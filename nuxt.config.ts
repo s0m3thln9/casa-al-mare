@@ -8,4 +8,7 @@ export default defineNuxtConfig({
     '@nuxt/image',
     '@nuxtjs/tailwindcss',
   ],
+  image: {
+    dir: 'assets',
+  }
 })
