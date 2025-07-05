@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  <header class="font-[Manrope] text-sm flex justify-between items-center p-4 bg-[#fffffa]">
+  <header class="font-[Manrope] text-sm flex justify-between items-center p-4 bg-[#FFFFFA] text-[#211D1D]">
 	  <div>
 		  <NuxtLink to="/">
 		    <NuxtImg src="logo.svg" alt="CASA AL MARE" width="229" height="30" loading="eager" />
@@ -28,7 +28,3 @@
 	  </nav>
   </header>
 </template>
-
-<style scoped>
-
-</style>
