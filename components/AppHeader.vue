@@ -3,10 +3,15 @@
 </script>
 
 <template>
-  <header class="font-[Manrope] text-sm flex justify-between items-center p-4 bg-[#FFFFFA] text-[#211D1D]">
+  <header
+	  class="font-[Manrope] text-sm flex justify-between items-center p-4 bg-[#FFFFFA] text-[#211D1D]"
+  >
 	  <div>
 		  <NuxtLink to="/">
-		    <NuxtImg src="logo.svg" alt="CASA AL MARE" width="229" height="30" loading="eager" />
+		    <NuxtImg
+			    src="logo.svg" alt="CASA AL MARE" width="229" height="30"
+			    loading="eager"
+		    />
 		  </NuxtLink>
 	  </div>
 	  <nav>
