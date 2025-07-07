@@ -28,7 +28,7 @@
 			<div class="flex flex-col gap-4">
 				<h3 class="font-normal text-base uppercase">О бренде</h3>
 				<ul class="flex flex-col gap-4">
-					<li><NuxtLink to="/">О нас</NuxtLink></li>
+					<li><NuxtLink to="/public">О нас</NuxtLink></li>
 					<li><NuxtLink to="/">Telegram</NuxtLink></li>
 					<li><NuxtLink to="/">WhatsApp</NuxtLink></li>
 					<li><NuxtLink to="/">Pinterest</NuxtLink></li>
