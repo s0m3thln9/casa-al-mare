@@ -5,7 +5,7 @@
 <template>
 	<footer class="py-6 px-4 font-[Manrope] font-light text-sm text-[#211D1D]">
 		<div
-			class="border border-[#BBB8B6] rounded-lg px-6 py-8 flex justify-between"
+			class="border border-[#BBB8B6] rounded-lg px-6 py-8 hidden justify-between flex-wrap sm:flex"
 		>
 			<div class="flex flex-col gap-4">
 				<h3 class="font-normal text-base uppercase">Каталог</h3>
@@ -45,9 +45,9 @@
 					<li><NuxtLink to="/">Сертификат</NuxtLink></li>
 				</ul>
 			</div>
-			<div class="flex flex-col gap-4">
+			<div class="flex flex-col gap-4 w-full lg:w-auto">
 				<h3 class="font-normal text-base uppercase">Аккаунт</h3>
-				<div class="flex gap-4">
+				<div class="flex flex-col gap-4 xl:flex-row">
 					<input
 						type="text" placeholder="Введите e-mail для получения новостей"
 						class="w-[245px] h-[44px] px-2 py-2.5 border-[#5E5B58] border-[0.7px] rounded-lg text-xs placeholder:text-[#5E5B58]"
@@ -56,10 +56,24 @@
 						class="w-[155px] h-[35px] px-8 pt-[7px] pb-[9px] bg-[#211D1D] text-[#FFFFFA] rounded-2xl border border-[#211D1D] font-normal "
 					>Подписаться</button>
 				</div>
-				<p class="w-[416px] text-[10px] font-[Commissioner]">Нажимая на кнопку «Подписаться», я соглашаюсь на обработку моих персональных данных и ознакомлен(а) с условиями конфиденциальности.</p>
+				<p class="max-w-[300px] text-[10px] font-[Commissioner] xl:max-w-[416px]">Нажимая на кнопку «Подписаться», я соглашаюсь на обработку моих персональных данных и ознакомлен(а) с условиями конфиденциальности.</p>
 				<span class="text-xs">Политика конфиденциальности и оферта</span>
 				<span class="text-xs">CASA AL MARE © 2025</span>
 			</div>
+		</div>
+		<div class="flex flex-col items-center gap-12 sm:hidden">
+			<div class="w-full flex flex-col gap-2">
+				<div class="flex gap-2">
+					<button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Whatsapp</button>
+					<button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Telegram</button>
+					<button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Рассылка</button>
+				</div>
+				<button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Обратная связь</button>
+				<button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Реквизиты</button>
+				<button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Политика конфиденциальности и оферта</button>
+			</div>
+			<NuxtImg src="/logo-3.svg" alt="CASA AL MARE" width="156" height="174" />
+			<span class="text-xs text-[#BBB8B6]">CASA AL MARE © 2025</span>
 		</div>
 	</footer>
 </template>

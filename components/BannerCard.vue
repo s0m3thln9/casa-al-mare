@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { NuxtImg } from '#components'
 
 defineProps<{
 	imageUrl: string
@@ -13,7 +14,7 @@ defineProps<{
   <div
 	  :class="[
       'relative w-full overflow-hidden',
-      maxHeight || 'max-h-[500px]',
+      maxHeight || '',
       customClass
     ]"
   >
@@ -27,7 +28,7 @@ defineProps<{
     />
     <div
 	    v-if="text"
-	    class="absolute bottom-6 right-6 px-4 py-2 bg-[#FFFFFA] rounded-2xl font-[Manrope] text-[#211D1D] uppercase text-base/5"
+	    class="absolute bottom-2 right-2 px-2 py-1 bg-[#FFFFFA99] rounded-2xl font-[Manrope] text-[#211D1D] uppercase text-[10px] sm:text-base/5 sm:px-4 sm:py-2 sm:bottom-6 sm:right-6 sm:bg-[#FFFFFA]"
     >
       {{ text }}
     </div>
