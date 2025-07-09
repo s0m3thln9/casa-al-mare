@@ -4,7 +4,7 @@
 
 <template>
   <header
-	  class="font-[Manrope] text-xs flex justify-between items-center p-4 bg-[#FFFFFA] text-[#211D1D] sm:text-sm"
+	  class="font-[Manrope] text-xs flex justify-between items-center p-2 bg-[#FFFFFA] text-[#211D1D] sm:text-sm sm:p-4"
   >
 	  <div>
 		  <NuxtLink to="/">
