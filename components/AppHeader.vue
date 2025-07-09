@@ -9,7 +9,8 @@
 	  <div>
 		  <NuxtLink to="/">
 		    <NuxtImg
-			    src="logo.svg" alt="CASA AL MARE" class="min-w-[126px] h-[17px] sm:w-[229px] sm:h-[30px]"
+			    src="logo.svg" alt="CASA AL MARE"
+			    class="min-w-[126px] h-[17px] sm:w-[229px] sm:h-[30px]"
 			    loading="eager"
 		    />
 		  </NuxtLink>

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { NuxtImg } from '#components'
-
 defineProps<{
 	imageUrl: string
 	text?: string
