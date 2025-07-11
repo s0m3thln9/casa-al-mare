@@ -12,15 +12,19 @@
 		  </span>
 	  </div>
 	  <div class="px-0 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-8 sm:px-4">
-		  <div class="flex items-center gap-2">
+		  <div class="flex flex-col items-center gap-2 sm:flex-row">
 			  <NuxtImg
 				  src="/certificate-1.png" alt="certificate" width="726" height="1080"
-				  class="rounded-lg"
+				  class="sm:rounded-lg"
 			  />
 			  <NuxtImg
 				  src="/certificate-2.png" alt="certificate" width="726" height="1080"
-				  class="rounded-lg"
+				  class="sm:rounded-lg hidden sm:block"
 			  />
+			  <div class="w-full flex justify-center items-center gap-1 px-4 sm:hidden">
+				  <div class="w-full border-y-1 border-[#A6CEFF]" />
+				  <div class="w-full border-y-1 border-[#A6CEFF] opacity-30" />
+			  </div>
 		  </div>
 		  <div class="px-2 flex flex-col sm:px-0">
 			  <div class="flex justify-center items-center">
@@ -59,14 +63,14 @@
 						  999999
 					  </div>
 				  </div>
-				  <div class="w-full flex items-center justify-between">
+				  <div class="w-full flex items-center gap-2">
 					  <button
-						  class="px-8 py-4 rounded-[18px] border border-[#211D1D] text-[#211D1D] text-[13px] sm:text-sm"
+						  class="px-4 py-2 rounded-2xl border border-[#211D1D] text-[#211D1D] text-[13px] sm:px-8 sm:py-4 sm:rounded-[18px] sm:text-sm"
 					  >
 						  Назад
 					  </button>
 					  <button
-						  class="px-8 py-4 rounded-[18px] border border-[#211D1D] text-[#211D1D] text-[13px] sm:text-sm"
+						  class="w-full px-4 py-2 rounded-2xl bg-[#211D1D] border border-[#211D1D] text-[#FFFFFA] text-[13px] sm:px-8 sm:py-4 sm:rounded-[18px] sm:bg-none sm:text-[#211D1D] sm:text-sm"
 					  >
 						  Сначала выберите номинал
 					  </button>
@@ -74,7 +78,7 @@
 			  </div>
 			  <div class="w-full mt-14">
 				  <div
-					  class="flex justify-between items-center p-4 border border-[#BBB8B6] rounded-2xl"
+					  class="flex justify-center gap-2.5 items-center p-4 border border-[#BBB8B6] rounded-2xl sm:justify-between sm:gap-0"
 				  >
 					  <span class="font-light text-sm">Описание сертификата</span>
 					  <NuxtImg src="/help.svg" alt="help" width="16" height="16" />
