@@ -13,7 +13,7 @@ const images = {
 			 Главная / Смотреть все / Наименование
 		  </span>
 	  </div>
-	  <div class="px-0 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-8 sm:gap-4 sm:px-4">
+	  <div class="px-0 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-8 sm:px-4">
 		  <div class="grid grid-cols-2 gap-2">
 			  <NuxtImg
 				  src="/item-1.jpg" alt="item" width="726" height="1080"
@@ -40,11 +40,13 @@ const images = {
 				  class="rounded-lg"
 			  />
 		  </div>
-		  <div class="px-2 flex flex-col sm:px-4">
+		  <div class="px-2 flex flex-col sm:px-0">
 			  <div class="flex justify-center items-center">
 				  <h2
 					  class="font-[Inter] text-center text-[32px] sm:text-4xl"
-				  >Colored triangle top</h2>
+				  >
+					  Colored triangle top
+				  </h2>
 			  </div>
 			  <div class="flex justify-center items-center gap-2 mt-4 sm:mt-6">
 				  <span class="font-[Inter] font-light text-[17px] text-[#8C8785] sm:font-[Manrope] sm:font-normal sm:text-base sm:text-[#211D1D]">36 000 ₽</span>
