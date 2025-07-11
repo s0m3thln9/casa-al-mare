@@ -3,6 +3,7 @@ defineProps<{
 	imageUrl: string
 	text?: string
 	price?: string
+	customClass?: string
 }>()
 </script>
 
@@ -10,7 +11,7 @@ defineProps<{
   <div class="relative font-[Commissioner] font-light text-[10px] text-center sm:font-[Manrope] sm:text-sm">
 			  <NuxtImg
 				  :src="imageUrl" alt="card" width="460" height="680"
-				  class="rounded-lg sm:rounded-2xl"
+				  :class="['rounded-lg sm:rounded-2xl', customClass]"
 			  />
 			  <div class="flex justify-center items-center gap-1 px-6 py-2">
 				  <div class="w-full border-y-1 border-[#A6CEFF]" />
