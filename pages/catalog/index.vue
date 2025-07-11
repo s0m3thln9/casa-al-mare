@@ -6,11 +6,13 @@ const images = {
 </script>
 
 <template>
-  <main class="font-[Manrope]">
+  <main class="font-[Manrope] bg-[#FFFFFA]">
 	  <div class="hidden sm:flex justify-between px-4 py-6">
 		  <span
 			  class="text-sm font-light text-[#211D1D]"
-		  >Смотреть все / Купальники</span>
+		  >
+			  Смотреть все / Купальники
+		  </span>
 		  <div class="flex gap-4">
 			  <NuxtImg src="/sliders.svg" alt="sliders" width="24" height="24" />
 			  <div
@@ -51,7 +53,7 @@ const images = {
 		  </div>
 	  </div>
 	  <div
-		  class="grid grid-cols-2 px-2 gap-x-1 gap-y-2 font-[Commissioner] font-light text-[10px] text-center sm:font-[Manrope] sm:text-sm sm:grid-cols-4 sm:px-4 sm:gap-x-4 sm:gap-y-6"
+		  class="grid grid-cols-2 px-2 gap-x-1 gap-y-2 sm:grid-cols-4 sm:px-4 sm:gap-x-4 sm:gap-y-6"
 	  >
 		  <CatalogCard
 			  :image-url="images.card1"

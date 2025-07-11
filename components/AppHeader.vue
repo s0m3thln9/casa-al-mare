@@ -18,7 +18,7 @@
 	  <nav class="hidden lg:block">
 		  <ul class="flex gap-4">
 		    <li><NuxtLink to="/">Меню</NuxtLink> </li>
-		    <li><NuxtLink to="/">Новинки</NuxtLink> </li>
+		    <li><NuxtLink to="/catalog">Новинки</NuxtLink> </li>
 		    <li><NuxtLink to="/">Блог</NuxtLink> </li>
 		    <li><NuxtLink to="/">NEW COLLECTION</NuxtLink> </li>
 		    <li><NuxtLink to="/">Telegram</NuxtLink> </li>

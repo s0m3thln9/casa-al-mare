@@ -7,7 +7,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="relative">
+  <div class="relative font-[Commissioner] font-light text-[10px] text-center sm:font-[Manrope] sm:text-sm">
 			  <NuxtImg
 				  :src="imageUrl" alt="card" width="460" height="680"
 				  class="rounded-lg sm:rounded-2xl"

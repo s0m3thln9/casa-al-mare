@@ -3,7 +3,7 @@
 </script>
 
 <template>
-	<footer class="py-6 px-4 font-[Manrope] font-light text-sm text-[#211D1D]">
+	<footer class="py-6 px-4 font-[Manrope] font-light text-sm text-[#211D1D] bg-[#FFFFFA]">
 		<div
 			class="border border-[#BBB8B6] rounded-lg px-6 py-8 hidden justify-between flex-wrap sm:flex"
 		>

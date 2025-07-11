@@ -15,7 +15,7 @@ const images = {
 </script>
 
 <template>
-  <main>
+  <main class="bg-[#FFFFFA]">
     <BannerCard
 	    :image-url="images.video"
 	    text="SS26 solar power"
