@@ -12,7 +12,7 @@
 		  </span>
 	  </div>
 	  <div class="px-0 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-8 sm:px-4">
-		  <div class="flex flex-col items-center gap-2 sm:flex-row">
+		  <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
 			  <NuxtImg
 				  src="/certificate-1.png" alt="certificate" width="726" height="1080"
 				  class="sm:rounded-lg"
@@ -70,7 +70,7 @@
 						  Назад
 					  </button>
 					  <button
-						  class="w-full px-4 py-2 rounded-2xl bg-[#211D1D] border border-[#211D1D] text-[#FFFFFA] text-[13px] sm:px-8 sm:py-4 sm:rounded-[18px] sm:bg-none sm:text-[#211D1D] sm:text-sm"
+						  class="w-full px-4 py-2 rounded-2xl bg-[#211D1D] border border-[#211D1D] text-[#FFFFFA] text-[13px] sm:px-8 sm:py-4 sm:rounded-[18px] sm:bg-transparent sm:text-[#211D1D] sm:text-sm"
 					  >
 						  Сначала выберите номинал
 					  </button>

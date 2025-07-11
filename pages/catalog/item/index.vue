@@ -14,7 +14,7 @@ const images = {
 		  </span>
 	  </div>
 	  <div class="px-0 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-8 sm:px-4">
-		  <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+		  <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
 			  <NuxtImg
 				  src="/item-1.jpg" alt="item" width="726" height="1080"
 				  class="sm:rounded-lg"
