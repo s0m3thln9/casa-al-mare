@@ -14,31 +14,37 @@ const images = {
 		  </span>
 	  </div>
 	  <div class="px-0 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-8 sm:px-4">
-		  <div class="grid grid-cols-2 gap-2">
+		  <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
 			  <NuxtImg
 				  src="/item-1.jpg" alt="item" width="726" height="1080"
-				  class="rounded-lg"
+				  class="sm:rounded-lg"
 			  />
 			  <NuxtImg
 				  src="/item-2.jpg" alt="item" width="726" height="1080"
-				  class="rounded-lg"
+				  class="hidden sm:block sm:rounded-lg"
 			  />
 			  <NuxtImg
 				  src="/item-3.jpg" alt="item" width="726" height="1080"
-				  class="rounded-lg"
+				  class="hidden sm:block sm:rounded-lg"
 			  />
 			  <NuxtImg
 				  src="/item-4.jpg" alt="item" width="726" height="1080"
-				  class="rounded-lg"
+				  class="hidden sm:block sm:rounded-lg"
 			  />
 			  <NuxtImg
 				  src="/item-5.jpg" alt="item" width="726" height="1080"
-				  class="rounded-lg"
+				  class="hidden sm:block sm:rounded-lg"
 			  />
 			  <NuxtImg
 				  src="/item-6.jpg" alt="item" width="726" height="1080"
-				  class="rounded-lg"
+				  class="hidden sm:block sm:rounded-lg"
 			  />
+			  <div class="w-full flex justify-center items-center gap-1 px-4 sm:hidden">
+				  <div class="w-full border-y-1 border-[#A6CEFF]" />
+				  <div class="w-full border-y-1 border-[#A6CEFF] opacity-30" />
+				  <div class="w-full border-y-1 border-[#A6CEFF] opacity-30" />
+				  <div class="w-full border-y-1 border-[#A6CEFF] opacity-30" />
+			  </div>
 		  </div>
 		  <div class="px-2 flex flex-col sm:px-0">
 			  <div class="flex justify-center items-center">
