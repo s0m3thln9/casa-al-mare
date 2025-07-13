@@ -27,7 +27,7 @@ const images = {
 		  </span>
 	  </div>
 		<h2 class="uppercase text-center font-[Inter] text-[17px]">Campaign</h2>
-	  <div class="grid grid-cols-2 mt-4 px-2 gap-2 sm:gap-4 sm:px-4 sm:mt-10 sm:grid-cols-4">
+	  <div class="grid grid-cols-2 mt-4 px-2 gap-2 sm:gap-4 sm:px-4 sm:mt-10 md:grid-cols-4">
 		  <BannerCard
 			  :image-url="images.camp1"
 			  plus
