@@ -20,7 +20,7 @@ const images = {
 		<div class="grid mt-4 px-2 gap-2 sm:gap-4 sm:px-4 sm:mt-10 sm:grid-cols-2">
 			<BannerCard
 				:image-url="images.col1"
-				text="SS26 solar power"
+				text="capsule deep sea"
 				custom-class="rounded-lg aspect-[936/670]"
 				object-position="center"
 			/>
@@ -32,49 +32,49 @@ const images = {
       />
 			<BannerCard
 				:image-url="images.col3"
-				text="SS26 solar power"
+				text="ss24 elle"
 				custom-class="rounded-lg aspect-[936/670]"
 				object-position="center"
 			/>
       <BannerCard
 	      :image-url="images.col4"
-	      text="SS26 solar power"
+	      text="capsule white clouds"
 	      custom-class="rounded-lg aspect-[936/670]"
 	      object-position="center"
       />
 			<BannerCard
 				:image-url="images.col5"
-				text="SS26 solar power"
+				text="sunset story f23"
 				custom-class="rounded-lg aspect-[936/670]"
 				object-position="center"
 			/>
       <BannerCard
 	      :image-url="images.col6"
-	      text="SS26 solar power"
+	      text="ss 23 lookbook"
 	      custom-class="rounded-lg aspect-[936/670]"
 	      object-position="center"
       />
 			<BannerCard
 				:image-url="images.col7"
-				text="SS26 solar power"
+				text="COLLECTION"
 				custom-class="rounded-lg aspect-[936/670]"
 				object-position="50% 10%"
 			/>
       <BannerCard
 	      :image-url="images.col8"
-	      text="SS26 solar power"
+	      text="COLLECTION"
 	      custom-class="rounded-lg aspect-[936/670]"
 	      object-position="center"
       />
 			<BannerCard
 				:image-url="images.col9"
-				text="SS26 solar power"
+				text="COLLECTION"
 				custom-class="rounded-lg aspect-[936/670]"
 				object-position="50% 10%"
 			/>
       <BannerCard
 	      :image-url="images.col10"
-	      text="SS26 solar power"
+	      text="COLLECTION"
 	      custom-class="rounded-lg aspect-[936/670]"
 	      object-position="50% 0%"
       />
