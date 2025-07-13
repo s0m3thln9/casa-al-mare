@@ -5,7 +5,7 @@ const images = {
 </script>
 
 <template>
-  <main class="my-5 font-[Manrope] text-[#211D1D] sm:my-10">
+  <main class="my-5 font-[Manrope] bg-[#FFFFFA] text-[#211D1D] sm:my-10">
 	  <h2 class="uppercase text-center font-[Inter] text-[17px]">Избранное</h2>
 	  <div
 		  class="mt-4 grid grid-cols-2 px-2 gap-x-1 gap-y-2 sm:mt-10 sm:grid-cols-4 sm:px-4 sm:gap-x-4 sm:gap-y-6"
