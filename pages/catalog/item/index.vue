@@ -226,19 +226,19 @@ const images = {
 				  :image-url="images.item"
 				  text="Printed bikini top"
 				  price="25 500"
-				  custom-class="h-[245px] sm:h-auto"
+				  custom-image-class="h-[245px] sm:h-auto"
 			  />
 			  <CatalogCard
 				  :image-url="images.item"
 				  text="Printed bikini top"
 				  price="25 500"
-				  custom-class="h-[245px] sm:h-auto"
+				  custom-image-class="h-[245px] sm:h-auto"
 			  />
 			  <CatalogCard
 				  :image-url="images.item"
 				  text="Printed bikini top"
 				  price="25 500"
-				  custom-class="h-[245px] sm:h-auto"
+				  custom-image-class="h-[245px] sm:h-auto"
 			  />
 		  </div>
 	  </div>

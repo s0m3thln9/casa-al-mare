@@ -1,0 +1,90 @@
+<script setup lang="ts">
+const images = {
+	card1: "/item-page-1.jpg",
+}
+</script>
+
+<template>
+  <main class="my-5 font-[Manrope] text-[#211D1D] sm:my-10">
+	  <h2 class="uppercase text-center font-[Inter] text-[17px]">Избранное</h2>
+	  <div
+		  class="mt-4 grid grid-cols-2 px-2 gap-x-1 gap-y-2 sm:mt-10 sm:grid-cols-4 sm:px-4 sm:gap-x-4 sm:gap-y-6"
+	  >
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  price="25 500"
+		  />
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  price="25 500"
+		  />
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  price="25 500"
+		  />
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  price="25 500"
+		  />
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  price="25 500"
+		  />
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  price="25 500"
+		  />
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  price="25 500"
+			  custom-class="hidden sm:block"
+		  />
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  price="25 500"
+			  custom-class="hidden sm:block"
+		  />
+		  <div class="col-span-2 w-full flex justify-center items-center mt-5 mb-3 sm:hidden">
+			  <button class="font-light text-xs">Показать больше</button>
+		  </div>
+	  </div>
+	  <h2 class="hidden mt-10 font-[Inter] text-4xl text-center sm:block">Вам может понравится</h2>
+	  <div
+		  class="hidden mt-12 grid-cols-4 px-4 gap-x-4 gap-y-6 sm:grid"
+	  >
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  price="25 500"
+		  />
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  price="25 500"
+		  />
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  price="25 500"
+		  />
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  price="25 500"
+		  />
+	  </div>
+	  <AppSEO custom-class="sm:hidden" content="CASA AL MARE — эстетика тела, свобода выбора. Каталог CASA AL MARE создан для женщин, которые ищут не просто купальник или комплект белья, а выражение своей индивидуальности. Мы создаём коллекции, вдохновлённые побережьями, архитектурой юга и непринуждённой элегантностью." />
+  </main>
+</template>
+
+<style scoped>
+
+</style>
