@@ -170,7 +170,7 @@ const images = {
 				  <span class="text-[11px] text-[#363636]">Параметры модели: 175 80/60/89</span>
 			  </div>
 			  <div class="flex flex-col justify-center items-center gap-4 mt-6">
-				  <button class="w-full px-8 py-4 rounded-[18px] border border-[#211D1D] bg-[#211D1D] text-[#FFFFFA] text-[13px] sm:text-sm">Выберите размер</button>
+				  <BuyButton in-stock available-quantity is-size-selected />
 				  <button class="w-full px-8 py-4 rounded-[18px] border border-[#211D1D] text-[#211D1D] text-[13px] sm:text-sm">Собрать комплект</button>
 			  </div>
 			  <div class="flex justify-center items-center mt-4 sm:mt-6">

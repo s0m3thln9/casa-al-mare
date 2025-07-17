@@ -1,8 +1,11 @@
 <script setup lang="ts">
 defineProps<{
-	content: string
+	paragraphs: string[]
 	customClass?: string
 }>()
+
+const isExpanded = ref(false)
+
 </script>
 
 <template>
@@ -14,13 +17,14 @@ defineProps<{
 		>
 			<NuxtImg src="/logo-2.svg" alt="CASA AL MARE" width="230" height="31" />
 			<p
-				class="font-[Manrope] text-[11px] text-[#8F8F8F] font-light text-center w-full sm:text-xs md:w-[660px]"
+				class="font-[Manrope] text-[11px] text-[#8F8F8F] font-light text-center w-full whitespace-pre-line sm:text-xs md:max-w-[800px]"
 			>
-				{{ content }}
+				{{ isExpanded ? paragraphs.join("\n\n") : paragraphs[0] }}
 			</p>
-			<button class="font-[Manrope] text-xs text-[#211D1D] font-light">
-				Подробнее
-			</button>
+			<ExpandButton
+				:is-expanded="isExpanded"
+				@toggle-expand="isExpanded = !isExpanded"
+			/>
 		</div>
 	</div>
 </template>
