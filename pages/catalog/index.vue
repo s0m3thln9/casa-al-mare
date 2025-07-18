@@ -3,6 +3,13 @@ const images = {
 	card1: "/card-1.jpg",
 	promo1: "/promo-1.jpg",
 }
+
+const strokeCardCount = ref(4)
+
+const handleSelect = (selected: number) => {
+	strokeCardCount.value = selected
+}
+
 </script>
 
 <template>
@@ -15,36 +22,14 @@ const images = {
 		  </span>
 		  <div class="flex gap-4">
 			  <NuxtImg src="/sliders.svg" alt="sliders" width="24" height="24" />
-			  <div
-				  class="border-[0.7px] border-[#211D1D] flex rounded-lg overflow-hidden"
-			  >
-				  <div
-					  class="bg-[#211D1D] text-[#FFFFFA] flex items-center px-4 py-1.5 text-xs"
-				  >
-					  4
-				  </div>
-				  <div
-					  class="bg-[#FFFFFA] text-[#211D1D] flex items-center px-4 py-1.5 text-xs"
-				  >
-					  6
-				  </div>
-			  </div>
+			  <SelectButton :variants="['4', '6']" @select="handleSelect" />
 		  </div>
 	  </div>
 	  <div class="flex justify-between items-center p-2 sm:hidden">
 		  <div
 			  class="border-[0.7px] border-[#211D1D] flex rounded-lg overflow-hidden"
 		  >
-				<div
-					class="bg-[#211D1D] text-[#FFFFFA] flex items-center px-2 py-1 text-[10px] font-light font-[Commissioner]"
-				>
-					2
-				</div>
-			  <div
-				  class="bg-[#FFFFFA] text-[#211D1D] flex items-center px-2 py-1 text-[10px] font-light font-[Commissioner]"
-			  >
-				  3
-			  </div>
+				<SelectButton :variants="['2', '3']" @select="handleSelect" />
 		  </div>
 		  <span class="text-[10px] font-light font-[Commissioner]">Смотреть все / Купальники</span>
 		  <div class="flex items-center gap-1">
@@ -53,37 +38,44 @@ const images = {
 		  </div>
 	  </div>
 	  <div
+		  v-if="strokeCardCount === 4 || strokeCardCount === 2"
 		  class="grid grid-cols-2 px-2 gap-x-1 gap-y-2 sm:grid-cols-4 sm:px-4 sm:gap-x-4 sm:gap-y-6"
 	  >
 		  <CatalogCard
 			  :image-url="images.card1"
 			  text="Printed bikini top"
-			  price="25 500"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <CatalogCard
 			  :image-url="images.card1"
 			  text="Printed bikini top"
-			  price="25 500"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <CatalogCard
 			  :image-url="images.card1"
 			  text="Printed bikini top"
-			  price="25 500"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <CatalogCard
 			  :image-url="images.card1"
 			  text="Printed bikini top"
-			  price="25 500"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <CatalogCard
 			  :image-url="images.card1"
 			  text="Printed bikini top"
-			  price="25 500"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <CatalogCard
 			  :image-url="images.card1"
 			  text="Printed bikini top"
-			  price="25 500"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <BannerCard
 			  :image-url="images.promo1"
@@ -94,38 +86,133 @@ const images = {
 		  <CatalogCard
 			  :image-url="images.card1"
 			  text="Printed bikini top"
-			  price="25 500"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <CatalogCard
 			  :image-url="images.card1"
 			  text="Printed bikini top"
-			  price="25 500"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <CatalogCard
 			  :image-url="images.card1"
 			  text="Printed bikini top"
-			  price="25 500"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <CatalogCard
 			  :image-url="images.card1"
 			  text="Printed bikini top"
-			  price="25 500"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <CatalogCard
 			  :image-url="images.card1"
 			  text="Printed bikini top"
-			  price="25 500"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <CatalogCard
 			  :image-url="images.card1"
 			  text="Printed bikini top"
-			  price="25 500"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <BannerCard
 			  :image-url="images.promo1"
 			  text="SS26 SOLAR POWER"
 			  custom-class="rounded-lg aspect-[1] col-span-2 sm:hidden"
 			  object-position="center"
+		  />
+	  </div>
+	  <div
+		  v-else
+		  class="grid grid-cols-3 px-2 gap-x-1 gap-y-2 sm:grid-cols-6 sm:px-4 sm:gap-x-4 sm:gap-y-6"
+	  >
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  :price="24600"
+			  :old-price="26000"
+			  variant="mini"
+		  />
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  :price="24600"
+			  :old-price="26000"
+			  variant="mini"
+		  />
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  :price="24600"
+			  :old-price="26000"
+			  variant="mini"
+		  />
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  :price="24600"
+			  :old-price="26000"
+			  variant="mini"
+		  />
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  :price="24600"
+			  :old-price="26000"
+			  variant="mini"
+		  />
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  :price="24600"
+			  :old-price="26000"
+			  variant="mini"
+		  />
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  :price="24600"
+			  :old-price="26000"
+			  variant="mini"
+		  />
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  :price="24600"
+			  :old-price="26000"
+			  variant="mini"
+		  />
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  :price="24600"
+			  :old-price="26000"
+			  variant="mini"
+		  />
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  :price="24600"
+			  :old-price="26000"
+			  variant="mini"
+		  />
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  :price="24600"
+			  :old-price="26000"
+			  variant="mini"
+		  />
+		  <CatalogCard
+			  :image-url="images.card1"
+			  text="Printed bikini top"
+			  :price="24600"
+			  :old-price="26000"
+			  variant="mini"
 		  />
 	  </div>
 	  <div class="flex justify-center items-center pt-4 pb-2 sm:py-10">
