@@ -14,6 +14,8 @@ const currentImageIndex = ref(0)
 const isTransitioning = ref(false)
 const isHovered = ref(false)
 const isFavorite = ref(false)
+const isVisible = ref(false)
+const isLoading = ref(false)
 
 const imageStyles = computed(() => (index: number) => {
 	if (index === currentImageIndex.value) {
@@ -36,6 +38,10 @@ const barStyles = computed(() => (index: number) => ({
 	opacity: index === currentImageIndex.value ? 1 : 0.3,
 	transition: 'opacity 400ms ease-in-out'
 }))
+
+onMounted(() => {
+	isVisible.value = true
+})
 
 const priceFormatter = (value: number) => {
 	const formattedValue = new Intl.NumberFormat('ru-RU').format(value)
@@ -85,6 +91,8 @@ const toggleFavorite = () => {
 	<div
 		v-if="variant === 'mini'"
 		:class="['flex flex-col items-center relative font-[Commissioner] font-light text-[11px] text-center sm:font-[Manrope] sm:text-xs', customClass]"
+		@mouseenter="isHovered = true"
+		@mouseleave="isHovered = false"
 	>
 		<div>
 			<NuxtImg
@@ -99,13 +107,16 @@ const toggleFavorite = () => {
 			<SizeButton custom-class="text-xs" />
 		</div>
 	  <NuxtImg
-		  src="/star.svg" alt="star"
-		  class="w-3 h-3 absolute right-2.5 top-2.5 sm:w-5 sm:h-5 sm:right-4 sm:top-4"
+		  v-if="isHovered"
+		  :src="isFavorite ? '/star-filled.svg' : '/star.svg'"
+		  alt="star"
+		  class="w-3 h-3 absolute z-10 right-2.5 top-2.5 sm:w-5 sm:h-5 sm:right-4 sm:top-4"
+		  @click="toggleFavorite"
 	  />
   </div>
   <div
 	  v-else
-	  :class="['relative font-[Commissioner] font-light text-[10px] text-center sm:font-[Manrope] sm:text-sm', customClass]"
+	  :class="['relative font-[Commissioner] font-light text-[10px] text-center sm:font-[Manrope] sm:text-sm', customClass, isVisible ? 'animate-card-appear' : '']"
 	  @mouseenter="isHovered = true"
 	  @mouseleave="isHovered = false"
   >
@@ -143,5 +154,18 @@ const toggleFavorite = () => {
 </template>
 
 <style scoped>
+@keyframes card-appear {
+	from {
+		opacity: 0;
+		transform: translateX(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
 
+.animate-card-appear {
+	animation: card-appear 400ms ease-out forwards;
+}
 </style>
