@@ -1,4 +1,4 @@
-{
+ {
   "name": "nuxt-app",
   "dependencies": {
     "@nuxt/eslint": "1.4.1",

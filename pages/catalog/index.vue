@@ -135,6 +135,7 @@ const handleSelect = (selected: number) => {
 			  text="Printed bikini top"
 			  :price="24600"
 			  :old-price="26000"
+			  color="Цвет"
 			  variant="mini"
 		  />
 		  <CatalogCard
@@ -142,6 +143,7 @@ const handleSelect = (selected: number) => {
 			  text="Printed bikini top"
 			  :price="24600"
 			  :old-price="26000"
+			  color="Цвет"
 			  variant="mini"
 		  />
 		  <CatalogCard
@@ -149,6 +151,7 @@ const handleSelect = (selected: number) => {
 			  text="Printed bikini top"
 			  :price="24600"
 			  :old-price="26000"
+			  color="Цвет"
 			  variant="mini"
 		  />
 		  <CatalogCard
@@ -156,6 +159,7 @@ const handleSelect = (selected: number) => {
 			  text="Printed bikini top"
 			  :price="24600"
 			  :old-price="26000"
+			  color="Цвет"
 			  variant="mini"
 		  />
 		  <CatalogCard
@@ -163,6 +167,7 @@ const handleSelect = (selected: number) => {
 			  text="Printed bikini top"
 			  :price="24600"
 			  :old-price="26000"
+			  color="Цвет"
 			  variant="mini"
 		  />
 		  <CatalogCard
@@ -170,6 +175,7 @@ const handleSelect = (selected: number) => {
 			  text="Printed bikini top"
 			  :price="24600"
 			  :old-price="26000"
+			  color="Цвет"
 			  variant="mini"
 		  />
 		  <CatalogCard
@@ -177,6 +183,7 @@ const handleSelect = (selected: number) => {
 			  text="Printed bikini top"
 			  :price="24600"
 			  :old-price="26000"
+			  color="Цвет"
 			  variant="mini"
 		  />
 		  <CatalogCard
@@ -184,6 +191,7 @@ const handleSelect = (selected: number) => {
 			  text="Printed bikini top"
 			  :price="24600"
 			  :old-price="26000"
+			  color="Цвет"
 			  variant="mini"
 		  />
 		  <CatalogCard
@@ -191,6 +199,7 @@ const handleSelect = (selected: number) => {
 			  text="Printed bikini top"
 			  :price="24600"
 			  :old-price="26000"
+			  color="Цвет"
 			  variant="mini"
 		  />
 		  <CatalogCard
@@ -198,6 +207,7 @@ const handleSelect = (selected: number) => {
 			  text="Printed bikini top"
 			  :price="24600"
 			  :old-price="26000"
+			  color="Цвет"
 			  variant="mini"
 		  />
 		  <CatalogCard
@@ -205,6 +215,7 @@ const handleSelect = (selected: number) => {
 			  text="Printed bikini top"
 			  :price="24600"
 			  :old-price="26000"
+			  color="Цвет"
 			  variant="mini"
 		  />
 		  <CatalogCard
@@ -212,6 +223,7 @@ const handleSelect = (selected: number) => {
 			  text="Printed bikini top"
 			  :price="24600"
 			  :old-price="26000"
+			  color="Цвет"
 			  variant="mini"
 		  />
 	  </div>
