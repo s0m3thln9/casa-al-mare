@@ -1,6 +1,8 @@
 <script setup lang="ts">
 const images = {
 	card1: "/card-1.jpg",
+	card2: "/card-2.jpg",
+	card3: "/card-3.jpg",
 	promo1: "/promo-1.jpg",
 }
 
@@ -42,7 +44,7 @@ const handleSelect = (selected: number) => {
 		  class="grid grid-cols-2 px-2 gap-x-1 gap-y-2 sm:grid-cols-4 sm:px-4 sm:gap-x-4 sm:gap-y-6"
 	  >
 		  <CatalogCard
-			  :image-url="images.card1"
+			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
 			  variant="large"
