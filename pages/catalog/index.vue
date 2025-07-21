@@ -28,11 +28,7 @@ const handleSelect = (selected: number) => {
 		  </div>
 	  </div>
 	  <div class="flex justify-between items-center p-2 sticky top-0 bg-[#FFFFFA] z-10 sm:hidden">
-		  <div
-			  class="border-[0.7px] border-[#211D1D] flex rounded-lg overflow-hidden"
-		  >
-				<SelectButton :variants="['2', '3']" @select="handleSelect" />
-		  </div>
+		  <SelectButton :variants="['2', '3']" @select="handleSelect" />
 		  <span class="text-[10px] font-light font-[Commissioner]">Смотреть все / Купальники</span>
 		  <div class="flex items-center gap-1">
 			  <span class="text-[11px] font-[Manrope]">(12)</span>
