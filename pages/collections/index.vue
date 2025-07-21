@@ -14,7 +14,7 @@ const images = {
 </script>
 
 <template>
-	<main class="my-5 font-[Manrope] bg-[#FFFFFA] text-[#211D1D] sm:my-10">
+	<main class="my-5 font-[Manrope] bg-[#FFFFFA] text-[#211D1D] sm:py-10">
 		<h2 class="hidden uppercase text-center font-[Inter] text-[17px] sm:block">Campaigns</h2>
 		<h2 class="uppercase text-center font-[Inter] text-[17px] sm:hidden">Collections</h2>
 		<div class="grid mt-4 px-2 gap-2 sm:gap-4 sm:px-4 sm:mt-10 md:grid-cols-2">
