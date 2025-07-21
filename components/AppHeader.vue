@@ -44,20 +44,20 @@ const toggleMenu = () => {
 	  </div>
 	  <nav class="hidden lg:block">
 		  <ul class="flex gap-4">
-		    <li><button @click="toggleMenu">Меню</button> </li>
-		    <li><NuxtLink to="/catalog">Новинки</NuxtLink> </li>
-		    <li><NuxtLink to="/">Блог</NuxtLink> </li>
-		    <li><NuxtLink to="/">NEW COLLECTION</NuxtLink> </li>
-		    <li><NuxtLink to="/">Telegram</NuxtLink> </li>
-		    <li><NuxtLink to="/">WhatsApp</NuxtLink> </li>
+		    <li class="hover:text-[#F3A454]"><button class="cursor-pointer" @click="toggleMenu">Меню</button> </li>
+		    <li class="hover:text-[#F3A454]"><NuxtLink to="/catalog">Новинки</NuxtLink> </li>
+		    <li class="hover:text-[#F3A454]"><NuxtLink to="/">Блог</NuxtLink> </li>
+		    <li class="hover:text-[#F3A454]"><NuxtLink to="/">NEW COLLECTION</NuxtLink> </li>
+		    <li class="hover:text-[#F3A454]"><NuxtLink to="/">Telegram</NuxtLink> </li>
+		    <li class="hover:text-[#F3A454]"><NuxtLink to="/">WhatsApp</NuxtLink> </li>
 		  </ul>
 	  </nav>
 	  <nav>
 		  <ul class="flex gap-2 sm:gap-4">
-			  <li><button>Поиск</button></li>
-			  <li class="hidden lg:block"><NuxtLink to="/">Избранное</NuxtLink></li>
-			  <li><NuxtLink to="/">Корзина</NuxtLink></li>
-			  <li class="block lg:hidden"><button @click="toggleMenu">Меню</button></li>
+			  <li class="hover:text-[#F3A454]"><button>Поиск</button></li>
+			  <li class="hidden hover:text-[#F3A454] lg:block"><NuxtLink to="/">Избранное</NuxtLink></li>
+			  <li class="hover:text-[#F3A454]"><NuxtLink to="/">Корзина</NuxtLink></li>
+			  <li class="block hover:text-[#F3A454] lg:hidden"><button @click="toggleMenu">Меню</button></li>
 		  </ul>
 	  </nav>
 	  <MainMenu :is-menu-open="isMenuOpen" />

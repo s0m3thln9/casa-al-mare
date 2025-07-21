@@ -11,7 +11,7 @@ const props = defineProps<{
 const isLoading = ref(false)
 const showSuccess = ref(false)
 
-const styleBase = "flex justify-center items-center w-full py-2 border rounded-2xl text-[13px]/snug font-[Manrope] font-light sm:text-sm/snug sm:font-normal " + (props.customClass ? props.customClass + ' ' : ' ')
+const styleBase = "flex justify-center items-center px-5 py-2 border rounded-2xl text-[13px]/snug font-[Manrope] font-light sm:text-sm/snug sm:font-normal " + (props.customClass ? props.customClass + ' ' : ' ')
 const styleVariants = {
 	default:
 		{
@@ -52,17 +52,12 @@ const currentState = computed(() => {
 	return { content, style, disabled }
 })
 
-const handleClick = () => {
-	alert('click')
-}
-
 </script>
 
 <template>
   <button
 	  :class="currentState.style"
 	  :disabled="currentState.disabled"
-	  @click="handleClick"
   >
     {{ currentState.content }}
   </button>
