@@ -57,10 +57,12 @@ const handleEscKey = (event: KeyboardEvent) => {
   >
 	  <div class="py-8 px-4 bg-[#FFFFFA] rounded-br-3xl border-t-none border-[#BBB8B6] w-full h-full max-h-[100svh] overflow-y-auto sm:border-t-[0.5px] sm:w-auto sm:h-auto sm:p-6">
 		  <div
-class="hidden relative w-full overflow-hidden cursor-pointer sm:block" @click="() => {
-				handleMenuItemClick()
-				navigateTo('/catalog')
-			}">
+				class="hidden relative w-full overflow-hidden cursor-pointer sm:block"
+				@click="() => {
+					handleMenuItemClick()
+					navigateTo('/catalog')
+				}"
+		  >
         <NuxtImg
 			    src="/menu-1.jpg"
 			    alt="banner"
@@ -89,13 +91,13 @@ class="hidden relative w-full overflow-hidden cursor-pointer sm:block" @click="(
 				<li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/" @click="handleMenuItemClick">Покупателям</NuxtLink><NuxtImg src="/arrow-right.svg" alt="arrow" class="w-1.5" /></li>
 				<li class="hidden gap-2 justify-between items-center sm:justify-start sm:flex"><button
 class="cursor-pointer px-2 py-1 bg-[#F3A45429] rounded-lg" to="/" @click="() => {
-					handleMenuItemClick()
+					emit('close-menu')
 					emit('open-popup')
 				}"
 				>Подписаться</button></li>
 				<li class="flex gap-2 justify-between items-center sm:justify-start sm:hidden"><button
 class="cursor-pointer px-2 py-1" to="/" @click="() => {
-					handleMenuItemClick()
+					emit('close-menu')
 					emit('open-popup')
 				}"
 				>Подписаться на рассылку</button></li>
