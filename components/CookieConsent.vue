@@ -3,7 +3,8 @@ const emit = defineEmits<{
 	(e: 'accept-cookie'): void
 }>()
 
-const handleClick = () => {
+const handleClick = (e: MouseEvent) => {
+	e.stopPropagation()
 	emit('accept-cookie')
 }
 

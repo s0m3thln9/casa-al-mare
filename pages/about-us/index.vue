@@ -1,15 +1,12 @@
 <script setup lang="ts">
+const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главная", path: "/" }, { name: "О нас" }]
 
 </script>
 
 <template>
-  <main class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D] px-2 sm:px-10">
+  <main class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D] px-2 sm:px-4">
 	  <div class="py-2 sm:py-6">
-		  <span
-			  class="text-[10px] font-light text-[#211D1D] font-[Commissioner] sm:font-[Manrope] sm:text-sm"
-		  >
-			 Главная / О нас
-		  </span>
+		  <AppBreadcrumbs :items="breadcrumsItems" />
 	  </div>
 	  <div class="grid grid-cols-1 items-center my-6 sm:gap-18 xl:grid-cols-2">
 		  <div class="flex flex-col sm:gap-12">

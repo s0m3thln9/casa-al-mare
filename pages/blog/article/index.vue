@@ -9,16 +9,14 @@ const images = {
 	art7: "/art-7.jpg",
 	art8: "/art-8.jpg",
 }
+const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главная", path: "/" }, { name: "Блог", path: "/blog" }, { name: "Статья" }]
+
 </script>
 
 <template>
   <main class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D] mb-6 sm:mb-4">
 	  <div class="p-2 sm:px-4 sm:py-6">
-		  <span
-			  class="text-[10px] font-light text-[#211D1D] font-[Commissioner] sm:font-[Manrope] sm:text-sm"
-		  >
-			 Главная / Блог / Статья
-		  </span>
+		  <AppBreadcrumbs :items="breadcrumsItems" />
 	  </div>
 	  <div class="px-2 sm:px-4 grid grid-cols-1 gap-10 items-start lg:grid-cols-[auto_1fr] lg:gap-20">
 		  <div class="flex flex-col items-center pt-4 lg:sticky lg:top-0 lg:h-screen ">

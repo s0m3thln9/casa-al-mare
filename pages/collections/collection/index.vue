@@ -15,16 +15,14 @@ const images = {
 	camp13: "/camp-13.jpg",
 	camp14: "/camp-14.jpg",
 }
+const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главная", path: "/" }, { name: "COLLECTIONS", path: "/collections" }, { name: "COLLECTION" }]
+
 </script>
 
 <template>
   <main class="mb-5 font-[Manrope] bg-[#FFFFFA] text-[#211D1D] sm:mb-10">
 	  <div class="p-2 sm:px-4 sm:py-6">
-		  <span
-			  class="text-[10px] font-light text-[#211D1D] font-[Commissioner] sm:font-[Manrope] sm:text-sm"
-		  >
-			 Главная / COLLECTIONS / COLLECTION
-		  </span>
+		  <AppBreadcrumbs :items="breadcrumsItems" />
 	  </div>
 		<h2 class="uppercase text-center font-[Inter] text-[17px]">Campaign</h2>
 	  <div class="grid grid-cols-2 mt-4 px-2 gap-2 sm:gap-4 sm:px-4 sm:mt-10 md:grid-cols-4">

@@ -41,6 +41,8 @@ const barStyles = computed(() => (index: number) => ({
 	transition: 'opacity 400ms ease-in-out'
 }))
 
+const sizes = ["XSS", "XS", "S", "M", "L", "XL", "XXL"]
+
 onMounted(() => {
 	isVisible.value = true
 	updateScreenWidth()
@@ -123,7 +125,7 @@ const toggleFavorite = () => {
 <template>
 	<div
 		v-if="variant === 'mini'"
-		:class="['flex flex-col items-center relative font-[Commissioner] font-light text-[11px] text-center sm:font-[Manrope] sm:text-xs', customClass]"
+		:class="['flex flex-col items-center relative font-[Commissioner] text-[#211D1D] font-light text-[11px] text-center sm:font-[Manrope] sm:text-xs', customClass]"
 		@mouseenter="isHovered = true"
 		@mouseleave="isHovered = false"
 	>
@@ -136,9 +138,9 @@ const toggleFavorite = () => {
 		</div>
 	  <h4 class="mt-1 sm:mt-2">{{ text }}</h4>
 		<span class="mt-0.5 block sm:mt-1">{{ priceFormatter(price!) }} <span class="text-[#5E5B58] line-through">{{ priceFormatter(oldPrice!) }}</span></span>
-		<span v-if="!isHovered" class="mt-1 hidden sm:block">{{ color }}</span>
-		<div class="mt-2 hidden gap-1 2xl:flex">
-			<SizeButton custom-class="text-xs" />
+		<span v-if="!isHovered" class="my-1 hidden sm:block">{{ color }}</span>
+		<div class="mt-auto hidden gap-1 2xl:flex">
+			<SingleSelectButton :content="sizes" custom-class="text-xs" />
 		</div>
 	  <NuxtImg
 		  v-if="!isWideScreen || isHovered"
@@ -150,7 +152,7 @@ const toggleFavorite = () => {
   </div>
   <div
 	  v-else
-	  :class="['relative font-[Commissioner] font-light text-[10px] text-center sm:font-[Manrope] sm:text-sm', customClass, isVisible ? 'animate-card-appear' : '']"
+	  :class="['relative font-[Commissioner] font-light text-[10px] text-center text-[#211D1D] sm:font-[Manrope] sm:text-sm', customClass, isVisible ? 'animate-card-appear' : '']"
 	  @mouseenter="isHovered = true"
 	  @mouseleave="isHovered = false"
   >

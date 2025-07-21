@@ -2,16 +2,23 @@
 const images = {
 	item: "/item-page-1.jpg",
 }
+const pants: {
+	title: string,
+	src: string,
+	altSrc: string
+}[] = [
+	{title: "Стринги", src: "/pant-1.svg", altSrc: "/pant-1-filled.svg"},
+	{title: "Бразилиана", src: "/pant-2.svg", altSrc: "/pant-2-filled.svg"},
+	{title: "Классика", src: "/pant-3.svg", altSrc: "/pant-3-filled.svg"}
+]
+const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главная", path: "/" }, { name: "Смотреть все", path: "/catalog" }, { name: "Наименование" }]
+
 </script>
 
 <template>
   <main class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D]">
 	  <div class="p-2 sm:px-4 sm:py-6">
-		  <span
-			  class="text-[10px] font-light text-[#211D1D] font-[Commissioner] sm:font-[Manrope] sm:text-sm"
-		  >
-			 Главная / Смотреть все / Наименование
-		  </span>
+		  <AppBreadcrumbs :items="breadcrumsItems" />
 	  </div>
 	  <div class="px-0 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-8 sm:px-4">
 		  <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
@@ -151,19 +158,8 @@ const images = {
 				  </div>
 				  <span class="text-xs">Низ</span>
 				  <div class="flex justify-center items-center gap-6 text-xs">
-					  <div class="flex flex-col justify-center items-center gap-2">
-						  <NuxtImg src="/pant-1.svg" alt="pant" width="54" height="30" class="h-[31px]" />
-						  <span>Стринги</span>
-					  </div>
-					  <div class="flex flex-col justify-center items-center gap-2">
-						  <NuxtImg src="/pant-2.svg" alt="pant" width="54" height="30" class="h-[31px]" />
-						  <span>Бразилиана</span>
-					  </div>
-					  <div class="flex flex-col justify-center items-center gap-2">
-						  <NuxtImg src="/pant-3.svg" alt="pant" width="54" height="30" class="h-[31px]" />
-						  <span>Классика</span>
-					  </div>
-				  </div>
+				    <PantButton :pants="pants"/>
+		      </div>
 			  </div>
 			  <div class="flex flex-col justify-center items-center gap-1 mt-12 sm:mt-10">
 				  <span class="font-light text-xs">На модели размер: топ S, низ M</span>

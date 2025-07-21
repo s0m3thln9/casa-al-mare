@@ -9,7 +9,8 @@ const selectedCity = ref("Москва")
 
 const options = ["Москва", "Питер"]
 
-const handleClick = () => {
+const handleClick = (e: MouseEvent) => {
+	e.stopPropagation()
 	emit('select-city')
 }
 

@@ -55,7 +55,7 @@ const handleEscKey = (event: KeyboardEvent) => {
       'opacity-0 translate-x-[-100%]': !isMenuOpen,
     }"
   >
-	  <div class="py-8 px-4 bg-[#FFFFFA] rounded-br-3xl border-t-none border-[#BBB8B6] w-full h-full max-h-[100svh] overflow-y-auto sm:border-t-[0.5px] sm:w-auto sm:h-auto sm:p-6">
+	  <div class="py-8 px-4 bg-[#FFFFFA] rounded-br-3xl border-t-none border-[#BBB8B6] w-full h-full max-h-[calc(100svh-33px)] overflow-y-auto sm:border-t-[0.5px] sm:w-auto sm:max-h-[calc(100svh-62px)] sm:h-auto sm:p-6">
 		  <div
 				class="hidden relative w-full overflow-hidden cursor-pointer sm:block"
 				@click="() => {

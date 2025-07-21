@@ -26,14 +26,14 @@ const handleKeydown = (event: KeyboardEvent) => {
 
 <template>
   <div
-	  class="fixed inset-0 z-40 bg-black/50 transition-all duration-300 ease-in-out" :class="{
+	  class="fixed inset-0 z-40 bg-black/50 text-[#211D1D] transition-all duration-300 ease-in-out" :class="{
       'opacity-100': isPopupOpen,
       'opacity-0 pointer-events-none': !isPopupOpen
 		}"
 	  @click.self="emit('close-popup')"
    >
     <div
-	    class="fixed w-full h-[100svh] overflow-y-auto bg-[#FFFFFA] z-30 top-0 right-0 py-8 px-4 transition-all duration-300 ease-in-out sm:w-auto sm:p-8"
+	    class="fixed w-full h-[100svh] overflow-y-auto bg-[#FFFFFA] z-30 top-0 right-0 py-8 px-4 transition-all duration-300 ease-in-out sm:w-[454px] sm:p-8"
 	    :class="{
         'opacity-100 translate-x-0': isPopupOpen,
         'opacity-0 translate-x-[100%]': !isPopupOpen
@@ -45,9 +45,7 @@ const handleKeydown = (event: KeyboardEvent) => {
         </button>
         <span class="font-[Inter] text-[17px] uppercase sm:normal-case sm:text-2xl">{{ title }}</span>
       </div>
-      <div class="flex flex-col items-center gap-6 mt-8 sm:mt-14 sm:items-start">
-	      <slot/>
-      </div>
+	    <slot/>
     </div>
   </div>
 </template>
