@@ -33,8 +33,18 @@ const handleClick = () => {
 	border: 0.7px solid #BFBFBF;
 	border-radius: 8px;
 	width: 120px;
+	font-size: 14px;
+	font-family: Manrope, sans-serif;
 }
 :deep(.vs__search) {
 	display: none !important;
+}
+
+:deep(.vs__selected) {
+	margin-top: 0;
+}
+
+:deep(.vs__actions) {
+	padding: 0;
 }
 </style>

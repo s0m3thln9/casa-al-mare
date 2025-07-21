@@ -6,7 +6,7 @@ defineProps<{
 
 <template>
   <div
-	  class="absolute top-[62px] left-0 z-10 transition-all duration-300 ease-in-out"
+	  class="absolute top-[62px] left-0 z-30 transition-all duration-300 ease-in-out"
 	  :class="{
       'opacity-100 translate-x-0': isMenuOpen,
       'opacity-0 translate-x-[-100%]': !isMenuOpen,
