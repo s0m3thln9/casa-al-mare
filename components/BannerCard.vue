@@ -1,21 +1,30 @@
 <script setup lang="ts">
-defineProps<{
+const props = defineProps<{
 	imageUrl: string
 	text?: string
 	plus?: boolean
 	maxHeight?: string
 	customClass?: string
 	objectPosition?: string
+	link?: string
 }>()
+
+const handleClick = () => {
+	if (props.link) {
+		navigateTo(props.link)
+	}
+}
+
 </script>
 
 <template>
   <div
 	  :class="[
-      'relative w-full overflow-hidden',
+      'relative w-full overflow-hidden cursor-pointer',
       maxHeight || '',
       customClass
     ]"
+	  @click="handleClick"
   >
     <NuxtImg
 	    :src="imageUrl"

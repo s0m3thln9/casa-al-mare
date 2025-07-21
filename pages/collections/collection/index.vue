@@ -23,7 +23,7 @@ const images = {
 		  <span
 			  class="text-[10px] font-light text-[#211D1D] font-[Commissioner] sm:font-[Manrope] sm:text-sm"
 		  >
-			 Главная / Сертификат
+			 Главная / COLLECTIONS / COLLECTION
 		  </span>
 	  </div>
 		<h2 class="uppercase text-center font-[Inter] text-[17px]">Campaign</h2>

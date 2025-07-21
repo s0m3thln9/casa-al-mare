@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 const images = {
 	video: "/video-banner.jpg",
 	promo1: "/promo-1.jpg",
@@ -12,12 +11,13 @@ const images = {
 	category4: "/category-4.jpg",
 	category5: "/category-5.jpg",
 }
+
 </script>
 
 <template>
   <main class="bg-[#FFFFFA]">
 	  <RunningLine :messages="['Сообщение об акции и эксклюзивных условиях', 'Сообщение об акции и эксклюзивных условиях', 'Сообщение об акции и эксклюзивных условиях', 'Сообщение об акции и эксклюзивных условиях', 'Сообщение об акции и эксклюзивных условиях', 'Сообщение об акции и эксклюзивных условиях', 'Сообщение об акции и эксклюзивных условиях']" />
-    <BannerCard
+	  <BannerCard
 	    :image-url="images.video"
 	    text="SS26 solar power"
 	    object-position="50% 75%"
@@ -31,12 +31,14 @@ const images = {
 	      text="SS26 solar power"
 	      custom-class="rounded-lg aspect-[1]"
 	      object-position="center"
+	      link="/collections/collection"
       />
       <BannerCard
 	      :image-url="images.promo2"
 	      text="SS26 solar power"
 	      custom-class="rounded-lg aspect-[1]"
 	      object-position="center"
+	      link="/collections/collection"
       />
     </div>
     <div
@@ -47,30 +49,35 @@ const images = {
 	      text="Головные уборы"
 	      custom-class="rounded-lg col-span-2 aspect-[343/400] sm:aspect-[1920/2462] md:col-span-3 lg:col-span-1"
 	      object-position="center"
+	      link="/catalog"
       />
       <BannerCard
 	      :image-url="images.category2"
 	      text="Купальники"
 	      custom-class="rounded-lg aspect-[167/284] sm:aspect-[1920/2462] md:col-span-3 lg:col-span-1"
 	      object-position="center"
+	      link="/catalog"
       />
       <BannerCard
 	      :image-url="images.category3"
 	      text="Низ купальника"
 	      custom-class="rounded-lg aspect-[167/284] sm:aspect-[1920/2462] md:col-span-2 lg:col-span-1"
 	      object-position="center"
+	      link="/catalog"
       />
       <BannerCard
 	      :image-url="images.category4"
 	      text="Верх купальника"
 	      custom-class="rounded-lg aspect-[167/284] sm:aspect-[1920/2462] md:col-span-2 lg:col-span-1"
 	      object-position="center"
+	      link="/catalog"
       />
       <BannerCard
 	      :image-url="images.category5"
 	      text="Аксессуары"
 	      custom-class="rounded-lg aspect-[167/284] sm:aspect-[1920/2462] md:col-span-2 lg:col-span-1"
 	      object-position="center"
+	      link="/catalog"
       />
     </div>
     <div
@@ -81,12 +88,14 @@ const images = {
 	      text="fw25 Surf tales"
 	      custom-class="rounded-lg aspect-[1]"
 	      object-position="center"
+	      link="/collections/collection"
       />
       <BannerCard
 	      :image-url="images.promo4"
 	      text="top capsule 25"
 	      custom-class="rounded-lg aspect-[1]"
 	      object-position="center"
+	      link="/collections/collection"
       />
     </div>
     <AppSEO

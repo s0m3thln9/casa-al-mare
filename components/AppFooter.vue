@@ -1,4 +1,7 @@
 <script setup lang="ts">
+const emit = defineEmits<{
+	(e: 'open-popup'): void
+}>()
 
 </script>
 
@@ -10,11 +13,11 @@
 			<div class="flex flex-col gap-4">
 				<h3 class="font-normal text-base uppercase">Каталог</h3>
 				<ul class="flex flex-col gap-4">
-					<li><NuxtLink to="/">Купальники</NuxtLink></li>
-					<li><NuxtLink to="/">Нижняя часть купальника</NuxtLink></li>
-					<li><NuxtLink to="/">Верхняя часть купальника</NuxtLink></li>
-					<li><NuxtLink to="/">Головные уборы</NuxtLink></li>
-					<li><NuxtLink to="/">Аксессуары</NuxtLink></li>
+					<li><NuxtLink to="/catalog">Купальники</NuxtLink></li>
+					<li><NuxtLink to="/catalog">Нижняя часть купальника</NuxtLink></li>
+					<li><NuxtLink to="/catalog">Верхняя часть купальника</NuxtLink></li>
+					<li><NuxtLink to="/catalog">Головные уборы</NuxtLink></li>
+					<li><NuxtLink to="/catalog">Аксессуары</NuxtLink></li>
 				</ul>
 			</div>
 			<div class="flex flex-col gap-4">
@@ -30,7 +33,7 @@
 			<div class="flex flex-col gap-4">
 				<h3 class="font-normal text-base uppercase">О бренде</h3>
 				<ul class="flex flex-col gap-4">
-					<li><NuxtLink to="/public">О нас</NuxtLink></li>
+					<li><NuxtLink to="/about-us">О нас</NuxtLink></li>
 					<li><NuxtLink to="/">Telegram</NuxtLink></li>
 					<li><NuxtLink to="/">WhatsApp</NuxtLink></li>
 					<li><NuxtLink to="/">Pinterest</NuxtLink></li>
@@ -40,9 +43,9 @@
 				<h3 class="font-normal text-base uppercase">Аккаунт</h3>
 				<ul class="flex flex-col gap-4">
 					<li><NuxtLink to="/">В личный кабинет</NuxtLink></li>
-					<li><NuxtLink to="/">Избранное</NuxtLink></li>
+					<li><NuxtLink to="/favourites">Избранное</NuxtLink></li>
 					<li><NuxtLink to="/">Заказы</NuxtLink></li>
-					<li><NuxtLink to="/">Сертификат</NuxtLink></li>
+					<li><NuxtLink to="/certificate">Сертификат</NuxtLink></li>
 				</ul>
 			</div>
 			<div class="flex flex-col gap-4 w-full lg:w-auto">
@@ -52,7 +55,7 @@
 						type="email" placeholder="Введите e-mail для получения новостей"
 						class="min-w-[245px] h-[44px] px-2 py-2.5 border-[#5E5B58] border-[0.7px] rounded-lg text-xs placeholder:text-[#5E5B58]"
 					>
-					<AppButton content="Подписаться" variant="primary" custom-class="w-full px-0 max-xl:w-[245px]"/>
+					<AppButton content="Подписаться" variant="primary" custom-class="w-full px-0 max-xl:w-[245px]" @click="emit('open-popup')"/>
 				</div>
 				<p
 					class="max-w-[300px] text-[10px] font-[Commissioner] xl:max-w-[416px]"
@@ -74,7 +77,10 @@
 					>Telegram</button>
 					<button
 						class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]"
-					>Рассылка</button>
+						@click="emit('open-popup')"
+					>
+						Рассылка
+					</button>
 				</div>
 				<button
 					class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]"

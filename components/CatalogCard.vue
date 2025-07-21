@@ -15,7 +15,6 @@ const isTransitioning = ref(false)
 const isHovered = ref(false)
 const isFavorite = ref(false)
 const isVisible = ref(false)
-const isLoading = ref(false)
 
 const imageStyles = computed(() => (index: number) => {
 	if (index === currentImageIndex.value) {
@@ -60,7 +59,7 @@ const handleMouseMove = (e: MouseEvent) => {
 	const x = e.clientX - rect.left
 	const width = rect.width
 	const section = width / props.imageUrls.length
-	const newIndex = Math.floor(x / section)
+	const newIndex = Math.floor(x / section) < 0 ? 0 : Math.floor(x / section)
 	
 	if (newIndex !== currentImageIndex.value) {
 		isTransitioning.value = true

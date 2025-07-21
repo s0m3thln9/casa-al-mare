@@ -1,6 +1,9 @@
 <script setup lang="ts">
-const isMenuOpen = ref(false)
+const emit = defineEmits<{
+	(e: 'open-popup'): void
+}>()
 
+const isMenuOpen = ref(false)
 const scrollbarWidth = ref(0)
 
 const getScrollbarWidth = () => {
@@ -44,10 +47,10 @@ const toggleMenu = () => {
 	  </div>
 	  <nav class="hidden lg:block">
 		  <ul class="flex gap-4">
-		    <li class="hover:text-[#F3A454]"><button class="cursor-pointer" @click="toggleMenu">Меню</button> </li>
+		    <li class="hover:text-[#F3A454]"><button class="cursor-pointer menu-button" @click="toggleMenu">Меню</button> </li>
 		    <li class="hover:text-[#F3A454]"><NuxtLink to="/catalog">Новинки</NuxtLink> </li>
-		    <li class="hover:text-[#F3A454]"><NuxtLink to="/">Блог</NuxtLink> </li>
-		    <li class="hover:text-[#F3A454]"><NuxtLink to="/">NEW COLLECTION</NuxtLink> </li>
+		    <li class="hover:text-[#F3A454]"><NuxtLink to="/blog">Блог</NuxtLink> </li>
+		    <li class="hover:text-[#F3A454]"><NuxtLink to="/collections/collection">NEW COLLECTION</NuxtLink> </li>
 		    <li class="hover:text-[#F3A454]"><NuxtLink to="/">Telegram</NuxtLink> </li>
 		    <li class="hover:text-[#F3A454]"><NuxtLink to="/">WhatsApp</NuxtLink> </li>
 		  </ul>
@@ -55,11 +58,11 @@ const toggleMenu = () => {
 	  <nav>
 		  <ul class="flex gap-2 sm:gap-4">
 			  <li class="hover:text-[#F3A454]"><button>Поиск</button></li>
-			  <li class="hidden hover:text-[#F3A454] lg:block"><NuxtLink to="/">Избранное</NuxtLink></li>
+			  <li class="hidden hover:text-[#F3A454] lg:block"><NuxtLink to="/favourites">Избранное</NuxtLink></li>
 			  <li class="hover:text-[#F3A454]"><NuxtLink to="/">Корзина</NuxtLink></li>
-			  <li class="block hover:text-[#F3A454] lg:hidden"><button @click="toggleMenu">Меню</button></li>
+			  <li class="block hover:text-[#F3A454] lg:hidden"><button class="menu-button" @click="toggleMenu">Меню</button></li>
 		  </ul>
 	  </nav>
-	  <MainMenu :is-menu-open="isMenuOpen" />
+	  <MainMenu :is-menu-open="isMenuOpen" @open-popup="emit('open-popup')" @close-menu="toggleMenu" />
   </header>
 </template>

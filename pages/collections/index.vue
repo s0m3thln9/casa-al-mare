@@ -23,60 +23,70 @@ const images = {
 				text="capsule deep sea"
 				custom-class="rounded-lg aspect-[936/670]"
 				object-position="center"
+				link="/collections/collection"
 			/>
       <BannerCard
 	      :image-url="images.col2"
 	      text="SS26 solar power"
 	      custom-class="rounded-lg aspect-[936/670]"
 	      object-position="center"
+	      link="/collections/collection"
       />
 			<BannerCard
 				:image-url="images.col3"
 				text="ss24 elle"
 				custom-class="rounded-lg aspect-[936/670]"
 				object-position="center"
+				link="/collections/collection"
 			/>
       <BannerCard
 	      :image-url="images.col4"
 	      text="capsule white clouds"
 	      custom-class="rounded-lg aspect-[936/670]"
 	      object-position="center"
+	      link="/collections/collection"
       />
 			<BannerCard
 				:image-url="images.col5"
 				text="sunset story f23"
 				custom-class="rounded-lg aspect-[936/670]"
 				object-position="center"
+				link="/collections/collection"
 			/>
       <BannerCard
 	      :image-url="images.col6"
 	      text="ss 23 lookbook"
 	      custom-class="rounded-lg aspect-[936/670]"
 	      object-position="center"
+	      link="/collections/collection"
       />
 			<BannerCard
 				:image-url="images.col7"
 				text="COLLECTION"
 				custom-class="rounded-lg aspect-[936/670]"
 				object-position="50% 10%"
+				link="/collections/collection"
 			/>
       <BannerCard
 	      :image-url="images.col8"
 	      text="COLLECTION"
 	      custom-class="rounded-lg aspect-[936/670]"
 	      object-position="center"
+	      link="/collections/collection"
       />
 			<BannerCard
 				:image-url="images.col9"
 				text="COLLECTION"
 				custom-class="rounded-lg aspect-[936/670]"
 				object-position="50% 10%"
+				link="/collections/collection"
 			/>
       <BannerCard
 	      :image-url="images.col10"
 	      text="COLLECTION"
 	      custom-class="rounded-lg aspect-[936/670]"
 	      object-position="50% 0%"
+	      link="/collections/collection"
       />
 		</div>
 	</main>

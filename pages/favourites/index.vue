@@ -11,46 +11,52 @@ const images = {
 		  class="mt-4 grid grid-cols-2 px-2 gap-x-1 gap-y-2 sm:mt-10 sm:grid-cols-4 sm:px-4 sm:gap-x-4 sm:gap-y-6"
 	  >
 		  <CatalogCard
-			  :image-url="images.card1"
+			  :image-urls="[images.card1, images.card1, images.card1]"
 			  text="Printed bikini top"
-			  price="25 500"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <CatalogCard
-			  :image-url="images.card1"
+			  :image-urls="[images.card1, images.card1, images.card1]"
 			  text="Printed bikini top"
-			  price="25 500"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <CatalogCard
-			  :image-url="images.card1"
+			  :image-urls="[images.card1, images.card1, images.card1]"
 			  text="Printed bikini top"
-			  price="25 500"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <CatalogCard
-			  :image-url="images.card1"
+			  :image-urls="[images.card1, images.card1, images.card1]"
 			  text="Printed bikini top"
-			  price="25 500"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <CatalogCard
-			  :image-url="images.card1"
+			  :image-urls="[images.card1, images.card1, images.card1]"
 			  text="Printed bikini top"
-			  price="25 500"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <CatalogCard
-			  :image-url="images.card1"
+			  :image-urls="[images.card1, images.card1, images.card1]"
 			  text="Printed bikini top"
-			  price="25 500"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <CatalogCard
-			  :image-url="images.card1"
+			  :image-urls="[images.card1, images.card1, images.card1]"
 			  text="Printed bikini top"
-			  price="25 500"
-			  custom-class="hidden sm:block"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <CatalogCard
-			  :image-url="images.card1"
+			  :image-urls="[images.card1, images.card1, images.card1]"
 			  text="Printed bikini top"
-			  price="25 500"
-			  custom-class="hidden sm:block"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <div
 			  class="col-span-2 w-full flex justify-center items-center mt-5 mb-3 sm:hidden"
@@ -63,24 +69,28 @@ const images = {
 		  class="hidden mt-12 grid-cols-4 px-4 gap-x-4 gap-y-6 sm:grid"
 	  >
 		  <CatalogCard
-			  :image-url="images.card1"
+			  :image-urls="[images.card1, images.card1, images.card1]"
 			  text="Printed bikini top"
-			  price="25 500"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <CatalogCard
-			  :image-url="images.card1"
+			  :image-urls="[images.card1, images.card1, images.card1]"
 			  text="Printed bikini top"
-			  price="25 500"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <CatalogCard
-			  :image-url="images.card1"
+			  :image-urls="[images.card1, images.card1, images.card1]"
 			  text="Printed bikini top"
-			  price="25 500"
+			  :price="25500"
+			  variant="large"
 		  />
 		  <CatalogCard
-			  :image-url="images.card1"
+			  :image-urls="[images.card1, images.card1, images.card1]"
 			  text="Printed bikini top"
-			  price="25 500"
+			  :price="25500"
+			  variant="large"
 		  />
 	  </div>
 	  <AppSEO
