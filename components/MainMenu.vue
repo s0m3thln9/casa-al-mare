@@ -22,10 +22,12 @@ onUnmounted(() => {
 
 const handleClickOutside = (event: MouseEvent) => {
 	const menuButton = document.querySelector('.menu-button');
+	const menuButton2 = document.querySelector('.menu-button2');
 	if (
 		menuRef.value &&
 		!menuRef.value.contains(event.target as Node) &&
 		!menuButton?.contains(event.target as Node) &&
+		!menuButton2?.contains(event.target as Node) &&
 		props.isMenuOpen
 	) {
 		emit('close-menu');

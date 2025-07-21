@@ -60,7 +60,7 @@ const toggleMenu = () => {
 			  <li class="hover:text-[#F3A454]"><button>Поиск</button></li>
 			  <li class="hidden hover:text-[#F3A454] lg:block"><NuxtLink to="/favourites">Избранное</NuxtLink></li>
 			  <li class="hover:text-[#F3A454]"><NuxtLink to="/">Корзина</NuxtLink></li>
-			  <li class="block hover:text-[#F3A454] lg:hidden"><button class="menu-button" @click="toggleMenu">Меню</button></li>
+			  <li class="block hover:text-[#F3A454] lg:hidden"><button class="menu-button2" @click="toggleMenu">Меню</button></li>
 		  </ul>
 	  </nav>
 	  <MainMenu :is-menu-open="isMenuOpen" @open-popup="emit('open-popup')" @close-menu="toggleMenu" />

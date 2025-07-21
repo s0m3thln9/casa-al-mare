@@ -27,7 +27,7 @@ const handleSelect = (selected: number) => {
 			  <SelectButton :variants="['4', '6']" @select="handleSelect" />
 		  </div>
 	  </div>
-	  <div class="flex justify-between items-center p-2 sm:hidden">
+	  <div class="flex justify-between items-center p-2 sticky top-0 bg-[#FFFFFA] z-10 sm:hidden">
 		  <div
 			  class="border-[0.7px] border-[#211D1D] flex rounded-lg overflow-hidden"
 		  >
@@ -48,36 +48,42 @@ const handleSelect = (selected: number) => {
 			  text="Printed bikini top"
 			  :price="25500"
 			  variant="large"
+			  link="/catalog/item"
 		  />
 		  <CatalogCard
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
 			  variant="large"
+			  link="/catalog/item"
 		  />
 		  <CatalogCard
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
 			  variant="large"
+			  link="/catalog/item"
 		  />
 		  <CatalogCard
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
 			  variant="large"
+			  link="/catalog/item"
 		  />
 		  <CatalogCard
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
 			  variant="large"
+			  link="/catalog/item"
 		  />
 		  <CatalogCard
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
 			  variant="large"
+			  link="/catalog/item"
 		  />
 		  <BannerCard
 			  :image-url="images.promo1"
@@ -90,36 +96,42 @@ const handleSelect = (selected: number) => {
 			  text="Printed bikini top"
 			  :price="25500"
 			  variant="large"
+			  link="/catalog/item"
 		  />
 		  <CatalogCard
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
 			  variant="large"
+			  link="/catalog/item"
 		  />
 		  <CatalogCard
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
 			  variant="large"
+			  link="/catalog/item"
 		  />
 		  <CatalogCard
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
 			  variant="large"
+			  link="/catalog/item"
 		  />
 		  <CatalogCard
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
 			  variant="large"
+			  link="/catalog/item"
 		  />
 		  <CatalogCard
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
 			  variant="large"
+			  link="/catalog/item"
 		  />
 		  <BannerCard
 			  :image-url="images.promo1"
@@ -139,6 +151,7 @@ const handleSelect = (selected: number) => {
 			  :old-price="26000"
 			  color="Цвет"
 			  variant="mini"
+			  link="/catalog/item"
 		  />
 		  <CatalogCard
 			  :image-urls="[images.card1, images.card2, images.card3]"
@@ -147,6 +160,7 @@ const handleSelect = (selected: number) => {
 			  :old-price="26000"
 			  color="Цвет"
 			  variant="mini"
+			  link="/catalog/item"
 		  />
 		  <CatalogCard
 			  :image-urls="[images.card1, images.card2, images.card3]"
@@ -155,6 +169,7 @@ const handleSelect = (selected: number) => {
 			  :old-price="26000"
 			  color="Цвет"
 			  variant="mini"
+			  link="/catalog/item"
 		  />
 		  <CatalogCard
 			  :image-urls="[images.card1, images.card2, images.card3]"
@@ -163,6 +178,7 @@ const handleSelect = (selected: number) => {
 			  :old-price="26000"
 			  color="Цвет"
 			  variant="mini"
+			  link="/catalog/item"
 		  />
 		  <CatalogCard
 			  :image-urls="[images.card1, images.card2, images.card3]"
@@ -171,6 +187,7 @@ const handleSelect = (selected: number) => {
 			  :old-price="26000"
 			  color="Цвет"
 			  variant="mini"
+			  link="/catalog/item"
 		  />
 		  <CatalogCard
 			  :image-urls="[images.card1, images.card2, images.card3]"
@@ -179,6 +196,7 @@ const handleSelect = (selected: number) => {
 			  :old-price="26000"
 			  color="Цвет"
 			  variant="mini"
+			  link="/catalog/item"
 		  />
 		  <CatalogCard
 			  :image-urls="[images.card1, images.card2, images.card3]"
@@ -187,6 +205,7 @@ const handleSelect = (selected: number) => {
 			  :old-price="26000"
 			  color="Цвет"
 			  variant="mini"
+			  link="/catalog/item"
 		  />
 		  <CatalogCard
 			  :image-urls="[images.card1, images.card2, images.card3]"
@@ -195,6 +214,7 @@ const handleSelect = (selected: number) => {
 			  :old-price="26000"
 			  color="Цвет"
 			  variant="mini"
+			  link="/catalog/item"
 		  />
 		  <CatalogCard
 			  :image-urls="[images.card1, images.card2, images.card3]"
@@ -203,6 +223,7 @@ const handleSelect = (selected: number) => {
 			  :old-price="26000"
 			  color="Цвет"
 			  variant="mini"
+			  link="/catalog/item"
 		  />
 		  <CatalogCard
 			  :image-urls="[images.card1, images.card2, images.card3]"
@@ -211,6 +232,7 @@ const handleSelect = (selected: number) => {
 			  :old-price="26000"
 			  color="Цвет"
 			  variant="mini"
+			  link="/catalog/item"
 		  />
 		  <CatalogCard
 			  :image-urls="[images.card1, images.card2, images.card3]"
@@ -219,6 +241,7 @@ const handleSelect = (selected: number) => {
 			  :old-price="26000"
 			  color="Цвет"
 			  variant="mini"
+			  link="/catalog/item"
 		  />
 		  <CatalogCard
 			  :image-urls="[images.card1, images.card2, images.card3]"
@@ -227,6 +250,7 @@ const handleSelect = (selected: number) => {
 			  :old-price="26000"
 			  color="Цвет"
 			  variant="mini"
+			  link="/catalog/item"
 		  />
 	  </div>
 	  <div class="flex justify-center items-center pt-4 pb-2 sm:py-10">

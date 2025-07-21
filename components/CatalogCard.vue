@@ -8,6 +8,7 @@ const props = defineProps<{
 	customClass?: string
 	customImageClass?: string
 	variant: 'mini' | 'large'
+	link?: string
 }>()
 
 const currentImageIndex = ref(0)
@@ -15,6 +16,8 @@ const isTransitioning = ref(false)
 const isHovered = ref(false)
 const isFavorite = ref(false)
 const isVisible = ref(false)
+const isWideScreen = ref(false)
+const touchStartX = ref(0)
 
 const imageStyles = computed(() => (index: number) => {
 	if (index === currentImageIndex.value) {
@@ -40,7 +43,17 @@ const barStyles = computed(() => (index: number) => ({
 
 onMounted(() => {
 	isVisible.value = true
+	updateScreenWidth()
+	window.addEventListener('resize', updateScreenWidth)
 })
+
+onUnmounted(() => {
+	window.removeEventListener('resize', updateScreenWidth)
+})
+
+const updateScreenWidth = () => {
+	isWideScreen.value = document.body.clientWidth > 640
+}
 
 const priceFormatter = (value: number) => {
 	const formattedValue = new Intl.NumberFormat('ru-RU').format(value)
@@ -53,7 +66,7 @@ const priceFormatter = (value: number) => {
 
 const handleMouseMove = (e: MouseEvent) => {
 	if (isTransitioning.value) return
-	
+	if (!isWideScreen.value) return
 	const target = e.currentTarget as HTMLElement
 	const rect = target.getBoundingClientRect()
 	const x = e.clientX - rect.left
@@ -67,6 +80,27 @@ const handleMouseMove = (e: MouseEvent) => {
 		setTimeout(() => {
 			isTransitioning.value = false
 		}, 500)
+	}
+}
+
+const handleTouchStart = (e: TouchEvent) => {
+	touchStartX.value = e.touches[0].clientX
+}
+
+const handleTouchEnd = (e: TouchEvent) => {
+	const touchEndX = e.changedTouches[0].clientX
+	const deltaX = touchEndX - touchStartX.value
+	const threshold = 50
+	if (deltaX > threshold) {
+		currentImageIndex.value = (currentImageIndex.value - 1 + props.imageUrls.length) % props.imageUrls.length
+	} else if (deltaX < -threshold) {
+		currentImageIndex.value = (currentImageIndex.value + 1) % props.imageUrls.length
+	}
+}
+
+const handleClick = () => {
+	if (props.link) {
+		navigateTo(props.link)
 	}
 }
 
@@ -95,18 +129,19 @@ const toggleFavorite = () => {
 	>
 		<div>
 			<NuxtImg
-				:src="imageUrls[0]" alt="card" width="300" height="450"
+				:src="imageUrls[0]" alt="card" width="300" :height="(isHovered && isWideScreen) ? 470 : 450"
 				:class="['rounded-lg', customImageClass]"
+				@click="handleClick"
 			/>
 		</div>
 	  <h4 class="mt-1 sm:mt-2">{{ text }}</h4>
 		<span class="mt-0.5 block sm:mt-1">{{ priceFormatter(price!) }} <span class="text-[#5E5B58] line-through">{{ priceFormatter(oldPrice!) }}</span></span>
-		<span class="mt-1 hidden sm:block">{{ color }}</span>
+		<span v-if="!isHovered" class="mt-1 hidden sm:block">{{ color }}</span>
 		<div class="mt-2 hidden gap-1 2xl:flex">
 			<SizeButton custom-class="text-xs" />
 		</div>
 	  <NuxtImg
-		  v-if="isHovered"
+		  v-if="!isWideScreen || isHovered"
 		  :src="isFavorite ? '/star-filled.svg' : '/star.svg'"
 		  alt="star"
 		  class="w-3 h-3 absolute z-10 right-2.5 top-2.5 sm:w-5 sm:h-5 sm:right-4 sm:top-4"
@@ -119,7 +154,7 @@ const toggleFavorite = () => {
 	  @mouseenter="isHovered = true"
 	  @mouseleave="isHovered = false"
   >
-	  <div class="relative w-full aspect-[460/680] overflow-hidden">
+	  <div class="relative w-full aspect-[460/680] overflow-hidden" @touchstart="handleTouchStart" @touchend="handleTouchEnd">
       <NuxtImg
 	      v-for="(img, index) in props.imageUrls"
 	      :key="index"
@@ -130,6 +165,7 @@ const toggleFavorite = () => {
 	      :class="['rounded-lg sm:rounded-2xl absolute top-0 left-0 w-full h-full', customImageClass]"
 	      :style="imageStyles(index)"
 	      @mousemove="handleMouseMove"
+	      @click="handleClick"
       />
     </div>
 	  <div class="flex justify-center items-center gap-1 px-6 py-2">
@@ -143,7 +179,7 @@ const toggleFavorite = () => {
 	  <h4 class="mt-1">{{ text }}</h4>
 	  <span class="mt-0.5">{{ priceFormatter(price!) }}</span>
 	  <NuxtImg
-		  v-if="isHovered"
+		  v-if="!isWideScreen || isHovered"
 		  :src="isFavorite ? '/star-filled.svg' : '/star.svg'"
 		  alt="star"
 		  class="w-3 h-3 absolute z-10 right-2.5 top-2.5 sm:w-5 sm:h-5 sm:right-4 sm:top-4"

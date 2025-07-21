@@ -201,44 +201,53 @@ const images = {
 	  </div>
 	  <div class="px-2 flex flex-col justify-center items-start gap-4 mt-18 sm:items-center sm:gap-12 sm:mt-24">
 		  <h2 class="font-[Manrope] text-[15px] font-light sm:font-[Inter] sm:text-4xl sm:font-normal">Вам может понравиться</h2>
-		  <div class="flex justify-center items-center gap-2">
+		  <div class="w-full grid gap-2 grid-cols-3 sm:gap-4 sm:px-[15%]">
 			  <CatalogCard
-				  :image-url="images.item"
+				  :image-urls="[images.item, images.item, images.item]"
 				  text="Printed bikini top"
-				  price="25 500"
+				  :price="25500"
+				  variant="large"
+				  link="/catalog/item"
 			  />
 			  <CatalogCard
-				  :image-url="images.item"
+				  :image-urls="[images.item, images.item, images.item]"
 				  text="Printed bikini top"
-				  price="25 500"
+				  :price="25500"
+				  variant="large"
+				  link="/catalog/item"
 			  />
 			  <CatalogCard
-				  :image-url="images.item"
+				  :image-urls="[images.item, images.item, images.item]"
 				  text="Printed bikini top"
-				  price="25 500"
+				  :price="25500"
+				  variant="large"
+				  link="/catalog/item"
 			  />
 		  </div>
 	  </div>
 	  <div class="px-2 flex flex-col justify-center items-start gap-4 mt-18 mb-18 sm:items-center sm:gap-12 sm:mt-12 sm:mb-4">
 		  <h2 class="font-[Manrope] text-[15px] font-light sm:font-[Inter] sm:text-4xl sm:font-normal">Вы недавно смотрели</h2>
-		  <div class="flex justify-center items-center gap-2">
+		  <div class="w-full grid gap-2 grid-cols-3 sm:gap-4 sm:px-[15%]">
 			  <CatalogCard
-				  :image-url="images.item"
+				  :image-urls="[images.item, images.item, images.item]"
 				  text="Printed bikini top"
-				  price="25 500"
-				  custom-image-class="h-[245px] sm:h-auto"
+				  :price="25500"
+				  variant="large"
+				  link="/catalog/item"
 			  />
 			  <CatalogCard
-				  :image-url="images.item"
+				  :image-urls="[images.item, images.item, images.item]"
 				  text="Printed bikini top"
-				  price="25 500"
-				  custom-image-class="h-[245px] sm:h-auto"
+				  :price="25500"
+				  variant="large"
+				  link="/catalog/item"
 			  />
 			  <CatalogCard
-				  :image-url="images.item"
+				  :image-urls="[images.item, images.item, images.item]"
 				  text="Printed bikini top"
-				  price="25 500"
-				  custom-image-class="h-[245px] sm:h-auto"
+				  :price="25500"
+				  variant="large"
+				  link="/catalog/item"
 			  />
 		  </div>
 	  </div>

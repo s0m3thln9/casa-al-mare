@@ -48,14 +48,14 @@ const emit = defineEmits<{
 					<li><NuxtLink to="/certificate">Сертификат</NuxtLink></li>
 				</ul>
 			</div>
-			<div class="flex flex-col gap-4 w-full lg:w-auto">
+			<div class="flex flex-col gap-4 w-full mt-4 lg:w-auto lg:mt-0">
 				<h3 class="font-normal text-base uppercase">Аккаунт</h3>
 				<div class="flex flex-col items-start gap-4 xl:flex-row">
 					<input
 						type="email" placeholder="Введите e-mail для получения новостей"
 						class="min-w-[245px] h-[44px] px-2 py-2.5 border-[#5E5B58] border-[0.7px] rounded-lg text-xs placeholder:text-[#5E5B58]"
 					>
-					<AppButton content="Подписаться" variant="primary" custom-class="w-full px-0 max-xl:w-[245px]" @click="emit('open-popup')"/>
+					<AppButton content="Подписаться" variant="primary" custom-class="w-full px-0 max-xl:w-[245px]"/>
 				</div>
 				<p
 					class="max-w-[300px] text-[10px] font-[Commissioner] xl:max-w-[416px]"

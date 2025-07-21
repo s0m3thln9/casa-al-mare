@@ -21,7 +21,7 @@ const handleKeydown = (event: KeyboardEvent) => {
 
 <template>
   <div class="fixed inset-0 z-40 bg-black/50" @click.self="emit('close-popup')">
-    <div class="fixed w-full h-[100svh] bg-[#FFFFFA] z-30 top-0 right-0 py-8 px-4 sm:w-auto sm:p-8">
+    <div class="fixed w-full h-[100svh] overflow-y-auto bg-[#FFFFFA] z-30 top-0 right-0 py-8 px-4 sm:w-auto sm:p-8">
       <div class="flex gap-4">
         <button class="cursor-pointer" @click="emit('close-popup')">
           <NuxtImg src="/arrow-left.svg" alt="arrow" class="w-2" />
