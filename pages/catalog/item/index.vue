@@ -202,28 +202,22 @@ const closePopup = () => {
 		  </div>
 	  </div>
 	  <AppPopup :is-popup-open="isPopupOpen" title="Собрать комплект" @close-popup="closePopup" >
-		  <div class="flex flex-col gap-6">
-			  <div class="flex flex-wrap gap-y-6 gap-x-4 sm:gap-x-2">
+		  <div class="flex flex-col gap-6 mt-6">
+			  <div class="grid grid-cols-2 gap-y-6 gap-x-4 sm:gap-x-2">
 				  <div class="flex flex-col gap-2">
 					  <span class="font-[Manrope] text-sm">Верх</span>
-					  <div class="flex flex-col items-center relative font-[Commissioner] text-[#211D1D] font-light text-[11px] text-center sm:font-[Manrope] sm:text-xs">
-						  <div>
-								<NuxtImg
-									:src="images.card1" alt="card" width="180" height="280"
-									class="rounded-lg"
-								/>
-							</div>
-					  </div>
+					  <CatalogCard custom-image-class="aspect-[200/300] w-full" popup :image-urls="[images.card1, images.card1, images.card1]" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
 				  </div>
 				  <div class="flex flex-col gap-2">
 					  <span class="font-[Manrope] text-sm">Низ</span>
-					  <CatalogCard popup :image-urls="[images.card1, images.card1, images.card1]" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
+					  <CatalogCard custom-image-class="aspect-[200/300] w-full" popup :image-urls="[images.card1, images.card1, images.card1]" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
 				  </div>
 				  <div class="flex flex-col gap-2">
 					  <span class="font-[Manrope] text-sm">Аксессуар</span>
-					  <CatalogCard popup :image-urls="[images.card1, images.card1, images.card1]" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
+					  <CatalogCard custom-image-class="aspect-[200/300] w-full" popup :image-urls="[images.card1, images.card1, images.card1]" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
 				  </div>
 			  </div>
+			  <BuyButton available-quantity in-stock is-size-selected />
 		  </div>
 	  </AppPopup>
   </main>

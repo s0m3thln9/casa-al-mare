@@ -9,6 +9,7 @@ const props = defineProps<{
 	customImageClass?: string
 	variant: 'mini' | 'large'
 	link?: string
+	popup?: boolean
 }>()
 
 const currentImageIndex = ref(0)
@@ -125,21 +126,21 @@ const toggleFavorite = () => {
 <template>
 	<div
 		v-if="variant === 'mini'"
-		:class="['flex flex-col items-center relative font-[Commissioner] text-[#211D1D] font-light text-[11px] text-center sm:font-[Manrope] sm:text-xs', customClass]"
+		:class="['flex flex-col items-center relative font-[Commissioner] text-[#211D1D] font-light text-[11px] text-center sm:font-[Manrope] sm:text-xs', customClass, isWideScreen && 'justify-between flex-1']"
 		@mouseenter="isHovered = true"
 		@mouseleave="isHovered = false"
 	>
 		<div>
 			<NuxtImg
 				:src="imageUrls[0]" alt="card" width="300" :height="(isHovered && isWideScreen) ? 470 : 450"
-				:class="['rounded-lg', customImageClass]"
+				:class="['rounded-lg', customImageClass, popup && 'aspect-[200/300] w-full', (popup && isHovered && isWideScreen) && 'aspect-[200/320]']"
 				@click="handleClick"
 			/>
 		</div>
 	  <h4 class="mt-1 sm:mt-2">{{ text }}</h4>
 		<span class="mt-0.5 block sm:mt-1">{{ priceFormatter(price!) }} <span class="text-[#5E5B58] line-through">{{ priceFormatter(oldPrice!) }}</span></span>
 		<span v-if="!isHovered" class="my-1 hidden sm:block">{{ color }}</span>
-		<div class="mt-auto hidden gap-1 2xl:flex">
+		<div :class="['hidden gap-1 2xl:flex', popup && 'flex-wrap justify-center']">
 			<SingleSelectButton :content="sizes" custom-class="text-xs" />
 		</div>
 	  <NuxtImg
