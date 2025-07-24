@@ -1,5 +1,8 @@
 <script setup lang="ts">
+const isPopupOpen = ref(false)
+
 const images = {
+	card1: "/item-page-1.jpg",
 	item: "/item-page-1.jpg",
 }
 const pants: {
@@ -15,6 +18,30 @@ const sizes = ["XXS", "XS", "S", "M", "L", "XL"]
 const other: { title: string, src: string }[] = [{ title: "Оранжевый", src: "/orange.png" }, { title: "Синий", src: "/blue.png" }]
 const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главная", path: "/" }, { name: "Смотреть все", path: "/catalog" }, { name: "Наименование" }]
 
+const getScrollbarWidth = () => {
+	const outer = document.createElement("div")
+	outer.style.visibility = "hidden"
+	outer.style.overflow = "scroll"
+	document.body.appendChild(outer)
+	const inner = document.createElement("div")
+	outer.appendChild(inner)
+	const width = outer.offsetWidth - inner.offsetWidth
+	outer.remove()
+	return width
+}
+
+const openPopup = () => {
+	isPopupOpen.value = true
+	const scrollbarWidth = getScrollbarWidth()
+	document.body.style.overflow = "hidden"
+	document.body.style.paddingRight = `${scrollbarWidth}px`
+}
+
+const closePopup = () => {
+	isPopupOpen.value = false
+	document.body.style.overflow = "auto"
+	document.body.style.paddingRight = "0"
+}
 </script>
 
 <template>
@@ -94,7 +121,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  </div>
 			  <div class="flex flex-col justify-center items-center gap-4 mt-6">
 				  <BuyButton in-stock available-quantity is-size-selected />
-				  <AppButton variant="secondary" content="Собрать комплект" custom-class="w-full py-4" />
+				  <AppButton variant="secondary" content="Собрать комплект" custom-class="w-full py-4" @click="openPopup" />
 			  </div>
 			  <div class="flex justify-center items-center mt-4 sm:mt-6">
 				  <WishlistButton />
@@ -174,6 +201,31 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  />
 		  </div>
 	  </div>
+	  <AppPopup :is-popup-open="isPopupOpen" title="Собрать комплект" @close-popup="closePopup" >
+		  <div class="flex flex-col gap-6">
+			  <div class="flex flex-wrap gap-y-6 gap-x-4 sm:gap-x-2">
+				  <div class="flex flex-col gap-2">
+					  <span class="font-[Manrope] text-sm">Верх</span>
+					  <div class="flex flex-col items-center relative font-[Commissioner] text-[#211D1D] font-light text-[11px] text-center sm:font-[Manrope] sm:text-xs">
+						  <div>
+								<NuxtImg
+									:src="images.card1" alt="card" width="180" height="280"
+									class="rounded-lg"
+								/>
+							</div>
+					  </div>
+				  </div>
+				  <div class="flex flex-col gap-2">
+					  <span class="font-[Manrope] text-sm">Низ</span>
+					  <CatalogCard popup :image-urls="[images.card1, images.card1, images.card1]" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
+				  </div>
+				  <div class="flex flex-col gap-2">
+					  <span class="font-[Manrope] text-sm">Аксессуар</span>
+					  <CatalogCard popup :image-urls="[images.card1, images.card1, images.card1]" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
+				  </div>
+			  </div>
+		  </div>
+	  </AppPopup>
   </main>
 </template>
 
