@@ -4,7 +4,14 @@ const isPopupOpen = ref(false)
 const images = {
 	card1: "/item-page-1.jpg",
 	item: "/item-page-1.jpg",
+	item1: "/item-1.jpg",
+	item2: "/item-2.jpg",
+	item3: "/item-3.jpg",
+	item4: "/item-4.jpg",
+	item5: "/item-5.jpg",
+	item6: "/item-6.jpg",
 }
+const productImages = [images.item1, images.item2, images.item3, images.item4, images.item5, images.item6]
 const pants: {
 	title: string,
 	src: string,
@@ -17,6 +24,46 @@ const pants: {
 const sizes = ["XXS", "XS", "S", "M", "L", "XL"]
 const other: { title: string, src: string }[] = [{ title: "Оранжевый", src: "/orange.png" }, { title: "Синий", src: "/blue.png" }]
 const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главная", path: "/" }, { name: "Смотреть все", path: "/catalog" }, { name: "Наименование" }]
+
+const currentImageIndex = ref(0)
+const touchStartX = ref(0)
+
+const imageStyles = computed(() => (index: number) => {
+	if (index === currentImageIndex.value) {
+		return {
+			transform: 'translateX(0)',
+			opacity: 1,
+			zIndex: 1,
+			transition: 'transform 400ms ease-in-out, opacity 400ms ease-in-out'
+		}
+	}
+	return {
+		transform: index < currentImageIndex.value ? 'translateX(-100%)' : 'translateX(100%)',
+		opacity: 0,
+		zIndex: 0,
+		transition: 'transform 400ms ease-in-out, opacity 400ms ease-in-out'
+	}
+})
+
+const barStyles = computed(() => (index: number) => ({
+	opacity: index === currentImageIndex.value ? 1 : 0.3,
+	transition: 'opacity 400ms ease-in-out'
+}))
+
+const handleTouchStart = (e: TouchEvent) => {
+	touchStartX.value = e.touches[0].clientX
+}
+
+const handleTouchEnd = (e: TouchEvent) => {
+	const touchEndX = e.changedTouches[0].clientX
+	const deltaX = touchEndX - touchStartX.value
+	const threshold = 50
+	if (deltaX > threshold) {
+		currentImageIndex.value = (currentImageIndex.value - 1 + productImages.length) % productImages.length
+	} else if (deltaX < -threshold) {
+		currentImageIndex.value = (currentImageIndex.value + 1) % productImages.length
+	}
+}
 
 const getScrollbarWidth = () => {
 	const outer = document.createElement("div")
@@ -50,38 +97,39 @@ const closePopup = () => {
 		  <AppBreadcrumbs :items="breadcrumsItems" />
 	  </div>
 	  <div class="px-0 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-8 sm:px-4">
-		  <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
-			  <NuxtImg
-				  src="/item-1.jpg" alt="item" width="726" height="1080"
+		  <div class="block sm:hidden">
+			  <div class="relative w-full aspect-[460/680] overflow-hidden" @touchstart="handleTouchStart" @touchend="handleTouchEnd">
+			    <NuxtImg
+				    v-for="(img, index) in productImages"
+				    :key="index"
+				    :src="img"
+				    alt="item"
+				    width="460"
+				    height="680"
+				    class="absolute top-0 left-0 w-full h-full"
+				    :style="imageStyles(index)"
+			    />
+			  </div>
+			  <div class="flex justify-center items-center gap-1 px-4 mt-2">
+			    <div
+				    v-for="(_, index) in productImages"
+				    :key="index"
+				    class="flex-1 border-y border-[#A6CEFF]"
+				    :style="barStyles(index)"
+			    />
+			  </div>
+			</div>
+		  <div class="hidden sm:grid grid-cols-1 gap-2 lg:grid-cols-2">
+        <NuxtImg
+				  v-for="(img, index) in productImages"
+				  :key="index"
+				  :src="img"
+				  alt="item"
+				  width="726"
+				  height="1080"
 				  class="sm:rounded-lg"
 			  />
-			  <NuxtImg
-				  src="/item-2.jpg" alt="item" width="726" height="1080"
-				  class="hidden sm:block sm:rounded-lg"
-			  />
-			  <NuxtImg
-				  src="/item-3.jpg" alt="item" width="726" height="1080"
-				  class="hidden sm:block sm:rounded-lg"
-			  />
-			  <NuxtImg
-				  src="/item-4.jpg" alt="item" width="726" height="1080"
-				  class="hidden sm:block sm:rounded-lg"
-			  />
-			  <NuxtImg
-				  src="/item-5.jpg" alt="item" width="726" height="1080"
-				  class="hidden sm:block sm:rounded-lg"
-			  />
-			  <NuxtImg
-				  src="/item-6.jpg" alt="item" width="726" height="1080"
-				  class="hidden sm:block sm:rounded-lg"
-			  />
-			  <div class="w-full flex justify-center items-center gap-1 px-4 sm:hidden">
-				  <div class="w-full border-y-1 border-[#A6CEFF]" />
-				  <div class="w-full border-y-1 border-[#A6CEFF] opacity-30" />
-				  <div class="w-full border-y-1 border-[#A6CEFF] opacity-30" />
-				  <div class="w-full border-y-1 border-[#A6CEFF] opacity-30" />
-			  </div>
-		  </div>
+			</div>
 		  <div class="px-2 flex flex-col sm:px-0">
 			  <div class="flex justify-center items-center">
 				  <h2
