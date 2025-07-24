@@ -140,18 +140,21 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 				  text="Название статьи"
 				  custom-class="rounded-lg aspect-[618/570]"
 				  object-position="center"
+				  link="/blog/article"
 			  />
 			  <BannerCard
 				  :image-url="images.art7"
 				  text="Название статьи"
 				  custom-class="rounded-lg aspect-[618/570]"
 				  object-position="center"
+				  link="/blog/article"
 			  />
 			  <BannerCard
 				  :image-url="images.art8"
 				  text="Название статьи"
 				  custom-class="rounded-lg aspect-[618/570]"
 				  object-position="center"
+				  link="/blog/article"
 			  />
 		  </div>
 	  </div>

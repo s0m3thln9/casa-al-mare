@@ -7,36 +7,15 @@ const images = {
 	blog5: "/blog-5.jpg",
 	blog6: "/blog-6.jpg",
 }
+const categories = ["Все", "Уход", "Стиль", "Советы"]
+
 </script>
 
 <template>
    <main class="mb-5 font-[Manrope] bg-[#FFFFFA] text-[#211D1D] sm:mb-10">
 	   <h2 class="uppercase text-center font-[Inter] text-[17px]">Блог</h2>
 	   <div class="mt-4 w-full flex justify-center items-center px-2">
-		   <div
-			   class="max-w-[600px] w-full border-[0.7px] border-[#211D1D] flex items-center rounded-lg overflow-hidden"
-		   >
-			   <div
-				   class="flex-1 bg-[#211D1D] text-[#FFFFFA] flex items-center justify-center px-4 py-1.5 border-r border-[#211D1D] text-xs font-light sm:text-sm"
-			   >
-				   Все
-			   </div>
-			   <div
-				   class="flex-1 bg-[#FFFFFA] text-[#211D1D] flex items-center justify-center px-4 py-1.5 border-r border-[#211D1D] text-xs font-light sm:text-sm"
-			   >
-				   Уход
-			   </div>
-			   <div
-				   class="flex-1 bg-[#FFFFFA] text-[#211D1D] flex items-center justify-center px-4 py-1.5 border-r border-[#211D1D] text-xs font-light sm:text-sm"
-			   >
-				   Стиль
-			   </div>
-			   <div
-				   class="flex-1 bg-[#FFFFFA] text-[#211D1D] flex items-center justify-center px-4 py-1.5 text-xs font-light sm:text-sm"
-			   >
-				   Советы
-			   </div>
-			  </div>
+		   <SelectButton :variants="categories" custom-class="max-w-[600px] w-full " custom-button-class="flex-1" />
 	   </div>
 	   <div class="grid px-2 mt-4 sm:mt-10 sm:px-4 sm:gap-6 lg:grid-cols-3">
 		   <div class="flex flex-col items-center cursor-pointer" @click="navigateTo('/blog/article')">

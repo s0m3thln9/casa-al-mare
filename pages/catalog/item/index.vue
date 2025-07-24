@@ -11,6 +11,8 @@ const pants: {
 	{title: "Бразилиана", src: "/pant-2.svg", altSrc: "/pant-2-filled.svg"},
 	{title: "Классика", src: "/pant-3.svg", altSrc: "/pant-3-filled.svg"}
 ]
+const sizes = ["XXS", "XS", "S", "M", "L", "XL"]
+const other: { title: string, src: string }[] = [{ title: "Оранжевый", src: "/orange.png" }, { title: "Синий", src: "/blue.png" }]
 const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главная", path: "/" }, { name: "Смотреть все", path: "/catalog" }, { name: "Наименование" }]
 
 </script>
@@ -69,92 +71,17 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 				  <span class="font-light text-xs">Скидка #%</span>
 			  </div>
 			  <div class="flex justify-center items-center gap-6 mt-14">
-				  <div class="flex flex-col justify-center items-center gap-2.5">
-					  <div>
-						  <NuxtImg
-							  src="/orange.png" alt="orange" width="40" height="54"
-							  class="rounded-lg border-[0.7px] border-[#BBB8B6]"
-						  />
-					  </div>
-					  <span class="font-normal text-[11px] sm:text-xs sm:font-light">Оранжевый</span>
-				  </div>
-				  <div class="flex flex-col justify-center items-center gap-2.5">
-					  <div>
-						  <NuxtImg
-							  src="/blue.png" alt="blue" width="40" height="54"
-							  class="rounded-lg border-[0.7px] border-[#BBB8B6]"
-						  />
-					  </div>
-					  <span class="font-normal text-[11px] sm:text-xs sm:font-light">Синий</span>
-				  </div>
+				  <PantButton :pants="other" other />
 			  </div>
 			  <div class="flex flex-col justify-center items-center gap-4 mt-12 sm:mt-10">
 				  <div class="flex justify-center items-center gap-3 font-light sm:gap-4 sm:font-normal">
-					  <div
-						  class="p-2 flex justify-center items-center border-[0.7px] border-[#BBB8B6] rounded-lg text-sm"
-					  >
-						  XXS
-					  </div>
-					  <div
-						  class="p-2 flex justify-center items-center border-[0.7px] border-[#BBB8B6] rounded-lg text-sm"
-					  >
-						  XS
-					  </div>
-					  <div
-						  class="p-2 flex justify-center items-center border-[0.7px] border-[#BBB8B6] rounded-lg text-sm"
-					  >
-						  S
-					  </div>
-					  <div
-						  class="p-2 flex justify-center items-center border-[0.7px] border-[#BBB8B6] rounded-lg text-sm"
-					  >
-						  M
-					  </div>
-					  <div
-						  class="p-2 flex justify-center items-center border-[0.7px] border-[#BBB8B6] rounded-lg text-sm"
-					  >
-						  L
-					  </div>
-					  <div
-						  class="p-2 flex justify-center items-center border-[0.7px] border-[#BBB8B6] rounded-lg text-sm"
-					  >
-						  XL
-					  </div>
+					  <SingleSelectButton :content="sizes" />
 				  </div>
 				  <span class="text-xs">Верх</span>
 			  </div>
 			  <div class="flex flex-col justify-center items-center gap-4 mt-12 sm:mt-10">
 				  <div class="flex justify-center items-center gap-3 font-light sm:gap-4 sm:font-normal">
-					  <div
-						  class="p-2 flex justify-center items-center border-[0.7px] border-[#BBB8B6] rounded-lg text-sm"
-					  >
-						  XXS
-					  </div>
-					  <div
-						  class="p-2 flex justify-center items-center border-[0.7px] border-[#BBB8B6] rounded-lg text-sm"
-					  >
-						  XS
-					  </div>
-					  <div
-						  class="p-2 flex justify-center items-center border-[0.7px] border-[#BBB8B6] rounded-lg text-sm"
-					  >
-						  S
-					  </div>
-					  <div
-						  class="p-2 flex justify-center items-center border-[0.7px] border-[#BBB8B6] rounded-lg text-sm"
-					  >
-						  M
-					  </div>
-					  <div
-						  class="p-2 flex justify-center items-center border-[0.7px] border-[#BBB8B6] rounded-lg text-sm"
-					  >
-						  L
-					  </div>
-					  <div
-						  class="p-2 flex justify-center items-center border-[0.7px] border-[#BBB8B6] rounded-lg text-sm"
-					  >
-						  XL
-					  </div>
+					  <SingleSelectButton :content="sizes" />
 				  </div>
 				  <span class="text-xs">Низ</span>
 				  <div class="flex justify-center items-center gap-6 text-xs">
@@ -167,10 +94,10 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  </div>
 			  <div class="flex flex-col justify-center items-center gap-4 mt-6">
 				  <BuyButton in-stock available-quantity is-size-selected />
-				  <button class="w-full px-8 py-4 rounded-[18px] border border-[#211D1D] text-[#211D1D] text-[13px] sm:text-sm">Собрать комплект</button>
+				  <AppButton variant="secondary" content="Собрать комплект" custom-class="w-full py-4" />
 			  </div>
 			  <div class="flex justify-center items-center mt-4 sm:mt-6">
-				  <button class="font-normal text-[13px] sm:font-light sm:text-xs">Добавить в избранное</button>
+				  <WishlistButton />
 			  </div>
 			  <div class="mt-14 flex flex-col justify-center items-center gap-3 p-4 rounded-2xl border border-[#BBB8B6]">
 				  <div class="flex justify-center gap-2.5 items-center w-full sm:justify-between sm:gap-0">

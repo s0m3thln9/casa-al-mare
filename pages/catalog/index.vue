@@ -68,7 +68,7 @@ const closePopup = () => {
 </script>
 
 <template>
-  <main class="font-[Manrope] bg-[#FFFFFA]">
+  <main class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D]">
 	  <div class="hidden sm:flex justify-between px-4 py-6">
 		  <AppBreadcrumbs :items="breadcrumsItems" />
 		  <div class="flex gap-4">
