@@ -4,16 +4,21 @@ defineProps<{
 	content: string[]
 }>()
 
+const emit = defineEmits<{
+	(e: 'select', value: number | null): void
+}>()
+
 const selected = ref<number | null>(null)
 const ring = ref<number | null>(null)
 
 const select = (index: number) => {
 	if (selected.value === index) {
 		selected.value = null
+		emit('select', null)
 	} else {
 		selected.value = index
+		emit('select', selected.value)
 	}
-	// emit('select', parseInt(props.variants[index]))
 }
 
 </script>
