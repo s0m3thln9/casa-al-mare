@@ -1,7 +1,10 @@
 <script setup lang="ts">
 
+import {twMerge} from "tailwind-merge"
+
 const props = defineProps<{
-	variant?: "primary" | "secondary"
+	content?: string
+	expandedContent?: string
 	customClass?: string
 	disabled?: boolean
 	isExpanded?: boolean
@@ -15,8 +18,7 @@ const isLoading = ref(false)
 const showSuccess = ref(false)
 
 const styleBase = computed(() =>
-	"flex justify-center items-center px-4 py-2 rounded-xl border text-xs/snug font-[Manrope] font-light sm:font-normal " +
-	(props.customClass ? props.customClass + ' ' : ' ')
+	twMerge("flex justify-center items-center px-4 py-2 rounded-xl border text-xs/snug font-[Manrope] font-light sm:font-normal", props.customClass) + ' '
 )
 const styleVariants = {
 	default: "bg-transparent border-transparent text-[#211D1D] cursor-pointer hover:border-[#211D1D] hover:text-[#211D1D]",
@@ -34,11 +36,11 @@ const currentState = computed(() => {
 		style = styleBase.value + styleVariants.preload
 		disabled = true
 	} else if (showSuccess.value) {
-		content = props.isExpanded ? "Свернуть" : "Подробнее"
+		content = props.isExpanded ? props.expandedContent ? props.expandedContent : "Свернуть" : props.content ? props.content : "Подробнее"
 		style = styleBase.value + styleVariants.success
 		disabled = true
 	} else {
-		content = props.isExpanded ? "Свернуть" : "Подробнее"
+		content = props.isExpanded ? props.expandedContent ? props.expandedContent : "Свернуть" : props.content ? props.content : "Подробнее"
 		style = styleBase.value + styleVariants.default
 		disabled = props.disabled || false
 	}

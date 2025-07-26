@@ -35,7 +35,7 @@ const handleClickOutside = (event: MouseEvent) => {
 }
 
 const handleMenuItemClick = () => {
-	// emit('close-menu')
+	emit('close-menu')
 }
 
 const handleEscKey = (event: KeyboardEvent) => {
@@ -87,7 +87,7 @@ const handleEscKey = (event: KeyboardEvent) => {
 				<li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/" @click="handleMenuItemClick">Аксессуары</NuxtLink></li>
 		  </ul>
 		  <ul class="py-4 border-t-[0.5px] border-[#BBB8B6] flex flex-col gap-4 mt-8 font-[Manrope] font-light text-[15px] sm:text-base">
-				<li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/" @click="handleMenuItemClick">Войти в Личный кабинет</NuxtLink></li>
+				<li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/profile" @click="handleMenuItemClick">Войти в Личный кабинет</NuxtLink></li>
 				<li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/" @click="handleMenuItemClick">Покупателям</NuxtLink><NuxtImg src="/arrow-right.svg" alt="arrow" class="w-1.5" /></li>
 				<li class="hidden gap-2 justify-between items-center sm:justify-start sm:flex"><button
 class="cursor-pointer px-2 py-1 bg-[#F3A45429] rounded-lg" to="/" @click="() => {

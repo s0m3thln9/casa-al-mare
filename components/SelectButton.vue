@@ -13,7 +13,7 @@ const selected = ref(0)
 
 const select = (index: number) => {
 	selected.value = index
-	emit('select', parseInt(props.variants[index]))
+	emit('select', selected.value)
 }
 
 </script>
