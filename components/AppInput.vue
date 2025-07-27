@@ -11,7 +11,7 @@ const emit = defineEmits<{
 }>()
 
 const isActive = ref(false)
-const isHidden = ref(false)
+const isHidden = ref(true)
 const inputRef = ref<HTMLInputElement | null>(null)
 
 const toggleVisibility = () => {
