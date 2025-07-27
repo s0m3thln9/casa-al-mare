@@ -6,6 +6,9 @@ const isExpandedCert = ref(false)
 const deliveryMethod = ref<number | undefined>(undefined)
 const paymentMethod = ref<number | undefined>(undefined)
 const currentAddress = ref<number | undefined>(undefined)
+const addressFirstLine = ref('')
+const addressSecondLine = ref('')
+const commentForCourier = ref('')
 
 const toggleDeliveryMethod = (value?: number) => {
 	deliveryMethod.value = value
@@ -56,21 +59,12 @@ const calculateSum = () => {
 						<AppCheckbox size="S" label="Ул. Заречная, дом 19, кв. 5" :value="0" :current-value="currentAddress" @toggle="value => toggleCurrentAddress(value)" />
 						<AppCheckbox size="S" label="Ул. Октябрьская, дом 32, к. 4, офис 219" :value="1" :current-value="currentAddress" @toggle="value => toggleCurrentAddress(value)" />
 						<AppCheckbox size="S" label="Новый адрес" :value="2" :current-value="currentAddress" @toggle="value => toggleCurrentAddress(value)" />
-						<input
-							type="text" placeholder="Улица, дом, корпус, строение, квартира"
-							class="w-full h-[44px] px-2 py-2.5 border-[#5E5B58] border-[0.7px] rounded-lg text-xs placeholder:text-[#5E5B58]"
-						>
-				    <input
-					    type="text" placeholder="Номер дома и домофон / офис"
-					    class="w-full h-[44px] px-2 py-2.5 border-[#5E5B58] border-[0.7px] rounded-lg text-xs placeholder:text-[#5E5B58]"
-				    >
-						<AppButton custom-class="w-full" content="Сохранено" variant="primary" />
+						<AppInput id="address1" v-model="addressFirstLine" type="text" label="Улица, дом, корпус, строение, квартира" />
+						<AppInput id="address2" v-model="addressSecondLine" type="text" label="Номер дома и домофон / офис" />
+						<AppButton custom-class="w-full" content="Сохранить" variant="primary" />
 						<AppCheckbox size="M" disabled label="СДЭК (ПВЗ)" :value="2" :current-value="deliveryMethod" @toggle="value => toggleDeliveryMethod(value)" />
 					</div>
-					<input
-						type="text" placeholder="Пожелания и комментарии для курьера"
-						class="w-full h-[44px] px-2 py-2.5 border-[#5E5B58] border-[0.7px] rounded-lg text-xs placeholder:text-[#5E5B58]"
-					>
+					<AppInput id="forCourier" v-model="commentForCourier" type="text" label="Пожелания и комментарии для курьера" />
 					<div class="flex flex-col gap-6">
 						<span class="font-light text-sm">Способ оплаты</span>
 						<div class="flex flex-col gap-4">
@@ -105,7 +99,7 @@ const calculateSum = () => {
 						<div class="flex flex-col gap-4">
 							<div class="flex items-center justify-between">
 								<span class="font-light text-sm">Промокод</span>
-								<button class="w-4 h-4 flex items-center justify-center cursor-pointer" @click="toggleExpandPromo" :class="isExpandedPromo ? 'rotate-0' : 'rotate-180'">
+								<button class="w-4 h-4 flex items-center justify-center cursor-pointer" :class="isExpandedPromo ? 'rotate-0' : 'rotate-180'" @click="toggleExpandPromo">
 								  <NuxtImg src="/order-arrow.svg" class="w-full"/>
 							  </button>
 							</div>
@@ -126,7 +120,7 @@ const calculateSum = () => {
 						<div class="flex flex-col gap-4">
 							<div class="flex items-center justify-between">
 								<span class="font-light text-sm">Сертификат</span>
-								<button class="w-4 h-4 flex items-center justify-center cursor-pointer" @click="toggleExpandCert" :class="isExpandedCert ? 'rotate-0' : 'rotate-180'">
+								<button class="w-4 h-4 flex items-center justify-center cursor-pointer" :class="isExpandedCert ? 'rotate-0' : 'rotate-180'" @click="toggleExpandCert">
 								  <NuxtImg src="/order-arrow.svg" class="w-full"/>
 							  </button>
 							</div>
