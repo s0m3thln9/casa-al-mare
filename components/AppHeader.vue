@@ -59,7 +59,7 @@ const toggleMenu = () => {
 		  <ul class="flex gap-2 sm:gap-4">
 			  <li class="hover:text-[#F3A454]"><button>Поиск</button></li>
 			  <li class="hidden hover:text-[#F3A454] lg:block"><NuxtLink to="/favourites">Избранное</NuxtLink></li>
-			  <li class="hover:text-[#F3A454]"><NuxtLink to="/">Корзина</NuxtLink></li>
+			  <li class="hover:text-[#F3A454]"><NuxtLink to="/order">Корзина</NuxtLink></li>
 			  <li class="block hover:text-[#F3A454] lg:hidden"><button class="menu-button2" @click="toggleMenu">Меню</button></li>
 		  </ul>
 	  </nav>

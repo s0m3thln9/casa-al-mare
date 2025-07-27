@@ -26,7 +26,7 @@ const calculateSum = () => {
 <template>
 	<main class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D] flex justify-start items-center pt-8 pb-8 flex-col">
 		<h2 class="uppercase">Оформление</h2>
-		<div class="mt-8 flex max-w-[1264px] h-fit w-full gap-12">
+		<div class="mt-8 flex max-w-[1264px] flex-col px-2 sm:px-0 sm:flex-row h-fit w-full gap-12">
 			<div class="p-10 w-full max-w-[652px] rounded-4xl border-[0.7px] border-[#BBB8B6]">
 				<div class="flex flex-col gap-6">
 					<span class="font-light text-sm">Доставка</span>
