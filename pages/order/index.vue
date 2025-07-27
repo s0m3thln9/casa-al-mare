@@ -3,6 +3,21 @@ const items = [{ bottom: 'XS', color: 'Цвет', img: '/order.jpg', count: 2, n
 
 const isExpandedPromo = ref(false)
 const isExpandedCert = ref(false)
+const deliveryMethod = ref<number | undefined>(undefined)
+const paymentMethod = ref<number | undefined>(undefined)
+const currentAddress = ref<number | undefined>(undefined)
+
+const toggleDeliveryMethod = (value?: number) => {
+	deliveryMethod.value = value
+}
+
+const togglePaymentMethod = (value?: number) => {
+	paymentMethod.value = value
+}
+
+const toggleCurrentAddress = (value?: number) => {
+	currentAddress.value = value
+}
 
 const toggleExpandPromo = () => {
 	isExpandedPromo.value = !isExpandedPromo.value
@@ -34,28 +49,13 @@ const calculateSum = () => {
 						<option value="Москва">Москва</option>
 					</select>
 					<div class="flex flex-col gap-6">
-						<div class="flex gap-2 items-center">
-						  <input type="checkbox" class="w-5 h-5">
-						  <span class="text-sm font-light">Самовывоз</span>
-					  </div>
-						<div class="flex gap-2 items-center">
-						  <input type="checkbox" class="w-5 h-5">
-						  <span class="text-sm font-light">Курьер (# дней)</span>
-					  </div>
+						<AppCheckbox size="M" label="Самовывоз" :value="0" :current-value="deliveryMethod" @toggle="value => toggleDeliveryMethod(value)" />
+						<AppCheckbox size="M" label="Курьер (# дней)" :value="1" :current-value="deliveryMethod" @toggle="value => toggleDeliveryMethod(value)" />
 					</div>
 					<div class="flex flex-col gap-4">
-						<div class="flex gap-2 items-center">
-						  <input type="checkbox" class="w-4 h-4">
-						  <span class="text-[13px] font-light">Ул. Заречная, дом 19, кв. 55</span>
-					  </div>
-						<div class="flex gap-2 items-center">
-						  <input type="checkbox" class="w-4 h-4">
-						  <span class="text-[13px] font-light">Ул. Октябрьская, дом 32, к. 4, офис 219</span>
-					  </div>
-						<div class="flex gap-2 items-center">
-						  <input type="checkbox" class="w-4 h-4">
-						  <span class="text-[13px] font-light">Новый адрес</span>
-					  </div>
+						<AppCheckbox size="S" label="Ул. Заречная, дом 19, кв. 5" :value="0" :current-value="currentAddress" @toggle="value => toggleCurrentAddress(value)" />
+						<AppCheckbox size="S" label="Ул. Октябрьская, дом 32, к. 4, офис 219" :value="1" :current-value="currentAddress" @toggle="value => toggleCurrentAddress(value)" />
+						<AppCheckbox size="S" label="Новый адрес" :value="2" :current-value="currentAddress" @toggle="value => toggleCurrentAddress(value)" />
 						<input
 							type="text" placeholder="Улица, дом, корпус, строение, квартира"
 							class="w-full h-[44px] px-2 py-2.5 border-[#5E5B58] border-[0.7px] rounded-lg text-xs placeholder:text-[#5E5B58]"
@@ -65,10 +65,7 @@ const calculateSum = () => {
 					    class="w-full h-[44px] px-2 py-2.5 border-[#5E5B58] border-[0.7px] rounded-lg text-xs placeholder:text-[#5E5B58]"
 				    >
 						<AppButton custom-class="w-full" content="Сохранено" variant="primary" />
-						<div class="flex gap-2 items-center">
-						  <input type="checkbox" class="w-5 h-5">
-						  <span class="text-sm font-light">СДЭК (ПВЗ)</span>
-					  </div>
+						<AppCheckbox size="M" disabled label="СДЭК (ПВЗ)" :value="2" :current-value="deliveryMethod" @toggle="value => toggleDeliveryMethod(value)" />
 					</div>
 					<input
 						type="text" placeholder="Пожелания и комментарии для курьера"
@@ -77,14 +74,8 @@ const calculateSum = () => {
 					<div class="flex flex-col gap-6">
 						<span class="font-light text-sm">Способ оплаты</span>
 						<div class="flex flex-col gap-4">
-							<div class="flex gap-2 items-center">
-							  <input type="checkbox" class="w-5 h-5">
-							  <span class="text-sm font-light">Картой на сайте</span>
-						  </div>
-							<div class="flex gap-2 items-center">
-							  <input type="checkbox" class="w-5 h-5">
-							  <span class="text-sm font-light">Оплата при получении</span>
-					    </div>
+							<AppCheckbox size="S" label="Картой на сайте" :value="1" :current-value="paymentMethod" @toggle="value => togglePaymentMethod(value)" />
+							<AppCheckbox size="S" label="Оплата при получении" :value="1" :current-value="paymentMethod" @toggle="value => togglePaymentMethod(value)" />
 						</div>
 					</div>
 				</div>
