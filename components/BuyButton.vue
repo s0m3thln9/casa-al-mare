@@ -71,8 +71,7 @@ const handleClick = () => {
 		return
 	}
 	if (isInCart.value) {
-		alert('Перейти в корзину')
-		return
+		navigateTo("/order")
 	}
 	if (!isLoading.value && !showSuccess.value) {
 		isLoading.value = true

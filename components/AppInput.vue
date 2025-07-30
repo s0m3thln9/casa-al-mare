@@ -41,7 +41,7 @@ const handleInput = (event: Event) => {
 		  ref="inputRef" 
 		  :value="modelValue"
 		  :type="(isHidden && type === 'password') ? 'password' : type === 'password' ? 'text' : type"
-		  class="h-[44px] w-full px-2.5 py-[21.5px] pb-1.5 border-[#5E5B58] border-[0.7px] rounded-lg text-sm font-light text-[#211D1D] font-[Manrope] focus:border-[#211D1D] focus:outline-0 sm:text-xs"
+		  class="h-[44px] w-full px-2.5 pt-[21.5px] pb-1.5 border-[#5E5B58] border-[0.7px] rounded-lg text-sm font-light text-[#211D1D] font-[Manrope] focus:border-[#211D1D] focus:outline-0 sm:text-xs"
 		  @focus="isActive = true"
 		  @blur="isActive = modelValue !== ''"
 		  @input="handleInput"

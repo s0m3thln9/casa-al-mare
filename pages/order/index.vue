@@ -48,9 +48,7 @@ const calculateSum = () => {
 			<div class="p-10 w-full max-w-[652px] rounded-4xl border-[0.7px] border-[#BBB8B6]">
 				<div class="flex flex-col gap-6">
 					<span class="font-light text-sm">Доставка</span>
-					<select class="w-full px-2.5 py-3 rounded-lg border-[0.7px] border-[#BFBFBF] font-light text-xs font-[Manrope] text-[#211D1D]">
-						<option value="Москва">Москва</option>
-					</select>
+					<AppSelect :options="['Москва', 'Питер', 'Ростов', 'Краснодар', 'Мурманск', 'Брянск']" label="Город" />
 					<div class="flex flex-col gap-6">
 						<AppCheckbox size="M" label="Самовывоз" :value="0" :current-value="deliveryMethod" @toggle="value => toggleDeliveryMethod(value)" />
 						<AppCheckbox size="M" label="Курьер (# дней)" :value="1" :current-value="deliveryMethod" @toggle="value => toggleDeliveryMethod(value)" />
@@ -68,7 +66,7 @@ const calculateSum = () => {
 					<div class="flex flex-col gap-6">
 						<span class="font-light text-sm">Способ оплаты</span>
 						<div class="flex flex-col gap-4">
-							<AppCheckbox size="S" label="Картой на сайте" :value="1" :current-value="paymentMethod" @toggle="value => togglePaymentMethod(value)" />
+							<AppCheckbox size="S" label="Картой на сайте" :value="0" :current-value="paymentMethod" @toggle="value => togglePaymentMethod(value)" />
 							<AppCheckbox size="S" label="Оплата при получении" :value="1" :current-value="paymentMethod" @toggle="value => togglePaymentMethod(value)" />
 						</div>
 					</div>
@@ -89,7 +87,7 @@ const calculateSum = () => {
 						  <div class="flex flex-col items-end gap-4">
 							  <div class="flex items-center gap-2">
 								  <div class="py-1 px-2 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light"><button class="w-4 h-4 flex items-center justify-center cursor-pointer"><NuxtImg src="/minus.svg" alt="minus" class="w-full" /></button> {{item.count}} <button class="w-4 h-4 flex items-center justify-center cursor-pointer"><NuxtImg src="/plus.svg" alt="plus" class="w-full" /></button></div>
-								  <button class="w-4 h-4 flex items-center justify-center cursor-pointer">
+								  <button class="w-6 h-6 flex items-center justify-center cursor-pointer">
 									  <NuxtImg src="/x.svg" alt="x" class="w-full" />
 								  </button>
 							  </div>
