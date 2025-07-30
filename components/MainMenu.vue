@@ -78,30 +78,30 @@ const handleEscKey = (event: KeyboardEvent) => {
 		    </div>
       </div>
 		  <ul class="flex flex-col gap-6 pb-[170px] font-[Inter] font-normal text-[17px] sm:text-base sm:font-[Manrope] uppercase sm:font-light sm:gap-4 sm:mt-8 sm:pb-0 sm:normal-case">
-			  <li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/" @click="handleMenuItemClick">Смотреть все</NuxtLink><NuxtImg src="/arrow-right.svg" alt="arrow" class="w-1.5" /></li>
-				<li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/" @click="handleMenuItemClick">Купальники</NuxtLink></li>
-				<li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/" @click="handleMenuItemClick">Нижняя часть купальника</NuxtLink></li>
-				<li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/" @click="handleMenuItemClick">Верхняя часть купальника</NuxtLink></li>
-				<li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/" @click="handleMenuItemClick">Одежда для пляжа</NuxtLink><NuxtImg src="/dot.svg" alt="dot" class="w-[9px]" /></li>
-				<li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/" @click="handleMenuItemClick">Головные уборы</NuxtLink></li>
-				<li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/" @click="handleMenuItemClick">Аксессуары</NuxtLink></li>
+			  <li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/catalog" @click="handleMenuItemClick">Смотреть все</NuxtLink><NuxtImg src="/arrow-right.svg" alt="arrow" class="w-1.5" /></li>
+				<li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/catalog" @click="handleMenuItemClick">Купальники</NuxtLink></li>
+				<li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/catalog" @click="handleMenuItemClick">Нижняя часть купальника</NuxtLink></li>
+				<li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/catalog" @click="handleMenuItemClick">Верхняя часть купальника</NuxtLink></li>
+				<li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/catalog" @click="handleMenuItemClick">Одежда для пляжа</NuxtLink><NuxtImg src="/dot.svg" alt="dot" class="w-[9px]" /></li>
+				<li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/catalog" @click="handleMenuItemClick">Головные уборы</NuxtLink></li>
+				<li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/catalog" @click="handleMenuItemClick">Аксессуары</NuxtLink></li>
 		  </ul>
 		  <ul class="py-4 border-t-[0.5px] border-[#BBB8B6] flex flex-col gap-4 mt-8 font-[Manrope] font-light text-[15px] sm:text-base">
 				<li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/profile" @click="handleMenuItemClick">Войти в Личный кабинет</NuxtLink></li>
 				<li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/" @click="handleMenuItemClick">Покупателям</NuxtLink><NuxtImg src="/arrow-right.svg" alt="arrow" class="w-1.5" /></li>
 				<li class="hidden gap-2 justify-between items-center sm:justify-start sm:flex"><button
-class="cursor-pointer px-2 py-1 bg-[#F3A45429] rounded-lg" to="/" @click="() => {
+class="cursor-pointer px-2 py-1 bg-[#F3A45429] rounded-lg" @click="() => {
 					emit('close-menu')
 					emit('open-popup')
 				}"
 				>Подписаться</button></li>
 				<li class="flex gap-2 justify-between items-center sm:justify-start sm:hidden"><button
-class="cursor-pointer px-2 py-1" to="/" @click="() => {
+class="cursor-pointer px-2 py-1" @click="() => {
 					emit('close-menu')
 					emit('open-popup')
 				}"
 				>Подписаться на рассылку</button></li>
-				<li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/" @click="handleMenuItemClick">Контакты</NuxtLink></li>
+				<li class="flex gap-2 justify-between items-center sm:justify-start"><NuxtLink class="px-2 py-1" to="/contacts" @click="handleMenuItemClick">Контакты</NuxtLink></li>
 		  </ul>
 	  </div>
   </div>
