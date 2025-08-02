@@ -1,12 +1,11 @@
 <script setup lang="ts">
+import {usePopupStore} from "~/stores/popup"
+
 defineProps<{
-	isPopupOpen: boolean
 	title: string
 }>()
 
-const emit = defineEmits<{
-	(e: 'close-popup'): void
-}>()
+const popupStore = usePopupStore()
 
 onMounted(() => {
 	window.addEventListener('keydown', handleKeydown)
@@ -18,7 +17,7 @@ onUnmounted(() => {
 
 const handleKeydown = (event: KeyboardEvent) => {
 	if (event.key === 'Escape') {
-		emit('close-popup')
+		popupStore.close()
 	}
 }
 
@@ -27,20 +26,20 @@ const handleKeydown = (event: KeyboardEvent) => {
 <template>
   <div
 	  class="fixed inset-0 z-40 bg-black/50 text-[#211D1D] transition-all duration-300 ease-in-out" :class="{
-      'opacity-100': isPopupOpen,
-      'opacity-0 pointer-events-none': !isPopupOpen
+      'opacity-100': popupStore.isOpen,
+      'opacity-0 pointer-events-none': !popupStore.isOpen
 		}"
-	  @click.self="emit('close-popup')"
+	  @click.self="popupStore.close"
    >
     <div
 	    class="fixed w-full h-[100svh] overflow-y-auto bg-[#FFFFFA] z-30 top-0 right-0 py-8 px-4 transition-all duration-300 ease-in-out sm:w-[454px] sm:p-8"
 	    :class="{
-        'opacity-100 translate-x-0': isPopupOpen,
-        'opacity-0 translate-x-[100%]': !isPopupOpen
+        'opacity-100 translate-x-0': popupStore.isOpen,
+        'opacity-0 translate-x-[100%]': !popupStore.isOpen
       }"
     >
       <div class="flex gap-4">
-        <button class="cursor-pointer" @click="emit('close-popup')">
+        <button class="cursor-pointer" @click="popupStore.close">
           <NuxtImg src="/arrow-left.svg" alt="arrow" class="w-2" />
         </button>
         <span class="font-[Inter] text-[17px] uppercase sm:normal-case sm:text-2xl">{{ title }}</span>

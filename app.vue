@@ -1,7 +1,6 @@
 <script setup lang="ts">
 const isCookieAccepted = ref(false)
 const isCitySelected = ref(false)
-const isPopupOpen = ref(false)
 
 const acceptCookie = () => {
 	isCookieAccepted.value = true
@@ -11,39 +10,14 @@ const selectCity = () => {
 	isCitySelected.value = true
 }
 
-const getScrollbarWidth = () => {
-	const outer = document.createElement('div')
-	outer.style.visibility = 'hidden'
-	outer.style.overflow = 'scroll'
-	document.body.appendChild(outer)
-	const inner = document.createElement('div')
-	outer.appendChild(inner)
-	const width = outer.offsetWidth - inner.offsetWidth
-	outer.remove()
-	return width
-};
-
-const openPopup = () => {
-	isPopupOpen.value = true
-	const scrollbarWidth = getScrollbarWidth()
-	document.body.style.overflow = 'hidden'
-	document.body.style.paddingRight = `${scrollbarWidth}px`
-}
-
-const closePopup = () => {
-	isPopupOpen.value = false
-	document.body.style.overflow = 'auto'
-	document.body.style.paddingRight = '0'
-}
-
 </script>
 <template>
-	<AppHeader @open-popup="openPopup" />
+	<AppHeader />
 	<NuxtPage />
 	<AppFooter @open-popup="openPopup" />
 	<CitySelection v-show="!isCitySelected" @select-city="selectCity" />
 	<CookieConsent v-show="!isCookieAccepted" @accept-cookie="acceptCookie" />
-	<AppPopup :is-popup-open="isPopupOpen" title="Подпишитесь на рассылку" @close-popup="closePopup">
+	<AppPopup title="Подпишитесь на рассылку">
 		<div class="flex flex-col items-center gap-6 mt-8 sm:mt-14 sm:items-start">
 			<NuxtImg src="/pop-up-sub.jpg" alt="sub" width="390" height="532" class="rounded-lg" />
 			<input

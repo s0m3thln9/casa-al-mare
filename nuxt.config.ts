@@ -7,5 +7,6 @@ export default defineNuxtConfig({
     '@nuxt/fonts',
     '@nuxt/image',
     '@nuxtjs/tailwindcss',
+    '@pinia/nuxt'
   ],
 })
