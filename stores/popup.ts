@@ -1,6 +1,3 @@
-import {defineStore} from "pinia"
-import {useBodyScrollLock} from "~/composables/useBodyScrollLock"
-
 export const usePopupStore = defineStore('popup', () => {
 	const activePopup = ref<string | null>(null)
 	const { lockBodyScroll, unlockBodyScroll } = useBodyScrollLock()

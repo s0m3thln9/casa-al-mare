@@ -3,12 +3,10 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 const sums =  ["999", "9999", "99999", "999999"]
 const ways =  ["Электронной почтой", "По SMS", "Доставка"]
 const details =  ["Отправить сразу после оплаты", "Анонимно"]
-const step = ref(1)
-const selectedSum = ref<number | null>(null)
-const selectedWay = ref<number | null>(null)
-const selectedDetails = ref<number | null>(null)
 const currentImageIndex = ref(0)
 const touchStartX = ref(0)
+
+const certificateStore = useCertificateStore()
 
 const imageStyles = computed(() => (index: number) => {
 	if (index === currentImageIndex.value) {
@@ -54,14 +52,6 @@ const handleTouchEnd = (e: TouchEvent) => {
 	} else if (deltaX < -threshold) {
 		currentImageIndex.value = (currentImageIndex.value + 1) % certificateImages.length
 	}
-}
-
-const handleNextStep = () => {
-	if (step.value + 1 > 3) {
-		alert('Отправлено')
-		return
-	}
-	step.value++
 }
 
 </script>
@@ -131,34 +121,44 @@ const handleNextStep = () => {
 				  </h2>
 			  </div>
 			  <div class="mt-14 flex flex-col justify-center items-center gap-8">
-				  <div class="flex flex-col justify-center items-center gap-2">
-					  <h3 class="font-[Inter] text-2xl">{{step}}/3</h3>
-					  <span class="font-light text-sm">{{step === 1 ? "Выберите номинал:" : step === 2 ? "Как отправить получателю?" : "Кому и когда отправить?"}}</span>
-				  </div>
-				  <div
-					  :class="['flex w-full justify-center items-center font-light sm:font-normal', step === 3 ? 'flex-col gap-8' : 'gap-3 sm:gap-4']"
-				  >
-					  <SingleSelectButton v-if="step === 1" :content="sums" @select="value => selectedSum = value" />
-					  <SingleSelectButton v-if="step === 2" :content="ways" @select="value => selectedWay = value" />
-					  <div v-if="step === 3" class="w-full flex flex-col gap-8">
-						  <input
-							  type="text" placeholder="Имя получателя*"
-							  class="w-full h-[44px] px-2 py-2.5 border-[#5E5B58] border-[0.7px] rounded-lg text-xs placeholder:text-[#5E5B58]"
-						  >
-						  <input
-							  type="text" placeholder="Текст послания"
-							  class="w-full h-[44px] px-2 py-2.5 border-[#5E5B58] border-[0.7px] rounded-lg text-xs placeholder:text-[#5E5B58]"
-						  >
-					  </div>
-					  <div class="flex justify-center items-center gap-3 font-light sm:gap-4 sm:font-normal">
-					    <SingleSelectButton v-if="step === 3" :content="details" @select="value => selectedDetails = value" />
-					  </div>
-				  </div>
-				  <div class="w-full flex items-center gap-2 sm:w-[400px]">
-					  <AppButton :disabled="step === 1" content="Назад" @click="step--" />
-					  <AppButton :disabled="(step === 1 && selectedSum === null) || (step === 2 && selectedWay === null) || (step === 3 && selectedDetails === null)" variant="primary" :content="(step === 1 && selectedSum === null) ? 'Сначала выберите номинал' : (step === 2 && selectedWay === null) ? 'Выберите способ отправки' : (step === 3 && selectedDetails === null) ? 'Укажите детали отправки' : (step === 3 && selectedDetails !== null) ? 'Отправить сертификат' : 'Далее'" custom-class="w-full" @click="handleNextStep" />
-				  </div>
-			  </div>
+          <div class="flex flex-col justify-center items-center gap-2">
+            <h3 class="font-[Inter] text-2xl">{{ certificateStore.step }}/3</h3>
+            <span class="font-light text-sm">
+              {{ certificateStore.step === 1 ? "Выберите номинал:" : certificateStore.step === 2 ? "Как отправить получателю?" : "Кому и когда отправить?" }}
+            </span>
+          </div>
+          <div :class="['flex w-full justify-center items-center font-light sm:font-normal', certificateStore.step === 3 ? 'flex-col gap-8' : 'gap-3 sm:gap-4']">
+            <SingleSelectButton v-if="certificateStore.step === 1" :content="sums" @select="value => certificateStore.selectedSum = value" />
+            <SingleSelectButton v-if="certificateStore.step === 2" :content="ways" @select="value => certificateStore.selectedWay = value" />
+            <div v-if="certificateStore.step === 3" class="w-full flex flex-col gap-8">
+              <AppInput
+	              label="Имя получателя*"
+	              type="text"
+	              id="recipientName"
+	              v-model="certificateStore.recipientName"
+              />
+              <AppInput
+	              label="Текст послания"
+	              type="text"
+	              id="message"
+	              v-model="certificateStore.message"
+              />
+            </div>
+            <div class="flex justify-center items-center gap-3 font-light sm:gap-4 sm:font-normal">
+              <SingleSelectButton v-if="certificateStore.step === 3" :content="details" @select="value => certificateStore.selectedDetails = value" />
+            </div>
+          </div>
+          <div class="w-full flex items-center gap-2 sm:w-[400px]">
+            <AppButton :disabled="certificateStore.step === 1" content="Назад" @click="certificateStore.prevStep" />
+            <AppButton
+	            :disabled="!certificateStore.canGoNext"
+	            variant="primary"
+	            :content="(certificateStore.step === 1 && certificateStore.selectedSum === null) ? 'Сначала выберите номинал' : (certificateStore.step === 2 && certificateStore.selectedWay === null) ? 'Выберите способ отправки' : (certificateStore.step === 3 && certificateStore.selectedDetails === null) ? 'Укажите детали отправки' : (certificateStore.step === 3 && certificateStore.selectedDetails !== null) ? 'Отправить сертификат' : 'Далее'"
+	            custom-class="w-full"
+	            @click="certificateStore.nextStep"
+            />
+          </div>
+        </div>
 			  <div class="w-full mt-14">
 				  <CollapsibleBlock label="Описание сертификта" description="Текстовое описание сертификата" />
 			  </div>
