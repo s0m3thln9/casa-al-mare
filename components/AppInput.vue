@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{
+const props = defineProps<{
 	label: string
 	type: "email" | "password" | "text"
 	id: string
@@ -13,6 +13,10 @@ const emit = defineEmits<{
 const isActive = ref(false)
 const isHidden = ref(true)
 const inputRef = ref<HTMLInputElement | null>(null)
+
+watch(() => props.modelValue, (newValue) => {
+	isActive.value = newValue !== ''
+})
 
 const toggleVisibility = () => {
 	isHidden.value = !isHidden.value

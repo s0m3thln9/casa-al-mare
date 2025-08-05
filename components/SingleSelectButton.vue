@@ -1,25 +1,23 @@
 <script setup lang="ts">
+import { defineProps, defineEmits } from 'vue'
+
 const props = defineProps<{
 	customClass?: string
 	content: string[]
+	modelValue: string | null
 }>()
 
 const emit = defineEmits<{
-	(e: 'select', value: string | null): void
+	(e: 'update:modelValue', value: string | null): void
 }>()
 
-const selected = ref<number | null>(null)
-
-const select = (index: number) => {
-	if (selected.value === index) {
-		selected.value = null
-		emit('select', null)
+const select = (item: string) => {
+	if (props.modelValue === item) {
+		emit('update:modelValue', null)
 	} else {
-		selected.value = index
-		emit('select', props.content[index])
+		emit('update:modelValue', item)
 	}
 }
-
 </script>
 
 <template>
@@ -29,14 +27,13 @@ const select = (index: number) => {
 	  :class="[
       'font-[Manrope] p-2 flex justify-center items-center border-[0.7px] rounded-lg text-sm cursor-pointer hover:border-[#F3A454] hover:text-[#FFFFFA] hover:bg-[#F3A454]',
       customClass,
-      selected === index ? 'bg-[#211D1D] border-[#211D1D] text-[#FFFFFA]' : 'border-[#BBB8B6]'
+      item === modelValue ? 'bg-[#211D1D] border-[#211D1D] text-[#FFFFFA]' : 'border-[#BBB8B6]'
     ]"
-	  @click="select(index)"
+	  @click="select(item)"
   >
     {{ item }}
   </button>
 </template>
 
 <style scoped>
-
 </style>
