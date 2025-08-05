@@ -34,6 +34,10 @@ const barStyles = computed(() => (index: number) => ({
 
 const certificateImages = [
 	"/certificate-1.png",
+	"/certificate-2.png",
+	"/certificate-1.png",
+	"/certificate-2.png",
+	"/certificate-1.png",
 	"/certificate-2.png"
 ]
 
@@ -68,7 +72,7 @@ const handleNextStep = () => {
 		  <AppBreadcrumbs :items="breadcrumsItems" />
 	  </div>
 	  <div class="px-0 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-8 sm:px-4">
-		  <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
+		  <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
 			  <div
 				  class="block sm:hidden relative w-full aspect-[460/680] overflow-hidden"
 				  @touchstart="handleTouchStart"
@@ -93,6 +97,22 @@ const handleNextStep = () => {
 					  :style="barStyles(index)"
 				  />
 			  </div>
+			  <NuxtImg
+				  src="/certificate-1.png" alt="certificate" width="726" height="1080"
+				  class="sm:rounded-lg hidden sm:block"
+			  />
+			  <NuxtImg
+				  src="/certificate-2.png" alt="certificate" width="726" height="1080"
+				  class="sm:rounded-lg hidden sm:block"
+			  />
+			  <NuxtImg
+				  src="/certificate-1.png" alt="certificate" width="726" height="1080"
+				  class="sm:rounded-lg hidden sm:block"
+			  />
+			  <NuxtImg
+				  src="/certificate-2.png" alt="certificate" width="726" height="1080"
+				  class="sm:rounded-lg hidden sm:block"
+			  />
 			  <NuxtImg
 				  src="/certificate-1.png" alt="certificate" width="726" height="1080"
 				  class="sm:rounded-lg hidden sm:block"
@@ -135,17 +155,12 @@ const handleNextStep = () => {
 					  </div>
 				  </div>
 				  <div class="w-full flex items-center gap-2 sm:w-[400px]">
-					  <AppButton @click="step--" :disabled="step === 1" content="Назад" />
-					  <AppButton @click="handleNextStep" :disabled="(step === 1 && selectedSum === null) || (step === 2 && selectedWay === null) || (step === 3 && selectedDetails === null)" variant="primary" :content="(step === 1 && selectedSum === null) ? 'Сначала выберите номинал' : (step === 2 && selectedWay === null) ? 'Выберите способ отправки' : (step === 3 && selectedDetails === null) ? 'Укажите детали отправки' : (step === 3 && selectedDetails !== null) ? 'Отправить сертификат' : 'Далее'" custom-class="w-full" />
+					  <AppButton :disabled="step === 1" content="Назад" @click="step--" />
+					  <AppButton :disabled="(step === 1 && selectedSum === null) || (step === 2 && selectedWay === null) || (step === 3 && selectedDetails === null)" variant="primary" :content="(step === 1 && selectedSum === null) ? 'Сначала выберите номинал' : (step === 2 && selectedWay === null) ? 'Выберите способ отправки' : (step === 3 && selectedDetails === null) ? 'Укажите детали отправки' : (step === 3 && selectedDetails !== null) ? 'Отправить сертификат' : 'Далее'" custom-class="w-full" @click="handleNextStep" />
 				  </div>
 			  </div>
 			  <div class="w-full mt-14">
-				  <div
-					  class="flex justify-center gap-2.5 items-center p-4 border border-[#BBB8B6] rounded-2xl sm:justify-between sm:gap-0"
-				  >
-					  <span class="font-light text-sm">Описание сертификата</span>
-					  <NuxtImg src="/help.svg" alt="help" width="16" height="16" />
-				  </div>
+				  <CollapsibleBlock label="Описание сертификта" description="Текстовое описание сертификата" />
 			  </div>
 		  </div>
 	  </div>
