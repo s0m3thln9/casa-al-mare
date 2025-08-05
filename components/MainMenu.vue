@@ -124,7 +124,7 @@ onUnmounted(() => {
 <template>
   <div class="absolute inset-0 z-30" :class="menuStore.isOpen ? 'pointer-events-auto' : 'pointer-events-none'" @click.self="menuStore.close">
 	  <div
-		  class="max-h-[calc(100vh-62px)] overflow-hidden absolute top-[32px] flex bg-[#FFFFFA] transition-all duration-300 h-full sm:top-[62px] sm:rounded-br-3xl sm:border-t-[0.5px] sm:border-[#BBB8B6] sm:h-auto"
+		  class="max-h-[calc(100vh-32px)] sm:max-h-[calc(100vh-62px)] overflow-hidden absolute top-[32px] flex bg-[#FFFFFA] transition-all duration-300 h-full sm:top-[62px] sm:rounded-br-3xl sm:border-t-[0.5px] sm:border-[#BBB8B6] sm:h-auto"
 		  :class="[menuStore.isOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0', isMobile ? 'w-full' : 'w-fit']"
 	  >
 		  <div
@@ -151,7 +151,7 @@ onUnmounted(() => {
         </div>
 			  <ul
 				  class="flex flex-col"
-				  :class="isMobile ? 'p-0 gap-6' : 'py-4 gap-4'"
+				  :class="isMobile ? 'pb-6 gap-6' : 'py-4 gap-4'"
 			  >
 				  <li 
 					  v-for="(item, index) in menuItems"
@@ -192,8 +192,8 @@ onUnmounted(() => {
 		  </div>
 		  <div class="flex flex-col gap-8 transition-[transform,_opacity] duration-300 overflow-y-auto" :class="selectedSubmenu !== undefined ? isMobile ? 'w-full px-4 gap-10 pt-8' : 'min-w-[254px] p-6 translate-x-0 opacity-100' : 'w-0 p-0 -translate-x-full opacity-0'">
 			  <div
-				  class="flex items-center gap-2 cursor-pointer"
 				  v-if="isMobile"
+				  class="flex items-center gap-2 cursor-pointer"
 				  @click="goBack"
 			  >
 				  <NuxtImg
