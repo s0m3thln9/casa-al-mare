@@ -7,7 +7,7 @@ const images = {
 }
 
 const strokeCardCount = ref(4)
-const isPopupOpen = ref(false)
+const popupStore = usePopupStore()
 
 const types = ["Топ", "Купальник", "Лиф", "Трусы", "Шорты", "Рубашка", "Брюки", "Туника", "Панамка", "Поло", "Сумка", "Полотенце"]
 const colors: { title: string, value: string }[] = [
@@ -40,31 +40,6 @@ const handleSelect = (selected: number) => {
 	strokeCardCount.value = selected
 }
 
-const getScrollbarWidth = () => {
-	const outer = document.createElement("div")
-	outer.style.visibility = "hidden"
-	outer.style.overflow = "scroll"
-	document.body.appendChild(outer)
-	const inner = document.createElement("div")
-	outer.appendChild(inner)
-	const width = outer.offsetWidth - inner.offsetWidth
-	outer.remove()
-	return width
-}
-
-const openPopup = () => {
-	isPopupOpen.value = true
-	const scrollbarWidth = getScrollbarWidth()
-	document.body.style.overflow = "hidden"
-	document.body.style.paddingRight = `${scrollbarWidth}px`
-}
-
-const closePopup = () => {
-	isPopupOpen.value = false
-	document.body.style.overflow = "auto"
-	document.body.style.paddingRight = "0"
-}
-
 </script>
 
 <template>
@@ -72,7 +47,7 @@ const closePopup = () => {
 	  <div class="hidden sm:flex justify-between px-4 py-6">
 		  <AppBreadcrumbs :items="breadcrumsItems" />
 		  <div class="flex gap-4">
-			  <button class="cursor-pointer" @click="openPopup">
+			  <button class="cursor-pointer" @click="popupStore.open('filter')">
 			    <NuxtImg src="/sliders.svg" alt="sliders" width="24" height="24" />
 			  </button>
 			  <SelectButton :variants="['4', '6']" @select="handleSelect" />
@@ -85,7 +60,7 @@ const closePopup = () => {
 		  <span class="text-[10px] font-light font-[Commissioner]">Смотреть все / Купальники</span>
 		  <div class="flex items-center gap-1">
 			  <span class="text-[11px] font-[Manrope]">(12)</span>
-			  <button class="cursor-pointer" @click="openPopup">
+			  <button class="cursor-pointer" @click="popupStore.open('filter')">
 			    <NuxtImg src="/sliders.svg" alt="sliders" width="21" height="21" />
 			  </button>
 		  </div>
@@ -321,8 +296,8 @@ const closePopup = () => {
 'Следите за новыми коллекциями, подписывайтесь на наш telegram, vk и открывайте красоту каждый день.']"
 	  />
 	  <AppPopup
-		  title="Фильтр и сортировка" :is-popup-open="isPopupOpen"
-		  @close-popup="closePopup"
+		  title="Фильтр и сортировка"
+		  popup-id="filter"
 	  >
 			<div class="mt-6 flex flex-col gap-10 sm:mt-10">
 				<div class="flex flex-col items-center gap-4 sm:gap-6">

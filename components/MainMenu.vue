@@ -77,7 +77,7 @@ const secondMenuItems: MenuItem[] = [
 	{
 		label: 'Подписаться на расссылку',
 		customClass: 'bg-[#F3A45429] rounded-lg',
-		func: popupStore.open,
+		func: () => popupStore.open('subscription'),
 	},
 	{
 		label: 'Контакты',

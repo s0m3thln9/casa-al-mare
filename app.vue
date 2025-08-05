@@ -17,7 +17,10 @@ const selectCity = () => {
 	<AppFooter />
 	<CitySelection v-show="!isCitySelected" @select-city="selectCity" />
 	<CookieConsent v-show="!isCookieAccepted" @accept-cookie="acceptCookie" />
-	<AppPopup title="Подпишитесь на рассылку">
+	<AppPopup
+		title="Подпишитесь на рассылку"
+		popup-id="subscription"
+	>
 		<div class="flex flex-col items-center gap-6 mt-8 sm:mt-14 sm:items-start">
 			<NuxtImg src="/pop-up-sub.jpg" alt="sub" width="390" height="532" class="rounded-lg" />
 			<input

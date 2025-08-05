@@ -74,7 +74,7 @@ const popupStore = usePopupStore()
 					>Telegram</button>
 					<button
 						class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]"
-						@click="popupStore.open"
+						@click="popupStore.open('subscription')"
 					>
 						Рассылка
 					</button>

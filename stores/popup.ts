@@ -2,17 +2,20 @@ import {defineStore} from "pinia"
 import {useBodyScrollLock} from "~/composables/useBodyScrollLock"
 
 export const usePopupStore = defineStore('popup', () => {
-	const isOpen = ref(false)
+	const activePopup = ref<string | null>(null)
 	const { lockBodyScroll, unlockBodyScroll } = useBodyScrollLock()
 	
-	const open = () => {
+	const open = (popupId: string) => {
 		lockBodyScroll()
-		isOpen.value = true
-	}
-	const close = () => {
-		unlockBodyScroll()
-		isOpen.value = false
+		activePopup.value = popupId
 	}
 	
-	return { isOpen, open, close }
+	const close = () => {
+		unlockBodyScroll()
+		activePopup.value = null
+	}
+	
+	const isOpen = (popupId: string) => activePopup.value === popupId
+	
+	return { isOpen, open, close, activePopup }
 })
