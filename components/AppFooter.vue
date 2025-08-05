@@ -1,8 +1,5 @@
 <script setup lang="ts">
-const emit = defineEmits<{
-	(e: 'open-popup'): void
-}>()
-
+const popupStore = usePopupStore()
 </script>
 
 <template>
@@ -77,7 +74,7 @@ const emit = defineEmits<{
 					>Telegram</button>
 					<button
 						class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]"
-						@click="emit('open-popup')"
+						@click="popupStore.open"
 					>
 						Рассылка
 					</button>

@@ -13,6 +13,10 @@ type MenuItem = {
 const menuStore = useMenuStore()
 const popupStore = usePopupStore()
 
+const selectedSubmenu = ref<MenuItem[] | undefined>(undefined)
+const selectedSubmenuLabel = ref<string | undefined>(undefined)
+const isMobile = ref(false)
+
 const menuItems: MenuItem[] = [
 	{ label: 'Смотреть все', link: '/catalog' },
 	{
@@ -83,7 +87,8 @@ const secondMenuItems: MenuItem[] = [
 
 const handleItemClick = (item: MenuItem) => {
 	if (item.submenu) {
-		alert('submenu clicked')
+		selectedSubmenu.value = item.submenu
+		selectedSubmenuLabel.value = item.label
 	}
 	if (item.link) {
 		menuStore.close()
@@ -97,19 +102,43 @@ const handleItemClick = (item: MenuItem) => {
 	}
 }
 
+const goBack = () => {
+	selectedSubmenu.value = undefined
+}
+
+const updateIsMobile = () => {
+	isMobile.value = window.innerWidth < 768
+}
+
+onMounted(() => {
+	isMobile.value = window.innerWidth < 768
+	window.addEventListener('resize', updateIsMobile)
+})
+
+onUnmounted(() => {
+	window.removeEventListener('resize', updateIsMobile)
+})
+
 </script>
 
 <template>
-  <div class="absolute inset-0 z-30" @click.self="menuStore.close">
-	  <div class="absolute top-[62px] flex bg-[#FFFFFA] border-t-[0.5px] border-[#BBB8B6] rounded-br-3xl w-fit">
-		  <div class="p-6 flex flex-col gap-8">
+  <div class="absolute inset-0 z-30" :class="menuStore.isOpen ? 'pointer-events-auto' : 'pointer-events-none'" @click.self="menuStore.close">
+	  <div
+		  class="max-h-[calc(100vh-62px)] overflow-hidden absolute top-[32px] flex bg-[#FFFFFA] transition-all duration-300 h-full sm:top-[62px] sm:rounded-br-3xl sm:border-t-[0.5px] sm:border-[#BBB8B6] sm:h-auto"
+		  :class="[menuStore.isOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0', isMobile ? 'w-full' : 'w-fit']"
+	  >
+		  <div
+			  class="flex flex-col z-31 bg-[#FFFFFA] overflow-y-auto"
+			  :class="[(selectedSubmenu !== undefined) && 'border-r-[0.5px] border-[#BBB8B6]', isMobile ? (selectedSubmenu !== undefined) ? 'w-0' : 'px-2 pt-8 pb-6 w-full justify-between' : 'p-6 gap-8']"
+		  >
 			  <div
-				  class="hidden relative w-full overflow-hidden cursor-pointer sm:block"
+				  class="w-[252px] min-h-[180px] relative overflow-hidden cursor-pointer"
+				  :class="isMobile && 'hidden'"
 			  >
           <NuxtImg
 	          src="/menu-1.jpg"
 	          alt="banner"
-	          class="w-full h-full object-cover rounded-lg"
+	          class="object-cover rounded-lg"
 	          loading="lazy"
 	          width="252"
 	          height="180"
@@ -120,11 +149,15 @@ const handleItemClick = (item: MenuItem) => {
             Категории
           </div>
         </div>
-			  <ul class="flex flex-col gap-4 py-4 text-base font-[Manrope] font-light">
+			  <ul
+				  class="flex flex-col"
+				  :class="isMobile ? 'p-0 gap-6' : 'py-4 gap-4'"
+			  >
 				  <li 
 					  v-for="(item, index) in menuItems"
 					  :key="index"
-					  class="flex items-center justify-between cursor-pointer"
+					  class="flex items-center justify-between cursor-pointer text-[#211D1D]"
+					  :class="isMobile ? 'font-[Inter] text-[17px] uppercase' : 'text-base font-[Manrope] font-light'"
 					  @click.stop="handleItemClick(item)"
 				  >
 					  <span class="px-2 py-1">{{item.label}}</span>
@@ -136,14 +169,18 @@ const handleItemClick = (item: MenuItem) => {
 					  />
 				  </li>
 			  </ul>
-			  <ul class="flex flex-col gap-4 py-4 text-base font-[Manrope] font-light border-t-[0.5px] border-[#BBB8B6]">
+			  <ul
+				  class="flex flex-col border-t-[0.5px] border-[#BBB8B6]"
+				  :class="isMobile ? 'pt-6 gap-6' : 'py-4 gap-4'"
+			  >
 				  <li
 					  v-for="(item, index) in secondMenuItems"
 					  :key="index"
-					  class="flex items-center justify-between cursor-pointer"
+					  class="flex items-center justify-between cursor-pointer text-[#211D1D]"
+					  :class="isMobile ? 'font-[Inter] text-[17px] uppercase' : 'text-base font-[Manrope] font-light'"
 					  @click.stop="handleItemClick(item)"
 				  >
-					  <span :class="['px-2 py-1', item.customClass]">{{item.label}}</span>
+					  <span :class="['px-2 py-1', !isMobile && item.customClass]">{{item.label}}</span>
 					  <NuxtImg
 						  v-if="item.submenu"
 						  src="/arrow-right.svg"
@@ -153,7 +190,31 @@ const handleItemClick = (item: MenuItem) => {
 				  </li>
 			  </ul>
 		  </div>
-<!--		  <div>fdsf</div>-->
+		  <div class="flex flex-col gap-8 transition-[transform,_opacity] duration-300 overflow-y-auto" :class="selectedSubmenu !== undefined ? isMobile ? 'w-full px-4 gap-10 pt-8' : 'min-w-[254px] p-6 translate-x-0 opacity-100' : 'w-0 p-0 -translate-x-full opacity-0'">
+			  <div
+				  class="flex items-center gap-2 cursor-pointer"
+				  v-if="isMobile"
+				  @click="goBack"
+			  >
+				  <NuxtImg
+					  src="/arrow-right.svg"
+					  alt="arrow"
+					  class="w-2 rotate-180"
+				  />
+				  <span class="font-[Inter] text-[17px] uppercase">{{selectedSubmenuLabel}}</span>
+			  </div>
+			  <ul class="flex flex-col gap-4 py-4">
+				  <li
+				    v-for="(item, index) in selectedSubmenu"
+				    :key="index"
+				    class="flex items-center justify-between cursor-pointer text-[#211D1D]"
+				    :class="isMobile ? 'font-[Inter] text-[17px] uppercase' : 'text-base font-[Manrope] font-light'"
+				    @click.stop="handleItemClick(item)"
+				  >
+					  {{item.label}}
+				  </li>
+			  </ul>
+		  </div>
 	  </div>
   </div>
 </template>

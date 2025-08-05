@@ -36,6 +36,6 @@ const menuStore = useMenuStore()
 			  <li class="block hover:text-[#F3A454] lg:hidden"><button class="menu-button2" @click="menuStore.open">Меню</button></li>
 		  </ul>
 	  </nav>
-	  <MainMenu v-if="menuStore.isOpen" />
+	  <MainMenu />
   </header>
 </template>

@@ -14,7 +14,7 @@ const selectCity = () => {
 <template>
 	<AppHeader />
 	<NuxtPage />
-	<AppFooter @open-popup="openPopup" />
+	<AppFooter />
 	<CitySelection v-show="!isCitySelected" @select-city="selectCity" />
 	<CookieConsent v-show="!isCookieAccepted" @accept-cookie="acceptCookie" />
 	<AppPopup title="Подпишитесь на рассылку">
@@ -34,4 +34,32 @@ const selectCity = () => {
 	</AppPopup>
 </template>
 <style>
+* {
+	scrollbar-width: thin !important;
+	scrollbar-color: #211D1D #F9F6EC !important;
+}
+
+::-webkit-scrollbar {
+	width: 4px !important;
+	height: 4px !important;
+}
+
+::-webkit-scrollbar-track {
+	background: #f1f1f1 !important;
+	border-radius: 23px !important;
+	margin: 1px 0 !important;
+}
+
+::-webkit-scrollbar-thumb {
+	background: #211D1D !important;
+	border-radius: 23px !important;
+	transition: background 0.3s ease !important;
+}
+
+::-webkit-scrollbar-button {
+	display: none !important;
+	width: 0 !important;
+	height: 0 !important;
+	background: transparent !important;
+}
 </style>
