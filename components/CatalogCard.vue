@@ -19,6 +19,7 @@ const isFavorite = ref(false)
 const isVisible = ref(false)
 const isWideScreen = ref(false)
 const touchStartX = ref(0)
+const areImagesLoaded = ref(false)
 
 const imageStyles = computed(() => (index: number) => {
 	if (index === currentImageIndex.value) {
@@ -48,11 +49,31 @@ onMounted(() => {
 	isVisible.value = true
 	updateScreenWidth()
 	window.addEventListener('resize', updateScreenWidth)
+	preloadImages()
 })
 
 onUnmounted(() => {
 	window.removeEventListener('resize', updateScreenWidth)
 })
+
+const preloadImages = async () => {
+	const loadImage = (url: string) => {
+		return new Promise((resolve, reject) => {
+			const img = new Image()
+			img.src = url
+			img.onload = resolve
+			img.onerror = reject
+		})
+	}
+	
+	try {
+		await Promise.all(props.imageUrls.map(url => loadImage(url)))
+		areImagesLoaded.value = true
+	} catch (error) {
+		console.error('Ошибка при загрузке изображений:', error)
+		areImagesLoaded.value = true
+	}
+}
 
 const updateScreenWidth = () => {
 	isWideScreen.value = document.body.clientWidth > 640
@@ -130,19 +151,23 @@ const toggleFavorite = () => {
 		@mouseenter="isHovered = true"
 		@mouseleave="isHovered = false"
 	>
-		<div>
+		<div v-if="!areImagesLoaded" class="aspect-[200/300] w-full bg-[#F9F6EC] rounded-lg mt-1"/>
+		<div v-else>
 			<NuxtImg
 				:src="imageUrls[0]" alt="card" width="300" :height="(isHovered && isWideScreen) ? 470 : 450"
 				:class="['rounded-lg', customImageClass, popup && 'aspect-[200/300] w-full', (popup && isHovered && isWideScreen) && 'aspect-[200/320]']"
 				@click="handleClick"
 			/>
 		</div>
-	  <h4 class="mt-1 sm:mt-2">{{ text }}</h4>
-		<span class="mt-0.5 block sm:mt-1">{{ priceFormatter(price!) }} <span class="text-[#5E5B58] line-through">{{ priceFormatter(oldPrice!) }}</span></span>
-		<span v-if="!isHovered" class="my-1 hidden sm:block">{{ color }}</span>
-		<div :class="['hidden gap-1 2xl:flex', popup && 'flex-wrap justify-center']">
-			<SingleSelectButton :content="sizes" custom-class="text-xs" />
-		</div>
+		<div v-if="!areImagesLoaded" class="w-full h-10 bg-[#F9F6EC] rounded-lg mt-1"/>
+		<template v-else>
+			<h4 class="mt-1 sm:mt-2">{{ text }}</h4>
+			<span class="mt-0.5 block sm:mt-1">{{ priceFormatter(price!) }} <span class="text-[#5E5B58] line-through">{{ priceFormatter(oldPrice!) }}</span></span>
+			<span v-if="!isHovered" class="my-1 hidden sm:block">{{ color }}</span>
+			<div :class="['hidden gap-1 2xl:flex', popup && 'flex-wrap justify-center']">
+				<SingleSelectButton :content="sizes" custom-class="text-xs" />
+			</div>
+		</template>
 	  <NuxtImg
 		  v-if="!isWideScreen || isHovered"
 		  :src="isFavorite ? '/star-filled.svg' : '/star.svg'"
@@ -157,7 +182,13 @@ const toggleFavorite = () => {
 	  @mouseenter="isHovered = true"
 	  @mouseleave="isHovered = false"
   >
-	  <div class="relative w-full aspect-[460/680] overflow-hidden" @touchstart="handleTouchStart" @touchend="handleTouchEnd">
+	  <div v-if="!areImagesLoaded" class="aspect-[460/680] bg-[#F9F6EC] rounded-lg w-full"/>
+	  <div
+		  v-else
+		  class="relative w-full aspect-[460/680] overflow-hidden"
+		  @touchstart="handleTouchStart"
+		  @touchend="handleTouchEnd"
+	  >
       <NuxtImg
 	      v-for="(img, index) in props.imageUrls"
 	      :key="index"
@@ -171,7 +202,8 @@ const toggleFavorite = () => {
 	      @click="handleClick"
       />
     </div>
-	  <div class="flex justify-center items-center gap-1 px-6 py-2">
+	  <div v-if="!areImagesLoaded" class="w-full h-0.5 bg-[#F9F6EC] rounded-lg mt-1" />
+	  <div v-else class="flex justify-center items-center gap-1 px-6 py-2">
 		  <div
 			  v-for="(_, index) in props.imageUrls"
 			  :key="index"
@@ -179,8 +211,11 @@ const toggleFavorite = () => {
 			  :style="barStyles(index)"
 		  />
 	  </div>
-	  <h4 class="mt-1">{{ text }}</h4>
-	  <span class="mt-0.5">{{ priceFormatter(price!) }}</span>
+	  <div v-if="!areImagesLoaded" class="w-full h-10 bg-[#F9F6EC] rounded-lg mt-1" />
+	  <template v-else>
+		  <h4 class="mt-1">{{ text }}</h4>
+	    <span class="mt-0.5">{{ priceFormatter(price!) }}</span>
+	  </template>
 	  <NuxtImg
 		  v-if="!isWideScreen || isHovered"
 		  :src="isFavorite ? '/star-filled.svg' : '/star.svg'"
