@@ -10,7 +10,7 @@ const emit = defineEmits<{
 	(e: "update:modelValue", value: string): void
 }>()
 
-const isActive = ref(false)
+const isActive = ref(props.modelValue !== '')
 const isHidden = ref(true)
 const inputRef = ref<HTMLInputElement | null>(null)
 
