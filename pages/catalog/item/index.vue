@@ -29,6 +29,7 @@ const areImagesLoaded = ref(false)
 
 const popupStore = usePopupStore()
 const itemStore = useItemStore()
+const setStore = useSetStore()
 
 const imageStyles = computed(() => (index: number) => {
 	if (index === currentImageIndex.value) {
@@ -267,18 +268,18 @@ onMounted(() => {
 			  <div class="grid grid-cols-2 gap-y-6 gap-x-4 sm:gap-x-2">
 				  <div class="flex flex-col gap-2">
 					  <span class="font-[Manrope] text-sm">Верх</span>
-					  <CatalogCard custom-image-class="aspect-[200/300] w-full" popup :image-urls="[images.card1, images.card1, images.card1]" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
+					  <CatalogCard v-model="setStore.top" custom-image-class="aspect-[200/300] w-full" popup :image-urls="[images.card1, images.card1, images.card1]" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
 				  </div>
 				  <div class="flex flex-col gap-2">
 					  <span class="font-[Manrope] text-sm">Низ</span>
-					  <CatalogCard custom-image-class="aspect-[200/300] w-full" popup :image-urls="[images.card1, images.card1, images.card1]" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
+					  <CatalogCard v-model="setStore.bottom" custom-image-class="aspect-[200/300] w-full" popup :image-urls="[images.card1, images.card1, images.card1]" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
 				  </div>
 				  <div class="flex flex-col gap-2">
 					  <span class="font-[Manrope] text-sm">Аксессуар</span>
-					  <CatalogCard custom-image-class="aspect-[200/300] w-full" popup :image-urls="[images.card1, images.card1, images.card1]" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
+					  <CatalogCard v-model="setStore.accessory" custom-image-class="aspect-[200/300] w-full" popup :image-urls="[images.card1, images.card1, images.card1]" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
 				  </div>
 			  </div>
-			  <BuyButton available-quantity in-stock is-size-selected />
+			  <BuyButton available-quantity in-stock :is-parameters-selected="setStore.canAddToCart" />
 		  </div>
 	  </AppPopup>
 	  <AppPopup title="Определить размер" popup-id="size">

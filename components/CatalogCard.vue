@@ -10,6 +10,11 @@ const props = defineProps<{
 	variant: 'mini' | 'large'
 	link?: string
 	popup?: boolean
+	modelValue: string | null
+}>()
+
+const emit = defineEmits<{
+	(e: 'update:modelValue', value: string | null): void
 }>()
 
 const currentImageIndex = ref(0)
@@ -43,7 +48,7 @@ const barStyles = computed(() => (index: number) => ({
 	transition: 'opacity 400ms ease-in-out'
 }))
 
-const sizes = ["XSS", "XS", "S", "M", "L", "XL", "XXL"]
+const sizes = ["XSS", "XS", "S", "M", "L", "XL"]
 
 onMounted(() => {
 	isVisible.value = true
@@ -165,7 +170,7 @@ const toggleFavorite = () => {
 			<span class="mt-0.5 block sm:mt-1">{{ priceFormatter(price!) }} <span class="text-[#5E5B58] line-through">{{ priceFormatter(oldPrice!) }}</span></span>
 			<span v-if="!isHovered" class="my-1 hidden sm:block">{{ color }}</span>
 			<div :class="['hidden gap-1 2xl:flex', popup && 'flex-wrap justify-center']">
-				<SingleSelectButton :content="sizes" custom-class="text-xs" />
+				<SingleSelectButton :content="sizes" custom-class="text-xs" :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)" />
 			</div>
 		</template>
 	  <NuxtImg
