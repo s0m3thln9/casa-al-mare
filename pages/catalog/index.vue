@@ -280,9 +280,7 @@ const handleSelect = (selected: number) => {
 		  />
 	  </div>
 	  <div class="flex justify-center items-center pt-4 pb-2 sm:py-10">
-		  <button class="text-xs font-light text-[#211D1D]">
-			  Показать больше
-		  </button>
+		  <ExpandButton />
 	  </div>
 	  <AppSEO
 		  :paragraphs="['CASA AL MARE — эстетика тела, свобода выбора. Каталог CASA AL MARE создан для женщин, которые ищут не просто купальник или комплект белья, а выражение своей индивидуальности.\n'+

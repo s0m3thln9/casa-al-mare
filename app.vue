@@ -37,6 +37,10 @@ const selectCity = () => {
 	</AppPopup>
 </template>
 <style>
+body {
+	width: 100%;
+}
+
 * {
 	scrollbar-width: thin !important;
 	scrollbar-color: #211D1D #F9F6EC !important;

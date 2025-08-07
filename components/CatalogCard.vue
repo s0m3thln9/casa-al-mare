@@ -147,7 +147,7 @@ const toggleFavorite = () => {
 <template>
 	<div
 		v-if="variant === 'mini'"
-		:class="['flex flex-col items-center relative font-[Commissioner] text-[#211D1D] font-light text-[11px] text-center sm:font-[Manrope] sm:text-xs', customClass, isWideScreen && 'justify-between flex-1']"
+		:class="['flex flex-col items-center relative font-[Commissioner] text-[#211D1D] font-light text-[11px] text-center cursor-pointer sm:font-[Manrope] sm:text-xs', customClass, isWideScreen && 'justify-between flex-1']"
 		@mouseenter="isHovered = true"
 		@mouseleave="isHovered = false"
 	>
@@ -178,7 +178,7 @@ const toggleFavorite = () => {
   </div>
   <div
 	  v-else
-	  :class="['relative font-[Commissioner] font-light text-[10px] text-center text-[#211D1D] sm:font-[Manrope] sm:text-sm', customClass, isVisible ? 'animate-card-appear' : '']"
+	  :class="['relative font-[Commissioner] font-light text-[10px] text-center text-[#211D1D] cursor-pointer sm:font-[Manrope] sm:text-sm', customClass, isVisible ? 'animate-card-appear' : '']"
 	  @mouseenter="isHovered = true"
 	  @mouseleave="isHovered = false"
   >

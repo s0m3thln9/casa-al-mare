@@ -1,6 +1,4 @@
 <script setup lang="ts">
-const isPopupOpen = ref(false)
-
 const images = {
 	card1: "/item-page-1.jpg",
 	item: "/item-page-1.jpg",
@@ -27,6 +25,10 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 
 const currentImageIndex = ref(0)
 const touchStartX = ref(0)
+const areImagesLoaded = ref(false)
+
+const popupStore = usePopupStore()
+const itemStore = useItemStore()
 
 const imageStyles = computed(() => (index: number) => {
 	if (index === currentImageIndex.value) {
@@ -65,42 +67,43 @@ const handleTouchEnd = (e: TouchEvent) => {
 	}
 }
 
-const getScrollbarWidth = () => {
-	const outer = document.createElement("div")
-	outer.style.visibility = "hidden"
-	outer.style.overflow = "scroll"
-	document.body.appendChild(outer)
-	const inner = document.createElement("div")
-	outer.appendChild(inner)
-	const width = outer.offsetWidth - inner.offsetWidth
-	outer.remove()
-	return width
+const preloadImages = async () => {
+	const loadImage = (url: string) => {
+		return new Promise((resolve, reject) => {
+			const img = new Image()
+			img.src = url
+			img.onload = resolve
+			img.onerror = reject
+		})
+	}
+	
+	try {
+		await Promise.all(productImages.map(url => loadImage(url)))
+		areImagesLoaded.value = true
+	} catch (error) {
+		console.error('Ошибка при загрузке изображений:', error)
+		areImagesLoaded.value = true
+	}
 }
 
-const openPopup = () => {
-	isPopupOpen.value = true
-	const scrollbarWidth = getScrollbarWidth()
-	document.body.style.overflow = "hidden"
-	document.body.style.paddingRight = `${scrollbarWidth}px`
-}
+onMounted(() => {
+	preloadImages()
+})
 
-const closePopup = () => {
-	isPopupOpen.value = false
-	document.body.style.overflow = "auto"
-	document.body.style.paddingRight = "0"
-}
 </script>
 
 <template>
-  <main class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D]">
+  <main class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D] w-full">
 	  <div class="p-2 sm:px-4 sm:py-6">
 		  <AppBreadcrumbs :items="breadcrumsItems" />
 	  </div>
-	  <div class="px-0 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-8 sm:px-4">
+	  <div class="px-0 grid grid-cols-1 sm:grid-cols-[minmax(auto,1450px)_1fr] w-full gap-8 sm:px-4">
 		  <div class="block sm:hidden">
 			  <div class="relative w-full aspect-[460/680] overflow-hidden" @touchstart="handleTouchStart" @touchend="handleTouchEnd">
+				  <div v-if="!areImagesLoaded" class="aspect-[460/680] w-full bg-[#F9F6EC]" />
 			    <NuxtImg
 				    v-for="(img, index) in productImages"
+				    v-else
 				    :key="index"
 				    :src="img"
 				    alt="item"
@@ -120,8 +123,12 @@ const closePopup = () => {
 			  </div>
 			</div>
 		  <div class="hidden sm:grid grid-cols-1 gap-2 lg:grid-cols-2">
+			  <template v-if="!areImagesLoaded">
+				  <div v-for="(_, index) in productImages" :key="index" class="aspect-[726/1080] bg-[#F9F6EC] rounded-lg" />
+			  </template>
         <NuxtImg
 				  v-for="(img, index) in productImages"
+				  v-else
 				  :key="index"
 				  :src="img"
 				  alt="item"
@@ -130,7 +137,7 @@ const closePopup = () => {
 				  class="sm:rounded-lg"
 			  />
 			</div>
-		  <div class="px-2 flex flex-col sm:px-0">
+		  <div class="px-2 flex flex-col max-w-[400px] sm:px-0">
 			  <div class="flex justify-center items-center">
 				  <h2
 					  class="font-[Inter] text-center text-[32px] sm:text-4xl"
@@ -146,21 +153,21 @@ const closePopup = () => {
 				  <span class="font-light text-xs">Скидка #%</span>
 			  </div>
 			  <div class="flex justify-center items-center gap-6 mt-14">
-				  <PantButton :pants="other" other />
+				  <PantButton v-model="itemStore.color" :pants="other" other />
 			  </div>
 			  <div class="flex flex-col justify-center items-center gap-4 mt-12 sm:mt-10">
 				  <div class="flex justify-center items-center gap-3 font-light sm:gap-4 sm:font-normal">
-					  <SingleSelectButton :content="sizes" />
+					  <SingleSelectButton v-model="itemStore.top" :content="sizes" />
 				  </div>
 				  <span class="text-xs">Верх</span>
 			  </div>
 			  <div class="flex flex-col justify-center items-center gap-4 mt-12 sm:mt-10">
 				  <div class="flex justify-center items-center gap-3 font-light sm:gap-4 sm:font-normal">
-					  <SingleSelectButton :content="sizes" />
+					  <SingleSelectButton v-model="itemStore.bottom" :content="sizes" />
 				  </div>
 				  <span class="text-xs">Низ</span>
 				  <div class="flex justify-center items-center gap-6 text-xs">
-				    <PantButton :pants="pants"/>
+				    <PantButton v-model="itemStore.pantsType" :pants="pants"/>
 		      </div>
 			  </div>
 			  <div class="flex flex-col justify-center items-center gap-1 mt-12 sm:mt-10">
@@ -168,29 +175,35 @@ const closePopup = () => {
 				  <span class="text-[11px] text-[#363636]">Параметры модели: 175 80/60/89</span>
 			  </div>
 			  <div class="flex flex-col justify-center items-center gap-4 mt-6">
-				  <BuyButton in-stock available-quantity is-size-selected />
-				  <AppButton variant="secondary" content="Собрать комплект" custom-class="w-full py-4" @click="openPopup" />
+				  <BuyButton in-stock available-quantity :is-parameters-selected="itemStore.canAddToCart" />
+				  <AppButton variant="secondary" content="Собрать комплект" custom-class="w-full py-4" @click="popupStore.open('set')" />
 			  </div>
 			  <div class="flex justify-center items-center mt-4 sm:mt-6">
 				  <WishlistButton />
 			  </div>
 			  <div class="mt-14 flex flex-col justify-center items-center gap-3 p-4 rounded-2xl border border-[#BBB8B6]">
-				  <div class="flex justify-center gap-2.5 items-center w-full sm:justify-between sm:gap-0">
+				  <div class="flex justify-center gap-2.5 items-center w-full sm:justify-between cursor-pointer sm:gap-0">
 					  <span class="font-light text-sm">Состав и уход</span>
 					  <NuxtImg src="/help.svg" alt="help" width="16" height="16" />
 				  </div>
 				  <div class="w-full h-[1px] bg-[#BBB8B6]"/>
-				  <div class="flex justify-center gap-2.5 items-center w-full sm:justify-between sm:gap-0">
+				  <div
+					  class="flex justify-center gap-2.5 items-center w-full sm:justify-between cursor-pointer sm:gap-0"
+					  @click="popupStore.open('size')"
+				  >
 					  <span class="font-light text-sm">Определить размер</span>
 					  <NuxtImg src="/help.svg" alt="help" width="16" height="16" />
 				  </div>
 				  <div class="w-full h-[1px] bg-[#BBB8B6]"/>
-				  <div class="flex justify-center gap-2.5 items-center w-full sm:justify-between sm:gap-0">
+				  <div class="flex justify-center gap-2.5 items-center w-full sm:justify-between cursor-pointer sm:gap-0">
 					  <span class="font-light text-sm">Доставка и возврат</span>
 					  <NuxtImg src="/help.svg" alt="help" width="16" height="16" />
 				  </div>
 				  <div class="w-full h-[1px] bg-[#BBB8B6]"/>
-				  <div class="flex justify-center gap-2.5 items-center w-full sm:justify-between sm:gap-0">
+				  <div
+					  class="flex justify-center gap-2.5 items-center w-full sm:justify-between cursor-pointer sm:gap-0"
+					  @click="popupStore.open('subscription')"
+				  >
 					  <span class="font-light text-sm">Подписаться на рассылку</span>
 					  <NuxtImg src="/mail.svg" alt="mail" width="16" height="16" />
 				  </div>
@@ -249,7 +262,7 @@ const closePopup = () => {
 			  />
 		  </div>
 	  </div>
-	  <AppPopup :is-popup-open="isPopupOpen" title="Собрать комплект" @close-popup="closePopup" >
+	  <AppPopup title="Собрать комплект" popup-id="set">
 		  <div class="flex flex-col gap-6 mt-6">
 			  <div class="grid grid-cols-2 gap-y-6 gap-x-4 sm:gap-x-2">
 				  <div class="flex flex-col gap-2">
@@ -266,6 +279,91 @@ const closePopup = () => {
 				  </div>
 			  </div>
 			  <BuyButton available-quantity in-stock is-size-selected />
+		  </div>
+	  </AppPopup>
+	  <AppPopup title="Определить размер" popup-id="size">
+		  <div class="mt-6 flex flex-col gap-6">
+			  <div class="p-4 border border-[#BBB8B6] rounded-2xl flex flex-col gap-1">
+				  <span class="font-[Manrope] text-xs text-[#363636]">На модели размер: S</span>
+				  <span class="font-[Manrope] text-xs text-[#363636]">Параметры модели: 177 80/60/90</span>
+			  </div>
+			  <div class="p-4 border border-[#BBB8B6] rounded-2xl flex flex-col gap-4">
+				  <div class="flex gap-1 flex-col">
+					  <h3 class="font-[Manrope] text-sm text-[#211D1D]">Таблица размеров</h3>
+					  <span class="font-[Manrope] text-xs text-[#363636]">Сопоставьте ваши параметры с указанными значениями, чтобы определить свой размер</span>
+				  </div>
+				  <div class="border border-[#BBB8B6] rounded-lg flex flex-col pt-2 pb-4 gap-5">
+					  <div class="flex flex-col gap-2">
+						  <div class="grid grid-cols-9 border-b-[0.7px] border-[#8C8785] gap-4 pb-2 px-6">
+							  <div class="col-span-3 font-[Manrope] text-xs text-[#211D1D]">INT</div>
+							  <div class="font-[Manrope] text-xs text-[#211D1D]">XSS</div>
+							  <div class="font-[Manrope] text-xs text-[#211D1D]">XS</div>
+							  <div class="font-[Manrope] text-xs text-[#211D1D]">S</div>
+							  <div class="font-[Manrope] text-xs text-[#211D1D]">M</div>
+							  <div class="font-[Manrope] text-xs text-[#211D1D]">L</div>
+							  <div class="font-[Manrope] text-xs text-[#211D1D]">XL</div>
+						  </div>
+						  <div class="grid grid-cols-9 border-b-[0.7px] border-[#8C8785] gap-4 pb-2 px-6">
+							  <div class="col-span-3 font-[Manrope] text-xs text-[#211D1D]">RU</div>
+							  <div class="font-[Manrope] text-xs text-[#211D1D]">40</div>
+							  <div class="font-[Manrope] text-xs text-[#211D1D]">42</div>
+							  <div class="font-[Manrope] text-xs text-[#211D1D]">44</div>
+							  <div class="font-[Manrope] text-xs text-[#211D1D]">46</div>
+							  <div class="font-[Manrope] text-xs text-[#211D1D]">48</div>
+							  <div class="font-[Manrope] text-xs text-[#211D1D]">50</div>
+						  </div>
+					  </div>
+					  <div class="px-4 flex flex-col gap-1">
+						  <div class="px-2 py-1.5 bg-[#F9F6EC] rounded-lg grid grid-cols-9 gap-4">
+							  <div class="col-span-3 font-[Manrope] text-xs text-[#211D1D] pl-2">Обхват груди</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">80</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">84</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">88</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">92</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">96</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">100</div>
+						  </div>
+						  <div class="px-2 py-1.5 bg-[#F9F6EC] rounded-lg grid grid-cols-9 gap-4">
+							  <div class="col-span-3 font-[Manrope] text-xs text-[#211D1D] pl-2">Обхват талии</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">60</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">64</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">68</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">72</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">76</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">80</div>
+						  </div>
+						  <div class="px-2 py-1.5 bg-[#F9F6EC] rounded-lg grid grid-cols-9 gap-4">
+							  <div class="col-span-3 font-[Manrope] text-xs text-[#211D1D] pl-2">Обхват бедер</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">88</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">92</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">96</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">100</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">104</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">108</div>
+						  </div>
+						  <div class="px-2 py-1.5 bg-[#F9F6EC] rounded-lg grid grid-cols-9 gap-4">
+							  <div class="col-span-3 font-[Manrope] text-xs text-[#211D1D] pl-2">Рост</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">165</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">170</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">170</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">170</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">175</div>
+							  <div class="font-[Manrope] text-xs text-[#363636]">175</div>
+						  </div>
+					  </div>
+				  </div>
+				  <div class="border border-[#BBB8B6] rounded-lg flex flex-col p-4 gap-4">
+					  <div class="flex gap-1 flex-col">
+						  <h3 class="font-[Manrope] text-sm text-[#211D1D]">Обмеры изделия</h3>
+						  <span class="font-[Manrope] text-xs text-[#363636]">Сравните обмеры аналогичных вещей из вашего гардероба, чтобы выбрать подходящую посадку</span>
+					  </div>
+					  <div class="flex flex-col gap-2">
+						  <span class="font-[Manrope] text-xs text-[#363636]">Размер S:</span>
+						  <span class="font-[Manrope] text-xs text-[#363636]">Размер M:</span>
+						  <span class="font-[Manrope] text-xs text-[#363636]">Размер L:</span>
+					  </div>
+				  </div>
+			  </div>
 		  </div>
 	  </AppPopup>
   </main>

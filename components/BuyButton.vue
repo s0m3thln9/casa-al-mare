@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 
 const props = defineProps<{
-	isSizeSelected?: boolean
+	isParametersSelected?: boolean
 	inStock?: boolean
 	availableQuantity?: boolean
 }>()
@@ -33,8 +33,8 @@ const currentState = computed(() => {
 		content = 'Уведомить о размерах'
 		style = styleBase + styleVariants.notify
 		disabled = false
-	} else if (!props.isSizeSelected) {
-		content = 'Выберите размер'
+	} else if (!props.isParametersSelected) {
+		content = 'Выберите все параметры'
 		style = styleBase + styleVariants.default
 		disabled = false
 	} else if (isLoading.value) {
@@ -66,8 +66,8 @@ const handleClick = () => {
 		alert('Уведомление о поступлении товара настроено')
 		return
 	}
-	if (!props.isSizeSelected) {
-		alert('Пожалуйста, выберите размер')
+	if (!props.isParametersSelected) {
+		alert('Пожалуйста, выберите все параметры')
 		return
 	}
 	if (isInCart.value) {
