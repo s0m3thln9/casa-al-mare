@@ -9,11 +9,36 @@ const props = defineProps<{
 	link?: string
 }>()
 
+const areImagesLoaded = ref(false)
+
 const handleClick = () => {
 	if (props.link) {
 		navigateTo(props.link)
 	}
 }
+
+const preloadImages = async () => {
+	const loadImage = (url: string) => {
+		return new Promise((resolve, reject) => {
+			const img = new Image()
+			img.src = url
+			img.onload = resolve
+			img.onerror = reject
+		})
+	}
+	
+	try {
+		await Promise.all([props.imageUrl].map(url => loadImage(url)))
+		areImagesLoaded.value = true
+	} catch (error) {
+		console.error('Ошибка при загрузке изображений:', error)
+		areImagesLoaded.value = true
+	}
+}
+
+onMounted(() => {
+	preloadImages()
+})
 
 </script>
 
@@ -26,6 +51,7 @@ const handleClick = () => {
     ]"
 	  @click="handleClick"
   >
+	  <div v-if="!areImagesLoaded" :class="['bg-[#F9F6EC] w-full', customClass]" />
     <NuxtImg
 	    :src="imageUrl"
 	    alt="banner"
