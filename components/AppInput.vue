@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue'
-
 const props = defineProps<{
 	label: string
 	type: "email" | "password" | "text"
@@ -91,8 +89,8 @@ defineExpose({ validateInput })
       />
     </button>
     <div
-	    v-if="showError"
-	    class="absolute -top-[40px] left-3 bg-[#FFFFFA] border border-[#A6CEFF] text-[#211D1D] text-[13px] font-light font-[Manrope] p-4 shadow-md z-10 rounded-t-3xl rounded-r-3xl"
+	    class="absolute -top-[40px] left-3 bg-[#FFFFFA] border border-[#A6CEFF] transition-opacity duration-300 text-[#211D1D] text-[13px] font-light font-[Manrope] p-4 shadow-md z-10 rounded-t-3xl rounded-r-3xl pointer-events-none"
+      :class="showError === true ? 'opacity-100' : 'opacity-0'"
     >
       Это поле обязательно для заполнения
     </div>
@@ -100,11 +98,4 @@ defineExpose({ validateInput })
 </template>
 
 <style scoped>
-div[role="tooltip"] {
-	opacity: 0;
-	transition: opacity 0.2s ease-in-out;
-}
-div[role="tooltip"].visible {
-	opacity: 1;
-}
 </style>

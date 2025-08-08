@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import type {AppInput} from "#components"
+import {type AppInput, AppSelect} from "#components"
 
 const orderStore = useOrderStore()
 const authStore = useAuthStore()
 
 const inputRefs = ref<InstanceType<typeof AppInput>[]>([])
+const inputNewAddressRef = ref<InstanceType<typeof AppInput>>()
+const selectRef = ref<InstanceType<typeof AppSelect>>()
 
 const priceFormatter = (value: number) => {
 	const formattedValue = new Intl.NumberFormat('ru-RU').format(value)
@@ -12,17 +14,41 @@ const priceFormatter = (value: number) => {
 }
 
 const handlePay = () => {
-	let isValid = true
-	inputRefs.value.forEach((input) => {
-		if (input.validateInput) {
-			const valid = input.validateInput()
-			isValid = isValid && valid
+	if (orderStore.isPaymentSuccessful === null) {
+		if (!authStore.isAuth) {
+			let isValid = true
+			inputRefs.value.forEach((input) => {
+				if (input.validateInput) {
+					const valid = input.validateInput()
+					isValid = isValid && valid
+				}
+			})
+			if (!isValid) {
+				return
+			}
 		}
-	})
-	if (!isValid) {
+		if (!selectRef.value?.validateSelect()) return
+		if (orderStore.deliveryMethod === null || (orderStore.deliveryMethod === 'Курьер' && !orderStore.currentAddress)) {
+			orderStore.showErrorDeliveryMethod = true
+			setTimeout(() => {
+				orderStore.showErrorDeliveryMethod = false
+			}, 2000)
+			return
+		}
+	}
+	if (orderStore.paymentMethod === null) {
+		orderStore.showErrorPaymentMethod = true
+		setTimeout(() => {
+			orderStore.showErrorPaymentMethod = false
+		}, 2000)
 		return
 	}
 	orderStore.isPaymentSuccessful = false
+}
+
+const handleSave = () => {
+	if (!inputNewAddressRef.value?.validateInput()) return
+	orderStore.saveNewAddress()
 }
 
 const addInputRef = (el: InstanceType<typeof AppInput> | null) => {
@@ -49,9 +75,9 @@ const addInputRef = (el: InstanceType<typeof AppInput> | null) => {
 	          <AppInput id="phone" v-model="orderStore.userInfo.phone" type="text" label="Номер телефона" required :ref="addInputRef" />
 	          <AppInput id="email" v-model="orderStore.userInfo.email" type="email" label="E-mail" required :ref="addInputRef" />
 	        </div>
-	        <div class="flex flex-col gap-6">
+	        <div class="relative flex flex-col gap-6">
 	          <span class="font-light text-sm">Доставка</span>
-	          <AppSelect :options="['Москва', 'Питер', 'Ростов', 'Краснодар', 'Мурманск', 'Брянск']" label="Город" />
+	          <AppSelect v-model="orderStore.city" :options="['Москва', 'Питер', 'Ростов', 'Краснодар', 'Мурманск', 'Брянск']" label="Город" ref="selectRef" required />
 	          <div class="flex flex-col gap-6">
 	            <AppCheckbox v-model="orderStore.deliveryMethod" size="M" label="Самовывоз" value="Самовывоз" />
 	            <AppCheckbox v-model="orderStore.deliveryMethod" size="M" label="Курьер (# дней)" value="Курьер" />
@@ -60,20 +86,32 @@ const addInputRef = (el: InstanceType<typeof AppInput> | null) => {
 	            <AppCheckbox v-for="(address, index) in orderStore.addresses" :key="index" v-model="orderStore.currentAddress" size="S" :label="address" :value="address" />
 	            <AppCheckbox v-model="orderStore.currentAddress" size="S" label="Новый адрес" value="Новый адрес" />
 	            <div v-if="orderStore.currentAddress === 'Новый адрес'" class="flex flex-col gap-4">
-	              <AppInput id="address1" v-model="orderStore.newAddressFirstLine" type="text" label="Улица, дом, корпус, строение, квартира" required />
+	              <AppInput id="address1" v-model="orderStore.newAddressFirstLine" type="text" label="Улица, дом, корпус, строение, квартира" required ref="inputNewAddressRef"/>
 	              <AppInput id="address2" v-model="orderStore.newAddressSecondLine" type="text" label="Номер дома и домофон / офис" />
-	              <AppButton custom-class="w-full" content="Сохранить" variant="primary" @click="orderStore.saveNewAddress" />
+	              <AppButton custom-class="w-full" content="Сохранить" variant="primary" @click="handleSave" />
 	            </div>
 	          </div>
 		        <AppCheckbox v-model="orderStore.deliveryMethod" size="M" disabled label="СДЭК (ПВЗ)" value="СДЭК (ПВЗ)" />
 	          <AppInput id="forCourier" v-model="orderStore.commentForCourier" type="text" label="Пожелания и комментарии для курьера" />
+		        <div
+			        class="absolute -top-[40px] left-3 bg-[#FFFFFA] transition-opacity duration-300 border border-[#A6CEFF] text-[#211D1D] text-[13px] font-light font-[Manrope] p-4 shadow-md z-10 rounded-t-3xl rounded-r-3xl"
+			        :class="orderStore.showErrorDeliveryMethod ? 'opacity-100' : 'opacity-0'"
+		        >
+              Выберите способ доставки
+            </div>
 	        </div>
-	        <div class="flex flex-col gap-6">
+	        <div class="relative flex flex-col gap-6">
 	          <span class="font-light text-sm">Способ оплаты</span>
 	          <div class="flex flex-col gap-4">
 	            <AppCheckbox v-model="orderStore.paymentMethod" size="S" label="Картой на сайте" value="Картой на сайте" />
 	            <AppCheckbox v-model="orderStore.paymentMethod" size="S" label="Оплата при получении" value="Оплата при получении" />
 	          </div>
+		        <div
+			        class="absolute -top-[40px] left-3 bg-[#FFFFFA] transition-opacity duration-300 border border-[#A6CEFF] text-[#211D1D] text-[13px] font-light font-[Manrope] p-4 shadow-md z-10 rounded-t-3xl rounded-r-3xl"
+		          :class="orderStore.showErrorPaymentMethod ? 'opacity-100' : 'opacity-0'"
+		        >
+              Выберите способ оплаты
+            </div>
 	        </div>
 	      </template>
 	      <div v-else-if="orderStore.isPaymentSuccessful" class="flex flex-col gap-4">
@@ -240,12 +278,18 @@ const addInputRef = (el: InstanceType<typeof AppInput> | null) => {
 			      <span>Стоимость товаров:</span>
 			      <span class="flex items-center gap-2">{{ priceFormatter(orderStore.totalSum) }} <span class="font-extralight line-through">{{ priceFormatter(orderStore.totalSum) }}</span></span>
 		      </div>
-		      <div class="flex flex-col gap-6 mt-8">
+		      <div class="relative flex flex-col gap-6 mt-8">
 	          <span class="font-light text-sm">Способ оплаты</span>
 	          <div class="flex flex-col gap-4">
 	            <AppCheckbox v-model="orderStore.paymentMethod" size="S" label="Картой на сайте" value="Картой на сайте" />
 	            <AppCheckbox v-model="orderStore.paymentMethod" size="S" label="Оплата при получении" value="Оплата при получении" />
 	          </div>
+			      <div
+				      class="absolute -top-[40px] left-3 bg-[#FFFFFA] transition-opacity duration-300 border border-[#A6CEFF] text-[#211D1D] text-[13px] font-light font-[Manrope] p-4 shadow-md z-10 rounded-t-3xl rounded-r-3xl"
+				      :class="orderStore.showErrorPaymentMethod ? 'opacity-100' : 'opacity-0'"
+			      >
+              Выберите способ оплаты
+            </div>
 	        </div>
 		      <AppButton class="w-full mt-8" content="Оплатить заказ" @click="handlePay" />
 	      </div>

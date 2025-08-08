@@ -22,11 +22,14 @@ export const useOrderStore = defineStore('order', () => {
 		{ id: 2, bottom: 'XS', color: 'Цвет', img: '/order.jpg', count: 2, name: 'Название', top: 'XS', price: 10000 }
 	])
 	const deliveryMethod = ref<string | null>(null)
+	const showErrorDeliveryMethod = ref<boolean>(false)
 	const paymentMethod = ref<string | null>(null)
+	const showErrorPaymentMethod = ref<boolean>(false)
 	const addresses = ref<string[]>([
 		'Ул. Заречная, дом 19, кв. 5',
 		'Ул. Октябрьская, дом 32, к. 4, офис 219'
 	])
+	const city = ref<string | null>(null)
 	const currentAddress = ref<string | null>(null)
 	const newAddressFirstLine = ref('')
 	const newAddressSecondLine = ref('')
@@ -59,7 +62,10 @@ export const useOrderStore = defineStore('order', () => {
 	}
 	
 	function saveNewAddress() {
-		const newAddress = `${newAddressFirstLine.value}, ${newAddressSecondLine.value}`
+		let newAddress = `${newAddressFirstLine.value}, ${newAddressSecondLine.value}`
+		if (newAddressSecondLine.value.trim() === '') {
+			newAddress = newAddressFirstLine.value
+		}
 		addresses.value.push(newAddress)
 		currentAddress.value = newAddress
 		newAddressFirstLine.value = ''
@@ -77,8 +83,11 @@ export const useOrderStore = defineStore('order', () => {
 	return {
 		cartItems,
 		deliveryMethod,
+		showErrorDeliveryMethod,
 		paymentMethod,
+		showErrorPaymentMethod,
 		addresses,
+		city,
 		currentAddress,
 		newAddressFirstLine,
 		newAddressSecondLine,
