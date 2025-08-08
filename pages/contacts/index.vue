@@ -31,7 +31,7 @@
 			  <div class="grid sm:grid-cols-3 w-fit gap-10 sm:gap-6 text-sm">
 				  <div class="grid grid-rows-2 text-center gap-1 sm:gap-2">
 					  <span>Адрес</span>
-		        <span class="font-light">ул Лазурная. д.2</span>
+		        <span class="font-light ">ул Лазурная. д.2</span>
 				  </div>
 				  <div class="grid grid-rows-2 text-center gap-1 sm:gap-2">
 					  <span>Телефон</span>

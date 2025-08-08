@@ -6,8 +6,24 @@ const images = {
 	promo1: "/promo-1.jpg",
 }
 
-const strokeCardCount = ref(4)
 const popupStore = usePopupStore()
+const catalogStore = useCatalogStore()
+const isMobile = ref(false)
+
+const currentCardCount = computed(() => isMobile.value ? catalogStore.mobileStrokeCardCount : catalogStore.desktopStrokeCardCount);
+
+const handleResize = () => {
+	isMobile.value = window.innerWidth < 640;
+};
+
+onMounted(() => {
+	isMobile.value = window.innerWidth < 640;
+	window.addEventListener('resize', handleResize);
+});
+
+onUnmounted(() => {
+	window.removeEventListener('resize', handleResize);
+});
 
 const types = ["Топ", "Купальник", "Лиф", "Трусы", "Шорты", "Рубашка", "Брюки", "Туника", "Панамка", "Поло", "Сумка", "Полотенце"]
 const colors: { title: string, value: string }[] = [
@@ -36,27 +52,27 @@ const materials = ["Махра", "Вязаные", "В рубчик"]
 const useTypes = ["Повседневная одежда", "Пляж"]
 const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главная", path: "/" }, { name: "Смотреть все" }]
 
-const handleSelect = (selected: number) => {
-	strokeCardCount.value = selected
-}
-
 </script>
 
 <template>
   <main class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D]">
-	  <div class="hidden sm:flex justify-between px-4 py-6">
+	  <div
+		  v-if="!isMobile"
+		  class="flex justify-between px-4 py-6"
+	  >
 		  <AppBreadcrumbs :items="breadcrumsItems" />
 		  <div class="flex gap-4">
 			  <button class="cursor-pointer" @click="popupStore.open('filter')">
 			    <NuxtImg src="/sliders.svg" alt="sliders" width="24" height="24" />
 			  </button>
-			  <SelectButton :variants="['4', '6']" @select="handleSelect" />
+			  <SelectButton v-model="catalogStore.desktopStrokeCardCount" :variants="['4', '6']" />
 		  </div>
 	  </div>
 	  <div
-		  class="flex justify-between items-center p-2 sticky top-0 bg-[#FFFFFA] z-10 sm:hidden"
+		  v-else
+		  class="flex justify-between items-center p-2 sticky top-0 bg-[#FFFFFA] z-10"
 	  >
-		  <SelectButton :variants="['2', '3']" @select="handleSelect" />
+		  <SelectButton v-model="catalogStore.mobileStrokeCardCount" :variants="['2', '3']" />
 		  <span class="text-[10px] font-light font-[Commissioner]">Смотреть все / Купальники</span>
 		  <div class="flex items-center gap-1">
 			  <span class="text-[11px] font-[Manrope]">(12)</span>
@@ -66,7 +82,7 @@ const handleSelect = (selected: number) => {
 		  </div>
 	  </div>
 	  <div
-		  v-if="strokeCardCount === 4 || strokeCardCount === 2"
+		  v-if="currentCardCount === '4' || currentCardCount === '2'"
 		  class="overflow-hidden grid grid-cols-2 px-2 gap-x-1 gap-y-2 sm:grid-cols-4 sm:px-4 sm:gap-x-4 sm:gap-y-6"
 	  >
 		  <CatalogCard
