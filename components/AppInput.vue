@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { ref, watch, nextTick } from 'vue'
+
 const props = defineProps<{
 	label: string
 	type: "email" | "password" | "text"
 	id: string
 	modelValue: string
+	required?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -13,9 +16,11 @@ const emit = defineEmits<{
 const isActive = ref(props.modelValue !== '')
 const isHidden = ref(true)
 const inputRef = ref<HTMLInputElement | null>(null)
+const showError = ref(false)
 
 watch(() => props.modelValue, (newValue) => {
 	isActive.value = newValue !== ''
+	showError.value = props.required && newValue === ''
 })
 
 const toggleVisibility = () => {
@@ -26,8 +31,18 @@ const toggleVisibility = () => {
 }
 
 const handleInput = (event: Event) => {
-	emit("update:modelValue", (event.target as HTMLInputElement).value)
+	const value = (event.target as HTMLInputElement).value
+	emit("update:modelValue", value)
+	showError.value = props.required && value === ''
 }
+
+const validateInput = () => {
+	showError.value = props.required && props.modelValue === ''
+	return !showError.value
+}
+
+defineExpose({ validateInput })
+
 </script>
 
 <template>
@@ -38,15 +53,17 @@ const handleInput = (event: Event) => {
 	    :class="{ '!top-[3px]': isActive }"
     >
       {{ label }}
+      <span class="text-[#E29650]">{{ required ? '*' : '' }}</span>
     </label>
     <input
 	    :id="id"
 	    ref="inputRef"
 	    :value="modelValue"
 	    :type="(isHidden && type === 'password') ? 'password' : type === 'password' ? 'text' : type"
-	    class="h-[44px] w-full px-2.5 pt-[21.5px] pb-1.5 border-[#5E5B58] border-[0.7px] rounded-lg text-sm font-light text-[#211D1D] font-[Manrope] focus:border-[#211D1D] focus:outline-0 sm:text-xs"
+	    class="h-[44px] w-full px-2.5 pt-[21.5px] pb-1.5 border-[0.7px] rounded-lg text-sm font-light text-[#211D1D] font-[Manrope] focus:outline-0 sm:text-xs"
+	    :class="{ 'border-[#5E5B58]': !showError, 'border-[#E29650]': showError }"
 	    @focus="isActive = true"
-	    @blur="isActive = modelValue !== ''"
+	    @blur="isActive = modelValue !== ''; validateInput()"
 	    @input="handleInput"
     >
     <button
@@ -61,8 +78,33 @@ const handleInput = (event: Event) => {
 	      :alt="isHidden ? 'Показать пароль' : 'Скрыть пароль'"
       />
     </button>
+    <button
+	    v-if="props.required"
+	    class="absolute top-1/2 -translate-y-1/2 right-[40px] w-fit"
+	    aria-label="Проверить поле"
+	    @click="validateInput"
+    >
+      <NuxtImg
+	      src="/check.svg"
+	      class="w-[23px]"
+	      alt="Проверить поле"
+      />
+    </button>
+    <div
+	    v-if="showError"
+	    class="absolute -top-[40px] left-3 bg-[#FFFFFA] border border-[#A6CEFF] text-[#211D1D] text-[13px] font-light font-[Manrope] p-4 shadow-md z-10 rounded-t-3xl rounded-r-3xl"
+    >
+      Это поле обязательно для заполнения
+    </div>
   </div>
 </template>
 
 <style scoped>
+div[role="tooltip"] {
+	opacity: 0;
+	transition: opacity 0.2s ease-in-out;
+}
+div[role="tooltip"].visible {
+	opacity: 1;
+}
 </style>

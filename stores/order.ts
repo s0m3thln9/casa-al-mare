@@ -34,6 +34,7 @@ export const useOrderStore = defineStore('order', () => {
 	const isExpandedPromo = ref(false)
 	const isExpandedCert = ref(false)
 	const userInfo = ref<UserInfo>({ name: '', surname: '', phone: '', email: '' })
+	const isPaymentSuccessful = ref<boolean | null>(null)
 	
 	const totalSum = computed(() => {
 		return cartItems.value.reduce((sum, item) => sum + item.price * item.count, 0)
@@ -86,6 +87,7 @@ export const useOrderStore = defineStore('order', () => {
 		isExpandedCert,
 		userInfo,
 		totalSum,
+		isPaymentSuccessful,
 		removeItemFromCart,
 		incrementQuantity,
 		decrementQuantity,
