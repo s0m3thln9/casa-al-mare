@@ -43,7 +43,7 @@ const handlePay = () => {
 		}, 2000)
 		return
 	}
-	orderStore.isPaymentSuccessful = false
+	orderStore.isPaymentSuccessful = Math.random() >= 0.5
 }
 
 const handleSave = () => {
