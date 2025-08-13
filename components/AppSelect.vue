@@ -83,7 +83,7 @@ defineExpose({ validateSelect })
       }"
 	    @click="toggleSelect"
     >
-	    <div class="flex items-center justify-between w-full" :class="[(isActive && !isDropdownOpen) ? 'justify-between' : 'justify-end']">
+	    <div class="flex items-center w-full" :class="[(isActive && !isDropdownOpen) ? 'justify-between' : 'justify-end']">
 		    <span
 			    v-if="selected !== null && !isDropdownOpen"
 			    class="text-sm font-light text-[#211D1D] font-[Manrope] sm:text-xs"

@@ -7,7 +7,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-	(e: 'update:modelValue', value: string | null): void
+	(e: 'update:modelValue', value: string): void
 }>()
 
 const selected = ref(props.modelValue)

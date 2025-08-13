@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const isCookieAccepted = ref(false)
 const isCitySelected = ref(false)
+const email = ref('')
 
 const acceptCookie = () => {
 	isCookieAccepted.value = true
@@ -23,10 +24,7 @@ const selectCity = () => {
 	>
 		<div class="flex flex-col items-center gap-6 mt-8 sm:mt-14 sm:items-start">
 			<NuxtImg src="/pop-up-sub.jpg" alt="sub" width="390" height="532" class="rounded-lg" />
-			<input
-				type="email" placeholder="Введите e-mail для получения новостей"
-				class="min-w-full h-[44px] px-2 py-2.5 border-[#5E5B58] border-[0.7px] rounded-lg text-xs placeholder:text-[#5E5B58]"
-			>
+			<AppInput id="email" v-model="email" label="ведите e-mail для получения новостей" type="email" custom-class="min-w-full" />
 			<AppButton content="Подписаться" variant="primary" custom-class="w-full px-0"/>
 			<p
 				class="w-full font-light text-[10px] text-[#5E5B58] font-[Commissioner] sm:w-[350px]"

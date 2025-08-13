@@ -72,7 +72,7 @@ const addInputRef = (el: InstanceType<typeof AppInput> | null) => {
 	          <span class="text-xs">Есть аккаунт? <span class="cursor-pointer" @click="authStore.login">Войти</span></span>
 	          <AppInput id="name" v-model="orderStore.userInfo.name" type="text" label="Имя" required :ref="addInputRef" />
 	          <AppInput id="surname" v-model="orderStore.userInfo.surname" type="text" label="Фамилия" required :ref="addInputRef" />
-	          <AppInput id="phone" v-model="orderStore.userInfo.phone" type="text" label="Номер телефона" required :ref="addInputRef" />
+			      <SelectInput :ref="addInputRef" id="phone" v-model="orderStore.userInfo.phone" :options="[  { code: '+7', country: 'Россия' }, { code: '+375', country: 'Беларусь' }, { code: '+380', country: 'Украина' }, { code: '+77', country: 'Казахстан' }, { code: '+998', country: 'Узбекистан' }, { code: '+992', country: 'Таджикистан' }, { code: '+993', country: 'Туркменистан' }, { code: '+996', country: 'Кыргызстан' }, { code: '+374', country: 'Армения' }, { code: '+994', country: 'Азербайджан' }, { code: '+373', country: 'Молдова' }, { code: '+7', country: 'Абхазия' }, { code: '+995', country: 'Грузия' }]" type="text" label="Номер телефона" required />
 	          <AppInput id="email" v-model="orderStore.userInfo.email" type="email" label="E-mail" required :ref="addInputRef" />
 	        </div>
 	        <div class="relative flex flex-col gap-6">

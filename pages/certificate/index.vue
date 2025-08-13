@@ -176,13 +176,7 @@ const handleTouchEnd = (e: TouchEvent) => {
 		              label="Введите e-mail получателя*"
 		              type="email"
 	              />
-			          <AppInput
-				          v-if="certificateStore.selectedWay === 'По SMS'"
-				          id="recipientPhone"
-				          v-model="certificateStore.recipientPhone"
-				          label="Введите номер телефона получателя*"
-				          type="text"
-			          />
+		            <SelectInput v-if="certificateStore.selectedWay === 'По SMS'" id="recipientPhone" v-model="certificateStore.recipientPhone" :options="[  { code: '+7', country: 'Россия' }, { code: '+375', country: 'Беларусь' }, { code: '+380', country: 'Украина' }, { code: '+77', country: 'Казахстан' }, { code: '+998', country: 'Узбекистан' }, { code: '+992', country: 'Таджикистан' }, { code: '+993', country: 'Туркменистан' }, { code: '+996', country: 'Кыргызстан' }, { code: '+374', country: 'Армения' }, { code: '+994', country: 'Азербайджан' }, { code: '+373', country: 'Молдова' }, { code: '+7', country: 'Абхазия' }, { code: '+995', country: 'Грузия' }]" type="text" label="Номер телефона" required />
 	            </div>
             </div>
           </div>

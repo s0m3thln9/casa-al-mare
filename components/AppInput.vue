@@ -5,6 +5,7 @@ const props = defineProps<{
 	id: string
 	modelValue: string
 	required?: boolean
+	customClass?: string
 }>()
 
 const emit = defineEmits<{
@@ -44,7 +45,7 @@ defineExpose({ validateInput })
 </script>
 
 <template>
-  <div class="relative">
+  <div class="relative" :class="customClass">
     <label
 	    :for="id"
 	    class="absolute top-3.5 left-2.5 font-[Manrope] font-light text-sm text-[#8C8785] transition-all duration-200 pointer-events-none sm:text-xs"
@@ -58,7 +59,7 @@ defineExpose({ validateInput })
 	    ref="inputRef"
 	    :value="modelValue"
 	    :type="(isHidden && type === 'password') ? 'password' : type === 'password' ? 'text' : type"
-	    class="h-[44px] w-full px-2.5 pt-[21.5px] pb-1.5 border-[0.7px] rounded-lg text-sm font-light text-[#211D1D] font-[Manrope] focus:outline-0 sm:text-xs"
+	    class="h-[44px] w-full px-2.5 pt-[21.5px] pb-1.5 border-[0.7px] rounded-lg text-sm font-light text-[#211D1D] font-[Manrope] outline-none sm:text-xs"
 	    :class="{ 'border-[#5E5B58]': !showError, 'border-[#E29650]': showError }"
 	    @focus="isActive = true"
 	    @blur="isActive = modelValue !== ''; validateInput()"
