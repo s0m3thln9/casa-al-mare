@@ -317,50 +317,50 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 				<div class="flex flex-col items-center gap-4 sm:gap-6">
 					<h3 class="font-[Inter] text-[17px] font-light sm:font-[Manrope] sm:font-light sm:text-base sm:uppercase">Тип</h3>
 					<div class="flex flex-wrap gap-4 items-center justify-center">
-						<SingleSelectButton :content="types" />
+						<SingleSelectButton v-model="catalogStore.sortAndFilter.type" :content="types" />
 					</div>
 				</div>
 				<div class="grid grid-cols-4 gap-4 sm:gap-y-8">
-					<ColorButton :colors="colors" />
+					<ColorButton v-model="catalogStore.sortAndFilter.color" :colors="colors" />
 				</div>
 				<div class="flex flex-col items-center gap-4 sm:gap-6">
 					<h3 class="font-[Inter] text-[17px] font-light sm:font-[Manrope] sm:font-light sm:text-base sm:uppercase">Верх</h3>
 					<div class="flex gap-4 items-center justify-center">
-						<SingleSelectButton :content="sizes" />
+						<SingleSelectButton v-model="catalogStore.sortAndFilter.top" :content="sizes" />
 					</div>
 				</div>
 				<div class="flex flex-col items-center gap-4 sm:gap-6">
 					<h3 class="font-[Inter] text-[17px] font-light sm:font-[Manrope] sm:font-light sm:text-base sm:uppercase">Низ</h3>
 					<div class="flex gap-4 items-center justify-center">
-						<SingleSelectButton :content="sizes" />
+						<SingleSelectButton v-model="catalogStore.sortAndFilter.bottom" :content="sizes" />
 					</div>
 				</div>
 				<div class="flex justify-center items-center gap-6 text-xs">
-				  <PantButton :pants="pants"/>
+				  <PantButton v-model="catalogStore.sortAndFilter.pantsType" :pants="pants"/>
 		    </div>
 				<div class="flex flex-col items-center gap-4 sm:gap-6">
 					<h3 class="font-[Inter] text-[17px] font-light sm:font-[Manrope] sm:font-light sm:text-base sm:uppercase">Цена</h3>
 					<div class="flex flex-wrap gap-4 items-center justify-center">
-						<SingleSelectButton :content="prices" />
+						<SingleSelectButton v-model="catalogStore.sortAndFilter.priceLimit" :content="prices" />
 					</div>
 				</div>
 				<div class="flex flex-wrap gap-4 items-center justify-center">
-					<MultiSelectButton :content="sortTypes" />
+					<SingleSelectButton v-model="catalogStore.sortAndFilter.price" :content="sortTypes" />
 				</div>
 				<div class="flex flex-col items-center gap-4 sm:gap-6">
 					<h3 class="font-[Inter] text-[17px] font-light sm:font-[Manrope] sm:font-light sm:text-base sm:uppercase">Материал</h3>
 					<div class="flex flex-wrap gap-4 items-center justify-center">
-						<SingleSelectButton :content="materials" />
+						<SingleSelectButton v-model="catalogStore.sortAndFilter.material" :content="materials" />
 					</div>
 				</div>
 				<div class="flex flex-col items-center gap-4 sm:gap-6">
 					<h3 class="font-[Inter] text-[17px] font-light sm:font-[Manrope] sm:font-light sm:text-base sm:uppercase">Назначение</h3>
 					<div class="flex flex-wrap gap-4 items-center justify-center">
-						<SingleSelectButton :content="useTypes" />
+						<SingleSelectButton v-model="catalogStore.sortAndFilter.useType" :content="useTypes" />
 					</div>
 				</div>
 				<div class="flex items-center gap-4 sm:pt-6">
-					<AppButton custom-class="py-4 px-4 sm:px-8" content="Сбросить" />
+					<AppButton custom-class="py-4 px-4 sm:px-8" content="Сбросить" @click="catalogStore.reset" />
 					<AppButton custom-class="w-full py-4 sm:p-4" variant="primary" content="Показать результаты" />
 				</div>
 			</div>

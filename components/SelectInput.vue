@@ -2,7 +2,7 @@
 import { ref, watch, computed, onMounted } from 'vue'
 import { parsePhoneNumberFromString } from 'libphonenumber-js'
 
-type Option = { code: string; country: string }
+type Option = { code: string, country: string }
 
 const props = defineProps<{
 	id: string
