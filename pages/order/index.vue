@@ -72,7 +72,29 @@ const addInputRef = (el: InstanceType<typeof AppInput> | null) => {
 	          <span class="text-xs">Есть аккаунт? <span class="cursor-pointer" @click="authStore.login">Войти</span></span>
 	          <AppInput id="name" v-model="orderStore.userInfo.name" type="text" label="Имя" required :ref="addInputRef" />
 	          <AppInput id="surname" v-model="orderStore.userInfo.surname" type="text" label="Фамилия" required :ref="addInputRef" />
-			      <SelectInput :ref="addInputRef" id="phone" v-model="orderStore.userInfo.phone" :options="[  { code: '+7', country: 'Россия' }, { code: '+375', country: 'Беларусь' }, { code: '+380', country: 'Украина' }, { code: '+77', country: 'Казахстан' }, { code: '+998', country: 'Узбекистан' }, { code: '+992', country: 'Таджикистан' }, { code: '+993', country: 'Туркменистан' }, { code: '+996', country: 'Кыргызстан' }, { code: '+374', country: 'Армения' }, { code: '+994', country: 'Азербайджан' }, { code: '+373', country: 'Молдова' }, { code: '+7', country: 'Абхазия' }, { code: '+995', country: 'Грузия' }]" type="text" label="Номер телефона" required />
+			      <SelectInput
+				      id="phone"
+				      :ref="addInputRef"
+				      v-model="orderStore.userInfo.phone"
+				      :options="[
+								{ code: '+7', country: 'Россия' },
+								{ code: '+375', country: 'Беларусь' },
+								{ code: '+380', country: 'Украина' },
+								{ code: '+77', country: 'Казахстан' },
+								{ code: '+998', country: 'Узбекистан' },
+								{ code: '+992', country: 'Таджикистан' },
+								{ code: '+993', country: 'Туркменистан' },
+								{ code: '+996', country: 'Кыргызстан' },
+								{ code: '+374', country: 'Армения' },
+								{ code: '+994', country: 'Азербайджан' },
+								{ code: '+373', country: 'Молдова' },
+								{ code: '+7', country: 'Абхазия' },
+								{ code: '+995', country: 'Грузия' }
+							]"
+				      type="text"
+				      label="Номер телефона"
+				      required
+			      />
 	          <AppInput id="email" v-model="orderStore.userInfo.email" type="email" label="E-mail" required :ref="addInputRef" />
 	        </div>
 	        <div class="relative flex flex-col gap-6">
@@ -164,15 +186,14 @@ const addInputRef = (el: InstanceType<typeof AppInput> | null) => {
 	                </button>
 	              </div>
 	              <div class="collapsible-div flex flex-col gap-4 transition-max-height duration-300 ease-in-out overflow-hidden" :class="{ 'max-h-500 opacity-100': orderStore.isExpandedPromo, 'max-h-0 opacity-0': !orderStore.isExpandedPromo }">
-	                <input
-		                type="text" placeholder="Введите код"
-		                class="w-full h-[44px] px-2 py-2.5 border-[#5E5B58] border-[0.7px] rounded-lg text-xs placeholder:text-[#5E5B58]"
-	                >
+		              <AppInput
+			              id="promocode"
+			              v-model="orderStore.promocode"
+			              label="Введите код"
+			              type="text"
+		              />
 	                <AppButton variant="primary" custom-class="w-full" content="Использовать" />
-	                <div class="flex gap-2 items-center">
-	                  <input type="checkbox" class="w-4 h-4">
-	                  <span class="text-[13px]">Промокод “name” -10% Выгода 500 ₽</span>
-	                </div>
+	                <AppCheckbox v-model="orderStore.promocodeCheckbox" size="S" label="Промокод “name” -10% Выгода 500 ₽" value="Промокод “name” -10% Выгода 500 ₽" />
 	                <span class="font-light text-[13px] text-[#E57979]">Промокод не применяется к товарам со скидкой</span>
 	                <AppButton variant="primary" custom-class="w-full" content="Применить промокод" />
 	              </div>
@@ -185,18 +206,19 @@ const addInputRef = (el: InstanceType<typeof AppInput> | null) => {
 	                </button>
 	              </div>
 	              <div class="collapsible-div flex flex-col gap-4 transition-max-height duration-300 ease-in-out overflow-hidden" :class="{ 'max-h-500 opacity-100': orderStore.isExpandedCert, 'max-h-0 opacity-0': !orderStore.isExpandedCert }">
-	                <input
-		                type="text" placeholder="Введите код"
-		                class="w-full h-[44px] px-2 py-2.5 border-[#5E5B58] border-[0.7px] rounded-lg text-xs placeholder:text-[#5E5B58]"
-	                >
-	                <div class="flex gap-2 items-center">
-	                  <input type="checkbox" class="w-4 h-4">
-	                  <span class="text-[13px]">Сертификат на сумму 1 000 рублей</span>
-	                </div>
-	                <input
-		                type="text" placeholder="Введите сумму для списания"
-		                class="w-full h-[44px] px-2 py-2.5 border-[#5E5B58] border-[0.7px] rounded-lg text-xs placeholder:text-[#5E5B58]"
-	                >
+	                <AppInput
+		                id="certificate"
+		                v-model="orderStore.certificate"
+		                label="Введите код"
+		                type="text"
+	                />
+	                <AppCheckbox v-model="orderStore.certificateCheckbox" size="S" label="Сертификат на сумму 1 000 рублей" value="Сертификат на сумму 1 000 рублей" />
+	                <AppInput
+		                id="certificateSum"
+		                v-model="orderStore.certificateSum"
+		                label="Введите сумму для списания"
+		                type="text"
+	                />
 	                <AppButton variant="primary" custom-class="w-full" content="Списать 1 000 рублей" />
 	              </div>
 	            </div>

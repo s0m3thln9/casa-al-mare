@@ -18,7 +18,7 @@ const isSelected = computed(() => props.modelValue === props.value)
 
 <template>
   <div
-	  class="flex gap-2 items-center"
+	  class="flex gap-2 items-center select-none"
 	  :class="!disabled && 'cursor-pointer'"
 	  role="checkbox"
 	  :aria-checked="isSelected"

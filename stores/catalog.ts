@@ -10,6 +10,15 @@ type SortAndFilter = {
 	useType: string | null,
 }
 
+type Item = {
+	id: string
+	name: string
+	color: string
+	images: string[]
+	price: number
+	oldPrice: number
+}
+
 export const useCatalogStore = defineStore('catalog', () => {
 	const desktopStrokeCardCount = ref<string>('4')
 	const mobileStrokeCardCount = ref<string>('2')

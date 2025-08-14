@@ -9,6 +9,7 @@ const images = {
 const popupStore = usePopupStore()
 const catalogStore = useCatalogStore()
 const isMobile = ref(false)
+const selectedSizes = ref<(string | null)[]>([])
 
 const currentCardCount = computed(() => isMobile.value ? catalogStore.mobileStrokeCardCount : catalogStore.desktopStrokeCardCount);
 
@@ -86,6 +87,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 		  class="overflow-hidden grid grid-cols-2 px-2 gap-x-1 gap-y-2 sm:grid-cols-4 sm:px-4 sm:gap-x-4 sm:gap-y-6"
 	  >
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
@@ -93,6 +95,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  link="/catalog/item"
 		  />
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
@@ -100,6 +103,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  link="/catalog/item"
 		  />
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
@@ -107,6 +111,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  link="/catalog/item"
 		  />
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
@@ -114,6 +119,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  link="/catalog/item"
 		  />
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
@@ -121,6 +127,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  link="/catalog/item"
 		  />
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
@@ -134,6 +141,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  object-position="center"
 		  />
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
@@ -141,6 +149,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  link="/catalog/item"
 		  />
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
@@ -148,6 +157,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  link="/catalog/item"
 		  />
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
@@ -155,6 +165,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  link="/catalog/item"
 		  />
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
@@ -162,6 +173,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  link="/catalog/item"
 		  />
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
@@ -169,6 +181,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  link="/catalog/item"
 		  />
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="25500"
@@ -187,6 +200,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 		  class="overflow-hidden grid grid-cols-3 px-2 gap-x-1 gap-y-2 sm:grid-cols-6 sm:px-4 sm:gap-x-4 sm:gap-y-6"
 	  >
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="24600"
@@ -196,6 +210,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  link="/catalog/item"
 		  />
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="24600"
@@ -205,6 +220,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  link="/catalog/item"
 		  />
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="24600"
@@ -214,6 +230,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  link="/catalog/item"
 		  />
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="24600"
@@ -223,6 +240,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  link="/catalog/item"
 		  />
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="24600"
@@ -232,6 +250,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  link="/catalog/item"
 		  />
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="24600"
@@ -241,6 +260,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  link="/catalog/item"
 		  />
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="24600"
@@ -250,6 +270,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  link="/catalog/item"
 		  />
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="24600"
@@ -259,6 +280,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  link="/catalog/item"
 		  />
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="24600"
@@ -268,6 +290,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  link="/catalog/item"
 		  />
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="24600"
@@ -277,6 +300,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  link="/catalog/item"
 		  />
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="24600"
@@ -286,6 +310,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  link="/catalog/item"
 		  />
 		  <CatalogCard
+			  v-model="selectedSize"
 			  :image-urls="[images.card1, images.card2, images.card3]"
 			  text="Printed bikini top"
 			  :price="24600"
