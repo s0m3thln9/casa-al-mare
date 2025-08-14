@@ -24,7 +24,7 @@ const selectCity = () => {
 	>
 		<div class="flex flex-col items-center gap-6 mt-8 sm:mt-14 sm:items-start">
 			<NuxtImg src="/pop-up-sub.jpg" alt="sub" width="390" height="532" class="rounded-lg" />
-			<AppInput id="email" v-model="email" label="ведите e-mail для получения новостей" type="email" custom-class="min-w-full" />
+			<AppInput id="email" v-model="email" label="Введите e-mail для получения новостей" type="email" custom-class="min-w-full" />
 			<AppButton content="Подписаться" variant="primary" custom-class="w-full px-0"/>
 			<p
 				class="w-full font-light text-[10px] text-[#5E5B58] font-[Commissioner] sm:w-[350px]"
