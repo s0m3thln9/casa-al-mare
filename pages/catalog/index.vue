@@ -111,129 +111,21 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 		  v-else
 		  class="overflow-hidden grid grid-cols-3 px-2 gap-x-1 gap-y-2 sm:grid-cols-6 sm:px-4 sm:gap-x-4 sm:gap-y-6"
 	  >
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="24600"
-			  :old-price="26000"
-			  color="Цвет"
-			  variant="mini"
-			  link="/catalog/item"
-		  />
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="24600"
-			  :old-price="26000"
-			  color="Цвет"
-			  variant="mini"
-			  link="/catalog/item"
-		  />
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="24600"
-			  :old-price="26000"
-			  color="Цвет"
-			  variant="mini"
-			  link="/catalog/item"
-		  />
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="24600"
-			  :old-price="26000"
-			  color="Цвет"
-			  variant="mini"
-			  link="/catalog/item"
-		  />
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="24600"
-			  :old-price="26000"
-			  color="Цвет"
-			  variant="mini"
-			  link="/catalog/item"
-		  />
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="24600"
-			  :old-price="26000"
-			  color="Цвет"
-			  variant="mini"
-			  link="/catalog/item"
-		  />
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="24600"
-			  :old-price="26000"
-			  color="Цвет"
-			  variant="mini"
-			  link="/catalog/item"
-		  />
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="24600"
-			  :old-price="26000"
-			  color="Цвет"
-			  variant="mini"
-			  link="/catalog/item"
-		  />
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="24600"
-			  :old-price="26000"
-			  color="Цвет"
-			  variant="mini"
-			  link="/catalog/item"
-		  />
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="24600"
-			  :old-price="26000"
-			  color="Цвет"
-			  variant="mini"
-			  link="/catalog/item"
-		  />
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="24600"
-			  :old-price="26000"
-			  color="Цвет"
-			  variant="mini"
-			  link="/catalog/item"
-		  />
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="24600"
-			  :old-price="26000"
-			  color="Цвет"
-			  variant="mini"
-			  link="/catalog/item"
-		  />
+		  <template v-for="item in catalogStore.items" :key="item.id">
+			  <CatalogCard
+				  v-model="selectedSize"
+				  :slider-images="item.sliderImages"
+				  :color="item.color"
+				  :name="item.name"
+				  :price="item.price"
+				  :old-price="item.oldPrice"
+				  variant="mini"
+				  :link="`/catalog/${item.id}`"
+			  />
+		  </template>
 	  </div>
 	  <div class="flex justify-center items-center pt-4 pb-2 sm:py-10">
-		  <ExpandButton />
+		  <ExpandButton content="Показать больше" />
 	  </div>
 	  <AppSEO
 		  :paragraphs="['CASA AL MARE — эстетика тела, свобода выбора. Каталог CASA AL MARE создан для женщин, которые ищут не просто купальник или комплект белья, а выражение своей индивидуальности.\n'+

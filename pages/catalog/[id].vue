@@ -220,25 +220,31 @@ onMounted(() => {
 		  <h2 class="font-[Manrope] text-[15px] font-light sm:font-[Inter] sm:text-4xl sm:font-normal">Вам может понравиться</h2>
 		  <div class="w-full grid gap-2 grid-cols-3 sm:gap-4 sm:px-[15%]">
 			  <CatalogCard
-				  :images="item!.images"
-				  text="Printed bikini top"
-				  :price="25500"
 				  variant="large"
-				  link="/catalog/item"
+				  :slider-images="item!.sliderImages"
+				  :color="item!.color"
+				  :name="item!.name"
+				  :price="item!.price"
+				  :old-price="item!.oldPrice"
+				  :link="`/catalog/${item!.id}`"
 			  />
 			  <CatalogCard
-				  :images="item!.images"
-				  text="Printed bikini top"
-				  :price="25500"
 				  variant="large"
-				  link="/catalog/item"
+				  :slider-images="item!.sliderImages"
+				  :color="item!.color"
+				  :name="item!.name"
+				  :price="item!.price"
+				  :old-price="item!.oldPrice"
+				  :link="`/catalog/${item!.id}`"
 			  />
 			  <CatalogCard
-				  :images="item!.images"
-				  text="Printed bikini top"
-				  :price="25500"
 				  variant="large"
-				  link="/catalog/item"
+				  :slider-images="item!.sliderImages"
+				  :color="item!.color"
+				  :name="item!.name"
+				  :price="item!.price"
+				  :old-price="item!.oldPrice"
+				  :link="`/catalog/${item!.id}`"
 			  />
 		  </div>
 	  </div>
@@ -246,25 +252,31 @@ onMounted(() => {
 		  <h2 class="font-[Manrope] text-[15px] font-light sm:font-[Inter] sm:text-4xl sm:font-normal">Вы недавно смотрели</h2>
 		  <div class="w-full grid gap-2 grid-cols-3 sm:gap-4 sm:px-[15%]">
 			  <CatalogCard
-				  :images="item!.images"
-				  text="Printed bikini top"
-				  :price="25500"
 				  variant="large"
-				  link="/catalog/item"
+				  :slider-images="item!.sliderImages"
+				  :color="item!.color"
+				  :name="item!.name"
+				  :price="item!.price"
+				  :old-price="item!.oldPrice"
+				  :link="`/catalog/${item!.id}`"
 			  />
 			  <CatalogCard
-				  :images="item!.images"
-				  text="Printed bikini top"
-				  :price="25500"
 				  variant="large"
-				  link="/catalog/item"
+				  :slider-images="item!.sliderImages"
+				  :color="item!.color"
+				  :name="item!.name"
+				  :price="item!.price"
+				  :old-price="item!.oldPrice"
+				  :link="`/catalog/${item!.id}`"
 			  />
 			  <CatalogCard
-				  :images="item!.images"
-				  text="Printed bikini top"
-				  :price="25500"
 				  variant="large"
-				  link="/catalog/item"
+				  :slider-images="item!.sliderImages"
+				  :color="item!.color"
+				  :name="item!.name"
+				  :price="item!.price"
+				  :old-price="item!.oldPrice"
+				  :link="`/catalog/${item!.id}`"
 			  />
 		  </div>
 	  </div>
@@ -273,15 +285,15 @@ onMounted(() => {
 			  <div class="grid grid-cols-2 gap-y-6 gap-x-4 sm:gap-x-2">
 				  <div class="flex flex-col gap-2">
 					  <span class="font-[Manrope] text-sm">Верх</span>
-					  <CatalogCard v-model="setStore.top" custom-image-class="aspect-[200/300] w-full" popup :images="item!.images" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
+					  <CatalogCard v-model="setStore.top" custom-image-class="aspect-[200/300] w-full" popup :slider-images="item!.sliderImages" variant="mini" :price="item!.price" :old-price="item!.oldPrice" :color="item!.color" :name="item!.name" />
 				  </div>
 				  <div class="flex flex-col gap-2">
 					  <span class="font-[Manrope] text-sm">Низ</span>
-					  <CatalogCard v-model="setStore.bottom" custom-image-class="aspect-[200/300] w-full" popup :images="item!.images" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
+					  <CatalogCard v-model="setStore.bottom" custom-image-class="aspect-[200/300] w-full" popup :slider-images="item!.sliderImages" variant="mini" :price="item!.price" :old-price="item!.oldPrice" :color="item!.color" :name="item!.name" />
 				  </div>
 				  <div class="flex flex-col gap-2">
 					  <span class="font-[Manrope] text-sm">Аксессуар</span>
-					  <CatalogCard v-model="setStore.accessory" custom-image-class="aspect-[200/300] w-full" popup :images="item!.images" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
+					  <CatalogCard v-model="setStore.accessory" custom-image-class="aspect-[200/300] w-full" popup :slider-images="item!.sliderImages" variant="mini" :price="item!.price" :old-price="item!.oldPrice" :color="item!.color" :name="item!.name" />
 				  </div>
 			  </div>
 			  <BuyButton available-quantity in-stock :is-parameters-selected="setStore.canAddToCart" />
