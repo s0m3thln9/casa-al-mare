@@ -1,16 +1,16 @@
 <script setup lang="ts">
 const props = defineProps<{
-	imageUrls: string[]
-	text?: string
-	price?: number
-	oldPrice?: number
-	color?: string
 	customClass?: string
 	customImageClass?: string
 	variant: 'mini' | 'large'
 	link?: string
 	popup?: boolean
 	modelValue: string | null
+	name: string
+	color: string
+	sliderImages: string[]
+	price: number
+	oldPrice: number
 }>()
 
 const emit = defineEmits<{
@@ -72,7 +72,7 @@ const preloadImages = async () => {
 	}
 	
 	try {
-		await Promise.all(props.imageUrls.map(url => loadImage(url)))
+		await Promise.all(props.sliderImages.map(url => loadImage(url)))
 		areImagesLoaded.value = true
 	} catch (error) {
 		console.error('Ошибка при загрузке изображений:', error)
@@ -100,7 +100,7 @@ const handleMouseMove = (e: MouseEvent) => {
 	const rect = target.getBoundingClientRect()
 	const x = e.clientX - rect.left
 	const width = rect.width
-	const section = width / props.imageUrls.length
+	const section = width / props.sliderImages.length
 	const newIndex = Math.floor(x / section) < 0 ? 0 : Math.floor(x / section)
 	
 	if (newIndex !== currentImageIndex.value) {
@@ -121,9 +121,9 @@ const handleTouchEnd = (e: TouchEvent) => {
 	const deltaX = touchEndX - touchStartX.value
 	const threshold = 50
 	if (deltaX > threshold) {
-		currentImageIndex.value = (currentImageIndex.value - 1 + props.imageUrls.length) % props.imageUrls.length
+		currentImageIndex.value = (currentImageIndex.value - 1 + props.sliderImages.length) % props.sliderImages.length
 	} else if (deltaX < -threshold) {
-		currentImageIndex.value = (currentImageIndex.value + 1) % props.imageUrls.length
+		currentImageIndex.value = (currentImageIndex.value + 1) % props.sliderImages.length
 	}
 }
 
@@ -139,10 +139,8 @@ const toggleFavorite = () => {
 	isFavorite.value = !isFavorite.value
 	
 	if (isAuthenticated()) {
-		// Заглушка для сохранения в базу
 		console.log(`Сохраняем товар в избранное в базе: ${isFavorite.value}`)
 	} else {
-		// Заглушка для сохранения в localStorage
 		console.log(`Сохраняем товар в localStorage: ${isFavorite.value}`)
 	}
 }
@@ -159,14 +157,14 @@ const toggleFavorite = () => {
 		<div v-if="!areImagesLoaded" class="aspect-[200/300] w-full bg-[#F9F6EC] rounded-lg mt-1"/>
 		<div v-else>
 			<NuxtImg
-				:src="imageUrls[0]" alt="card" width="300" :height="(isHovered && isWideScreen) ? 470 : 450"
+				:src="sliderImages[0]" alt="card" width="300" :height="(isHovered && isWideScreen) ? 470 : 450"
 				:class="['rounded-lg', customImageClass, popup && 'aspect-[200/300] w-full', (popup && isHovered && isWideScreen) && 'aspect-[200/320]']"
 				@click="handleClick"
 			/>
 		</div>
 		<div v-if="!areImagesLoaded" class="w-full h-10 bg-[#F9F6EC] rounded-lg mt-1"/>
 		<template v-else>
-			<h4 class="mt-1 sm:mt-2">{{ text }}</h4>
+			<h4 class="mt-1 sm:mt-2">{{ name }}</h4>
 			<span class="mt-0.5 block sm:mt-1">{{ priceFormatter(price!) }} <span class="text-[#5E5B58] line-through">{{ priceFormatter(oldPrice!) }}</span></span>
 			<span v-if="!isHovered" class="my-1 hidden sm:block">{{ color }}</span>
 			<div :class="['hidden gap-1 2xl:flex', popup && 'flex-wrap justify-center']">
@@ -195,7 +193,7 @@ const toggleFavorite = () => {
 		  @touchend="handleTouchEnd"
 	  >
       <NuxtImg
-	      v-for="(img, index) in props.imageUrls"
+	      v-for="(img, index) in props.sliderImages"
 	      :key="index"
 	      :src="img"
 	      alt="card"
@@ -210,7 +208,7 @@ const toggleFavorite = () => {
 	  <div v-if="!areImagesLoaded" class="w-full h-0.5 bg-[#F9F6EC] rounded-lg mt-1" />
 	  <div v-else class="flex justify-center items-center gap-1 px-6 py-2">
 		  <div
-			  v-for="(_, index) in props.imageUrls"
+			  v-for="(_, index) in props.sliderImages"
 			  :key="index"
 			  class="flex-1 border-y border-[#A6CEFF]"
 			  :style="barStyles(index)"
@@ -218,7 +216,7 @@ const toggleFavorite = () => {
 	  </div>
 	  <div v-if="!areImagesLoaded" class="w-full h-10 bg-[#F9F6EC] rounded-lg mt-1" />
 	  <template v-else>
-		  <h4 class="mt-1">{{ text }}</h4>
+		  <h4 class="mt-1">{{ name }}</h4>
 	    <span class="mt-0.5">{{ priceFormatter(price!) }}</span>
 	  </template>
 	  <NuxtImg

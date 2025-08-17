@@ -9,7 +9,7 @@ const images = {
 const popupStore = usePopupStore()
 const catalogStore = useCatalogStore()
 const isMobile = ref(false)
-const selectedSizes = ref<(string | null)[]>([])
+const selectedSize = ref<string | null>(null)
 
 const currentCardCount = computed(() => isMobile.value ? catalogStore.mobileStrokeCardCount : catalogStore.desktopStrokeCardCount);
 
@@ -86,114 +86,26 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 		  v-if="currentCardCount === '4' || currentCardCount === '2'"
 		  class="overflow-hidden grid grid-cols-2 px-2 gap-x-1 gap-y-2 sm:grid-cols-4 sm:px-4 sm:gap-x-4 sm:gap-y-6"
 	  >
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="25500"
-			  variant="large"
-			  link="/catalog/item"
-		  />
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="25500"
-			  variant="large"
-			  link="/catalog/item"
-		  />
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="25500"
-			  variant="large"
-			  link="/catalog/item"
-		  />
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="25500"
-			  variant="large"
-			  link="/catalog/item"
-		  />
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="25500"
-			  variant="large"
-			  link="/catalog/item"
-		  />
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="25500"
-			  variant="large"
-			  link="/catalog/item"
-		  />
-		  <BannerCard
-			  :image-url="images.promo1"
-			  text="SS26 SOLAR POWER"
-			  custom-class="rounded-lg aspect-[1] col-span-2 sm:hidden"
-			  object-position="center"
-		  />
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="25500"
-			  variant="large"
-			  link="/catalog/item"
-		  />
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="25500"
-			  variant="large"
-			  link="/catalog/item"
-		  />
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="25500"
-			  variant="large"
-			  link="/catalog/item"
-		  />
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="25500"
-			  variant="large"
-			  link="/catalog/item"
-		  />
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="25500"
-			  variant="large"
-			  link="/catalog/item"
-		  />
-		  <CatalogCard
-			  v-model="selectedSize"
-			  :image-urls="[images.card1, images.card2, images.card3]"
-			  text="Printed bikini top"
-			  :price="25500"
-			  variant="large"
-			  link="/catalog/item"
-		  />
-		  <BannerCard
-			  :image-url="images.promo1"
-			  text="SS26 SOLAR POWER"
-			  custom-class="rounded-lg aspect-[1] col-span-2 sm:hidden"
-			  object-position="center"
-		  />
+		  <template v-for="(item, index) in catalogStore.items" :key="item.id">
+	      <template v-if="index > 0 && index % 6 === 0">
+	        <BannerCard
+		        :image-url="images.promo1"
+		        text="SS26 SOLAR POWER"
+		        custom-class="rounded-lg aspect-[1] col-span-2 sm:hidden"
+		        object-position="center"
+	        />
+	      </template>
+			  <CatalogCard
+		      v-model="selectedSize"
+		      :slider-images="item.sliderImages"
+		      :color="item.color"
+		      :name="item.name"
+		      :price="item.price"
+		      :old-price="item.oldPrice"
+		      variant="large"
+		      :link="`/catalog/${item.id}`"
+	      />
+	    </template>
 	  </div>
 	  <div
 		  v-else

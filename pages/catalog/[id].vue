@@ -1,15 +1,8 @@
 <script setup lang="ts">
-const images = {
-	card1: "/item-page-1.jpg",
-	item: "/item-page-1.jpg",
-	item1: "/item-1.jpg",
-	item2: "/item-2.jpg",
-	item3: "/item-3.jpg",
-	item4: "/item-4.jpg",
-	item5: "/item-5.jpg",
-	item6: "/item-6.jpg",
-}
-const productImages = [images.item1, images.item2, images.item3, images.item4, images.item5, images.item6]
+const route = useRoute()
+const segment = route.params.id
+const catalogStore = useCatalogStore()
+const item = catalogStore.items.find(item => item.id === segment)
 const pants: {
 	title: string,
 	src: string,
@@ -21,7 +14,7 @@ const pants: {
 ]
 const sizes = ["XXS", "XS", "S", "M", "L", "XL"]
 const other: { title: string, src: string }[] = [{ title: "Оранжевый", src: "/orange.png" }, { title: "Синий", src: "/blue.png" }]
-const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главная", path: "/" }, { name: "Смотреть все", path: "/catalog" }, { name: "Наименование" }]
+const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главная", path: "/" }, { name: "Смотреть все", path: "/catalog" }, { name: item!.name }]
 
 const currentImageIndex = ref(0)
 const touchStartX = ref(0)
@@ -62,9 +55,9 @@ const handleTouchEnd = (e: TouchEvent) => {
 	const deltaX = touchEndX - touchStartX.value
 	const threshold = 50
 	if (deltaX > threshold) {
-		currentImageIndex.value = (currentImageIndex.value - 1 + productImages.length) % productImages.length
+		currentImageIndex.value = (currentImageIndex.value - 1 + item!.images.length) % item!.images.length
 	} else if (deltaX < -threshold) {
-		currentImageIndex.value = (currentImageIndex.value + 1) % productImages.length
+		currentImageIndex.value = (currentImageIndex.value + 1) % item!.images.length
 	}
 }
 
@@ -79,12 +72,24 @@ const preloadImages = async () => {
 	}
 	
 	try {
-		await Promise.all(productImages.map(url => loadImage(url)))
+		await Promise.all(item!.images.map(url => loadImage(url)))
 		areImagesLoaded.value = true
 	} catch (error) {
 		console.error('Ошибка при загрузке изображений:', error)
 		areImagesLoaded.value = true
 	}
+}
+
+const calculateDiscount = (price: number, oldPrice: number) => {
+	if (!oldPrice || oldPrice <= price) return 0;
+	return Math.round(((oldPrice - price) / oldPrice) * 100);
+};
+
+const discount = calculateDiscount(item!.price, item!.oldPrice)
+
+const priceFormatter = (value: number) => {
+	const formattedValue = new Intl.NumberFormat('ru-RU').format(value)
+	return `${formattedValue} ₽`
 }
 
 onMounted(() => {
@@ -103,7 +108,7 @@ onMounted(() => {
 			  <div class="relative w-full aspect-[460/680] overflow-hidden" @touchstart="handleTouchStart" @touchend="handleTouchEnd">
 				  <div v-if="!areImagesLoaded" class="aspect-[460/680] w-full bg-[#F9F6EC]" />
 			    <NuxtImg
-				    v-for="(img, index) in productImages"
+				    v-for="(img, index) in item?.images"
 				    v-else
 				    :key="index"
 				    :src="img"
@@ -116,7 +121,7 @@ onMounted(() => {
 			  </div>
 			  <div class="flex justify-center items-center gap-1 px-4 mt-2">
 			    <div
-				    v-for="(_, index) in productImages"
+				    v-for="(_, index) in item!.images"
 				    :key="index"
 				    class="flex-1 border-y border-[#A6CEFF]"
 				    :style="barStyles(index)"
@@ -125,10 +130,10 @@ onMounted(() => {
 			</div>
 		  <div class="hidden sm:grid grid-cols-1 gap-2 lg:grid-cols-2">
 			  <template v-if="!areImagesLoaded">
-				  <div v-for="(_, index) in productImages" :key="index" class="aspect-[726/1080] bg-[#F9F6EC] rounded-lg" />
+				  <div v-for="(_, index) in item!.images" :key="index" class="aspect-[726/1080] bg-[#F9F6EC] rounded-lg" />
 			  </template>
         <NuxtImg
-				  v-for="(img, index) in productImages"
+				  v-for="(img, index) in item!.images"
 				  v-else
 				  :key="index"
 				  :src="img"
@@ -143,15 +148,15 @@ onMounted(() => {
 				  <h2
 					  class="font-[Inter] text-center text-[32px] sm:text-4xl"
 				  >
-					  Colored triangle top
+					  {{ item!.name }}
 				  </h2>
 			  </div>
 			  <div class="flex justify-center items-center gap-2 mt-4 sm:mt-6">
-				  <span class="font-[Inter] font-light text-[17px] text-[#8C8785] sm:font-[Manrope] sm:font-normal sm:text-base sm:text-[#211D1D]">36 000 ₽</span>
-				  <span class="font-[Inter] line-through font-light text-[17px] text-[#8C8785] sm:font-[Manrope] sm:font-normal sm:text-base sm:text-[#211D1D]">39 700 ₽</span>
+				  <span class="font-[Inter] font-light text-[17px] text-[#8C8785] sm:font-[Manrope] sm:font-normal sm:text-base sm:text-[#211D1D]">{{ priceFormatter(item!.price) }}</span>
+				  <span class="font-[Inter] line-through font-light text-[17px] text-[#8C8785] sm:font-[Manrope] sm:font-normal sm:text-base sm:text-[#211D1D]">{{ priceFormatter(item!.oldPrice) }}</span>
 			  </div>
 			  <div class="flex justify-center items-center mt-1 sm:mt-2">
-				  <span class="font-light text-xs">Скидка #%</span>
+				  <span class="font-light text-xs">Скидка {{ discount }}%</span>
 			  </div>
 			  <div class="flex justify-center items-center gap-6 mt-14">
 				  <PantButton v-model="itemStore.color" :pants="other" other />
@@ -215,21 +220,21 @@ onMounted(() => {
 		  <h2 class="font-[Manrope] text-[15px] font-light sm:font-[Inter] sm:text-4xl sm:font-normal">Вам может понравиться</h2>
 		  <div class="w-full grid gap-2 grid-cols-3 sm:gap-4 sm:px-[15%]">
 			  <CatalogCard
-				  :image-urls="[images.item, images.item, images.item]"
+				  :images="item!.images"
 				  text="Printed bikini top"
 				  :price="25500"
 				  variant="large"
 				  link="/catalog/item"
 			  />
 			  <CatalogCard
-				  :image-urls="[images.item, images.item, images.item]"
+				  :images="item!.images"
 				  text="Printed bikini top"
 				  :price="25500"
 				  variant="large"
 				  link="/catalog/item"
 			  />
 			  <CatalogCard
-				  :image-urls="[images.item, images.item, images.item]"
+				  :images="item!.images"
 				  text="Printed bikini top"
 				  :price="25500"
 				  variant="large"
@@ -241,21 +246,21 @@ onMounted(() => {
 		  <h2 class="font-[Manrope] text-[15px] font-light sm:font-[Inter] sm:text-4xl sm:font-normal">Вы недавно смотрели</h2>
 		  <div class="w-full grid gap-2 grid-cols-3 sm:gap-4 sm:px-[15%]">
 			  <CatalogCard
-				  :image-urls="[images.item, images.item, images.item]"
+				  :images="item!.images"
 				  text="Printed bikini top"
 				  :price="25500"
 				  variant="large"
 				  link="/catalog/item"
 			  />
 			  <CatalogCard
-				  :image-urls="[images.item, images.item, images.item]"
+				  :images="item!.images"
 				  text="Printed bikini top"
 				  :price="25500"
 				  variant="large"
 				  link="/catalog/item"
 			  />
 			  <CatalogCard
-				  :image-urls="[images.item, images.item, images.item]"
+				  :images="item!.images"
 				  text="Printed bikini top"
 				  :price="25500"
 				  variant="large"
@@ -268,15 +273,15 @@ onMounted(() => {
 			  <div class="grid grid-cols-2 gap-y-6 gap-x-4 sm:gap-x-2">
 				  <div class="flex flex-col gap-2">
 					  <span class="font-[Manrope] text-sm">Верх</span>
-					  <CatalogCard v-model="setStore.top" custom-image-class="aspect-[200/300] w-full" popup :image-urls="[images.card1, images.card1, images.card1]" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
+					  <CatalogCard v-model="setStore.top" custom-image-class="aspect-[200/300] w-full" popup :images="item!.images" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
 				  </div>
 				  <div class="flex flex-col gap-2">
 					  <span class="font-[Manrope] text-sm">Низ</span>
-					  <CatalogCard v-model="setStore.bottom" custom-image-class="aspect-[200/300] w-full" popup :image-urls="[images.card1, images.card1, images.card1]" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
+					  <CatalogCard v-model="setStore.bottom" custom-image-class="aspect-[200/300] w-full" popup :images="item!.images" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
 				  </div>
 				  <div class="flex flex-col gap-2">
 					  <span class="font-[Manrope] text-sm">Аксессуар</span>
-					  <CatalogCard v-model="setStore.accessory" custom-image-class="aspect-[200/300] w-full" popup :image-urls="[images.card1, images.card1, images.card1]" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
+					  <CatalogCard v-model="setStore.accessory" custom-image-class="aspect-[200/300] w-full" popup :images="item!.images" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
 				  </div>
 			  </div>
 			  <BuyButton available-quantity in-stock :is-parameters-selected="setStore.canAddToCart" />

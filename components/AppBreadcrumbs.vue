@@ -8,7 +8,7 @@ defineProps<{
 </script>
 
 <template>
-	<nav>
+	<nav class="select-none">
 		<ol class="flex items-center gap-1 text-[10px] sm:text-sm">
 			<li
 				v-for="(item, index) in items"
