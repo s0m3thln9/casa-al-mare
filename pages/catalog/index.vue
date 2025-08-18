@@ -9,7 +9,7 @@ const images = {
 const popupStore = usePopupStore()
 const catalogStore = useCatalogStore()
 const isMobile = ref(false)
-const selectedSize = ref<string | null>(null)
+const selectedSizes = ref<Record<string, string | null>>({})
 
 const currentCardCount = computed(() => isMobile.value ? catalogStore.mobileStrokeCardCount : catalogStore.desktopStrokeCardCount);
 
@@ -96,7 +96,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 	        />
 	      </template>
 			  <CatalogCard
-		      v-model="selectedSize"
+		      v-model="selectedSizes[item.id]"
 		      :slider-images="item.sliderImages"
 		      :color="item.color"
 		      :name="item.name"
@@ -113,7 +113,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 	  >
 		  <template v-for="item in catalogStore.items" :key="item.id">
 			  <CatalogCard
-				  v-model="selectedSize"
+				  v-model="selectedSizes[item.id]"
 				  :slider-images="item.sliderImages"
 				  :color="item.color"
 				  :name="item.name"
