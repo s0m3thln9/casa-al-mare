@@ -86,7 +86,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 		  v-if="currentCardCount === '4' || currentCardCount === '2'"
 		  class="overflow-hidden grid grid-cols-2 px-2 gap-x-1 gap-y-2 sm:grid-cols-4 sm:px-4 sm:gap-x-4 sm:gap-y-6"
 	  >
-		  <template v-for="(item, index) in catalogStore.items" :key="item.id">
+		  <template v-for="(item, index) in catalogStore.filteredItems" :key="item.id">
 	      <template v-if="index > 0 && index % 6 === 0">
 	        <BannerCard
 		        :image-url="images.promo1"
@@ -96,7 +96,8 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 	        />
 	      </template>
 			  <CatalogCard
-		      v-model="selectedSizes[item.id]"
+				  :id="item.id"
+				  v-model="selectedSizes[item.id]"
 		      :slider-images="item.sliderImages"
 		      :color="item.color"
 		      :name="item.name"
@@ -111,8 +112,9 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 		  v-else
 		  class="overflow-hidden grid grid-cols-3 px-2 gap-x-1 gap-y-2 sm:grid-cols-6 sm:px-4 sm:gap-x-4 sm:gap-y-6"
 	  >
-		  <template v-for="item in catalogStore.items" :key="item.id">
+		  <template v-for="item in catalogStore.filteredItems" :key="item.id">
 			  <CatalogCard
+				  :id="item.id"
 				  v-model="selectedSizes[item.id]"
 				  :slider-images="item.sliderImages"
 				  :color="item.color"

@@ -3,12 +3,11 @@ import AuthModal from "~/components/AuthModal.vue"
 import {useAuthStore} from "~/stores/auth"
 import {useAuthModalStore} from "~/stores/authModal"
 
-const images = {
-	card1: "/item-page-1.jpg",
-}
-
 const authStore = useAuthStore()
 const authModalStore = useAuthModalStore()
+const favouritesStore = useFavouritesStore()
+const catalogStore = useCatalogStore()
+const favourites = computed(() => catalogStore.items.filter(item => favouritesStore.favourites.includes(item.id)))
 
 </script>
 
@@ -28,90 +27,49 @@ const authModalStore = useAuthModalStore()
 		  </h3>
 		  <template v-else>
 			  <div
+				  v-if="favouritesStore.favourites.length > 0"
 				  class="mt-4 grid grid-cols-2 px-2 gap-x-1 gap-y-2 sm:mt-10 sm:grid-cols-4 sm:px-4 sm:gap-x-4 sm:gap-y-6"
 			  >
-				  <CatalogCard
-					  :image-urls="[images.card1, images.card1, images.card1]"
-					  text="Printed bikini top"
-					  :price="25500"
-					  variant="large"
-				  />
-				  <CatalogCard
-					  :image-urls="[images.card1, images.card1, images.card1]"
-					  text="Printed bikini top"
-					  :price="25500"
-					  variant="large"
-				  />
-				  <CatalogCard
-					  :image-urls="[images.card1, images.card1, images.card1]"
-					  text="Printed bikini top"
-					  :price="25500"
-					  variant="large"
-				  />
-				  <CatalogCard
-					  :image-urls="[images.card1, images.card1, images.card1]"
-					  text="Printed bikini top"
-					  :price="25500"
-					  variant="large"
-				  />
-				  <CatalogCard
-					  :image-urls="[images.card1, images.card1, images.card1]"
-					  text="Printed bikini top"
-					  :price="25500"
-					  variant="large"
-				  />
-				  <CatalogCard
-					  :image-urls="[images.card1, images.card1, images.card1]"
-					  text="Printed bikini top"
-					  :price="25500"
-					  variant="large"
-				  />
-				  <CatalogCard
-					  :image-urls="[images.card1, images.card1, images.card1]"
-					  text="Printed bikini top"
-					  :price="25500"
-					  variant="large"
-				  />
-				  <CatalogCard
-					  :image-urls="[images.card1, images.card1, images.card1]"
-					  text="Printed bikini top"
-					  :price="25500"
-					  variant="large"
-				  />
+				  <template v-for="item in favourites" :key="item.id">
+					  <CatalogCard
+						  :id="item.id"
+						  :slider-images="item.sliderImages"
+						  :color="item.color"
+						  :name="item.name"
+						  :price="item.price"
+						  :old-price="item.oldPrice"
+						  variant="large"
+						  :link="`/catalog/${item.id}`"
+					  />
+				  </template>
 				  <div
 					  class="col-span-2 w-full flex justify-center items-center mt-5 mb-3 sm:hidden"
 				  >
 					  <button class="font-light text-xs">Показать больше</button>
 				  </div>
 			  </div>
+			  <h3
+				  v-else
+				  class="uppercase text-center font-[Inter] mt-8"
+			  >
+			  Тут ничего нет
+		  </h3>
 			  <h2 class="hidden mt-10 font-[Inter] text-4xl text-center sm:block">Вам может понравится</h2>
 			  <div
 				  class="hidden mt-12 grid-cols-4 px-4 gap-x-4 gap-y-6 sm:grid"
 			  >
-				  <CatalogCard
-					  :image-urls="[images.card1, images.card1, images.card1]"
-					  text="Printed bikini top"
-					  :price="25500"
-					  variant="large"
-				  />
-				  <CatalogCard
-					  :image-urls="[images.card1, images.card1, images.card1]"
-					  text="Printed bikini top"
-					  :price="25500"
-					  variant="large"
-				  />
-				  <CatalogCard
-					  :image-urls="[images.card1, images.card1, images.card1]"
-					  text="Printed bikini top"
-					  :price="25500"
-					  variant="large"
-				  />
-				  <CatalogCard
-					  :image-urls="[images.card1, images.card1, images.card1]"
-					  text="Printed bikini top"
-					  :price="25500"
-					  variant="large"
-				  />
+				  <template v-for="(_, index) in new Array(4)" :key="index">
+					  <CatalogCard
+						  :id="catalogStore.items[0].id"
+						  :slider-images="catalogStore.items[0].sliderImages"
+						  :color="catalogStore.items[0].color"
+						  :name="catalogStore.items[0].name"
+						  :price="catalogStore.items[0].price"
+						  :old-price="catalogStore.items[0].oldPrice"
+						  variant="large"
+						  :link="`/catalog/${catalogStore.items[0].id}`"
+					  />
+				  </template>
 			  </div>
 			  <AppSEO
 				  :paragraphs="['CASA AL MARE — эстетика тела, свобода выбора.\n'+

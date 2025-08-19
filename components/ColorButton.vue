@@ -1,20 +1,27 @@
 <script setup lang="ts">
-defineProps<{
+import {defineEmits} from "vue"
+
+const props = defineProps<{
 	colors: {
 		title: string
 		value: string
 	}[]
+	modelValue: string | null
+}>()
+
+const emit = defineEmits<{
+	(e: 'update:modelValue', value: string | null): void
 }>()
 
 const selected = ref<number | null>(null)
 
-const select = (index: number) => {
-	if (selected.value === index) {
-		selected.value = null
+const select = (color: string) => {
+	if (props.modelValue === color) {
+		emit('update:modelValue', null)
 	} else {
-		selected.value = index
+		emit('update:modelValue', color)
+		
 	}
-	// emit('select', parseInt(props.variants[index]))
 }
 
 </script>
@@ -27,10 +34,10 @@ const select = (index: number) => {
 	>
 		<button
 			class="cursor-pointer"
-			@click="select(index)"
+			@click="select(color.title)"
 		>
 	    <div
-		    :class="['w-6 h-6 rounded-lg', selected === index && 'border-2 border-[#211D1D]']"
+		    :class="['w-6 h-6 rounded-lg', modelValue === color.title && 'border-2 border-[#211D1D]']"
 	      :style="{ backgroundColor: color.value }"
 	    />
     </button>

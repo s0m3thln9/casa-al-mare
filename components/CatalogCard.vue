@@ -1,11 +1,12 @@
 <script setup lang="ts">
 const props = defineProps<{
+	id: string
 	customClass?: string
 	customImageClass?: string
 	variant: 'mini' | 'large'
 	link?: string
 	popup?: boolean
-	modelValue: string | null
+	modelValue?: string | null
 	name: string
 	color: string
 	sliderImages: string[]
@@ -20,11 +21,12 @@ const emit = defineEmits<{
 const currentImageIndex = ref(0)
 const isTransitioning = ref(false)
 const isHovered = ref(false)
-const isFavorite = ref(false)
 const isVisible = ref(false)
 const isWideScreen = ref(false)
 const touchStartX = ref(0)
 const areImagesLoaded = ref(false)
+
+const favouritesStore = useFavouritesStore()
 
 const imageStyles = computed(() => (index: number) => {
 	if (index === currentImageIndex.value) {
@@ -133,18 +135,6 @@ const handleClick = () => {
 	}
 }
 
-const isAuthenticated = () => false
-
-const toggleFavorite = () => {
-	isFavorite.value = !isFavorite.value
-	
-	if (isAuthenticated()) {
-		console.log(`Сохраняем товар в избранное в базе: ${isFavorite.value}`)
-	} else {
-		console.log(`Сохраняем товар в localStorage: ${isFavorite.value}`)
-	}
-}
-
 </script>
 
 <template>
@@ -168,15 +158,15 @@ const toggleFavorite = () => {
 			<span class="mt-0.5 block sm:mt-1">{{ priceFormatter(price!) }} <span class="text-[#5E5B58] line-through">{{ priceFormatter(oldPrice!) }}</span></span>
 			<span v-if="!isHovered" class="my-1 hidden sm:block">{{ color }}</span>
 			<div :class="['hidden gap-1 2xl:flex', popup && 'flex-wrap justify-center']">
-				<SingleSelectButton :content="sizes" custom-class="text-xs" :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)" />
+				<SingleSelectButton :content="sizes" custom-class="text-xs" :model-value="modelValue ? modelValue : null" @update:model-value="emit('update:modelValue', $event)" />
 			</div>
 		</template>
 	  <NuxtImg
 		  v-if="!isWideScreen || isHovered"
-		  :src="isFavorite ? '/star-filled.svg' : '/star.svg'"
+		  :src="favouritesStore.isFavourite(id) ? '/star-filled.svg' : '/star.svg'"
 		  alt="star"
 		  class="w-3 h-3 absolute z-10 right-2.5 top-2.5 sm:w-5 sm:h-5 sm:right-4 sm:top-4"
-		  @click="toggleFavorite"
+		  @click="favouritesStore.toggle(id)"
 	  />
   </div>
   <div
@@ -221,10 +211,10 @@ const toggleFavorite = () => {
 	  </template>
 	  <NuxtImg
 		  v-if="!isWideScreen || isHovered"
-		  :src="isFavorite ? '/star-filled.svg' : '/star.svg'"
+		  :src="favouritesStore.isFavourite(id) ? '/star-filled.svg' : '/star.svg'"
 		  alt="star"
 		  class="w-3 h-3 absolute z-10 right-2.5 top-2.5 sm:w-5 sm:h-5 sm:right-4 sm:top-4"
-		  @click="toggleFavorite"
+		  @click="favouritesStore.toggle(id)"
 	  />
   </div>
 </template>
