@@ -181,7 +181,7 @@ onMounted(() => {
 				  <span class="text-[11px] text-[#363636]">Параметры модели: 175 80/60/89</span>
 			  </div>
 			  <div class="flex flex-col justify-center items-center gap-4 mt-6">
-				  <BuyButton in-stock available-quantity :is-parameters-selected="itemStore.canAddToCart" />
+				  <BuyButton :id="item!.id" in-stock available-quantity :is-parameters-selected="itemStore.canAddToCart" />
 				  <AppButton variant="secondary" content="Собрать комплект" custom-class="w-full py-4" @click="popupStore.open('set')" />
 			  </div>
 			  <div class="flex justify-center items-center mt-4 sm:mt-6">
@@ -220,6 +220,7 @@ onMounted(() => {
 		  <h2 class="font-[Manrope] text-[15px] font-light sm:font-[Inter] sm:text-4xl sm:font-normal">Вам может понравиться</h2>
 		  <div class="w-full grid gap-2 grid-cols-3 sm:gap-4 sm:px-[15%]">
 			  <CatalogCard
+				  id="1"
 				  variant="large"
 				  :slider-images="item!.sliderImages"
 				  :color="item!.color"
@@ -229,6 +230,7 @@ onMounted(() => {
 				  :link="`/catalog/${item!.id}`"
 			  />
 			  <CatalogCard
+				  id="1"
 				  variant="large"
 				  :slider-images="item!.sliderImages"
 				  :color="item!.color"
@@ -238,6 +240,7 @@ onMounted(() => {
 				  :link="`/catalog/${item!.id}`"
 			  />
 			  <CatalogCard
+				  id="1"
 				  variant="large"
 				  :slider-images="item!.sliderImages"
 				  :color="item!.color"
@@ -252,6 +255,7 @@ onMounted(() => {
 		  <h2 class="font-[Manrope] text-[15px] font-light sm:font-[Inter] sm:text-4xl sm:font-normal">Вы недавно смотрели</h2>
 		  <div class="w-full grid gap-2 grid-cols-3 sm:gap-4 sm:px-[15%]">
 			  <CatalogCard
+				  id="1"
 				  variant="large"
 				  :slider-images="item!.sliderImages"
 				  :color="item!.color"
@@ -261,6 +265,7 @@ onMounted(() => {
 				  :link="`/catalog/${item!.id}`"
 			  />
 			  <CatalogCard
+				  id="1"
 				  variant="large"
 				  :slider-images="item!.sliderImages"
 				  :color="item!.color"
@@ -270,6 +275,7 @@ onMounted(() => {
 				  :link="`/catalog/${item!.id}`"
 			  />
 			  <CatalogCard
+				  id="1"
 				  variant="large"
 				  :slider-images="item!.sliderImages"
 				  :color="item!.color"
@@ -285,18 +291,18 @@ onMounted(() => {
 			  <div class="grid grid-cols-2 gap-y-6 gap-x-4 sm:gap-x-2">
 				  <div class="flex flex-col gap-2">
 					  <span class="font-[Manrope] text-sm">Верх</span>
-					  <CatalogCard v-model="setStore.top" custom-image-class="aspect-[200/300] w-full" popup :slider-images="item!.sliderImages" variant="mini" :price="item!.price" :old-price="item!.oldPrice" :color="item!.color" :name="item!.name" />
+					  <CatalogCard id="1" v-model="setStore.top" custom-image-class="aspect-[200/300] w-full" popup :slider-images="item!.sliderImages" variant="mini" :price="item!.price" :old-price="item!.oldPrice" :color="item!.color" :name="item!.name" />
 				  </div>
 				  <div class="flex flex-col gap-2">
 					  <span class="font-[Manrope] text-sm">Низ</span>
-					  <CatalogCard v-model="setStore.bottom" custom-image-class="aspect-[200/300] w-full" popup :slider-images="item!.sliderImages" variant="mini" :price="item!.price" :old-price="item!.oldPrice" :color="item!.color" :name="item!.name" />
+					  <CatalogCard id="1" v-model="setStore.bottom" custom-image-class="aspect-[200/300] w-full" popup :slider-images="item!.sliderImages" variant="mini" :price="item!.price" :old-price="item!.oldPrice" :color="item!.color" :name="item!.name" />
 				  </div>
 				  <div class="flex flex-col gap-2">
 					  <span class="font-[Manrope] text-sm">Аксессуар</span>
-					  <CatalogCard v-model="setStore.accessory" custom-image-class="aspect-[200/300] w-full" popup :slider-images="item!.sliderImages" variant="mini" :price="item!.price" :old-price="item!.oldPrice" :color="item!.color" :name="item!.name" />
+					  <CatalogCard id="1" v-model="setStore.accessory" custom-image-class="aspect-[200/300] w-full" popup :slider-images="item!.sliderImages" variant="mini" :price="item!.price" :old-price="item!.oldPrice" :color="item!.color" :name="item!.name" />
 				  </div>
 			  </div>
-			  <BuyButton available-quantity in-stock :is-parameters-selected="setStore.canAddToCart" />
+			  <BuyButton :id="item!.id" available-quantity in-stock :is-parameters-selected="setStore.canAddToCart" />
 		  </div>
 	  </AppPopup>
 	  <AppPopup title="Определить размер" popup-id="size">

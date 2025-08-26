@@ -70,8 +70,8 @@ const addInputRef = (el: InstanceType<typeof AppInput> | null) => {
 	      <template v-if="orderStore.isPaymentSuccessful === null">
 		      <div v-if="!authStore.isAuth" class="flex flex-col gap-4">
 	          <span class="text-xs">Есть аккаунт? <span class="cursor-pointer" @click="authStore.login">Войти</span></span>
-	          <AppInput id="name" v-model="orderStore.userInfo.name" type="text" label="Имя" required :ref="addInputRef" />
-	          <AppInput id="surname" v-model="orderStore.userInfo.surname" type="text" label="Фамилия" required :ref="addInputRef" />
+	          <AppInput id="name" :ref="addInputRef" v-model="orderStore.userInfo.name" type="text" label="Имя" required />
+	          <AppInput id="surname" :ref="addInputRef" v-model="orderStore.userInfo.surname" type="text" label="Фамилия" required />
 			      <SelectInput
 				      id="phone"
 				      :ref="addInputRef"
@@ -95,11 +95,11 @@ const addInputRef = (el: InstanceType<typeof AppInput> | null) => {
 				      label="Номер телефона"
 				      required
 			      />
-	          <AppInput id="email" v-model="orderStore.userInfo.email" type="email" label="E-mail" required :ref="addInputRef" />
+	          <AppInput id="email" :ref="addInputRef" v-model="orderStore.userInfo.email" type="email" label="E-mail" required />
 	        </div>
 	        <div class="relative flex flex-col gap-6">
 	          <span class="font-light text-sm">Доставка</span>
-	          <AppSelect v-model="orderStore.city" :options="['Москва', 'Питер', 'Ростов', 'Краснодар', 'Мурманск', 'Брянск']" label="Город" ref="selectRef" required />
+	          <AppSelect ref="selectRef" v-model="orderStore.city" :options="['Москва', 'Питер', 'Ростов', 'Краснодар', 'Мурманск', 'Брянск']" label="Город" required />
 	          <div class="flex flex-col gap-6">
 	            <AppCheckbox v-model="orderStore.deliveryMethod" size="M" label="Самовывоз" value="Самовывоз" />
 	            <AppCheckbox v-model="orderStore.deliveryMethod" size="M" label="Курьер (# дней)" value="Курьер" />
@@ -108,7 +108,7 @@ const addInputRef = (el: InstanceType<typeof AppInput> | null) => {
 	            <AppCheckbox v-for="(address, index) in orderStore.addresses" :key="index" v-model="orderStore.currentAddress" size="S" :label="address" :value="address" />
 	            <AppCheckbox v-model="orderStore.currentAddress" size="S" label="Новый адрес" value="Новый адрес" />
 	            <div v-if="orderStore.currentAddress === 'Новый адрес'" class="flex flex-col gap-4">
-	              <AppInput id="address1" v-model="orderStore.newAddressFirstLine" type="text" label="Улица, дом, корпус, строение, квартира" required ref="inputNewAddressRef"/>
+	              <AppInput id="address1" ref="inputNewAddressRef" v-model="orderStore.newAddressFirstLine" type="text" label="Улица, дом, корпус, строение, квартира" required/>
 	              <AppInput id="address2" v-model="orderStore.newAddressSecondLine" type="text" label="Номер дома и домофон / офис" />
 	              <AppButton custom-class="w-full" content="Сохранить" variant="primary" @click="handleSave" />
 	            </div>
@@ -153,10 +153,10 @@ const addInputRef = (el: InstanceType<typeof AppInput> | null) => {
 	          <div class="flex flex-col gap-6">
 	            <div v-for="(item, index) in orderStore.cartItems" :key="index" class="flex items-center justify-between w-full">
 	              <div class="flex items-center gap-2">
-	                <NuxtImg :src="item.img" alt="order-img" width="57" height="72" class="rounded-2xl border-[0.5px] border-[#211D1D]" />
+	                <NuxtImg :src="item.images[0]" alt="order-img" width="57" height="72" class="rounded-2xl border-[0.5px] border-[#211D1D]" />
 	                <div class="flex flex-col gap-1">
 	                  <span class="font-light text-sm text-[#414141]">{{ item.name }}</span>
-	                  <span class="font-light text-[13px]">Топ: {{ item.top }} Низ: {{ item.bottom }} {{ item.color }}</span>
+	                  <span class="font-light text-[13px]">Топ: XS Низ: XS {{ item.color }}</span>
 	                  <span class="text-xs text-[#414141]">{{ priceFormatter(item.price) }} <span class="font-light text-[#606060]">за шт.</span></span>
 	                </div>
 	              </div>
@@ -175,7 +175,7 @@ const addInputRef = (el: InstanceType<typeof AppInput> | null) => {
 	                    <NuxtImg src="/x.svg" alt="x" class="w-full" />
 	                  </button>
 	                </div>
-	                <span class="text-xs font-light">{{ priceFormatter(item.price * item.count) }} <span class="line-through">{{ priceFormatter(item.price * item.count + 1000) }}</span></span>
+	                <span class="text-xs font-light">{{ priceFormatter(item.price * item.count) }} <span class="line-through">{{ priceFormatter(item.oldPrice) }}</span></span>
 	              </div>
 	            </div>
 	            <div class="flex flex-col gap-4">
@@ -229,7 +229,7 @@ const addInputRef = (el: InstanceType<typeof AppInput> | null) => {
 	              </div>
 	              <div class="flex items-center justify-between">
 	                <span>Стоимость товаров:</span>
-	                <span class="flex items-center gap-2">{{ priceFormatter(orderStore.totalSum) }} <span class="font-extralight line-through">{{ priceFormatter(orderStore.totalSum) }}</span></span>
+	                <span class="flex items-center gap-2">{{ priceFormatter(orderStore.totalSum) }} <span class="font-extralight line-through">{{ priceFormatter(orderStore.totalOldSum) }}</span></span>
 	              </div>
 	            </div>
 	            <div class="flex flex-col gap-2">
@@ -244,10 +244,10 @@ const addInputRef = (el: InstanceType<typeof AppInput> | null) => {
 					<div class="flex flex-col gap-6 mt-8">
 						<div v-for="(item, index) in orderStore.cartItems" :key="index" class="flex items-center justify-between w-full">
 							<div class="flex items-center gap-2">
-								<NuxtImg :src="item.img" alt="order-img" width="57" height="72" class="rounded-2xl border-[0.5px] border-[#211D1D]" />
+								<NuxtImg :src="item.images[0]" alt="order-img" width="57" height="72" class="rounded-2xl border-[0.5px] border-[#211D1D]" />
 								<div class="flex flex-col gap-1">
 									<span class="font-light text-sm text-[#414141]">{{ item.name }}</span>
-									<span class="font-light text-[13px]">Топ: {{ item.top }} Низ: {{ item.bottom }} {{ item.color }}</span>
+									<span class="font-light text-[13px]">Топ: XS Низ: XS {{ item.color }}</span>
 									<span class="text-xs text-[#414141]">{{ priceFormatter(item.price) }} <span class="font-light text-[#606060]">за шт.</span></span>
 								</div>
 							</div>
@@ -270,10 +270,10 @@ const addInputRef = (el: InstanceType<typeof AppInput> | null) => {
 		      <div class="flex flex-col gap-6">
 			      <div v-for="(item, index) in orderStore.cartItems" :key="index" class="flex items-center justify-between w-full">
 				      <div class="flex items-center gap-2">
-					      <NuxtImg :src="item.img" alt="order-img" width="57" height="72" class="rounded-2xl border-[0.5px] border-[#211D1D]" />
+					      <NuxtImg :src="item.images[0]" alt="order-img" width="57" height="72" class="rounded-2xl border-[0.5px] border-[#211D1D]" />
 					      <div class="flex flex-col gap-1">
 						      <span class="font-light text-sm text-[#414141]">{{ item.name }}</span>
-						      <span class="font-light text-[13px]">Топ: {{ item.top }} Низ: {{ item.bottom }} {{ item.color }}</span>
+						      <span class="font-light text-[13px]">Топ: XS Низ: XS {{ item.color }}</span>
 						      <span class="text-xs text-[#414141]">{{ priceFormatter(item.price) }} <span class="font-light text-[#606060]">за шт.</span></span>
 					      </div>
 				      </div>

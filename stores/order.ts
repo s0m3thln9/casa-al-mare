@@ -1,15 +1,22 @@
-export interface CartItem {
-	id: number
+type Item = {
+	id: string
 	name: string
-	top: string
-	bottom: string
 	color: string
-	img: string
+	images: string[]
+	sliderImages: string[]
 	price: number
+	oldPrice: number
+	type: string
+	material: string
+	useType: string
+	pantsType?: string
+}
+
+export type CartItem = Item & {
 	count: number
 }
 
-export interface UserInfo {
+export type UserInfo = {
 	name: string
 	surname: string
 	phone: string
@@ -17,10 +24,8 @@ export interface UserInfo {
 }
 
 export const useOrderStore = defineStore('order', () => {
-	const cartItems = ref<CartItem[]>([
-		{ id: 1, bottom: 'XS', color: 'Цвет', img: '/order.jpg', count: 2, name: 'Название', top: 'XS', price: 10000 },
-		{ id: 2, bottom: 'XS', color: 'Цвет', img: '/order.jpg', count: 2, name: 'Название', top: 'XS', price: 10000 }
-	])
+	const catalogStore = useCatalogStore()
+	const cartItems = ref<CartItem[]>([])
 	const deliveryMethod = ref<string | null>(null)
 	const showErrorDeliveryMethod = ref<boolean>(false)
 	const paymentMethod = ref<string | null>(null)
@@ -48,21 +53,37 @@ export const useOrderStore = defineStore('order', () => {
 		return cartItems.value.reduce((sum, item) => sum + item.price * item.count, 0)
 	})
 	
-	function removeItemFromCart(id: number) {
+	const totalOldSum = computed(() => {
+		return cartItems.value.reduce((sum, item) => sum + item.oldPrice * item.count, 0)
+	})
+	
+	function removeItemFromCart(id: string) {
 		cartItems.value = cartItems.value.filter(item => item.id !== id)
 	}
 	
-	function incrementQuantity(id: number) {
+	function incrementQuantity(id: string) {
 		const item = cartItems.value.find(item => item.id === id)
 		if (item) {
 			item.count++
 		}
 	}
 	
-	function decrementQuantity(id: number) {
+	function decrementQuantity(id: string) {
 		const item = cartItems.value.find(item => item.id === id)
 		if (item && item.count > 1) {
 			item.count--
+		}
+	}
+	
+	const addToCart = (id: string) => {
+		const existingItem = cartItems.value.find(item => item.id === id)
+		if (existingItem) {
+			existingItem.count += 1
+		} else {
+			const item = catalogStore.items.find(item => item.id === id)
+			if (item) {
+				cartItems.value.push({...item, count: 1})
+			}
 		}
 	}
 	
@@ -101,6 +122,7 @@ export const useOrderStore = defineStore('order', () => {
 		isExpandedCert,
 		userInfo,
 		totalSum,
+		totalOldSum,
 		isPaymentSuccessful,
 		promocode,
 		promocodeCheckbox,
@@ -110,6 +132,7 @@ export const useOrderStore = defineStore('order', () => {
 		removeItemFromCart,
 		incrementQuantity,
 		decrementQuantity,
+		addToCart,
 		saveNewAddress,
 		togglePromo,
 		toggleCert,

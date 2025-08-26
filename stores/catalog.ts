@@ -88,7 +88,7 @@ const temporaryItems: Item[] = [
 	{
 		id: '6',
 		name: 'High-waist bikini',
-		color: 'Краасный',
+		color: 'Красный',
 		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
 		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
 		price: 31000,
@@ -120,7 +120,7 @@ const temporaryItems: Item[] = [
 		type: "Трусы",
 		material: "Махра",
 		useType: "Пляж",
-		pantType: "Бразилиана"
+		pantsType: "Бразилиана"
 	},
 	{
 		id: '9',
@@ -318,8 +318,9 @@ const temporaryItems: Item[] = [
 
 
 export const useCatalogStore = defineStore('catalog', () => {
-	const desktopStrokeCardCount = ref<string>('4')
-	const mobileStrokeCardCount = ref<string>('2')
+	const desktopStrokeCardCount = ref('4')
+	const mobileStrokeCardCount = ref('2')
+	const currentVisibleCardCount = ref(12)
 	const sortAndFilter = ref<SortAndFilter>({
 		type: null,
 		color: null,
@@ -348,11 +349,17 @@ export const useCatalogStore = defineStore('catalog', () => {
 		for (const key in sortAndFilter.value) {
 			sortAndFilter.value[key as keyof SortAndFilter] = null
 		}
+		currentVisibleCardCount.value = 12
 	}
+	
+	watch(filteredItems, () => {
+		currentVisibleCardCount.value = 12
+	})
 	
 	return {
 		desktopStrokeCardCount,
 		mobileStrokeCardCount,
+		currentVisibleCardCount,
 		sortAndFilter,
 		items,
 		filteredItems,

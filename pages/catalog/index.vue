@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import axios from "axios"
+
 const images = {
 	card1: "/card-1.jpg",
 	card2: "/card-2.jpg",
@@ -53,6 +55,15 @@ const materials = ["Махра", "Вязаные", "В рубчик"]
 const useTypes = ["Повседневная одежда", "Пляж"]
 const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главная", path: "/" }, { name: "Смотреть все" }]
 
+const visibleItems = computed(() => {
+	return catalogStore.filteredItems.slice(0, catalogStore.currentVisibleCardCount)
+})
+
+const load = () => {
+	const newCount = catalogStore.currentVisibleCardCount + 12
+	catalogStore.currentVisibleCardCount = Math.min(newCount, catalogStore.filteredItems.length)
+}
+
 </script>
 
 <template>
@@ -86,7 +97,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 		  v-if="currentCardCount === '4' || currentCardCount === '2'"
 		  class="overflow-hidden grid grid-cols-2 px-2 gap-x-1 gap-y-2 sm:grid-cols-4 sm:px-4 sm:gap-x-4 sm:gap-y-6"
 	  >
-		  <template v-for="(item, index) in catalogStore.filteredItems" :key="item.id">
+		  <template v-for="(item, index) in visibleItems" :key="item.id">
 	      <template v-if="index > 0 && index % 6 === 0">
 	        <BannerCard
 		        :image-url="images.promo1"
@@ -112,7 +123,7 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 		  v-else
 		  class="overflow-hidden grid grid-cols-3 px-2 gap-x-1 gap-y-2 sm:grid-cols-6 sm:px-4 sm:gap-x-4 sm:gap-y-6"
 	  >
-		  <template v-for="item in catalogStore.filteredItems" :key="item.id">
+		  <template v-for="item in visibleItems" :key="item.id">
 			  <CatalogCard
 				  :id="item.id"
 				  v-model="selectedSizes[item.id]"
@@ -126,9 +137,16 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  />
 		  </template>
 	  </div>
-	  <div class="flex justify-center items-center pt-4 pb-2 sm:py-10">
-		  <ExpandButton content="Показать больше" />
+	  <div
+		  v-if="catalogStore.currentVisibleCardCount < catalogStore.filteredItems.length"
+		  class="flex justify-center items-center pt-4 pb-2 sm:py-10"
+	  >
+		  <LoadButton content="Показать больше" @click="load" />
 	  </div>
+	  <div
+		  v-else
+		  class="pt-4 pb-2 sm:py-10"
+	  />
 	  <AppSEO
 		  :paragraphs="['CASA AL MARE — эстетика тела, свобода выбора. Каталог CASA AL MARE создан для женщин, которые ищут не просто купальник или комплект белья, а выражение своей индивидуальности.\n'+
 'Мы создаём коллекции, вдохновлённые побережьями, архитектурой юга и непринуждённой элегантностью.', 'В каталоге CASA AL MARE вы найдете:\n'+

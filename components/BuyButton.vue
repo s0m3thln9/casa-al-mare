@@ -5,11 +5,13 @@ const props = defineProps<{
 	isParametersSelected?: boolean
 	inStock?: boolean
 	availableQuantity?: boolean
+	id: string
 }>()
 
 const isLoading = ref(false)
 const showSuccess = ref(false)
 const isInCart = ref(false)
+const orderStore = useOrderStore()
 
 const styleBase = 'flex justify-center items-center w-full py-4 border rounded-[18px] text-[13px]/snug font-[Manrope] sm:text-sm/snug '
 const styleVariants = {
@@ -79,6 +81,7 @@ const handleClick = () => {
 			isLoading.value = false
 			isInCart.value = true
 			showSuccess.value = true
+			orderStore.addToCart(props.id)
 			setTimeout(() => {
 				showSuccess.value = false
 			}, 1500)

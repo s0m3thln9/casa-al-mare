@@ -135,18 +135,18 @@ const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главн�
 			  <div class="grid grid-cols-2 gap-y-6 gap-x-4 sm:gap-x-2">
 				  <div class="flex flex-col gap-2">
 					  <span class="font-[Manrope] text-sm">Верх</span>
-					  <CatalogCard v-model="setStore.top" custom-image-class="aspect-[200/300] w-full" popup :image-urls="[images.card1, images.card1, images.card1]" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
+					  <CatalogCard id="1" v-model="setStore.top" custom-image-class="aspect-[200/300] w-full" popup :slider-images="[images.card1, images.card1, images.card1]" variant="mini" :price="24600" :old-price="26000" color="Цвет" name="Название" />
 				  </div>
 				  <div class="flex flex-col gap-2">
 					  <span class="font-[Manrope] text-sm">Низ</span>
-					  <CatalogCard v-model="setStore.bottom" custom-image-class="aspect-[200/300] w-full" popup :image-urls="[images.card1, images.card1, images.card1]" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
+					  <CatalogCard id="1" v-model="setStore.top" custom-image-class="aspect-[200/300] w-full" popup :slider-images="[images.card1, images.card1, images.card1]" variant="mini" :price="24600" :old-price="26000" color="Цвет" name="Название" />
 				  </div>
 				  <div class="flex flex-col gap-2">
 					  <span class="font-[Manrope] text-sm">Аксессуар</span>
-					  <CatalogCard v-model="setStore.accessory" custom-image-class="aspect-[200/300] w-full" popup :image-urls="[images.card1, images.card1, images.card1]" variant="mini" :price="24600" :old-price="26000" color="Цвет" text="Название" />
+					  <CatalogCard id="1" v-model="setStore.top" custom-image-class="aspect-[200/300] w-full" popup :slider-images="[images.card1, images.card1, images.card1]" variant="mini" :price="24600" :old-price="26000" color="Цвет" name="Название" />
 				  </div>
 			  </div>
-			  <BuyButton available-quantity in-stock :is-parameters-selected="setStore.canAddToCart" />
+			  <BuyButton id="1" available-quantity in-stock :is-parameters-selected="setStore.canAddToCart" />
 		  </div>
 	  </AppPopup>
 	</main>
