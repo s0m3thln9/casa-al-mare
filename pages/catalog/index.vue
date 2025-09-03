@@ -64,10 +64,6 @@ const load = () => {
 	catalogStore.currentVisibleCardCount = Math.min(newCount, catalogStore.filteredItems.length)
 }
 
-onMounted(async  () => {
-	const response = await axios.get('https://swimwear.kyokata.wtf/api/getProducts')
-})
-
 </script>
 
 <template>
