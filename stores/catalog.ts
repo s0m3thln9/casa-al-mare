@@ -13,11 +13,21 @@ type SortAndFilter = {
 type Item = {
 	id: string
 	name: string
-	color: string
-	images: string[]
-	sliderImages: string[]
-	price: number
-	oldPrice: number
+	colors: {
+		[color: string]: number[]
+	}
+	sizes: string[]
+	images: {
+		[id: number]: string
+	},
+	vector: {
+		[vector: string]: {
+			oldPrice: number,
+			price: number,
+			quantity: number,
+			comingSoon: boolean,
+		}
+	}
 	type: string
 	material: string
 	useType: string
@@ -27,292 +37,801 @@ type Item = {
 const temporaryItems: Item[] = [
 	{
 		id: '1',
-		name: 'Printed bikini top',
-		color: 'Оранжевый',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 25000,
-		oldPrice: 26000,
-		type: "Топ",
-		material: "Махра",
-		useType: "Пляж"
+		name: 'Cropped swim top',
+		colors: {
+			'red': [1, 2, 3, 4, 5, 6],
+			'green': [7, 8, 9, 10, 11, 12]
+		},
+		sizes: ['xs-s', 's-m', 'm-l'],
+		images: {
+			1: '/item-1.jpg',
+			2: '/item-2.jpg',
+			3: '/item-3.jpg',
+			4: '/item-4.jpg',
+			5: '/item-5.jpg',
+			6: '/item-6.jpg',
+			7: '/item-7.jpg',
+			8: '/item-8.jpg',
+			9: '/item-9.jpg',
+			10: '/item-10.jpg',
+			11: '/item-11.jpg',
+			12: '/item-12.jpg'
+		},
+		vector: {
+			'red_xs-s': {
+				oldPrice: 21000,
+				price: 20000,
+				quantity: 10,
+				comingSoon: false,
+			},
+			'red_s-m': {
+				oldPrice: 10000,
+				price: 9000,
+				quantity: 0,
+				comingSoon: true,
+			},
+			'red_m-l': {
+				oldPrice: 15000,
+				price: 12000,
+				quantity: 0,
+				comingSoon: false,
+			},
+			'green_xs-s': {
+				oldPrice: 22000,
+				price: 21000,
+				quantity: 12,
+				comingSoon: false,
+			},
+			'green_s-m': {
+				oldPrice: 20000,
+				price: 19000,
+				quantity: 4,
+				comingSoon: false,
+			},
+			'green_m-l': {
+				oldPrice: 16000,
+				price: 11000,
+				quantity: 0,
+				comingSoon: true,
+			},
+		},
+		type: 'Топ',
+		material: 'Вязаные',
+		useType: 'Пляж',
 	},
 	{
 		id: '2',
-		name: 'Striped swimsuit',
-		color: 'Голубой',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 28000,
-		oldPrice: 30000,
-		type: "Купальник",
-		material: "В рубчик",
-		useType: "Пляж"
+		name: 'Beach shorts',
+		colors: {
+			'blue': [13, 14, 15, 16, 17, 18],
+			'yellow': [19, 20, 21, 22, 23, 24]
+		},
+		sizes: ['s', 'm', 'l', 'xl'],
+		images: {
+			13: '/item-13.jpg',
+			14: '/item-14.jpg',
+			15: '/item-15.jpg',
+			16: '/item-16.jpg',
+			17: '/item-17.jpg',
+			18: '/item-18.jpg',
+			19: '/item-19.jpg',
+			20: '/item-20.jpg',
+			21: '/item-21.jpg',
+			22: '/item-22.jpg',
+			23: '/item-23.jpg',
+			24: '/item-24.jpg'
+		},
+		vector: {
+			'blue_s': {
+				oldPrice: 18000,
+				price: 15000,
+				quantity: 8,
+				comingSoon: false,
+			},
+			'blue_m': {
+				oldPrice: 19000,
+				price: 16000,
+				quantity: 5,
+				comingSoon: false,
+			},
+			'blue_l': {
+				oldPrice: 20000,
+				price: 17000,
+				quantity: 0,
+				comingSoon: true,
+			},
+			'blue_xl': {
+				oldPrice: 21000,
+				price: 18000,
+				quantity: 3,
+				comingSoon: false,
+			},
+			'yellow_s': {
+				oldPrice: 17000,
+				price: 14500,
+				quantity: 0,
+				comingSoon: false,
+			},
+			'yellow_m': {
+				oldPrice: 18000,
+				price: 15500,
+				quantity: 7,
+				comingSoon: false,
+			},
+			'yellow_l': {
+				oldPrice: 19000,
+				price: 16500,
+				quantity: 2,
+				comingSoon: false,
+			},
+			'yellow_xl': {
+				oldPrice: 20000,
+				price: 17500,
+				quantity: 0,
+				comingSoon: true,
+			},
+		},
+		type: 'Шорты',
+		material: 'Хлопок',
+		useType: 'Пляж',
+		pantsType: 'Шорты'
 	},
 	{
 		id: '3',
-		name: 'Floral bikini set',
-		color: 'Фиолетовый',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 32000,
-		oldPrice: 35000,
-		type: "Купальник",
-		material: "Вязаные",
-		useType: "Пляж"
+		name: 'Bikini set',
+		colors: {
+			'black': [25, 26, 27, 28, 29, 30],
+			'pink': [31, 32, 33, 34, 35, 36]
+		},
+		sizes: ['xs', 's', 'm'],
+		images: {
+			25: '/item-25.jpg',
+			26: '/item-26.jpg',
+			27: '/item-27.jpg',
+			28: '/item-28.jpg',
+			29: '/item-29.jpg',
+			30: '/item-30.jpg',
+			31: '/item-31.jpg',
+			32: '/item-32.jpg',
+			33: '/item-33.jpg',
+			34: '/item-34.jpg',
+			35: '/item-35.jpg',
+			36: '/item-36.jpg'
+		},
+		vector: {
+			'black_xs': {
+				oldPrice: 25000,
+				price: 22000,
+				quantity: 6,
+				comingSoon: false,
+			},
+			'black_s': {
+				oldPrice: 26000,
+				price: 23000,
+				quantity: 0,
+				comingSoon: true,
+			},
+			'black_m': {
+				oldPrice: 27000,
+				price: 24000,
+				quantity: 4,
+				comingSoon: false,
+			},
+			'pink_xs': {
+				oldPrice: 24000,
+				price: 21000,
+				quantity: 8,
+				comingSoon: false,
+			},
+			'pink_s': {
+				oldPrice: 25000,
+				price: 22000,
+				quantity: 3,
+				comingSoon: false,
+			},
+			'pink_m': {
+				oldPrice: 26000,
+				price: 23000,
+				quantity: 0,
+				comingSoon: false,
+			},
+		},
+		type: 'Комплект',
+		material: 'Полиэстер',
+		useType: 'Пляж',
+		pantsType: 'Бикини'
 	},
 	{
 		id: '4',
-		name: 'Solid one-piece',
-		color: 'Зеленый',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 22000,
-		oldPrice: 24000,
-		type: "Купальник",
-		material: "Махра",
-		useType: "Пляж"
+		name: 'Summer dress',
+		colors: {
+			'white': [37, 38, 39, 40, 41, 42],
+			'floral': [43, 44, 45, 46, 47, 48]
+		},
+		sizes: ['s', 'm', 'l'],
+		images: {
+			37: '/item-37.jpg',
+			38: '/item-38.jpg',
+			39: '/item-39.jpg',
+			40: '/item-40.jpg',
+			41: '/item-41.jpg',
+			42: '/item-42.jpg',
+			43: '/item-43.jpg',
+			44: '/item-44.jpg',
+			45: '/item-45.jpg',
+			46: '/item-46.jpg',
+			47: '/item-47.jpg',
+			48: '/item-48.jpg'
+		},
+		vector: {
+			'white_s': {
+				oldPrice: 35000,
+				price: 30000,
+				quantity: 5,
+				comingSoon: false,
+			},
+			'white_m': {
+				oldPrice: 36000,
+				price: 31000,
+				quantity: 0,
+				comingSoon: true,
+			},
+			'white_l': {
+				oldPrice: 37000,
+				price: 32000,
+				quantity: 7,
+				comingSoon: false,
+			},
+			'floral_s': {
+				oldPrice: 38000,
+				price: 33000,
+				quantity: 4,
+				comingSoon: false,
+			},
+			'floral_m': {
+				oldPrice: 39000,
+				price: 34000,
+				quantity: 6,
+				comingSoon: false,
+			},
+			'floral_l': {
+				oldPrice: 40000,
+				price: 35000,
+				quantity: 0,
+				comingSoon: false,
+			},
+		},
+		type: 'Платье',
+		material: 'Лен',
+		useType: 'Повседневное'
 	},
 	{
 		id: '5',
-		name: 'Tie-dye bikini',
-		color: 'Зеленый',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 27000,
-		oldPrice: 29000,
-		type: "Купальник",
-		material: "В рубчик",
-		useType: "Пляж"
+		name: 'Swim trunks',
+		colors: {
+			'navy': [49, 50, 51, 52, 53, 54],
+			'coral': [55, 56, 57, 58, 59, 60]
+		},
+		sizes: ['m', 'l', 'xl'],
+		images: {
+			49: '/item-49.jpg',
+			50: '/item-50.jpg',
+			51: '/item-51.jpg',
+			52: '/item-52.jpg',
+			53: '/item-53.jpg',
+			54: '/item-54.jpg',
+			55: '/item-55.jpg',
+			56: '/item-56.jpg',
+			57: '/item-57.jpg',
+			58: '/item-58.jpg',
+			59: '/item-59.jpg',
+			60: '/item-60.jpg'
+		},
+		vector: {
+			'navy_m': {
+				oldPrice: 15000,
+				price: 12000,
+				quantity: 10,
+				comingSoon: false,
+			},
+			'navy_l': {
+				oldPrice: 16000,
+				price: 13000,
+				quantity: 8,
+				comingSoon: false,
+			},
+			'navy_xl': {
+				oldPrice: 17000,
+				price: 14000,
+				quantity: 0,
+				comingSoon: true,
+			},
+			'coral_m': {
+				oldPrice: 15500,
+				price: 12500,
+				quantity: 6,
+				comingSoon: false,
+			},
+			'coral_l': {
+				oldPrice: 16500,
+				price: 13500,
+				quantity: 0,
+				comingSoon: false,
+			},
+			'coral_xl': {
+				oldPrice: 17500,
+				price: 14500,
+				quantity: 4,
+				comingSoon: false,
+			},
+		},
+		type: 'Трусы',
+		material: 'Быстросохнущая ткань',
+		useType: 'Пляж',
+		pantsType: 'Плавки'
 	},
 	{
 		id: '6',
-		name: 'High-waist bikini',
-		color: 'Красный',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 31000,
-		oldPrice: 33000,
-		type: "Купальник",
-		material: "Вязаные",
-		useType: "Пляж"
+		name: 'Beach cover-up',
+		colors: {
+			'beige': [61, 62, 63, 64, 65, 66],
+			'striped': [67, 68, 69, 70, 71, 72]
+		},
+		sizes: ['one-size'],
+		images: {
+			61: '/item-61.jpg',
+			62: '/item-62.jpg',
+			63: '/item-63.jpg',
+			64: '/item-64.jpg',
+			65: '/item-65.jpg',
+			66: '/item-66.jpg',
+			67: '/item-67.jpg',
+			68: '/item-68.jpg',
+			69: '/item-69.jpg',
+			70: '/item-70.jpg',
+			71: '/item-71.jpg',
+			72: '/item-72.jpg'
+		},
+		vector: {
+			'beige_one-size': {
+				oldPrice: 28000,
+				price: 24000,
+				quantity: 7,
+				comingSoon: false,
+			},
+			'striped_one-size': {
+				oldPrice: 29000,
+				price: 25000,
+				quantity: 0,
+				comingSoon: true,
+			},
+		},
+		type: 'Парео',
+		material: 'Шифон',
+		useType: 'Пляж'
 	},
 	{
 		id: '7',
-		name: 'Sporty swim top',
-		color: 'Синий',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 24000,
-		oldPrice: 26000,
-		type: "Топ",
-		material: "В рубчик",
-		useType: "Пляж"
+		name: 'Sports top',
+		colors: {
+			'gray': [73, 74, 75, 76, 77, 78],
+			'purple': [79, 80, 81, 82, 83, 84]
+		},
+		sizes: ['xs-s', 's-m', 'm-l', 'l-xl'],
+		images: {
+			73: '/item-73.jpg',
+			74: '/item-74.jpg',
+			75: '/item-75.jpg',
+			76: '/item-76.jpg',
+			77: '/item-77.jpg',
+			78: '/item-78.jpg',
+			79: '/item-79.jpg',
+			80: '/item-80.jpg',
+			81: '/item-81.jpg',
+			82: '/item-82.jpg',
+			83: '/item-83.jpg',
+			84: '/item-84.jpg'
+		},
+		vector: {
+			'gray_xs-s': {
+				oldPrice: 22000,
+				price: 19000,
+				quantity: 8,
+				comingSoon: false,
+			},
+			'gray_s-m': {
+				oldPrice: 23000,
+				price: 20000,
+				quantity: 5,
+				comingSoon: false,
+			},
+			'gray_m-l': {
+				oldPrice: 24000,
+				price: 21000,
+				quantity: 0,
+				comingSoon: true,
+			},
+			'gray_l-xl': {
+				oldPrice: 25000,
+				price: 22000,
+				quantity: 3,
+				comingSoon: false,
+			},
+			'purple_xs-s': {
+				oldPrice: 22500,
+				price: 19500,
+				quantity: 6,
+				comingSoon: false,
+			},
+			'purple_s-m': {
+				oldPrice: 23500,
+				price: 20500,
+				quantity: 4,
+				comingSoon: false,
+			},
+			'purple_m-l': {
+				oldPrice: 24500,
+				price: 21500,
+				quantity: 7,
+				comingSoon: false,
+			},
+			'purple_l-xl': {
+				oldPrice: 25500,
+				price: 22500,
+				quantity: 0,
+				comingSoon: false,
+			},
+		},
+		type: 'Топ',
+		material: 'Спандекс',
+		useType: 'Спорт'
 	},
 	{
 		id: '8',
-		name: 'Cheeky bikini bottom',
-		color: 'Желтый',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 18000,
-		oldPrice: 20000,
-		type: "Трусы",
-		material: "Махра",
-		useType: "Пляж",
-		pantsType: "Бразилиана"
+		name: 'Board shorts',
+		colors: {
+			'orange': [85, 86, 87, 88, 89, 90],
+			'teal': [91, 92, 93, 94, 95, 96]
+		},
+		sizes: ['28', '30', '32', '34'],
+		images: {
+			85: '/item-85.jpg',
+			86: '/item-86.jpg',
+			87: '/item-87.jpg',
+			88: '/item-88.jpg',
+			89: '/item-89.jpg',
+			90: '/item-90.jpg',
+			91: '/item-91.jpg',
+			92: '/item-92.jpg',
+			93: '/item-93.jpg',
+			94: '/item-94.jpg',
+			95: '/item-95.jpg',
+			96: '/item-96.jpg'
+		},
+		vector: {
+			'orange_28': {
+				oldPrice: 32000,
+				price: 28000,
+				quantity: 5,
+				comingSoon: false,
+			},
+			'orange_30': {
+				oldPrice: 33000,
+				price: 29000,
+				quantity: 0,
+				comingSoon: true,
+			},
+			'orange_32': {
+				oldPrice: 34000,
+				price: 30000,
+				quantity: 7,
+				comingSoon: false,
+			},
+			'orange_34': {
+				oldPrice: 35000,
+				price: 31000,
+				quantity: 3,
+				comingSoon: false,
+			},
+			'teal_28': {
+				oldPrice: 32500,
+				price: 28500,
+				quantity: 6,
+				comingSoon: false,
+			},
+			'teal_30': {
+				oldPrice: 33500,
+				price: 29500,
+				quantity: 4,
+				comingSoon: false,
+			},
+			'teal_32': {
+				oldPrice: 34500,
+				price: 30500,
+				quantity: 0,
+				comingSoon: false,
+			},
+			'teal_34': {
+				oldPrice: 35500,
+				price: 31500,
+				quantity: 8,
+				comingSoon: false,
+			},
+		},
+		type: 'Шорты',
+		material: 'Нейлон',
+		useType: 'Серфинг',
+		pantsType: 'Бермуды'
 	},
 	{
 		id: '9',
-		name: 'Crochet cover-up',
-		color: 'white',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 35000,
-		oldPrice: 38000,
-		type: "Туника",
-		material: "Вязаные",
-		useType: "Повседневная одежда"
+		name: 'Bikini bottom',
+		colors: {
+			'red': [97, 98, 99, 100, 101, 102],
+			'blue': [103, 104, 105, 106, 107, 108]
+		},
+		sizes: ['xs', 's', 'm', 'l'],
+		images: {
+			97: '/item-97.jpg',
+			98: '/item-98.jpg',
+			99: '/item-99.jpg',
+			100: '/item-100.jpg',
+			101: '/item-101.jpg',
+			102: '/item-102.jpg',
+			103: '/item-103.jpg',
+			104: '/item-104.jpg',
+			105: '/item-105.jpg',
+			106: '/item-106.jpg',
+			107: '/item-107.jpg',
+			108: '/item-108.jpg'
+		},
+		vector: {
+			'red_xs': {
+				oldPrice: 12000,
+				price: 10000,
+				quantity: 9,
+				comingSoon: false,
+			},
+			'red_s': {
+				oldPrice: 12500,
+				price: 10500,
+				quantity: 6,
+				comingSoon: false,
+			},
+			'red_m': {
+				oldPrice: 13000,
+				price: 11000,
+				quantity: 0,
+				comingSoon: true,
+			},
+			'red_l': {
+				oldPrice: 13500,
+				price: 11500,
+				quantity: 4,
+				comingSoon: false,
+			},
+			'blue_xs': {
+				oldPrice: 12200,
+				price: 10200,
+				quantity: 7,
+				comingSoon: false,
+			},
+			'blue_s': {
+				oldPrice: 12700,
+				price: 10700,
+				quantity: 5,
+				comingSoon: false,
+			},
+			'blue_m': {
+				oldPrice: 13200,
+				price: 11200,
+				quantity: 8,
+				comingSoon: false,
+			},
+			'blue_l': {
+				oldPrice: 13700,
+				price: 11700,
+				quantity: 0,
+				comingSoon: false,
+			},
+		},
+		type: 'Трусы',
+		material: 'Полиамид',
+		useType: 'Пляж',
+		pantsType: 'Бикини'
 	},
 	{
 		id: '10',
-		name: 'Mesh swim dress',
-		color: 'green',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 42000,
-		oldPrice: 45000,
-		type: "Купальник",
-		material: "Махра",
-		useType: "Пляж"
+		name: 'Rash guard',
+		colors: {
+			'black': [109, 110, 111, 112, 113, 114],
+			'neon green': [115, 116, 117, 118, 119, 120]
+		},
+		sizes: ['s', 'm', 'l', 'xl'],
+		images: {
+			109: '/item-109.jpg',
+			110: '/item-110.jpg',
+			111: '/item-111.jpg',
+			112: '/item-112.jpg',
+			113: '/item-113.jpg',
+			114: '/item-114.jpg',
+			115: '/item-115.jpg',
+			116: '/item-116.jpg',
+			117: '/item-117.jpg',
+			118: '/item-118.jpg',
+			119: '/item-119.jpg',
+			120: '/item-120.jpg'
+		},
+		vector: {
+			'black_s': {
+				oldPrice: 45000,
+				price: 40000,
+				quantity: 6,
+				comingSoon: false,
+			},
+			'black_m': {
+				oldPrice: 46000,
+				price: 41000,
+				quantity: 8,
+				comingSoon: false,
+			},
+			'black_l': {
+				oldPrice: 47000,
+				price: 42000,
+				quantity: 0,
+				comingSoon: true,
+			},
+			'black_xl': {
+				oldPrice: 48000,
+				price: 43000,
+				quantity: 4,
+				comingSoon: false,
+			},
+			'neon green_s': {
+				oldPrice: 45500,
+				price: 40500,
+				quantity: 7,
+				comingSoon: false,
+			},
+			'neon green_m': {
+				oldPrice: 46500,
+				price: 41500,
+				quantity: 5,
+				comingSoon: false,
+			},
+			'neon green_l': {
+				oldPrice: 47500,
+				price: 42500,
+				quantity: 9,
+				comingSoon: false,
+			},
+			'neon green_xl': {
+				oldPrice: 48500,
+				price: 43500,
+				quantity: 0,
+				comingSoon: false,
+			},
+		},
+		type: 'Футболка',
+		material: 'Лайкра',
+		useType: 'Серфинг'
 	},
 	{
 		id: '11',
-		name: 'Bandeau bikini',
-		color: 'purple',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 23000,
-		oldPrice: 25000,
-		type: "Купальник",
-		material: "В рубчик",
-		useType: "Пляж"
+		name: 'Beach skirt',
+		colors: {
+			'white': [121, 122, 123, 124, 125, 126],
+			'navy': [127, 128, 129, 130, 131, 132]
+		},
+		sizes: ['s-m', 'm-l'],
+		images: {
+			121: '/item-121.jpg',
+			122: '/item-122.jpg',
+			123: '/item-123.jpg',
+			124: '/item-124.jpg',
+			125: '/item-125.jpg',
+			126: '/item-126.jpg',
+			127: '/item-127.jpg',
+			128: '/item-128.jpg',
+			129: '/item-129.jpg',
+			130: '/item-130.jpg',
+			131: '/item-131.jpg',
+			132: '/item-132.jpg'
+		},
+		vector: {
+			'white_s-m': {
+				oldPrice: 28000,
+				price: 24000,
+				quantity: 8,
+				comingSoon: false,
+			},
+			'white_m-l': {
+				oldPrice: 29000,
+				price: 25000,
+				quantity: 0,
+				comingSoon: true,
+			},
+			'navy_s-m': {
+				oldPrice: 28500,
+				price: 24500,
+				quantity: 6,
+				comingSoon: false,
+			},
+			'navy_m-l': {
+				oldPrice: 29500,
+				price: 25500,
+				quantity: 5,
+				comingSoon: false,
+			},
+		},
+		type: 'Юбка',
+		material: 'Хлопок',
+		useType: 'Пляж'
 	},
 	{
 		id: '12',
-		name: 'Ruffled swimsuit',
-		color: 'teal',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 38000,
-		oldPrice: 40000,
-		type: "Купальник",
-		material: "Вязаные",
-		useType: "Пляж"
-	},
-	{
-		id: '13',
-		name: 'Cut-out one-piece',
-		color: 'burgundy',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 41000,
-		oldPrice: 44000,
-		type: "Купальник",
-		material: "Махра",
-		useType: "Пляж"
-	},
-	{
-		id: '14',
-		name: 'Tropical print bikini',
-		color: 'turquoise',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 29000,
-		oldPrice: 32000,
-		type: "Купальник",
-		material: "В рубчик",
-		useType: "Пляж"
-	},
-	{
-		id: '15',
-		name: 'Halter neck swimsuit',
-		color: 'coral',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 34000,
-		oldPrice: 36000,
-		type: "Купальник",
-		material: "Вязаные",
-		useType: "Пляж"
-	},
-	{
-		id: '16',
-		name: 'Sheer cover-up',
-		color: 'beige',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 26000,
-		oldPrice: 28000,
-		type: "Туника",
-		material: "Махра",
-		useType: "Повседневная одежда"
-	},
-	{
-		id: '17',
-		name: 'Belted swim dress',
-		color: 'maroon',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 47000,
-		oldPrice: 50000,
-		type: "Купальник",
-		material: "В рубчик",
-		useType: "Пляж"
-	},
-	{
-		id: '18',
-		name: 'Off-shoulder swimsuit',
-		color: 'mint',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 39000,
-		oldPrice: 42000,
-		type: "Купальник",
-		material: "Вязаные",
-		useType: "Пляж"
-	},
-	{
-		id: '19',
-		name: 'High-neck bikini',
-		color: 'lavender',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 31000,
-		oldPrice: 34000,
-		type: "Купальник",
-		material: "Махра",
-		useType: "Пляж"
-	},
-	{
-		id: '20',
-		name: 'Side-tie bikini',
-		color: 'peach',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 27000,
-		oldPrice: 29000,
-		type: "Купальник",
-		material: "В рубчик",
-		useType: "Пляж"
-	},
-	{
-		id: '21',
-		name: 'Animal print bikini',
-		color: 'leopard',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 33000,
-		oldPrice: 36000,
-		type: "Купальник",
-		material: "Вязаные",
-		useType: "Пляж"
-	},
-	{
-		id: '22',
-		name: 'Retro high-waist',
-		color: 'polka dot',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 36000,
-		oldPrice: 39000,
-		type: "Купальник",
-		material: "Махра",
-		useType: "Пляж"
-	},
-	{
-		id: '23',
-		name: 'Sporty one-piece',
-		color: 'charcoal',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 29000,
-		oldPrice: 32000,
-		type: "Купальник",
-		material: "В рубчик",
-		useType: "Пляж"
-	},
-	{
-		id: '24',
-		name: 'Cropped swim top',
-		color: 'sky blue',
-		images: ['/item-1.jpg','/item-2.jpg','/item-3.jpg','/item-4.jpg','/item-5.jpg','/item-6.jpg'],
-		sliderImages: ['/item-1.jpg','/item-2.jpg','/item-3.jpg'],
-		price: 21000,
-		oldPrice: 23000,
-		type: "Топ",
-		material: "Вязаные",
-		useType: "Пляж"
+		name: 'Swim briefs',
+		colors: {
+			'black': [133, 134, 135, 136, 137, 138],
+			'yellow': [139, 140, 141, 142, 143, 144]
+		},
+		sizes: ['s', 'm', 'l'],
+		images: {
+			133: '/item-133.jpg',
+			134: '/item-134.jpg',
+			135: '/item-135.jpg',
+			136: '/item-136.jpg',
+			137: '/item-137.jpg',
+			138: '/item-138.jpg',
+			139: '/item-139.jpg',
+			140: '/item-140.jpg',
+			141: '/item-141.jpg',
+			142: '/item-142.jpg',
+			143: '/item-143.jpg',
+			144: '/item-144.jpg'
+		},
+		vector: {
+			'black_s': {
+				oldPrice: 15000,
+				price: 12000,
+				quantity: 7,
+				comingSoon: false,
+			},
+			'black_m': {
+				oldPrice: 15500,
+				price: 12500,
+				quantity: 9,
+				comingSoon: false,
+			},
+			'black_l': {
+				oldPrice: 16000,
+				price: 13000,
+				quantity: 0,
+				comingSoon: true,
+			},
+			'yellow_s': {
+				oldPrice: 15200,
+				price: 12200,
+				quantity: 5,
+				comingSoon: false,
+			},
+			'yellow_m': {
+				oldPrice: 15700,
+				price: 12700,
+				quantity: 8,
+				comingSoon: false,
+			},
+			'yellow_l': {
+				oldPrice: 16200,
+				price: 13200,
+				quantity: 4,
+				comingSoon: false,
+			},
+		},
+		type: 'Трусы',
+		material: 'Полиэстер',
+		useType: 'Пляж',
+		pantsType: 'Слипы'
 	}
 ]
 
@@ -339,8 +858,8 @@ export const useCatalogStore = defineStore('catalog', () => {
 			if (sortAndFilter.value.type && item.type !== sortAndFilter.value.type) return false
 			if (sortAndFilter.value.material && item.material !== sortAndFilter.value.material) return false
 			if (sortAndFilter.value.useType && item.useType !== sortAndFilter.value.useType) return false
-			if (sortAndFilter.value.color && item.color !== sortAndFilter.value.color) return false
-			if (sortAndFilter.value.priceLimit && item.price > parseInt(sortAndFilter.value.priceLimit.replace(/[^0-9.-]+/g, ""))) return false
+			// if (sortAndFilter.value.color && item.color !== sortAndFilter.value.color) return false
+			// if (sortAndFilter.value.priceLimit && item.price > parseInt(sortAndFilter.value.priceLimit.replace(/[^0-9.-]+/g, ""))) return false
 			return true
 		})
 	})

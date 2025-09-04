@@ -12,7 +12,6 @@ const pants: {
 	{title: "Бразилиана", src: "/pant-2.svg", altSrc: "/pant-2-filled.svg"},
 	{title: "Классика", src: "/pant-3.svg", altSrc: "/pant-3-filled.svg"}
 ]
-const sizes = ["XXS", "XS", "S", "M", "L", "XL"]
 const other: { title: string, src: string }[] = [{ title: "Оранжевый", src: "/orange.png" }, { title: "Синий", src: "/blue.png" }]
 const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главная", path: "/" }, { name: "Смотреть все", path: "/catalog" }, { name: item!.name }]
 
@@ -163,18 +162,9 @@ onMounted(() => {
 			  </div>
 			  <div class="flex flex-col justify-center items-center gap-4 mt-12 sm:mt-10">
 				  <div class="flex justify-center items-center gap-3 font-light sm:gap-4 sm:font-normal">
-					  <SingleSelectButton v-model="itemStore.top" :content="sizes" />
+					  <SingleSelectButton v-model="itemStore.top" :content="item!.sizes" />
 				  </div>
-				  <span class="text-xs">Верх</span>
-			  </div>
-			  <div class="flex flex-col justify-center items-center gap-4 mt-12 sm:mt-10">
-				  <div class="flex justify-center items-center gap-3 font-light sm:gap-4 sm:font-normal">
-					  <SingleSelectButton v-model="itemStore.bottom" :content="sizes" />
-				  </div>
-				  <span class="text-xs">Низ</span>
-				  <div class="flex justify-center items-center gap-6 text-xs">
-				    <PantButton v-model="itemStore.pantsType" :pants="pants"/>
-		      </div>
+				  <span class="text-xs">Размер</span>
 			  </div>
 			  <div class="flex flex-col justify-center items-center gap-1 mt-12 sm:mt-10">
 				  <span class="font-light text-xs">На модели размер: топ S, низ M</span>
