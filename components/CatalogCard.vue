@@ -5,12 +5,7 @@ const props = defineProps<{
   customImageClass?: string
   variant: "mini" | "large"
   popup?: boolean
-  modelValue?: string | null
 	link?: boolean
-}>()
-
-const emit = defineEmits<{
-  (e: "update:modelValue", value: string | null): void
 }>()
 
 const {

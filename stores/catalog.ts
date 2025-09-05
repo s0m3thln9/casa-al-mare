@@ -14,7 +14,11 @@ type Item = {
 	id: string
 	name: string
 	colors: {
-		[color: string]: number[]
+		[color: string]: {
+			name: string
+			value: string
+			images: number[]
+		}
 	}
 	sizes: string[]
 	images: {
@@ -39,8 +43,16 @@ const temporaryItems: Item[] = [
 		id: '1',
 		name: 'Cropped swim top',
 		colors: {
-			'red': [1, 2, 3, 4, 5, 6],
-			'green': [7, 8, 9, 10, 11, 12]
+			'red': {
+				name: 'Красный',
+				value: '#D85959',
+				images: [1, 2, 3, 4, 5, 6]
+			},
+			'green': {
+				name: 'Зеленый',
+				value: '#68C768',
+				images: [7, 8, 9, 10, 11, 12]
+			}
 		},
 		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
@@ -103,8 +115,16 @@ const temporaryItems: Item[] = [
 		id: '2',
 		name: 'Beach shorts',
 		colors: {
-			'blue': [13, 14, 15, 16, 17, 18],
-			'yellow': [19, 20, 21, 22, 23, 24]
+			'blue': {
+				name: 'Синий',
+				value: '#4A66C5',
+				images: [13, 14, 15, 16, 17, 18]
+			},
+			'yellow': {
+				name: 'Желтый',
+				value: '#F2D06C',
+				images: [19, 20, 21, 22, 23, 24]
+			}
 		},
 		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
@@ -168,8 +188,16 @@ const temporaryItems: Item[] = [
 		id: '3',
 		name: 'Bikini set',
 		colors: {
-			'black': [25, 26, 27, 28, 29, 30],
-			'pink': [31, 32, 33, 34, 35, 36]
+			'black': {
+				name: 'Черный',
+				value: '#000000',
+				images: [25, 26, 27, 28, 29, 30]
+			},
+			'pink': {
+				name: 'Розовый',
+				value: '#FFC0CB',
+				images: [31, 32, 33, 34, 35, 36]
+			}
 		},
 		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
@@ -233,8 +261,16 @@ const temporaryItems: Item[] = [
 		id: '4',
 		name: 'Summer dress',
 		colors: {
-			'white': [37, 38, 39, 40, 41, 42],
-			'floral': [43, 44, 45, 46, 47, 48]
+			'white': {
+				name: 'Белый',
+				value: '#FFFFFF',
+				images: [37, 38, 39, 40, 41, 42]
+			},
+			'floral': {
+				name: 'Цветочный',
+				value: '#FF9E9E',
+				images: [43, 44, 45, 46, 47, 48]
+			}
 		},
 		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
@@ -297,8 +333,16 @@ const temporaryItems: Item[] = [
 		id: '5',
 		name: 'Swim trunks',
 		colors: {
-			'navy': [49, 50, 51, 52, 53, 54],
-			'coral': [55, 56, 57, 58, 59, 60]
+			'navy': {
+				name: 'Синий',
+				value: '#4A66C5',
+				images: [49, 50, 51, 52, 53, 54]
+			},
+			'coral': {
+				name: 'Оранжевый',
+				value: '#FDBF81',
+				images: [55, 56, 57, 58, 59, 60]
+			}
 		},
 		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
@@ -362,8 +406,16 @@ const temporaryItems: Item[] = [
 		id: '6',
 		name: 'Beach cover-up',
 		colors: {
-			'beige': [61, 62, 63, 64, 65, 66],
-			'striped': [67, 68, 69, 70, 71, 72]
+			'beige': {
+				name: 'Бежевый',
+				value: '#F5F5DC',
+				images: [61, 62, 63, 64, 65, 66]
+			},
+			'striped': {
+				name: 'Полосатый',
+				value: '#6B93DD',
+				images: [67, 68, 69, 70, 71, 72]
+			}
 		},
 		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
@@ -426,8 +478,16 @@ const temporaryItems: Item[] = [
 		id: '7',
 		name: 'Sports top',
 		colors: {
-			'gray': [73, 74, 75, 76, 77, 78],
-			'purple': [79, 80, 81, 82, 83, 84]
+			'gray': {
+				name: 'Серый',
+				value: '#808080',
+				images: [73, 74, 75, 76, 77, 78]
+			},
+			'purple': {
+				name: 'Фиолетовый',
+				value: '#BA97D6',
+				images: [79, 80, 81, 82, 83, 84]
+			}
 		},
 		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
@@ -490,8 +550,16 @@ const temporaryItems: Item[] = [
 		id: '8',
 		name: 'Board shorts',
 		colors: {
-			'orange': [85, 86, 87, 88, 89, 90],
-			'teal': [91, 92, 93, 94, 95, 96]
+			'orange': {
+				name: 'Оранжевый',
+				value: '#FDBF81',
+				images: [85, 86, 87, 88, 89, 90]
+			},
+			'teal': {
+				name: 'Бирюзовый',
+				value: '#97D6D1',
+				images: [91, 92, 93, 94, 95, 96]
+			}
 		},
 		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
@@ -555,8 +623,16 @@ const temporaryItems: Item[] = [
 		id: '9',
 		name: 'Bikini bottom',
 		colors: {
-			'red': [97, 98, 99, 100, 101, 102],
-			'blue': [103, 104, 105, 106, 107, 108]
+			'red': {
+				name: 'Красный',
+				value: '#D85959',
+				images: [97, 98, 99, 100, 101, 102]
+			},
+			'blue': {
+				name: 'Голубой',
+				value: '#6B93DD',
+				images: [103, 104, 105, 106, 107, 108]
+			}
 		},
 		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
@@ -620,8 +696,16 @@ const temporaryItems: Item[] = [
 		id: '10',
 		name: 'Rash guard',
 		colors: {
-			'black': [109, 110, 111, 112, 113, 114],
-			'neon green': [115, 116, 117, 118, 119, 120]
+			'black': {
+				name: 'Черный',
+				value: '#000000',
+				images: [109, 110, 111, 112, 113, 114]
+			},
+			'neon green': {
+				name: 'Неоново-зеленый',
+				value: '#39FF14',
+				images: [115, 116, 117, 118, 119, 120]
+			}
 		},
 		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
@@ -684,8 +768,16 @@ const temporaryItems: Item[] = [
 		id: '11',
 		name: 'Beach skirt',
 		colors: {
-			'white': [121, 122, 123, 124, 125, 126],
-			'navy': [127, 128, 129, 130, 131, 132]
+			'white': {
+				name: 'Белый',
+				value: '#FFFFFF',
+				images: [121, 122, 123, 124, 125, 126]
+			},
+			'navy': {
+				name: 'Синий',
+				value: '#4A66C5',
+				images: [127, 128, 129, 130, 131, 132]
+			}
 		},
 		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
@@ -748,8 +840,16 @@ const temporaryItems: Item[] = [
 		id: '12',
 		name: 'Swim briefs',
 		colors: {
-			'black': [133, 134, 135, 136, 137, 138],
-			'yellow': [139, 140, 141, 142, 143, 144]
+			'black': {
+				name: 'Черный',
+				value: '#000000',
+				images: [133, 134, 135, 136, 137, 138]
+			},
+			'yellow': {
+				name: 'Желтый',
+				value: '#F2D06C',
+				images: [139, 140, 141, 142, 143, 144]
+			}
 		},
 		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
@@ -804,12 +904,12 @@ const temporaryItems: Item[] = [
 				comingSoon: false,
 			},
 		},
-		type: 'Юбка',
-		material: 'Хлопок',
-		useType: 'Пляж'
+		type: 'Трусы',
+		material: 'Полиэстер',
+		useType: 'Пляж',
+		pantsType: 'Слипы'
 	}
 ]
-			
 			
 export const useCatalogStore = defineStore('catalog', () => {
 	const desktopStrokeCardCount = ref('4')

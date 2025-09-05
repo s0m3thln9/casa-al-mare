@@ -14,23 +14,43 @@ const pants: {
 ]
 const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главная", path: "/" }, { name: "Смотреть все", path: "/catalog" }, { name: item!.name }]
 
-const colors: { title: string; value: string }[] = [
-	{ title: "Синий", value: "#4A66C5" },
-	{ title: "Голубой", value: "#6B93DD" },
-	{ title: "Бирюзовый", value: "#97D6D1" },
-	{ title: "Зеленый", value: "#68C768" },
-	{ title: "Желтый", value: "#F2D06C" },
-	{ title: "Оранжевый", value: "#FDBF81" },
-	{ title: "Красный", value: "#D85959" },
-	{ title: "Фиолетовый", value: "#BA97D6" },
-]
 const currentImageIndex = ref(0)
 const touchStartX = ref(0)
-const areImagesLoaded = ref(false)
-
 const popupStore = usePopupStore()
 const itemStore = useItemStore()
 const setStore = useSetStore()
+
+const currentColorCode = computed(() => {
+	return itemStore.color?.code || (item ? Object.keys(item.colors)[0] : '')
+})
+
+const currentColorName = computed(() => {
+	return itemStore.color?.name || (item ? Object.values(item.colors)[0] : '')
+})
+
+const currentSize = computed(() => {
+	return itemStore.size || (item ? item.sizes[0] : '')
+})
+
+const currentColorImages = computed(() => {
+	if (!item || !currentColorCode.value) return []
+	const colorData = item.colors[currentColorCode.value]
+	return colorData.images.map(id => item.images[id]) || []
+})
+
+const currentVectorData = computed(() => {
+	if (!item || !currentColorCode.value || !currentSize.value) return null
+	const vectorKey = `${currentColorCode.value}_${currentSize.value}`
+	return item.vector[vectorKey] || null
+})
+
+const currentPrice = computed(() => {
+	return currentVectorData.value?.price || 0
+})
+
+const currentOldPrice = computed(() => {
+	return currentVectorData.value?.oldPrice || 0
+})
 
 const imageStyles = computed(() => (index: number) => {
 	if (index === currentImageIndex.value) {
@@ -63,28 +83,9 @@ const handleTouchEnd = (e: TouchEvent) => {
 	const deltaX = touchEndX - touchStartX.value
 	const threshold = 50
 	if (deltaX > threshold) {
-		currentImageIndex.value = (currentImageIndex.value - 1 + item!.images.length) % item!.images.length
+		currentImageIndex.value = (currentImageIndex.value - 1 + currentColorImages.value.length) % currentColorImages.value.length
 	} else if (deltaX < -threshold) {
-		currentImageIndex.value = (currentImageIndex.value + 1) % item!.images.length
-	}
-}
-
-const preloadImages = async () => {
-	const loadImage = (url: string) => {
-		return new Promise((resolve, reject) => {
-			const img = new Image()
-			img.src = url
-			img.onload = resolve
-			img.onerror = reject
-		})
-	}
-	
-	try {
-		await Promise.all(item!.images.map(url => loadImage(url)))
-		areImagesLoaded.value = true
-	} catch (error) {
-		console.error('Ошибка при загрузке изображений:', error)
-		areImagesLoaded.value = true
+		currentImageIndex.value = (currentImageIndex.value + 1) % currentColorImages.value.length
 	}
 }
 
@@ -93,7 +94,9 @@ const calculateDiscount = (price: number, oldPrice: number) => {
 	return Math.round(((oldPrice - price) / oldPrice) * 100);
 };
 
-const discount = calculateDiscount(item!.price, item!.oldPrice)
+const discount = computed(() => {
+	return calculateDiscount(currentPrice.value, currentOldPrice.value)
+})
 
 const priceFormatter = (value: number) => {
 	const formattedValue = new Intl.NumberFormat('ru-RU').format(value)
@@ -101,12 +104,13 @@ const priceFormatter = (value: number) => {
 }
 
 onMounted(() => {
-	preloadImages()
 	if (item && Object.keys(item.colors).length > 0) {
-		itemStore.color = Object.keys(item.colors)[0]
+		const firstColorCode = Object.keys(item.colors)[0]
+		const firstColorName = item.colors[firstColorCode].name
+		itemStore.color = { code: firstColorCode, name: firstColorName }
 	}
 	if (item && item.sizes.length > 0) {
-		itemStore.top = item.sizes[0]
+		itemStore.size = item.sizes[0]
 	}
 })
 
@@ -120,22 +124,32 @@ onMounted(() => {
 	  <div class="px-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[4fr_1fr] xl:grid-cols-[3fr_1fr] w-full gap-8 sm:px-4">
 		  <div class="block sm:hidden">
 			  <div class="relative w-full aspect-[460/680] overflow-hidden" @touchstart="handleTouchStart" @touchend="handleTouchEnd">
-				  <div v-if="!areImagesLoaded" class="aspect-[460/680] w-full bg-[#F9F6EC]" />
-			    <NuxtImg
-				    v-for="(img, index) in item!.images"
-				    v-else
-				    :key="index"
-				    :src="img"
-				    alt="item"
-				    width="460"
-				    height="680"
-				    class="absolute top-0 left-0 w-full h-full"
-				    :style="imageStyles(index)"
-			    />
-			  </div>
+				  <NuxtImg
+					  v-for="(img, index) in currentColorImages"
+					  :key="index"
+					  v-slot="{ src, isLoaded, imgAttrs }"
+					  :src="img"
+					  :custom="true"
+					  class="absolute top-0 left-0 w-full h-full"
+				  >
+				    <div
+					    v-if="!isLoaded"
+					    class="w-full h-full aspect-[460/680] bg-[#F9F6EC]"
+					    :style="imageStyles(index)"
+				    />
+				    <img
+					    v-else
+					    v-bind="imgAttrs"
+					    :src="src"
+					    :style="imageStyles(index)"
+					    class="w-full h-full object-cover"
+					    alt="item"
+				    >
+				  </NuxtImg>
+				</div>
 			  <div class="flex justify-center items-center gap-1 px-4 mt-2">
 			    <div
-				    v-for="(_, index) in item!.images"
+				    v-for="(_, index) in currentColorImages"
 				    :key="index"
 				    class="flex-1 border-y border-[#A6CEFF]"
 				    :style="barStyles(index)"
@@ -143,19 +157,26 @@ onMounted(() => {
 			  </div>
 			</div>
 		  <div class="hidden sm:grid grid-cols-1 gap-2 lg:grid-cols-2">
-			  <template v-if="!areImagesLoaded">
-				  <div v-for="(_, index) in item!.images" :key="index" class="aspect-[726/1080] bg-[#F9F6EC] rounded-lg" />
-			  </template>
-        <NuxtImg
-				  v-for="(img, index) in item!.images"
-				  v-else
+			  <NuxtImg
+				  v-for="(img, index) in currentColorImages"
 				  :key="index"
+				  v-slot="{ src, isLoaded, imgAttrs }"
 				  :src="img"
-				  alt="item"
-				  width="726"
-				  height="1080"
+				  :custom="true"
 				  class="sm:rounded-lg aspect-[726/1080]"
-			  />
+			  >
+			    <div
+				    v-if="!isLoaded"
+				    class="aspect-[726/1080] bg-[#F9F6EC] rounded-lg"
+			    />
+			    <img
+				    v-else
+				    v-bind="imgAttrs"
+				    :src="src"
+				    class="w-full h-full object-cover sm:rounded-lg"
+				    alt="item"
+			    >
+			  </NuxtImg>
 			</div>
 		  <div class="px-2 flex flex-col sm:px-0">
 			  <div class="flex justify-center items-center">
@@ -166,23 +187,32 @@ onMounted(() => {
 				  </h2>
 			  </div>
 			  <div class="flex justify-center items-center gap-2 mt-4 sm:mt-6">
-				  <span class="font-[Inter] font-light text-[17px] text-[#8C8785] sm:font-[Manrope] sm:font-normal sm:text-base sm:text-[#211D1D]">{{ priceFormatter(item!.price) }}</span>
-				  <span class="font-[Inter] line-through font-light text-[17px] text-[#8C8785] sm:font-[Manrope] sm:font-normal sm:text-base sm:text-[#211D1D]">{{ priceFormatter(item!.oldPrice) }}</span>
+				  <span class="font-[Inter] font-light text-[17px] text-[#8C8785] sm:font-[Manrope] sm:font-normal sm:text-base sm:text-[#211D1D]">{{ priceFormatter(currentPrice) }}</span>
+				  <span class="font-[Inter] line-through font-light text-[17px] text-[#8C8785] sm:font-[Manrope] sm:font-normal sm:text-base sm:text-[#211D1D]">{{ priceFormatter(currentOldPrice) }}</span>
 			  </div>
 			  <div class="flex justify-center items-center mt-1 sm:mt-2">
 				  <span class="font-light text-xs">Скидка {{ discount }}%</span>
 			  </div>
-			  <div class="flex justify-center items-center gap-6 mt-14">
-				  <ColorButton v-model="itemStore.color" :colors="colors" />
-				  <span>{{ itemStore.color }}</span>
+			  <div class="flex flex-col justify-center items-center gap-6 mt-14">
+				  <div class="flex justify-center items-center gap-4">
+					  <ColorButton
+						  v-model="itemStore.color"
+						  :colors="Object.entries(item!.colors).map(([code, colorData]) => ({
+					      code: code,
+					      name: colorData.name,
+					      value: colorData.value
+					    }))"
+					  />
+				  </div>
+				  <span class="text-xs">{{ currentColorName }}</span>
 			  </div>
 			  <div class="flex flex-col justify-center items-center gap-4 mt-12 sm:mt-10">
 				  <div class="flex justify-center items-center gap-3 font-light sm:gap-4 sm:font-normal">
-					  <SingleSelectButton v-model="itemStore.top" :content="item!.sizes" />
+					  <SingleSelectButton v-model="itemStore.size" :content="item!.sizes" />
 				  </div>
 				  <span class="text-xs">Размер</span>
 			  </div>
-			  <div class="flex justify-center items-center gap-6 mt-4">
+			  <div v-if="item!.pantsType" class="flex justify-center items-center gap-6 mt-4">
 				  <PantButton v-model="itemStore.pantsType" :pants="pants" />
 			  </div>
 			  <div class="flex flex-col justify-center items-center gap-1 mt-12 sm:mt-10">
@@ -231,32 +261,17 @@ onMounted(() => {
 			  <CatalogCard
 				  id="1"
 				  variant="large"
-				  :slider-images="item!.sliderImages"
-				  :color="item!.color"
-				  :name="item!.name"
-				  :price="item!.price"
-				  :old-price="item!.oldPrice"
-				  :link="`/catalog/${item!.id}`"
+				  link
 			  />
 			  <CatalogCard
 				  id="1"
 				  variant="large"
-				  :slider-images="item!.sliderImages"
-				  :color="item!.color"
-				  :name="item!.name"
-				  :price="item!.price"
-				  :old-price="item!.oldPrice"
-				  :link="`/catalog/${item!.id}`"
+				  link
 			  />
 			  <CatalogCard
 				  id="1"
 				  variant="large"
-				  :slider-images="item!.sliderImages"
-				  :color="item!.color"
-				  :name="item!.name"
-				  :price="item!.price"
-				  :old-price="item!.oldPrice"
-				  :link="`/catalog/${item!.id}`"
+				  link
 			  />
 		  </div>
 	  </div>
@@ -266,32 +281,17 @@ onMounted(() => {
 			  <CatalogCard
 				  id="1"
 				  variant="large"
-				  :slider-images="item!.sliderImages"
-				  :color="item!.color"
-				  :name="item!.name"
-				  :price="item!.price"
-				  :old-price="item!.oldPrice"
-				  :link="`/catalog/${item!.id}`"
+				  link
 			  />
 			  <CatalogCard
 				  id="1"
 				  variant="large"
-				  :slider-images="item!.sliderImages"
-				  :color="item!.color"
-				  :name="item!.name"
-				  :price="item!.price"
-				  :old-price="item!.oldPrice"
-				  :link="`/catalog/${item!.id}`"
+				  link
 			  />
 			  <CatalogCard
 				  id="1"
 				  variant="large"
-				  :slider-images="item!.sliderImages"
-				  :color="item!.color"
-				  :name="item!.name"
-				  :price="item!.price"
-				  :old-price="item!.oldPrice"
-				  :link="`/catalog/${item!.id}`"
+				  link
 			  />
 		  </div>
 	  </div>
@@ -300,15 +300,15 @@ onMounted(() => {
 			  <div class="grid grid-cols-2 gap-y-6 gap-x-4 sm:gap-x-2">
 				  <div class="flex flex-col gap-2">
 					  <span class="font-[Manrope] text-sm">Верх</span>
-					  <CatalogCard id="1" v-model="setStore.top" custom-image-class="aspect-[200/300] w-full" popup :slider-images="item!.sliderImages" variant="mini" :price="item!.price" :old-price="item!.oldPrice" :color="item!.color" :name="item!.name" />
+					  <CatalogCard id="1" custom-image-class="aspect-[200/300] w-full" popup variant="mini" />
 				  </div>
 				  <div class="flex flex-col gap-2">
 					  <span class="font-[Manrope] text-sm">Низ</span>
-					  <CatalogCard id="1" v-model="setStore.bottom" custom-image-class="aspect-[200/300] w-full" popup :slider-images="item!.sliderImages" variant="mini" :price="item!.price" :old-price="item!.oldPrice" :color="item!.color" :name="item!.name" />
+					  <CatalogCard id="1" custom-image-class="aspect-[200/300] w-full" popup variant="mini" />
 				  </div>
 				  <div class="flex flex-col gap-2">
 					  <span class="font-[Manrope] text-sm">Аксессуар</span>
-					  <CatalogCard id="1" v-model="setStore.accessory" custom-image-class="aspect-[200/300] w-full" popup :slider-images="item!.sliderImages" variant="mini" :price="item!.price" :old-price="item!.oldPrice" :color="item!.color" :name="item!.name" />
+					  <CatalogCard id="1" custom-image-class="aspect-[200/300] w-full" popup variant="mini" />
 				  </div>
 			  </div>
 			  <BuyButton :id="item!.id" available-quantity in-stock :is-parameters-selected="setStore.canAddToCart" />
