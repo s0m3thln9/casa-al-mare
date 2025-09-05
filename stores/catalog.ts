@@ -106,69 +106,57 @@ const temporaryItems: Item[] = [
 			'blue': [13, 14, 15, 16, 17, 18],
 			'yellow': [19, 20, 21, 22, 23, 24]
 		},
-		sizes: ['s', 'm', 'l', 'xl'],
+		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
-			13: '/item-13.jpg',
-			14: '/item-14.jpg',
-			15: '/item-15.jpg',
-			16: '/item-16.jpg',
-			17: '/item-17.jpg',
-			18: '/item-18.jpg',
-			19: '/item-19.jpg',
-			20: '/item-20.jpg',
-			21: '/item-21.jpg',
-			22: '/item-22.jpg',
-			23: '/item-23.jpg',
-			24: '/item-24.jpg'
+			13: '/item-1.jpg',
+			14: '/item-2.jpg',
+			15: '/item-3.jpg',
+			16: '/item-4.jpg',
+			17: '/item-5.jpg',
+			18: '/item-6.jpg',
+			19: '/item-7.jpg',
+			20: '/item-8.jpg',
+			21: '/item-9.jpg',
+			22: '/item-10.jpg',
+			23: '/item-11.jpg',
+			24: '/item-12.jpg'
 		},
 		vector: {
-			'blue_s': {
+			'blue_xs-s': {
 				oldPrice: 18000,
 				price: 15000,
 				quantity: 8,
 				comingSoon: false,
 			},
-			'blue_m': {
+			'blue_s-m': {
 				oldPrice: 19000,
 				price: 16000,
 				quantity: 5,
 				comingSoon: false,
 			},
-			'blue_l': {
+			'blue_m-l': {
 				oldPrice: 20000,
 				price: 17000,
 				quantity: 0,
 				comingSoon: true,
 			},
-			'blue_xl': {
-				oldPrice: 21000,
-				price: 18000,
-				quantity: 3,
-				comingSoon: false,
-			},
-			'yellow_s': {
+			'yellow_xs-s': {
 				oldPrice: 17000,
 				price: 14500,
 				quantity: 0,
 				comingSoon: false,
 			},
-			'yellow_m': {
+			'yellow_s-m': {
 				oldPrice: 18000,
 				price: 15500,
 				quantity: 7,
 				comingSoon: false,
 			},
-			'yellow_l': {
+			'yellow_m-l': {
 				oldPrice: 19000,
 				price: 16500,
 				quantity: 2,
 				comingSoon: false,
-			},
-			'yellow_xl': {
-				oldPrice: 20000,
-				price: 17500,
-				quantity: 0,
-				comingSoon: true,
 			},
 		},
 		type: 'Шорты',
@@ -183,53 +171,53 @@ const temporaryItems: Item[] = [
 			'black': [25, 26, 27, 28, 29, 30],
 			'pink': [31, 32, 33, 34, 35, 36]
 		},
-		sizes: ['xs', 's', 'm'],
+		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
-			25: '/item-25.jpg',
-			26: '/item-26.jpg',
-			27: '/item-27.jpg',
-			28: '/item-28.jpg',
-			29: '/item-29.jpg',
-			30: '/item-30.jpg',
-			31: '/item-31.jpg',
-			32: '/item-32.jpg',
-			33: '/item-33.jpg',
-			34: '/item-34.jpg',
-			35: '/item-35.jpg',
-			36: '/item-36.jpg'
+			25: '/item-1.jpg',
+			26: '/item-2.jpg',
+			27: '/item-3.jpg',
+			28: '/item-4.jpg',
+			29: '/item-5.jpg',
+			30: '/item-6.jpg',
+			31: '/item-7.jpg',
+			32: '/item-8.jpg',
+			33: '/item-9.jpg',
+			34: '/item-10.jpg',
+			35: '/item-11.jpg',
+			36: '/item-12.jpg'
 		},
 		vector: {
-			'black_xs': {
+			'black_xs-s': {
 				oldPrice: 25000,
 				price: 22000,
 				quantity: 6,
 				comingSoon: false,
 			},
-			'black_s': {
+			'black_s-m': {
 				oldPrice: 26000,
 				price: 23000,
 				quantity: 0,
 				comingSoon: true,
 			},
-			'black_m': {
+			'black_m-l': {
 				oldPrice: 27000,
 				price: 24000,
 				quantity: 4,
 				comingSoon: false,
 			},
-			'pink_xs': {
+			'pink_xs-s': {
 				oldPrice: 24000,
 				price: 21000,
 				quantity: 8,
 				comingSoon: false,
 			},
-			'pink_s': {
+			'pink_s-m': {
 				oldPrice: 25000,
 				price: 22000,
 				quantity: 3,
 				comingSoon: false,
 			},
-			'pink_m': {
+			'pink_m-l': {
 				oldPrice: 26000,
 				price: 23000,
 				quantity: 0,
@@ -248,53 +236,53 @@ const temporaryItems: Item[] = [
 			'white': [37, 38, 39, 40, 41, 42],
 			'floral': [43, 44, 45, 46, 47, 48]
 		},
-		sizes: ['s', 'm', 'l'],
+		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
-			37: '/item-37.jpg',
-			38: '/item-38.jpg',
-			39: '/item-39.jpg',
-			40: '/item-40.jpg',
-			41: '/item-41.jpg',
-			42: '/item-42.jpg',
-			43: '/item-43.jpg',
-			44: '/item-44.jpg',
-			45: '/item-45.jpg',
-			46: '/item-46.jpg',
-			47: '/item-47.jpg',
-			48: '/item-48.jpg'
+			37: '/item-1.jpg',
+			38: '/item-2.jpg',
+			39: '/item-3.jpg',
+			40: '/item-4.jpg',
+			41: '/item-5.jpg',
+			42: '/item-6.jpg',
+			43: '/item-7.jpg',
+			44: '/item-8.jpg',
+			45: '/item-9.jpg',
+			46: '/item-10.jpg',
+			47: '/item-11.jpg',
+			48: '/item-12.jpg'
 		},
 		vector: {
-			'white_s': {
+			'white_xs-s': {
 				oldPrice: 35000,
 				price: 30000,
 				quantity: 5,
 				comingSoon: false,
 			},
-			'white_m': {
+			'white_s-m': {
 				oldPrice: 36000,
 				price: 31000,
 				quantity: 0,
 				comingSoon: true,
 			},
-			'white_l': {
+			'white_m-l': {
 				oldPrice: 37000,
 				price: 32000,
 				quantity: 7,
 				comingSoon: false,
 			},
-			'floral_s': {
+			'floral_xs-s': {
 				oldPrice: 38000,
 				price: 33000,
 				quantity: 4,
 				comingSoon: false,
 			},
-			'floral_m': {
+			'floral_s-m': {
 				oldPrice: 39000,
 				price: 34000,
 				quantity: 6,
 				comingSoon: false,
 			},
-			'floral_l': {
+			'floral_m-l': {
 				oldPrice: 40000,
 				price: 35000,
 				quantity: 0,
@@ -312,53 +300,53 @@ const temporaryItems: Item[] = [
 			'navy': [49, 50, 51, 52, 53, 54],
 			'coral': [55, 56, 57, 58, 59, 60]
 		},
-		sizes: ['m', 'l', 'xl'],
+		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
-			49: '/item-49.jpg',
-			50: '/item-50.jpg',
-			51: '/item-51.jpg',
-			52: '/item-52.jpg',
-			53: '/item-53.jpg',
-			54: '/item-54.jpg',
-			55: '/item-55.jpg',
-			56: '/item-56.jpg',
-			57: '/item-57.jpg',
-			58: '/item-58.jpg',
-			59: '/item-59.jpg',
-			60: '/item-60.jpg'
+			49: '/item-1.jpg',
+			50: '/item-2.jpg',
+			51: '/item-3.jpg',
+			52: '/item-4.jpg',
+			53: '/item-5.jpg',
+			54: '/item-6.jpg',
+			55: '/item-7.jpg',
+			56: '/item-8.jpg',
+			57: '/item-9.jpg',
+			58: '/item-10.jpg',
+			59: '/item-11.jpg',
+			60: '/item-12.jpg'
 		},
 		vector: {
-			'navy_m': {
+			'navy_xs-s': {
 				oldPrice: 15000,
 				price: 12000,
 				quantity: 10,
 				comingSoon: false,
 			},
-			'navy_l': {
+			'navy_s-m': {
 				oldPrice: 16000,
 				price: 13000,
 				quantity: 8,
 				comingSoon: false,
 			},
-			'navy_xl': {
+			'navy_m-l': {
 				oldPrice: 17000,
 				price: 14000,
 				quantity: 0,
 				comingSoon: true,
 			},
-			'coral_m': {
+			'coral_xs-s': {
 				oldPrice: 15500,
 				price: 12500,
 				quantity: 6,
 				comingSoon: false,
 			},
-			'coral_l': {
+			'coral_s-m': {
 				oldPrice: 16500,
 				price: 13500,
 				quantity: 0,
 				comingSoon: false,
 			},
-			'coral_xl': {
+			'coral_m-l': {
 				oldPrice: 17500,
 				price: 14500,
 				quantity: 4,
@@ -377,29 +365,53 @@ const temporaryItems: Item[] = [
 			'beige': [61, 62, 63, 64, 65, 66],
 			'striped': [67, 68, 69, 70, 71, 72]
 		},
-		sizes: ['one-size'],
+		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
-			61: '/item-61.jpg',
-			62: '/item-62.jpg',
-			63: '/item-63.jpg',
-			64: '/item-64.jpg',
-			65: '/item-65.jpg',
-			66: '/item-66.jpg',
-			67: '/item-67.jpg',
-			68: '/item-68.jpg',
-			69: '/item-69.jpg',
-			70: '/item-70.jpg',
-			71: '/item-71.jpg',
-			72: '/item-72.jpg'
+			61: '/item-1.jpg',
+			62: '/item-2.jpg',
+			63: '/item-3.jpg',
+			64: '/item-4.jpg',
+			65: '/item-5.jpg',
+			66: '/item-6.jpg',
+			67: '/item-7.jpg',
+			68: '/item-8.jpg',
+			69: '/item-9.jpg',
+			70: '/item-10.jpg',
+			71: '/item-11.jpg',
+			72: '/item-12.jpg'
 		},
 		vector: {
-			'beige_one-size': {
+			'beige_xs-s': {
 				oldPrice: 28000,
 				price: 24000,
 				quantity: 7,
 				comingSoon: false,
 			},
-			'striped_one-size': {
+			'beige_s-m': {
+				oldPrice: 28000,
+				price: 24000,
+				quantity: 7,
+				comingSoon: false,
+			},
+			'beige_m-l': {
+				oldPrice: 28000,
+				price: 24000,
+				quantity: 7,
+				comingSoon: false,
+			},
+			'striped_xs-s': {
+				oldPrice: 29000,
+				price: 25000,
+				quantity: 0,
+				comingSoon: true,
+			},
+			'striped_s-m': {
+				oldPrice: 29000,
+				price: 25000,
+				quantity: 0,
+				comingSoon: true,
+			},
+			'striped_m-l': {
 				oldPrice: 29000,
 				price: 25000,
 				quantity: 0,
@@ -417,20 +429,20 @@ const temporaryItems: Item[] = [
 			'gray': [73, 74, 75, 76, 77, 78],
 			'purple': [79, 80, 81, 82, 83, 84]
 		},
-		sizes: ['xs-s', 's-m', 'm-l', 'l-xl'],
+		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
-			73: '/item-73.jpg',
-			74: '/item-74.jpg',
-			75: '/item-75.jpg',
-			76: '/item-76.jpg',
-			77: '/item-77.jpg',
-			78: '/item-78.jpg',
-			79: '/item-79.jpg',
-			80: '/item-80.jpg',
-			81: '/item-81.jpg',
-			82: '/item-82.jpg',
-			83: '/item-83.jpg',
-			84: '/item-84.jpg'
+			73: '/item-1.jpg',
+			74: '/item-2.jpg',
+			75: '/item-3.jpg',
+			76: '/item-4.jpg',
+			77: '/item-5.jpg',
+			78: '/item-6.jpg',
+			79: '/item-7.jpg',
+			80: '/item-8.jpg',
+			81: '/item-9.jpg',
+			82: '/item-10.jpg',
+			83: '/item-11.jpg',
+			84: '/item-12.jpg'
 		},
 		vector: {
 			'gray_xs-s': {
@@ -451,12 +463,6 @@ const temporaryItems: Item[] = [
 				quantity: 0,
 				comingSoon: true,
 			},
-			'gray_l-xl': {
-				oldPrice: 25000,
-				price: 22000,
-				quantity: 3,
-				comingSoon: false,
-			},
 			'purple_xs-s': {
 				oldPrice: 22500,
 				price: 19500,
@@ -475,12 +481,6 @@ const temporaryItems: Item[] = [
 				quantity: 7,
 				comingSoon: false,
 			},
-			'purple_l-xl': {
-				oldPrice: 25500,
-				price: 22500,
-				quantity: 0,
-				comingSoon: false,
-			},
 		},
 		type: 'Топ',
 		material: 'Спандекс',
@@ -493,68 +493,56 @@ const temporaryItems: Item[] = [
 			'orange': [85, 86, 87, 88, 89, 90],
 			'teal': [91, 92, 93, 94, 95, 96]
 		},
-		sizes: ['28', '30', '32', '34'],
+		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
-			85: '/item-85.jpg',
-			86: '/item-86.jpg',
-			87: '/item-87.jpg',
-			88: '/item-88.jpg',
-			89: '/item-89.jpg',
-			90: '/item-90.jpg',
-			91: '/item-91.jpg',
-			92: '/item-92.jpg',
-			93: '/item-93.jpg',
-			94: '/item-94.jpg',
-			95: '/item-95.jpg',
-			96: '/item-96.jpg'
+			85: '/item-1.jpg',
+			86: '/item-2.jpg',
+			87: '/item-3.jpg',
+			88: '/item-4.jpg',
+			89: '/item-5.jpg',
+			90: '/item-6.jpg',
+			91: '/item-7.jpg',
+			92: '/item-8.jpg',
+			93: '/item-9.jpg',
+			94: '/item-10.jpg',
+			95: '/item-11.jpg',
+			96: '/item-12.jpg'
 		},
 		vector: {
-			'orange_28': {
+			'orange_xs-s': {
 				oldPrice: 32000,
 				price: 28000,
 				quantity: 5,
 				comingSoon: false,
 			},
-			'orange_30': {
+			'orange_s-m': {
 				oldPrice: 33000,
 				price: 29000,
 				quantity: 0,
 				comingSoon: true,
 			},
-			'orange_32': {
+			'orange_m-l': {
 				oldPrice: 34000,
 				price: 30000,
 				quantity: 7,
 				comingSoon: false,
 			},
-			'orange_34': {
-				oldPrice: 35000,
-				price: 31000,
-				quantity: 3,
-				comingSoon: false,
-			},
-			'teal_28': {
+			'teal_xs-s': {
 				oldPrice: 32500,
 				price: 28500,
 				quantity: 6,
 				comingSoon: false,
 			},
-			'teal_30': {
+			'teal_s-m': {
 				oldPrice: 33500,
 				price: 29500,
 				quantity: 4,
 				comingSoon: false,
 			},
-			'teal_32': {
+			'teal_m-l': {
 				oldPrice: 34500,
 				price: 30500,
 				quantity: 0,
-				comingSoon: false,
-			},
-			'teal_34': {
-				oldPrice: 35500,
-				price: 31500,
-				quantity: 8,
 				comingSoon: false,
 			},
 		},
@@ -570,68 +558,56 @@ const temporaryItems: Item[] = [
 			'red': [97, 98, 99, 100, 101, 102],
 			'blue': [103, 104, 105, 106, 107, 108]
 		},
-		sizes: ['xs', 's', 'm', 'l'],
+		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
-			97: '/item-97.jpg',
-			98: '/item-98.jpg',
-			99: '/item-99.jpg',
-			100: '/item-100.jpg',
-			101: '/item-101.jpg',
-			102: '/item-102.jpg',
-			103: '/item-103.jpg',
-			104: '/item-104.jpg',
-			105: '/item-105.jpg',
-			106: '/item-106.jpg',
-			107: '/item-107.jpg',
-			108: '/item-108.jpg'
+			97: '/item-1.jpg',
+			98: '/item-2.jpg',
+			99: '/item-3.jpg',
+			100: '/item-4.jpg',
+			101: '/item-5.jpg',
+			102: '/item-6.jpg',
+			103: '/item-7.jpg',
+			104: '/item-8.jpg',
+			105: '/item-9.jpg',
+			106: '/item-10.jpg',
+			107: '/item-11.jpg',
+			108: '/item-12.jpg'
 		},
 		vector: {
-			'red_xs': {
+			'red_xs-s': {
 				oldPrice: 12000,
 				price: 10000,
 				quantity: 9,
 				comingSoon: false,
 			},
-			'red_s': {
+			'red_s-m': {
 				oldPrice: 12500,
 				price: 10500,
 				quantity: 6,
 				comingSoon: false,
 			},
-			'red_m': {
+			'red_m-l': {
 				oldPrice: 13000,
 				price: 11000,
 				quantity: 0,
 				comingSoon: true,
 			},
-			'red_l': {
-				oldPrice: 13500,
-				price: 11500,
-				quantity: 4,
-				comingSoon: false,
-			},
-			'blue_xs': {
+			'blue_xs-s': {
 				oldPrice: 12200,
 				price: 10200,
 				quantity: 7,
 				comingSoon: false,
 			},
-			'blue_s': {
+			'blue_s-m': {
 				oldPrice: 12700,
 				price: 10700,
 				quantity: 5,
 				comingSoon: false,
 			},
-			'blue_m': {
+			'blue_m-l': {
 				oldPrice: 13200,
 				price: 11200,
 				quantity: 8,
-				comingSoon: false,
-			},
-			'blue_l': {
-				oldPrice: 13700,
-				price: 11700,
-				quantity: 0,
 				comingSoon: false,
 			},
 		},
@@ -647,68 +623,56 @@ const temporaryItems: Item[] = [
 			'black': [109, 110, 111, 112, 113, 114],
 			'neon green': [115, 116, 117, 118, 119, 120]
 		},
-		sizes: ['s', 'm', 'l', 'xl'],
+		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
-			109: '/item-109.jpg',
-			110: '/item-110.jpg',
-			111: '/item-111.jpg',
-			112: '/item-112.jpg',
-			113: '/item-113.jpg',
-			114: '/item-114.jpg',
-			115: '/item-115.jpg',
-			116: '/item-116.jpg',
-			117: '/item-117.jpg',
-			118: '/item-118.jpg',
-			119: '/item-119.jpg',
-			120: '/item-120.jpg'
+			109: '/item-1.jpg',
+			110: '/item-2.jpg',
+			111: '/item-3.jpg',
+			112: '/item-4.jpg',
+			113: '/item-5.jpg',
+			114: '/item-6.jpg',
+			115: '/item-7.jpg',
+			116: '/item-8.jpg',
+			117: '/item-9.jpg',
+			118: '/item-10.jpg',
+			119: '/item-11.jpg',
+			120: '/item-12.jpg'
 		},
 		vector: {
-			'black_s': {
+			'black_xs-s': {
 				oldPrice: 45000,
 				price: 40000,
 				quantity: 6,
 				comingSoon: false,
 			},
-			'black_m': {
+			'black_s-m': {
 				oldPrice: 46000,
 				price: 41000,
 				quantity: 8,
 				comingSoon: false,
 			},
-			'black_l': {
+			'black_m-l': {
 				oldPrice: 47000,
 				price: 42000,
 				quantity: 0,
 				comingSoon: true,
 			},
-			'black_xl': {
-				oldPrice: 48000,
-				price: 43000,
-				quantity: 4,
-				comingSoon: false,
-			},
-			'neon green_s': {
+			'neon green_xs-s': {
 				oldPrice: 45500,
 				price: 40500,
 				quantity: 7,
 				comingSoon: false,
 			},
-			'neon green_m': {
+			'neon green_s-m': {
 				oldPrice: 46500,
 				price: 41500,
 				quantity: 5,
 				comingSoon: false,
 			},
-			'neon green_l': {
+			'neon green_m-l': {
 				oldPrice: 47500,
 				price: 42500,
 				quantity: 9,
-				comingSoon: false,
-			},
-			'neon green_xl': {
-				oldPrice: 48500,
-				price: 43500,
-				quantity: 0,
 				comingSoon: false,
 			},
 		},
@@ -723,22 +687,28 @@ const temporaryItems: Item[] = [
 			'white': [121, 122, 123, 124, 125, 126],
 			'navy': [127, 128, 129, 130, 131, 132]
 		},
-		sizes: ['s-m', 'm-l'],
+		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
-			121: '/item-121.jpg',
-			122: '/item-122.jpg',
-			123: '/item-123.jpg',
-			124: '/item-124.jpg',
-			125: '/item-125.jpg',
-			126: '/item-126.jpg',
-			127: '/item-127.jpg',
-			128: '/item-128.jpg',
-			129: '/item-129.jpg',
-			130: '/item-130.jpg',
-			131: '/item-131.jpg',
-			132: '/item-132.jpg'
+			121: '/item-1.jpg',
+			122: '/item-2.jpg',
+			123: '/item-3.jpg',
+			124: '/item-4.jpg',
+			125: '/item-5.jpg',
+			126: '/item-6.jpg',
+			127: '/item-7.jpg',
+			128: '/item-8.jpg',
+			129: '/item-9.jpg',
+			130: '/item-10.jpg',
+			131: '/item-11.jpg',
+			132: '/item-12.jpg'
 		},
 		vector: {
+			'white_xs-s': {
+				oldPrice: 28000,
+				price: 24000,
+				quantity: 8,
+				comingSoon: false,
+			},
 			'white_s-m': {
 				oldPrice: 28000,
 				price: 24000,
@@ -750,6 +720,12 @@ const temporaryItems: Item[] = [
 				price: 25000,
 				quantity: 0,
 				comingSoon: true,
+			},
+			'navy_xs-s': {
+				oldPrice: 28500,
+				price: 24500,
+				quantity: 6,
+				comingSoon: false,
 			},
 			'navy_s-m': {
 				oldPrice: 28500,
@@ -775,67 +751,66 @@ const temporaryItems: Item[] = [
 			'black': [133, 134, 135, 136, 137, 138],
 			'yellow': [139, 140, 141, 142, 143, 144]
 		},
-		sizes: ['s', 'm', 'l'],
+		sizes: ['xs-s', 's-m', 'm-l'],
 		images: {
-			133: '/item-133.jpg',
-			134: '/item-134.jpg',
-			135: '/item-135.jpg',
-			136: '/item-136.jpg',
-			137: '/item-137.jpg',
-			138: '/item-138.jpg',
-			139: '/item-139.jpg',
-			140: '/item-140.jpg',
-			141: '/item-141.jpg',
-			142: '/item-142.jpg',
-			143: '/item-143.jpg',
-			144: '/item-144.jpg'
+			133: '/item-1.jpg',
+			134: '/item-2.jpg',
+			135: '/item-3.jpg',
+			136: '/item-4.jpg',
+			137: '/item-5.jpg',
+			138: '/item-6.jpg',
+			139: '/item-7.jpg',
+			140: '/item-8.jpg',
+			141: '/item-9.jpg',
+			142: '/item-10.jpg',
+			143: '/item-11.jpg',
+			144: '/item-12.jpg',
 		},
 		vector: {
-			'black_s': {
-				oldPrice: 15000,
-				price: 12000,
-				quantity: 7,
-				comingSoon: false,
-			},
-			'black_m': {
-				oldPrice: 15500,
-				price: 12500,
+			'black_xs-s': {
+				oldPrice: 26000,
+				price: 24000,
 				quantity: 9,
 				comingSoon: false,
 			},
-			'black_l': {
-				oldPrice: 16000,
-				price: 13000,
-				quantity: 0,
-				comingSoon: true,
-			},
-			'yellow_s': {
-				oldPrice: 15200,
-				price: 12200,
-				quantity: 5,
-				comingSoon: false,
-			},
-			'yellow_m': {
-				oldPrice: 15700,
-				price: 12700,
-				quantity: 8,
-				comingSoon: false,
-			},
-			'yellow_l': {
-				oldPrice: 16200,
-				price: 13200,
+			'black_s-m': {
+				oldPrice: 22000,
+				price: 21000,
 				quantity: 4,
 				comingSoon: false,
 			},
+			'black_m-l': {
+				oldPrice: 29000,
+				price: 25000,
+				quantity: 0,
+				comingSoon: true,
+			},
+			'yellow_xs-s': {
+				oldPrice: 21500,
+				price: 20500,
+				quantity: 2,
+				comingSoon: false,
+			},
+			'yellow_s-m': {
+				oldPrice: 28500,
+				price: 24500,
+				quantity: 6,
+				comingSoon: false,
+			},
+			'yellow_m-l': {
+				oldPrice: 28500,
+				price: 24500,
+				quantity: 7,
+				comingSoon: false,
+			},
 		},
-		type: 'Трусы',
-		material: 'Полиэстер',
-		useType: 'Пляж',
-		pantsType: 'Слипы'
+		type: 'Юбка',
+		material: 'Хлопок',
+		useType: 'Пляж'
 	}
 ]
-
-
+			
+			
 export const useCatalogStore = defineStore('catalog', () => {
 	const desktopStrokeCardCount = ref('4')
 	const mobileStrokeCardCount = ref('2')
@@ -871,6 +846,10 @@ export const useCatalogStore = defineStore('catalog', () => {
 		currentVisibleCardCount.value = 12
 	}
 	
+	const getItemById = (id: string) => {
+		return items.value.find((item) => item.id === id)
+	}
+	
 	watch(filteredItems, () => {
 		currentVisibleCardCount.value = 12
 	})
@@ -882,6 +861,7 @@ export const useCatalogStore = defineStore('catalog', () => {
 		sortAndFilter,
 		items,
 		filteredItems,
+		getItemById,
 		reset,
 	}
 })

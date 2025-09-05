@@ -4,36 +4,31 @@ const props = defineProps<{
   customClass?: string
   customImageClass?: string
   variant: "mini" | "large"
-  link?: string
   popup?: boolean
   modelValue?: string | null
-  name: string
-  color: string
-  sliderImages: string[]
-  price: number
-  oldPrice: number
+	link?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: "update:modelValue", value: string | null): void
 }>()
 
-const sizes = ["XSS", "XS", "S", "M", "L", "XL"]
-
 const {
   currentImageIndex,
   isHovered,
   isVisible,
   isWideScreen,
+	selectedSize,
   favouritesStore,
   imageStyles,
   barStyles,
+	item,
   priceFormatter,
   handleMouseMove,
   handleTouchStart,
   handleTouchEnd,
   handleClick,
-} = useProductCard(props)
+} = useCatalogCard(props.variant, props.id, props.link)
 </script>
 
 <template>
@@ -49,46 +44,42 @@ const {
   >
     <div
       class="w-full overflow-hidden rounded-lg"
-      style="height: 450px"
     >
       <NuxtImg
         v-slot="{ src, isLoaded, imgAttrs }"
-        :src="sliderImages[0]"
-        alt="card"
-        width="300"
+        :src="Object.values(item!.images)[0]"
         :custom="true"
-        class="transition-all duration-300 ease-out"
-        :style="{ height: isHovered && isWideScreen ? '470px' : '450px' }"
+        class="aspect-[300/450] transition-all duration-300 ease-out"
       >
         <div
           v-if="!isLoaded"
-          class="w-full h-full bg-[#F9F6EC]"
+          class="w-full h-full aspect-[300/450] bg-[#F9F6EC]"
         />
         <img
           v-else
           v-bind="imgAttrs"
           :src="src"
           :class="['w-full object-cover', customImageClass]"
+          alt="card"
           @click="handleClick"
-        />
+        >
       </NuxtImg>
     </div>
-    <h4 class="mt-1 sm:mt-2">{{ name }}</h4>
+    <h4 class="mt-1 sm:mt-2">{{ item!.name }}</h4>
     <span class="mt-0.5 block sm:mt-1">
-      {{ priceFormatter(price!) }}
-      <span class="text-[#5E5B58] line-through">{{ priceFormatter(oldPrice!) }}</span>
+      {{ priceFormatter(item!.vector[`${Object.keys(item!.colors)[0]}_${selectedSize ?? 'xs-s'}`].price) }}
+      <span class="text-[#5E5B58] line-through">{{ priceFormatter(item!.vector[`${Object.keys(item!.colors)[0]}_${selectedSize ?? 'xs-s'}`].oldPrice) }}</span>
     </span>
     <span
       v-if="!isHovered"
       class="my-1 hidden sm:block"
-      >{{ color }}</span
+      >{{ Object.keys(item!.colors)[0] }}</span
     >
     <div :class="['hidden gap-1 2xl:flex', popup && 'flex-wrap justify-center']">
       <SingleSelectButton
-        :content="sizes"
+        v-model="selectedSize"
+        :content="item!.sizes"
         custom-class="text-xs"
-        :model-value="modelValue ?? null"
-        @update:model-value="emit('update:modelValue', $event)"
       />
     </div>
     <NuxtImg
@@ -112,7 +103,7 @@ const {
   >
     <NuxtImg
       v-slot="{ isLoaded }"
-      :src="sliderImages[currentImageIndex]"
+      :src="Object.values(item!.images)[currentImageIndex]"
       alt="card"
       width="460"
       height="680"
@@ -130,11 +121,10 @@ const {
         @mousemove="handleMouseMove"
       >
         <NuxtImg
-          v-for="(img, index) in sliderImages"
+          v-for="(img, index) in Object.values(item!.images).slice(0, 3)"
           :key="index"
           v-slot="{ src, imgAttrs }"
           :src="img"
-          alt="card"
           width="460"
           height="680"
           :custom="true"
@@ -144,8 +134,9 @@ const {
             :src="src"
             :class="['rounded-lg sm:rounded-2xl absolute top-0 left-0 w-full h-full', customImageClass]"
             :style="imageStyles(index)"
+            alt="card"
             @click="handleClick"
-          />
+          >
         </NuxtImg>
       </div>
       <div
@@ -157,7 +148,7 @@ const {
         class="flex justify-center items-center gap-1 px-6 py-2"
       >
         <div
-          v-for="(_, index) in sliderImages"
+          v-for="(_, index) in Object.values(item!.images).slice(0, 3)"
           :key="index"
           class="flex-1 border-y border-[#A6CEFF]"
           :style="barStyles(index)"
@@ -168,8 +159,8 @@ const {
         class="w-full h-10 bg-[#F9F6EC] rounded-lg mt-1"
       />
       <template v-else>
-        <h4 class="mt-1">{{ name }}</h4>
-        <span class="mt-0.5">{{ priceFormatter(price!) }}</span>
+        <h4 class="mt-1">{{ item!.name }}</h4>
+        <span class="mt-0.5">{{ priceFormatter(item!.vector[`${Object.keys(item!.colors)[0]}_${selectedSize ?? 'xs-s'}`].price) }}</span>
       </template>
     </NuxtImg>
     <NuxtImg

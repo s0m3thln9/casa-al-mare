@@ -240,6 +240,7 @@ const load = () => {
           <ColorButton
             v-model="catalogStore.sortAndFilter.color"
             :colors="colors"
+            text
           />
         </div>
         <div class="flex flex-col items-center gap-4 sm:gap-6">

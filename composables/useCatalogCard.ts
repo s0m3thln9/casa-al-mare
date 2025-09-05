@@ -1,12 +1,14 @@
-export function useProductCard(props: { variant: "mini" | "large"; link?: string; sliderImages: string[] }) {
+export function useCatalogCard(variant: "mini" | "large", id: string, link: boolean) {
+  const catalogStore = useCatalogStore()
   const currentImageIndex = ref(0)
   const isTransitioning = ref(false)
   const isHovered = ref(false)
   const isVisible = ref(false)
   const isWideScreen = ref(false)
   const touchStartX = ref(0)
-
+  const item = catalogStore.getItemById(id)
   const favouritesStore = useFavouritesStore()
+  const selectedSize = ref<string | null>(null)
 
   const imageStyles = computed(() => (index: number) => ({
     transform:
@@ -31,13 +33,13 @@ export function useProductCard(props: { variant: "mini" | "large"; link?: string
 
   const priceFormatter = (value: number) => {
     const formattedValue = new Intl.NumberFormat("ru-RU").format(value)
-    return props.variant === "mini" ? `${formattedValue.replace(/\s/g, ".")}₽` : `${formattedValue} ₽`
+    return variant === "mini" ? `${formattedValue.replace(/\s/g, ".")}₽` : `${formattedValue} ₽`
   }
 
   const handleMouseMove = (e: MouseEvent) => {
     if (isTransitioning.value || !isWideScreen.value) return
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-    const section = rect.width / props.sliderImages.length
+    const section = rect.width / 3
     const newIndex = Math.max(0, Math.floor((e.clientX - rect.left) / section))
     if (newIndex !== currentImageIndex.value) {
       isTransitioning.value = true
@@ -55,12 +57,12 @@ export function useProductCard(props: { variant: "mini" | "large"; link?: string
     const threshold = 50
     if (Math.abs(deltaX) > threshold) {
       currentImageIndex.value =
-        (currentImageIndex.value + (deltaX > 0 ? -1 : 1) + props.sliderImages.length) % props.sliderImages.length
+        (currentImageIndex.value + (deltaX > 0 ? -1 : 1) + 3) % 3
     }
   }
 
   const handleClick = () => {
-    if (props.link) navigateTo(props.link)
+    if (link) navigateTo(`/catalog/${id}`)
   }
 
   onMounted(() => {
@@ -79,9 +81,11 @@ export function useProductCard(props: { variant: "mini" | "large"; link?: string
     isHovered,
     isVisible,
     isWideScreen,
+    selectedSize,
     favouritesStore,
     imageStyles,
     barStyles,
+    item,
     priceFormatter,
     handleMouseMove,
     handleTouchStart,

@@ -1,19 +1,16 @@
 <script setup lang="ts">
-import {defineEmits} from "vue"
-
 const props = defineProps<{
 	colors: {
 		title: string
 		value: string
 	}[]
 	modelValue: string | null
+	text?: boolean
 }>()
 
 const emit = defineEmits<{
 	(e: 'update:modelValue', value: string | null): void
 }>()
-
-const selected = ref<number | null>(null)
 
 const select = (color: string) => {
 	if (props.modelValue === color) {
@@ -41,7 +38,7 @@ const select = (color: string) => {
 	      :style="{ backgroundColor: color.value }"
 	    />
     </button>
-		<span class="text-xs font-[Manrope]">{{ color.title }}</span>
+		<span v-if="text" class="text-xs font-[Manrope]">{{ color.title }}</span>
 	</div>
 </template>
 

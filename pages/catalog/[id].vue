@@ -12,9 +12,18 @@ const pants: {
 	{title: "Бразилиана", src: "/pant-2.svg", altSrc: "/pant-2-filled.svg"},
 	{title: "Классика", src: "/pant-3.svg", altSrc: "/pant-3-filled.svg"}
 ]
-const other: { title: string, src: string }[] = [{ title: "Оранжевый", src: "/orange.png" }, { title: "Синий", src: "/blue.png" }]
 const breadcrumsItems: { name: string, path?: string }[] = [{ name: "Главная", path: "/" }, { name: "Смотреть все", path: "/catalog" }, { name: item!.name }]
 
+const colors: { title: string; value: string }[] = [
+	{ title: "Синий", value: "#4A66C5" },
+	{ title: "Голубой", value: "#6B93DD" },
+	{ title: "Бирюзовый", value: "#97D6D1" },
+	{ title: "Зеленый", value: "#68C768" },
+	{ title: "Желтый", value: "#F2D06C" },
+	{ title: "Оранжевый", value: "#FDBF81" },
+	{ title: "Красный", value: "#D85959" },
+	{ title: "Фиолетовый", value: "#BA97D6" },
+]
 const currentImageIndex = ref(0)
 const touchStartX = ref(0)
 const areImagesLoaded = ref(false)
@@ -93,6 +102,12 @@ const priceFormatter = (value: number) => {
 
 onMounted(() => {
 	preloadImages()
+	if (item && Object.keys(item.colors).length > 0) {
+		itemStore.color = Object.keys(item.colors)[0]
+	}
+	if (item && item.sizes.length > 0) {
+		itemStore.top = item.sizes[0]
+	}
 })
 
 </script>
@@ -102,12 +117,12 @@ onMounted(() => {
 	  <div class="p-2 sm:px-4 sm:py-6">
 		  <AppBreadcrumbs :items="breadcrumsItems" />
 	  </div>
-	  <div class="px-0 grid grid-cols-1 sm:grid-cols-[minmax(auto,1450px)_1fr] w-full gap-8 sm:px-4">
+	  <div class="px-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[4fr_1fr] xl:grid-cols-[3fr_1fr] w-full gap-8 sm:px-4">
 		  <div class="block sm:hidden">
 			  <div class="relative w-full aspect-[460/680] overflow-hidden" @touchstart="handleTouchStart" @touchend="handleTouchEnd">
 				  <div v-if="!areImagesLoaded" class="aspect-[460/680] w-full bg-[#F9F6EC]" />
 			    <NuxtImg
-				    v-for="(img, index) in item?.images"
+				    v-for="(img, index) in item!.images"
 				    v-else
 				    :key="index"
 				    :src="img"
@@ -139,10 +154,10 @@ onMounted(() => {
 				  alt="item"
 				  width="726"
 				  height="1080"
-				  class="sm:rounded-lg"
+				  class="sm:rounded-lg aspect-[726/1080]"
 			  />
 			</div>
-		  <div class="px-2 flex flex-col max-w-[400px] sm:px-0">
+		  <div class="px-2 flex flex-col sm:px-0">
 			  <div class="flex justify-center items-center">
 				  <h2
 					  class="font-[Inter] text-center text-[32px] sm:text-4xl"
@@ -158,13 +173,17 @@ onMounted(() => {
 				  <span class="font-light text-xs">Скидка {{ discount }}%</span>
 			  </div>
 			  <div class="flex justify-center items-center gap-6 mt-14">
-				  <PantButton v-model="itemStore.color" :pants="other" other />
+				  <ColorButton v-model="itemStore.color" :colors="colors" />
+				  <span>{{ itemStore.color }}</span>
 			  </div>
 			  <div class="flex flex-col justify-center items-center gap-4 mt-12 sm:mt-10">
 				  <div class="flex justify-center items-center gap-3 font-light sm:gap-4 sm:font-normal">
 					  <SingleSelectButton v-model="itemStore.top" :content="item!.sizes" />
 				  </div>
 				  <span class="text-xs">Размер</span>
+			  </div>
+			  <div class="flex justify-center items-center gap-6 mt-4">
+				  <PantButton v-model="itemStore.pantsType" :pants="pants" />
 			  </div>
 			  <div class="flex flex-col justify-center items-center gap-1 mt-12 sm:mt-10">
 				  <span class="font-light text-xs">На модели размер: топ S, низ M</span>
