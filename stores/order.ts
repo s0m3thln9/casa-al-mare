@@ -1,26 +1,7 @@
-type Item = {
+export type CartItem = {
 	id: string
-	name: string
-	color: string
-	images: string[]
-	sliderImages: string[]
-	price: number
-	oldPrice: number
-	type: string
-	material: string
-	useType: string
-	pantsType?: string
-}
-
-export type CartItem = Item & {
+	vector: string
 	count: number
-}
-
-export type UserInfo = {
-	name: string
-	surname: string
-	phone: string
-	email: string
 }
 
 export const useOrderStore = defineStore('order', () => {
@@ -57,40 +38,72 @@ export const useOrderStore = defineStore('order', () => {
 	const certificateSum = ref('')
 	
 	const totalSum = computed(() => {
-		return cartItems.value.reduce((sum, item) => sum + item.price * item.count, 0)
+		return cartItems.value.reduce((sum, cartItem) => {
+			const product = catalogStore.items.find(p => p.id === cartItem.id)
+			if (!product) return sum
+			const vectorData = product.vector[cartItem.vector]
+			if (!vectorData) return sum
+			return sum + vectorData.price * cartItem.count
+		}, 0)
 	})
 	
 	const totalOldSum = computed(() => {
-		return cartItems.value.reduce((sum, item) => sum + item.oldPrice * item.count, 0)
+		return cartItems.value.reduce((sum, cartItem) => {
+			const product = catalogStore.items.find(p => p.id === cartItem.id)
+			if (!product) return sum
+			const vectorData = product.vector[cartItem.vector]
+			if (!vectorData) return sum
+			return sum + vectorData.oldPrice * cartItem.count
+		}, 0)
 	})
 	
-	function removeItemFromCart(id: string) {
-		cartItems.value = cartItems.value.filter(item => item.id !== id)
+	const cartDetailed = computed(() => {
+		return cartItems.value.map(cartItem => {
+			const product = catalogStore.items.find(p => p.id === cartItem.id)
+			const vectorData = product?.vector?.[cartItem.vector]
+			const [colorKey, size] = cartItem.vector.split('_')
+			const colorData = product?.colors?.[colorKey]
+			
+			return {
+				id: cartItem.id,
+				vector: cartItem.vector,
+				count: cartItem.count,
+				name: product?.name || '',
+				color: colorData?.name || '',
+				images: colorData?.images?.map(id => product?.images?.[id]) || [],
+				size,
+				price: vectorData?.price ?? 0,
+				oldPrice: vectorData?.oldPrice ?? 0
+			}
+		})
+	})
+	
+	
+	function setCartItems(items: CartItem[] | null | undefined) {
+		cartItems.value = Array.isArray(items) ? items : []
 	}
 	
-	function incrementQuantity(id: string) {
-		const item = cartItems.value.find(item => item.id === id)
+	function clearCart() {
+		cartItems.value = []
+	}
+	
+	function removeItemFromCart(id: string, vector: string) {
+		cartItems.value = cartItems.value.filter(
+			item => !(item.id === id && item.vector === vector)
+		)
+	}
+	
+	function incrementQuantity(id: string, vector: string) {
+		const item = cartItems.value.find(i => i.id === id && i.vector === vector)
 		if (item) {
 			item.count++
 		}
 	}
 	
-	function decrementQuantity(id: string) {
-		const item = cartItems.value.find(item => item.id === id)
+	function decrementQuantity(id: string, vector: string) {
+		const item = cartItems.value.find(i => i.id === id && i.vector === vector)
 		if (item && item.count > 1) {
 			item.count--
-		}
-	}
-	
-	const addToCart = (id: string) => {
-		const existingItem = cartItems.value.find(item => item.id === id)
-		if (existingItem) {
-			existingItem.count += 1
-		} else {
-			const item = catalogStore.items.find(item => item.id === id)
-			if (item) {
-				cartItems.value.push({...item, count: 1})
-			}
 		}
 	}
 	
@@ -115,6 +128,12 @@ export const useOrderStore = defineStore('order', () => {
 	
 	return {
 		cartItems,
+		cartDetailed,
+		setCartItems,
+		clearCart,
+		removeItemFromCart,
+		incrementQuantity,
+		decrementQuantity,
 		deliveryMethod,
 		showErrorDeliveryMethod,
 		paymentMethod,
@@ -127,6 +146,11 @@ export const useOrderStore = defineStore('order', () => {
 		commentForCourier,
 		isExpandedPromo,
 		isExpandedCert,
+		promocode,
+		promocodeCheckbox,
+		certificate,
+		certificateCheckbox,
+		certificateSum,
 		name,
 		showErrorName,
 		surname,
@@ -138,17 +162,8 @@ export const useOrderStore = defineStore('order', () => {
 		totalSum,
 		totalOldSum,
 		isPaymentSuccessful,
-		promocode,
-		promocodeCheckbox,
-		certificate,
-		certificateCheckbox,
-		certificateSum,
-		removeItemFromCart,
-		incrementQuantity,
-		decrementQuantity,
-		addToCart,
 		saveNewAddress,
 		togglePromo,
-		toggleCert,
+		toggleCert
 	}
 })

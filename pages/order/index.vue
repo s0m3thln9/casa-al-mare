@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import {type AppInput, AppSelect} from "#components"
-
 interface AppComponentExposed {
 	validate: () => boolean
 	showError: boolean
@@ -8,6 +6,10 @@ interface AppComponentExposed {
 
 const orderStore = useOrderStore()
 const authStore = useAuthStore()
+
+onMounted(() => {
+	orderStore.setCartItems([{ id: '1', vector: 'red_xs-s', count: 1 }])
+})
 
 const nameRef = ref<ComponentPublicInstance<object, AppComponentExposed> | null>(null)
 const surnameRef = ref<ComponentPublicInstance<object, AppComponentExposed> | null>(null)
@@ -150,31 +152,31 @@ const handleSave = () => {
 	      <template v-if="orderStore.isPaymentSuccessful === null">
 		      <div class="flex flex-col gap-8">
 	          <div class="flex flex-col gap-6">
-	            <div v-for="(item, index) in orderStore.cartItems" :key="index" class="flex items-center justify-between w-full">
+	            <div v-for="(item, index) in orderStore.cartDetailed" :key="index" class="flex items-center justify-between w-full">
 	              <div class="flex items-center gap-2">
-	                <NuxtImg :src="item.images[0]" alt="order-img" width="57" height="72" class="rounded-2xl border-[0.5px] border-[#211D1D]" />
+	                <NuxtImg :src="item?.images[0]" alt="order-img" width="57" height="72" class="rounded-2xl border-[0.5px] border-[#211D1D]" />
 	                <div class="flex flex-col gap-1">
-	                  <span class="font-light text-sm text-[#414141]">{{ item.name }}</span>
-	                  <span class="font-light text-[13px]">Топ: XS Низ: XS {{ item.color }}</span>
-	                  <span class="text-xs text-[#414141]">{{ priceFormatter(item.price) }} <span class="font-light text-[#606060]">за шт.</span></span>
+	                  <span class="font-light text-sm text-[#414141]">{{ item!.name }}</span>
+	                  <span class="font-light text-[13px]">Размер: {{ item!.size }} Цвет: {{ item!.color }}</span>
+	                  <span class="text-xs text-[#414141]">{{ priceFormatter(item!.price) }} <span class="font-light text-[#606060]">за шт.</span></span>
 	                </div>
 	              </div>
 	              <div class="flex flex-col items-end gap-4">
 	                <div class="flex items-center gap-2">
 	                  <div class="py-1 px-2 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light">
-	                    <button class="w-4 h-4 flex items-center justify-center cursor-pointer" @click="orderStore.decrementQuantity(item.id)">
+	                    <button class="w-4 h-4 flex items-center justify-center cursor-pointer" @click="orderStore.decrementQuantity(item!.id, item!.vector)">
 	                      <NuxtImg src="/minus.svg" alt="minus" class="w-full" />
 	                    </button>
-	                    {{ item.count }}
-	                    <button class="w-4 h-4 flex items-center justify-center cursor-pointer" @click="orderStore.incrementQuantity(item.id)">
+	                    {{ item!.count }}
+	                    <button class="w-4 h-4 flex items-center justify-center cursor-pointer" @click="orderStore.incrementQuantity(item!.id, item!.vector)">
 	                      <NuxtImg src="/plus.svg" alt="plus" class="w-full" />
 	                    </button>
 	                  </div>
-	                  <button class="w-6 h-6 flex items-center justify-center cursor-pointer" @click="orderStore.removeItemFromCart(item.id)">
+	                  <button class="w-6 h-6 flex items-center justify-center cursor-pointer" @click="orderStore.removeItemFromCart(item!.id, item!.vector)">
 	                    <NuxtImg src="/x.svg" alt="x" class="w-full" />
 	                  </button>
 	                </div>
-	                <span class="text-xs font-light">{{ priceFormatter(item.price * item.count) }} <span class="line-through">{{ priceFormatter(item.oldPrice) }}</span></span>
+	                <span class="text-xs font-light">{{ priceFormatter(item!.price * item!.count) }} <span class="line-through">{{ priceFormatter(item!.oldPrice) }}</span></span>
 	              </div>
 	            </div>
 	            <div class="flex flex-col gap-4">
@@ -241,22 +243,22 @@ const handleSave = () => {
 	      <div v-else-if="orderStore.isPaymentSuccessful">
 		      <h2 class="font-[Inter] text-[17px] text-[#211D1D] uppercase">заказанные товары</h2>
 					<div class="flex flex-col gap-6 mt-8">
-						<div v-for="(item, index) in orderStore.cartItems" :key="index" class="flex items-center justify-between w-full">
+						<div v-for="(item, index) in orderStore.cartDetailed" :key="index" class="flex items-center justify-between w-full">
 							<div class="flex items-center gap-2">
-								<NuxtImg :src="item.images[0]" alt="order-img" width="57" height="72" class="rounded-2xl border-[0.5px] border-[#211D1D]" />
+								<NuxtImg :src="item!.images[0]" alt="order-img" width="57" height="72" class="rounded-2xl border-[0.5px] border-[#211D1D]" />
 								<div class="flex flex-col gap-1">
-									<span class="font-light text-sm text-[#414141]">{{ item.name }}</span>
-									<span class="font-light text-[13px]">Топ: XS Низ: XS {{ item.color }}</span>
-									<span class="text-xs text-[#414141]">{{ priceFormatter(item.price) }} <span class="font-light text-[#606060]">за шт.</span></span>
+									<span class="font-light text-sm text-[#414141]">{{ item!.name }}</span>
+									<span class="font-light text-[13px]">Размер: {{ item!.size }} Цвет: {{ item!.color }}</span>
+									<span class="text-xs text-[#414141]">{{ priceFormatter(item!.price) }} <span class="font-light text-[#606060]">за шт.</span></span>
 								</div>
 							</div>
 							<div class="flex flex-col items-end gap-4">
 								<div class="flex items-center gap-2">
 									<div class="py-1 px-2 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light">
-										{{ item.count }}
+										{{ item!.count }}
 									</div>
 								</div>
-								<span class="text-xs font-light">{{ priceFormatter(item.price * item.count) }} <span class="line-through">{{ priceFormatter(item.price * item.count + 1000) }}</span></span>
+								<span class="text-xs font-light">{{ priceFormatter(item!.price * item!.count) }} <span class="line-through">{{ priceFormatter(item!.price * item!.count + 1000) }}</span></span>
 							</div>
 						</div>
 					</div>
@@ -267,31 +269,31 @@ const handleSave = () => {
 	      </div>
 	      <div v-else>
 		      <div class="flex flex-col gap-6">
-			      <div v-for="(item, index) in orderStore.cartItems" :key="index" class="flex items-center justify-between w-full">
+			      <div v-for="(item, index) in orderStore.cartDetailed" :key="index" class="flex items-center justify-between w-full">
 				      <div class="flex items-center gap-2">
-					      <NuxtImg :src="item.images[0]" alt="order-img" width="57" height="72" class="rounded-2xl border-[0.5px] border-[#211D1D]" />
+					      <NuxtImg :src="item!.images[0]" alt="order-img" width="57" height="72" class="rounded-2xl border-[0.5px] border-[#211D1D]" />
 					      <div class="flex flex-col gap-1">
-						      <span class="font-light text-sm text-[#414141]">{{ item.name }}</span>
-						      <span class="font-light text-[13px]">Топ: XS Низ: XS {{ item.color }}</span>
-						      <span class="text-xs text-[#414141]">{{ priceFormatter(item.price) }} <span class="font-light text-[#606060]">за шт.</span></span>
+						      <span class="font-light text-sm text-[#414141]">{{ item!.name }}</span>
+						      <span class="font-light text-[13px]">Размер: {{ item!.size }} Цвет: {{ item!.color }}</span>
+						      <span class="text-xs text-[#414141]">{{ priceFormatter(item!.price) }} <span class="font-light text-[#606060]">за шт.</span></span>
 					      </div>
 				      </div>
 				      <div class="flex flex-col items-end gap-4">
 					      <div class="flex items-center gap-2">
 						      <div class="py-1 px-2 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light">
-							      <button class="w-4 h-4 flex items-center justify-center cursor-pointer" @click="orderStore.decrementQuantity(item.id)">
+							      <button class="w-4 h-4 flex items-center justify-center cursor-pointer" @click="orderStore.decrementQuantity(item!.id, item!.vector)">
 								      <NuxtImg src="/minus.svg" alt="minus" class="w-full" />
 							      </button>
-							      {{ item.count }}
-							      <button class="w-4 h-4 flex items-center justify-center cursor-pointer" @click="orderStore.incrementQuantity(item.id)">
+							      {{ item!.count }}
+							      <button class="w-4 h-4 flex items-center justify-center cursor-pointer" @click="orderStore.incrementQuantity(item!.id, item!.vector)">
 								      <NuxtImg src="/plus.svg" alt="plus" class="w-full" />
 							      </button>
 						      </div>
-						      <button class="w-6 h-6 flex items-center justify-center cursor-pointer" @click="orderStore.removeItemFromCart(item.id)">
+						      <button class="w-6 h-6 flex items-center justify-center cursor-pointer" @click="orderStore.removeItemFromCart(item!.id, item!.vector)">
 							      <NuxtImg src="/x.svg" alt="x" class="w-full" />
 						      </button>
 					      </div>
-					      <span class="text-xs font-light">{{ priceFormatter(item.price * item.count) }} <span class="line-through">{{ priceFormatter(item.price * item.count + 1000) }}</span></span>
+					      <span class="text-xs font-light">{{ priceFormatter(item!.price * item!.count) }} <span class="line-through">{{ priceFormatter(item!.price * item!.count + 1000) }}</span></span>
 				      </div>
 			      </div>
 		      </div>
