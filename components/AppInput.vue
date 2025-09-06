@@ -1,12 +1,17 @@
 <script setup lang="ts">
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 	label: string
 	type: "email" | "password" | "text"
 	id: string
 	modelValue: string
 	required?: boolean
 	customClass?: string
-}>()
+	errorHideDelay?: number
+}>(), {
+	required: false,
+	customClass: '',
+	errorHideDelay: 3000
+})
 
 const emit = defineEmits<{
 	(e: "update:modelValue", value: string): void
@@ -16,10 +21,15 @@ const isActive = ref(props.modelValue !== '')
 const isHidden = ref(true)
 const inputRef = ref<HTMLInputElement | null>(null)
 const showError = ref(false)
+let hideTimer: ReturnType<typeof setTimeout> | null = null
 
 watch(() => props.modelValue, (newValue) => {
 	isActive.value = newValue !== ''
-	showError.value = props.required && newValue === ''
+	if (props.required && newValue === '') {
+		triggerError()
+	} else {
+		clearError()
+	}
 })
 
 const toggleVisibility = () => {
@@ -32,15 +42,39 @@ const toggleVisibility = () => {
 const handleInput = (event: Event) => {
 	const value = (event.target as HTMLInputElement).value
 	emit("update:modelValue", value)
-	showError.value = props.required && value === ''
+	if (props.required && value === '') {
+		triggerError()
+	} else {
+		clearError()
+	}
 }
 
-const validateInput = () => {
-	showError.value = props.required && props.modelValue === ''
-	return !showError.value
+const validate = () => {
+	if (props.required && props.modelValue.trim() === '') {
+		triggerError()
+		return false
+	}
+	clearError()
+	return true
 }
 
-defineExpose({ validateInput })
+const triggerError = () => {
+	showError.value = true
+	if (hideTimer) clearTimeout(hideTimer)
+	hideTimer = setTimeout(() => {
+		showError.value = false
+	}, props.errorHideDelay)
+}
+
+const clearError = () => {
+	showError.value = false
+	if (hideTimer) {
+		clearTimeout(hideTimer)
+		hideTimer = null
+	}
+}
+
+defineExpose({ validate, showError })
 
 </script>
 
@@ -62,7 +96,7 @@ defineExpose({ validateInput })
 	    class="h-[44px] w-full px-2.5 pt-[21.5px] pb-1.5 border-[0.7px] rounded-lg text-sm font-light text-[#211D1D] font-[Manrope] outline-none sm:text-xs"
 	    :class="{ 'border-[#5E5B58]': !showError, 'border-[#E29650]': showError }"
 	    @focus="isActive = true"
-	    @blur="isActive = modelValue !== ''; validateInput()"
+	    @blur="isActive = modelValue !== ''; validate()"
 	    @input="handleInput"
     >
     <button
@@ -77,24 +111,6 @@ defineExpose({ validateInput })
 	      :alt="isHidden ? 'Показать пароль' : 'Скрыть пароль'"
       />
     </button>
-    <button
-	    v-if="props.required"
-	    class="absolute top-1/2 -translate-y-1/2 right-[40px] w-fit"
-	    aria-label="Проверить поле"
-	    @click="validateInput"
-    >
-      <NuxtImg
-	      src="/check.svg"
-	      class="w-[23px]"
-	      alt="Проверить поле"
-      />
-    </button>
-    <div
-	    class="absolute -top-[40px] left-3 bg-[#FFFFFA] border border-[#A6CEFF] transition-opacity duration-300 text-[#211D1D] text-[13px] font-light font-[Manrope] p-4 shadow-md z-10 rounded-t-3xl rounded-r-3xl pointer-events-none"
-      :class="showError === true ? 'opacity-100' : 'opacity-0'"
-    >
-      Это поле обязательно для заполнения
-    </div>
   </div>
 </template>
 

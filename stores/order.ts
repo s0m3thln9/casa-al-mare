@@ -28,6 +28,14 @@ export const useOrderStore = defineStore('order', () => {
 	const cartItems = ref<CartItem[]>([])
 	const deliveryMethod = ref<string | null>(null)
 	const showErrorDeliveryMethod = ref<boolean>(false)
+	const name = ref('')
+	const showErrorName = ref<boolean>(false)
+	const surname = ref('')
+	const showErrorSurname = ref<boolean>(false)
+	const phone = ref('')
+	const showErrorPhone = ref<boolean>(false)
+	const email = ref('')
+	const showErrorEmail = ref<boolean>(false)
 	const paymentMethod = ref<string | null>(null)
 	const showErrorPaymentMethod = ref<boolean>(false)
 	const addresses = ref<string[]>([
@@ -41,7 +49,6 @@ export const useOrderStore = defineStore('order', () => {
 	const commentForCourier = ref('')
 	const isExpandedPromo = ref(false)
 	const isExpandedCert = ref(false)
-	const userInfo = ref<UserInfo>({ name: '', surname: '', phone: '', email: '' })
 	const isPaymentSuccessful = ref<boolean | null>(null)
 	const promocode = ref('')
 	const promocodeCheckbox = ref<string | null>(null)
@@ -120,7 +127,14 @@ export const useOrderStore = defineStore('order', () => {
 		commentForCourier,
 		isExpandedPromo,
 		isExpandedCert,
-		userInfo,
+		name,
+		showErrorName,
+		surname,
+		showErrorSurname,
+		phone,
+		showErrorPhone,
+		email,
+		showErrorEmail,
 		totalSum,
 		totalOldSum,
 		isPaymentSuccessful,

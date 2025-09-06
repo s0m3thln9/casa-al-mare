@@ -104,7 +104,7 @@ const onBlur = () => {
 	}
 }
 
-const validateInput = () => {
+const validate = () => {
 	if (props.required) {
 		if (combinedValue.value === '') {
 			showError.value = true
@@ -128,7 +128,7 @@ watch(selectedCode, () => {
 	}
 })
 
-defineExpose({ validateInput })
+defineExpose({ validate, showError })
 </script>
 
 <template>
@@ -206,13 +206,6 @@ defineExpose({ validateInput })
           </div>
         </div>
       </div>
-    </div>
-
-    <div
-	    class="absolute -top-[40px] left-3 w-fit whitespace-nowrap bg-[#FFFFFA] border border-[#A6CEFF] transition-opacity duration-300 text-[#211D1D] text-[13px] font-light font-[Manrope] p-4 shadow-md z-10 rounded-t-3xl rounded-r-3xl pointer-events-none"
-	    :class="!!showError && !isDropdownOpen ? 'opacity-100' : 'opacity-0'"
-    >
-      Это поле обязательно для заполнения
     </div>
   </div>
 </template>

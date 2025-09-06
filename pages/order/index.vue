@@ -1,12 +1,20 @@
 <script setup lang="ts">
 import {type AppInput, AppSelect} from "#components"
 
+interface AppComponentExposed {
+	validate: () => boolean
+	showError: boolean
+}
+
 const orderStore = useOrderStore()
 const authStore = useAuthStore()
 
-const inputRefs = ref<InstanceType<typeof AppInput>[]>([])
-const inputNewAddressRef = ref<InstanceType<typeof AppInput>>()
-const selectRef = ref<InstanceType<typeof AppSelect>>()
+const nameRef = ref<ComponentPublicInstance<object, AppComponentExposed> | null>(null)
+const surnameRef = ref<ComponentPublicInstance<object, AppComponentExposed> | null>(null)
+const phoneRef = ref<ComponentPublicInstance<object, AppComponentExposed> | null>(null)
+const emailRef = ref<ComponentPublicInstance<object, AppComponentExposed> | null>(null)
+const cityRef = ref<ComponentPublicInstance<object, AppComponentExposed> | null>(null)
+const newAddressRef = ref<ComponentPublicInstance<object, AppComponentExposed> | null>(null)
 
 const priceFormatter = (value: number) => {
 	const formattedValue = new Intl.NumberFormat('ru-RU').format(value)
@@ -16,46 +24,28 @@ const priceFormatter = (value: number) => {
 const handlePay = () => {
 	if (orderStore.isPaymentSuccessful === null) {
 		if (!authStore.isAuth) {
-			let isValid = true
-			inputRefs.value.forEach((input) => {
-				if (input.validateInput) {
-					const valid = input.validateInput()
-					isValid = isValid && valid
-				}
-			})
-			if (!isValid) {
-				return
-			}
+			const inputs = [nameRef.value, surnameRef.value, phoneRef.value, emailRef.value]
+			const isValid = inputs.every(input => input?.validate?.())
+			if (!isValid) return
 		}
-		if (!selectRef.value?.validateSelect()) return
-		if (orderStore.deliveryMethod === null || (orderStore.deliveryMethod === 'Курьер' && !orderStore.currentAddress)) {
+		if (!cityRef.value?.validate()) return
+		if (orderStore.deliveryMethod === null || (orderStore.deliveryMethod === 'Курьер' && !orderStore.currentAddress) || (orderStore.deliveryMethod === 'Курьер' && orderStore.currentAddress === 'Новый адрес')) {
 			orderStore.showErrorDeliveryMethod = true
-			setTimeout(() => {
-				orderStore.showErrorDeliveryMethod = false
-			}, 2000)
 			return
 		}
 	}
 	if (orderStore.paymentMethod === null) {
 		orderStore.showErrorPaymentMethod = true
-		setTimeout(() => {
-			orderStore.showErrorPaymentMethod = false
-		}, 2000)
 		return
 	}
 	orderStore.isPaymentSuccessful = Math.random() >= 0.5
 }
 
 const handleSave = () => {
-	if (!inputNewAddressRef.value?.validateInput()) return
+	if (!newAddressRef.value?.validate()) return
 	orderStore.saveNewAddress()
 }
 
-const addInputRef = (el: InstanceType<typeof AppInput> | null) => {
-	if (el && !inputRefs.value.includes(el)) {
-		inputRefs.value.push(el)
-	}
-}
 
 </script>
 
@@ -70,71 +60,80 @@ const addInputRef = (el: InstanceType<typeof AppInput> | null) => {
 	      <template v-if="orderStore.isPaymentSuccessful === null">
 		      <div v-if="!authStore.isAuth" class="flex flex-col gap-4">
 	          <span class="text-xs">Есть аккаунт? <span class="cursor-pointer" @click="authStore.login">Войти</span></span>
-	          <AppInput id="name" :ref="addInputRef" v-model="orderStore.userInfo.name" type="text" label="Имя" required />
-	          <AppInput id="surname" :ref="addInputRef" v-model="orderStore.userInfo.surname" type="text" label="Фамилия" required />
-			      <SelectInput
-				      id="phone"
-				      :ref="addInputRef"
-				      v-model="orderStore.userInfo.phone"
-				      :options="[
-								{ code: '+7', country: 'Россия' },
-								{ code: '+375', country: 'Беларусь' },
-								{ code: '+380', country: 'Украина' },
-								{ code: '+77', country: 'Казахстан' },
-								{ code: '+998', country: 'Узбекистан' },
-								{ code: '+992', country: 'Таджикистан' },
-								{ code: '+993', country: 'Туркменистан' },
-								{ code: '+996', country: 'Кыргызстан' },
-								{ code: '+374', country: 'Армения' },
-								{ code: '+994', country: 'Азербайджан' },
-								{ code: '+373', country: 'Молдова' },
-								{ code: '+7', country: 'Абхазия' },
-								{ code: '+995', country: 'Грузия' }
-							]"
-				      type="text"
-				      label="Номер телефона"
-				      required
-			      />
-	          <AppInput id="email" :ref="addInputRef" v-model="orderStore.userInfo.email" type="email" label="E-mail" required />
+			      <AppTooltip text="Это поле обязательно для заполнения" type="error" :show="nameRef?.showError">
+	            <AppInput id="name" ref="nameRef" v-model="orderStore.name" type="text" label="Имя" custom-class="w-full" required />
+			      </AppTooltip>
+	          <AppTooltip text="Это поле обязательно для заполнения" type="error" :show="surnameRef?.showError">
+					    <AppInput id="surname" ref="surnameRef" v-model="orderStore.surname" type="text" label="Фамилия" custom-class="w-full" required />
+					  </AppTooltip>
+			      <AppTooltip
+				      text="Это поле обязательно для заполнения"
+				      type="error"
+				      :show="phoneRef?.showError"
+			      >
+				      <SelectInput
+					      id="phone"
+					      ref="phoneRef"
+					      v-model="orderStore.phone"
+					      custom-class="w-full"
+					      :options="[
+				          { code: '+7', country: 'Россия' },
+				          { code: '+375', country: 'Беларусь' },
+				          { code: '+380', country: 'Украина' },
+				          { code: '+77', country: 'Казахстан' },
+				          { code: '+998', country: 'Узбекистан' },
+				          { code: '+992', country: 'Таджикистан' },
+				          { code: '+993', country: 'Туркменистан' },
+				          { code: '+996', country: 'Кыргызстан' },
+				          { code: '+374', country: 'Армения' },
+				          { code: '+994', country: 'Азербайджан' },
+				          { code: '+373', country: 'Молдова' },
+				          { code: '+7', country: 'Абхазия' },
+				          { code: '+995', country: 'Грузия' }
+				        ]"
+					      type="text"
+					      label="Номер телефона"
+					      required
+				      />
+				    </AppTooltip>
+	          <AppTooltip text="Это поле обязательно для заполнения" type="error" :show="emailRef?.showError">
+					    <AppInput id="email" ref="emailRef" v-model="orderStore.email" type="text" label="E-mail" custom-class="w-full" required />
+					  </AppTooltip>
 	        </div>
-	        <div class="relative flex flex-col gap-6">
-	          <span class="font-light text-sm">Доставка</span>
-	          <AppSelect ref="selectRef" v-model="orderStore.city" :options="['Москва', 'Питер', 'Ростов', 'Краснодар', 'Мурманск', 'Брянск']" label="Город" required />
-	          <div class="flex flex-col gap-6">
-	            <AppCheckbox v-model="orderStore.deliveryMethod" size="M" label="Самовывоз" value="Самовывоз" />
-	            <AppCheckbox v-model="orderStore.deliveryMethod" size="M" label="Курьер (# дней)" value="Курьер" />
-	          </div>
-	          <div v-if="orderStore.deliveryMethod === 'Курьер'" class="flex flex-col gap-4">
-	            <AppCheckbox v-for="(address, index) in orderStore.addresses" :key="index" v-model="orderStore.currentAddress" size="S" :label="address" :value="address" />
-	            <AppCheckbox v-model="orderStore.currentAddress" size="S" label="Новый адрес" value="Новый адрес" />
-	            <div v-if="orderStore.currentAddress === 'Новый адрес'" class="flex flex-col gap-4">
-	              <AppInput id="address1" ref="inputNewAddressRef" v-model="orderStore.newAddressFirstLine" type="text" label="Улица, дом, корпус, строение, квартира" required/>
-	              <AppInput id="address2" v-model="orderStore.newAddressSecondLine" type="text" label="Номер дома и домофон / офис" />
-	              <AppButton custom-class="w-full" content="Сохранить" variant="primary" @click="handleSave" />
-	            </div>
-	          </div>
-		        <AppCheckbox v-model="orderStore.deliveryMethod" size="M" disabled label="СДЭК (ПВЗ)" value="СДЭК (ПВЗ)" />
-	          <AppInput id="forCourier" v-model="orderStore.commentForCourier" type="text" label="Пожелания и комментарии для курьера" />
-		        <div
-			        class="absolute -top-[40px] left-3 bg-[#FFFFFA] transition-opacity duration-300 border border-[#A6CEFF] text-[#211D1D] text-[13px] font-light font-[Manrope] p-4 shadow-md z-10 rounded-t-3xl rounded-r-3xl"
-			        :class="orderStore.showErrorDeliveryMethod ? 'opacity-100' : 'opacity-0'"
-		        >
-              Выберите способ доставки
-            </div>
-	        </div>
-	        <div class="relative flex flex-col gap-6">
-	          <span class="font-light text-sm">Способ оплаты</span>
-	          <div class="flex flex-col gap-4">
-	            <AppCheckbox v-model="orderStore.paymentMethod" size="S" label="Картой на сайте" value="Картой на сайте" />
-	            <AppCheckbox v-model="orderStore.paymentMethod" size="S" label="Оплата при получении" value="Оплата при получении" />
-	          </div>
-		        <div
-			        class="absolute -top-[40px] left-3 bg-[#FFFFFA] transition-opacity duration-300 border border-[#A6CEFF] text-[#211D1D] text-[13px] font-light font-[Manrope] p-4 shadow-md z-10 rounded-t-3xl rounded-r-3xl"
-		          :class="orderStore.showErrorPaymentMethod ? 'opacity-100' : 'opacity-0'"
-		        >
-              Выберите способ оплаты
-            </div>
-	        </div>
+	        <AppTooltip text="Выберите способ доставки" type="error" :show="orderStore.showErrorDeliveryMethod" @update:show="value => orderStore.showErrorDeliveryMethod = value">
+		        <div class="relative flex flex-col gap-6 w-full">
+		          <span class="font-light text-sm">Доставка</span>
+			        <AppTooltip text="Это поле обязательно для заполнения" type="error" :show="cityRef?.showError">
+		            <AppSelect ref="cityRef" v-model="orderStore.city" :options="['Москва', 'Питер', 'Ростов', 'Краснодар', 'Мурманск', 'Брянск']" label="Город" custom-class="w-full" required />
+			        </AppTooltip>
+		          <div class="flex flex-col gap-6">
+		            <AppCheckbox v-model="orderStore.deliveryMethod" size="M" label="Самовывоз" value="Самовывоз" />
+		            <AppCheckbox v-model="orderStore.deliveryMethod" size="M" label="Курьер (# дней)" value="Курьер" />
+		          </div>
+		          <div v-if="orderStore.deliveryMethod === 'Курьер'" class="flex flex-col gap-4">
+		            <AppCheckbox v-for="(address, index) in orderStore.addresses" :key="index" v-model="orderStore.currentAddress" size="S" :label="address" :value="address" />
+		            <AppCheckbox v-model="orderStore.currentAddress" size="S" label="Новый адрес" value="Новый адрес" />
+		            <div v-if="orderStore.currentAddress === 'Новый адрес'" class="flex flex-col gap-4">
+	                <AppTooltip text="Это поле обязательно для заполнения" type="error" :show="newAddressRef?.showError">
+		                <AppInput id="address1" ref="newAddressRef" v-model="orderStore.newAddressFirstLine" type="text" label="Улица, дом, корпус, строение, квартира" custom-class="w-full" required/>
+	                </AppTooltip>
+			            <AppInput id="address2" v-model="orderStore.newAddressSecondLine" type="text" label="Номер дома и домофон / офис" />
+		              <AppButton custom-class="w-full" content="Сохранить" variant="primary" @click="handleSave" />
+		            </div>
+		          </div>
+			        <AppCheckbox v-model="orderStore.deliveryMethod" size="M" disabled label="СДЭК (ПВЗ)" value="СДЭК (ПВЗ)" />
+		          <AppInput id="forCourier" v-model="orderStore.commentForCourier" type="text" label="Пожелания и комментарии для курьера" />
+		        </div>
+	        </AppTooltip>
+		      <AppTooltip text="Выберите способ оплаты" type="error" :show="orderStore.showErrorPaymentMethod" @update:show="value => orderStore.showErrorPaymentMethod = value">
+	          <div class="relative flex flex-col gap-6">
+		          <span class="font-light text-sm">Способ оплаты</span>
+		          <div class="flex flex-col gap-4">
+		            <AppCheckbox v-model="orderStore.paymentMethod" size="S" label="Картой на сайте" value="Картой на сайте" />
+		            <AppCheckbox v-model="orderStore.paymentMethod" size="S" label="Оплата при получении" value="Оплата при получении" />
+		          </div>
+		        </div>
+		      </AppTooltip>
 	      </template>
 	      <div v-else-if="orderStore.isPaymentSuccessful" class="flex flex-col gap-4">
 		      <h2 class="font-[Inter] text-[17px] text-[#211D1D] uppercase">Благодарим Вас за заказ №31388!</h2>

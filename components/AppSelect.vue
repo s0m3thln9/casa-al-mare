@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-
 const props = defineProps<{
 	label: string
 	options: string[]
@@ -28,14 +26,14 @@ const toggleSelect = () => {
 	isDropdownOpen.value = !isDropdownOpen.value
 }
 
-const validateSelect = () => {
+const validate = () => {
 	showError.value = props.required && !selected.value
 	return !showError.value
 }
 
 watch(isDropdownOpen, (newValue) => {
 	if (!newValue) {
-		validateSelect()
+		validate()
 	}
 })
 
@@ -59,7 +57,7 @@ const handleClickOutside = (event: MouseEvent) => {
 	}
 }
 
-defineExpose({ validateSelect })
+defineExpose({ validate, showError })
 
 </script>
 
@@ -111,12 +109,6 @@ defineExpose({ validateSelect })
           {{ item }}
         </div>
 	    </div>
-    </div>
-	  <div
-		  class="absolute -top-[40px] left-3 bg-[#FFFFFA] border border-[#A6CEFF] transition-opacity duration-300 text-[#211D1D] text-[13px] font-light font-[Manrope] p-4 shadow-md z-10 rounded-t-3xl rounded-r-3xl pointer-events-none"
-		  :class="showError === true && !isDropdownOpen ? 'opacity-100' : 'opacity-0'"
-	  >
-      Это поле обязательно для заполнения
     </div>
   </div>
 </template>
