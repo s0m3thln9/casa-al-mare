@@ -68,8 +68,9 @@ const {
     <span
       v-if="!isHovered"
       class="my-1 hidden sm:block"
-      >{{ Object.keys(item!.colors)[0] }}</span
     >
+	    {{ Object.keys(item!.colors)[0] }}
+    </span>
     <div :class="['hidden gap-1 2xl:flex', popup && 'flex-wrap justify-center']">
       <SingleSelectButton
         v-model="selectedSize"

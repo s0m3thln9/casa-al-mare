@@ -25,7 +25,7 @@ const currentColorCode = computed(() => {
 })
 
 const currentColorName = computed(() => {
-	return itemStore.color?.name || (item ? Object.values(item.colors)[0] : '')
+	return itemStore.color?.name || ''
 })
 
 const currentSize = computed(() => {
@@ -50,6 +50,10 @@ const currentPrice = computed(() => {
 
 const currentOldPrice = computed(() => {
 	return currentVectorData.value?.oldPrice || 0
+})
+
+const canAddToCart = computed(() => {
+	return itemStore.color !== null && itemStore.size !== null && (item!.pantsType ? itemStore.pantsType !== null : true)
 })
 
 const imageStyles = computed(() => (index: number) => {
@@ -204,7 +208,7 @@ onMounted(() => {
 					    }))"
 					  />
 				  </div>
-				  <span class="text-xs">{{ currentColorName }}</span>
+				  <span class="text-xs">{{ currentColorName || '' }}</span>
 			  </div>
 			  <div class="flex flex-col justify-center items-center gap-4 mt-12 sm:mt-10">
 				  <div class="flex justify-center items-center gap-3 font-light sm:gap-4 sm:font-normal">
@@ -216,11 +220,11 @@ onMounted(() => {
 				  <PantButton v-model="itemStore.pantsType" :pants="pants" />
 			  </div>
 			  <div class="flex flex-col justify-center items-center gap-1 mt-12 sm:mt-10">
-				  <span class="font-light text-xs">На модели размер: топ S, низ M</span>
+				  <span class="font-light text-xs">На модели размер: S</span>
 				  <span class="text-[11px] text-[#363636]">Параметры модели: 175 80/60/89</span>
 			  </div>
 			  <div class="flex flex-col justify-center items-center gap-4 mt-6">
-				  <BuyButton :id="item!.id" in-stock available-quantity :is-parameters-selected="itemStore.canAddToCart" />
+				  <BuyButton :id="item!.id" :vector="`${currentColorCode}_${currentSize}`" in-stock available-quantity :is-parameters-selected="canAddToCart" />
 				  <AppButton variant="secondary" content="Собрать комплект" custom-class="w-full py-4" @click="popupStore.open('set')" />
 			  </div>
 			  <div class="flex justify-center items-center mt-4 sm:mt-6">
