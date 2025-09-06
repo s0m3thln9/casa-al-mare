@@ -1,17 +1,15 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-
 const props = defineProps<{
 	isParametersSelected?: boolean
 	inStock?: boolean
 	availableQuantity?: boolean
 	id: string
+	vector: string
 }>()
 
 const isLoading = ref(false)
 const showSuccess = ref(false)
 const isInCart = ref(false)
-const orderStore = useOrderStore()
 
 const styleBase = 'flex justify-center items-center w-full py-4 border rounded-[18px] text-[13px]/snug font-[Manrope] sm:text-sm/snug '
 const styleVariants = {
@@ -60,10 +58,8 @@ const currentState = computed(() => {
 	return { content, style, disabled }
 })
 
-const handleClick = () => {
-	if (!props.inStock) {
-		return
-	}
+const handleClick = async () => {
+	if (!props.inStock) return
 	if (!props.availableQuantity) {
 		alert('Уведомление о поступлении товара настроено')
 		return
@@ -74,20 +70,34 @@ const handleClick = () => {
 	}
 	if (isInCart.value) {
 		navigateTo("/order")
+		return
 	}
 	if (!isLoading.value && !showSuccess.value) {
 		isLoading.value = true
-		setTimeout(() => {
-			isLoading.value = false
+		
+		try {
+			await $fetch('https://swimwear.kyokata.wtf/api/addToCart', {
+				method: 'POST',
+				body: {
+					id: props.id,
+					vector: props.vector
+				}
+			})
+			
 			isInCart.value = true
 			showSuccess.value = true
-			orderStore.addToCart(props.id)
+		} catch (err) {
+			console.error('Ошибка добавления в корзину:', err)
+			alert('Не удалось добавить товар в корзину')
+		} finally {
+			isLoading.value = false
 			setTimeout(() => {
 				showSuccess.value = false
 			}, 1500)
-		}, 3000)
+		}
 	}
 }
+
 </script>
 
 <template>
