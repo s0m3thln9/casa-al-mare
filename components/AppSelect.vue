@@ -1,11 +1,16 @@
 <script setup lang="ts">
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 	label: string
 	options: string[]
 	customClass?: string
 	modelValue: string | null
 	required?: boolean
-}>()
+	errorHideDelay?: number
+}>(), {
+	customClass: '',
+	required: false,
+	errorHideDelay: 3000
+})
 
 const emit = defineEmits<{
 	(e: 'update:modelValue', value: string): void
@@ -20,15 +25,40 @@ const isActive = computed(() => !!selected.value)
 
 watch(() => props.modelValue, (newValue) => {
 	selected.value = newValue
+	if (props.required && newValue) {
+		clearError()
+	}
 })
 
 const toggleSelect = () => {
 	isDropdownOpen.value = !isDropdownOpen.value
 }
 
+let hideTimer: ReturnType<typeof setTimeout> | null = null
+
+const triggerError = () => {
+	showError.value = true
+	if (hideTimer) clearTimeout(hideTimer)
+	hideTimer = setTimeout(() => {
+		showError.value = false
+	}, props.errorHideDelay)
+}
+
+const clearError = () => {
+	showError.value = false
+	if (hideTimer) {
+		clearTimeout(hideTimer)
+		hideTimer = null
+	}
+}
+
 const validate = () => {
-	showError.value = props.required && !selected.value
-	return !showError.value
+	if (props.required && !selected.value) {
+		triggerError()
+		return false
+	}
+	clearError()
+	return true
 }
 
 watch(isDropdownOpen, (newValue) => {
@@ -41,6 +71,9 @@ const select = (item: string) => {
 	selected.value = item
 	isDropdownOpen.value = false
 	emit('update:modelValue', selected.value!)
+	if (props.required) {
+		clearError()
+	}
 }
 
 onMounted(() => {

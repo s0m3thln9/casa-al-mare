@@ -143,37 +143,37 @@ const temporaryItems: Item[] = [
 		},
 		vector: {
 			'blue_xs-s': {
-				oldPrice: 18000,
+				oldPrice: 0,
 				price: 15000,
 				quantity: 8,
 				comingSoon: false,
 			},
 			'blue_s-m': {
-				oldPrice: 19000,
+				oldPrice: 0,
 				price: 16000,
 				quantity: 5,
 				comingSoon: false,
 			},
 			'blue_m-l': {
-				oldPrice: 20000,
+				oldPrice: 0,
 				price: 17000,
 				quantity: 0,
 				comingSoon: true,
 			},
 			'yellow_xs-s': {
-				oldPrice: 17000,
+				oldPrice: 0,
 				price: 14500,
 				quantity: 0,
 				comingSoon: false,
 			},
 			'yellow_s-m': {
-				oldPrice: 18000,
+				oldPrice: 0,
 				price: 15500,
 				quantity: 7,
 				comingSoon: false,
 			},
 			'yellow_m-l': {
-				oldPrice: 19000,
+				oldPrice: 0,
 				price: 16500,
 				quantity: 2,
 				comingSoon: false,

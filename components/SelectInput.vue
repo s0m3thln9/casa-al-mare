@@ -1,18 +1,21 @@
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue'
-import { parsePhoneNumberFromString } from 'libphonenumber-js'
+import parsePhoneNumberFromString from "libphonenumber-js"
 
-type Option = { code: string, country: string }
+type CountryOption = { code: string, country: string }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 	id: string
 	label: string
-	type: 'text' | 'password' | 'email'
-	options: Option[]
+	options: CountryOption[]
 	customClass?: string
 	modelValue: string | null
 	required?: boolean
-}>()
+	errorHideDelay?: number
+}>(), {
+	customClass: '',
+	required: false,
+	errorHideDelay: 3000
+})
 
 const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 
@@ -22,6 +25,7 @@ const selectedCode = ref<string | null>(null)
 const nationalNumber = ref('')
 const search = ref('')
 const showError = ref(false)
+const dropdownRef = ref<HTMLElement | null>(null)
 
 const digitsOnly = (v: string) => v.replace(/\D/g, '')
 
@@ -68,9 +72,20 @@ const updateModelValue = () => {
 	}
 }
 
+const handleClickOutside = (event: MouseEvent) => {
+	if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
+		isDropdownOpen.value = false
+	}
+}
+
 onMounted(() => {
 	applyFromModel(props.modelValue ?? '')
 	isActive.value = nationalNumber.value !== ''
+	document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+	document.removeEventListener('click', handleClickOutside)
 })
 
 watch(
@@ -86,6 +101,9 @@ watch(
 
 watch([selectedCode, nationalNumber], () => {
 	updateModelValue()
+	if (props.required && combinedValue.value !== '') {
+		clearError()
+	}
 })
 
 const onFocus = () => {
@@ -96,43 +114,51 @@ const onFocus = () => {
 const onBlur = () => {
 	isActive.value = nationalNumber.value !== ''
 	if (props.required) {
-		if (combinedValue.value === '') {
-			showError.value = true
-		} else {
-			showError.value = false
-		}
+		validate()
+	}
+}
+
+let hideTimer: ReturnType<typeof setTimeout> | null = null
+
+const triggerError = () => {
+	showError.value = true
+	if (hideTimer) clearTimeout(hideTimer)
+	hideTimer = setTimeout(() => {
+		showError.value = false
+	}, props.errorHideDelay)
+}
+
+const clearError = () => {
+	showError.value = false
+	if (hideTimer) {
+		clearTimeout(hideTimer)
+		hideTimer = null
 	}
 }
 
 const validate = () => {
-	if (props.required) {
-		if (combinedValue.value === '') {
-			showError.value = true
-			return false
-		} else {
-			showError.value = false
-		}
+	if (props.required && combinedValue.value === '') {
+		triggerError()
+		return false
 	}
+	clearError()
 	return true
 }
 
-watch(nationalNumber, (val) => {
-	if (props.required && val.trim() !== '') {
-		showError.value = false
+const selectCode = (item: CountryOption) => {
+	selectedCode.value = item.code
+	isDropdownOpen.value = false
+	if (props.required && combinedValue.value !== '') {
+		clearError()
 	}
-})
-
-watch(selectedCode, () => {
-	if (props.required && nationalNumber.value.trim() !== '') {
-		showError.value = false
-	}
-})
+}
 
 defineExpose({ validate, showError })
 </script>
 
 <template>
   <div
+	  ref="dropdownRef"
 	  class="relative font-[Manrope] font-light text-sm text-[#211D1D] select-none cursor-pointer sm:text-xs"
 	  :class="customClass"
   >
@@ -179,7 +205,6 @@ defineExpose({ validate, showError })
           >
         </div>
       </div>
-
       <div
 	      class="flex flex-col gap-2 w-full overflow-hidden transition-all duration-300"
 	      :style="{
@@ -199,7 +224,7 @@ defineExpose({ validate, showError })
 	          :key="index"
 	          class="w-full rounded-lg px-2 py-1 flex items-center justify-between font-[Manrope] text-xs font-light"
 	          :class="[item.code === selectedCode ? 'bg-[#211D1D] text-[#FFFFFA]' : 'bg-[#FFFFFA] text-[#211D1D]']"
-	          @click.stop="selectedCode = item.code; isDropdownOpen = false"
+	          @click.stop="selectCode(item)"
           >
             <span>{{ item.code }}</span>
             <span>{{ item.country }}</span>

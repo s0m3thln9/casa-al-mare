@@ -1,19 +1,38 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-
 const props = defineProps<{
-	size: "S" | "M" | "L" | "XL"
-	modelValue: string | null
+	size: 'S' | 'M' | 'L' | 'XL'
+	modelValue: string | string[] | null
 	label: string
 	disabled?: boolean
 	value: string
-}>()
+}>();
 
 const emit = defineEmits<{
-	(e: 'update:modelValue', value: string | null): void
+	(e: 'update:modelValue', value: string | string[] | null): void
 }>()
 
-const isSelected = computed(() => props.modelValue === props.value)
+const isSelected = computed(() => {
+	if (Array.isArray(props.modelValue)) {
+		return props.modelValue.includes(props.value)
+	}
+	return props.modelValue === props.value
+})
+
+const toggle = () => {
+	if (props.disabled) return
+	if (Array.isArray(props.modelValue)) {
+		if (isSelected.value) {
+			emit(
+				'update:modelValue',
+				props.modelValue.filter(v => v !== props.value)
+			)
+		} else {
+			emit('update:modelValue', [...props.modelValue, props.value])
+		}
+	} else {
+		emit('update:modelValue', isSelected.value ? null : props.value)
+	}
+}
 </script>
 
 <template>
@@ -22,7 +41,7 @@ const isSelected = computed(() => props.modelValue === props.value)
 	  :class="!disabled && 'cursor-pointer'"
 	  role="checkbox"
 	  :aria-checked="isSelected"
-	  @click="!disabled && emit('update:modelValue', isSelected ? null : value)"
+	  @click="toggle"
   >
     <button
 	    :disabled="disabled"
