@@ -5,7 +5,7 @@ const props = defineProps<{
   customImageClass?: string
   variant: "mini" | "large"
   popup?: boolean
-	link?: boolean
+  link?: boolean
 }>()
 
 const {
@@ -13,11 +13,11 @@ const {
   isHovered,
   isVisible,
   isWideScreen,
-	selectedSize,
+  selectedSize,
   favouritesStore,
   imageStyles,
   barStyles,
-	item,
+  item,
   priceFormatter,
   handleMouseMove,
   handleTouchStart,
@@ -37,9 +37,7 @@ const {
     @mouseenter="isHovered = true"
     @mouseleave="isHovered = false"
   >
-    <div
-      class="w-full overflow-hidden rounded-lg"
-    >
+    <div class="w-full overflow-hidden rounded-lg">
       <NuxtImg
         v-slot="{ src, isLoaded, imgAttrs }"
         :src="Object.values(item!.images)[0]"
@@ -57,19 +55,21 @@ const {
           :class="['w-full object-cover', customImageClass]"
           alt="card"
           @click="handleClick"
-        >
+        />
       </NuxtImg>
     </div>
     <h4 class="mt-1 sm:mt-2">{{ item!.name }}</h4>
     <span class="mt-0.5 block sm:mt-1">
-      {{ priceFormatter(item!.vector[`${Object.keys(item!.colors)[0]}_${selectedSize ?? 'xs-s'}`].price) }}
-      <span class="text-[#5E5B58] line-through">{{ priceFormatter(item!.vector[`${Object.keys(item!.colors)[0]}_${selectedSize ?? 'xs-s'}`].oldPrice) }}</span>
+      {{ priceFormatter(item!.vector[`${Object.keys(item!.colors)[0]}_${selectedSize ?? item!.sizes[0]}`].price) }}
+      <span class="text-[#5E5B58] line-through">{{
+        priceFormatter(item!.vector[`${Object.keys(item!.colors)[0]}_${selectedSize ?? item!.sizes[0]}`].oldPrice)
+      }}</span>
     </span>
     <span
       v-if="!isHovered"
       class="my-1 hidden sm:block"
     >
-	    {{ Object.keys(item!.colors)[0] }}
+      {{ Object.values(item!.colors)[0].name }}
     </span>
     <div :class="['hidden gap-1 2xl:flex', popup && 'flex-wrap justify-center']">
       <SingleSelectButton
@@ -132,7 +132,7 @@ const {
             :style="imageStyles(index)"
             alt="card"
             @click="handleClick"
-          >
+          />
         </NuxtImg>
       </div>
       <div
@@ -156,7 +156,9 @@ const {
       />
       <template v-else>
         <h4 class="mt-1">{{ item!.name }}</h4>
-        <span class="mt-0.5">{{ priceFormatter(item!.vector[`${Object.keys(item!.colors)[0]}_${selectedSize ?? 'xs-s'}`].price) }}</span>
+        <span class="mt-0.5">{{
+          priceFormatter(item!.vector[`${Object.keys(item!.colors)[0]}_${selectedSize ?? item!.sizes[0]}`].price)
+        }}</span>
       </template>
     </NuxtImg>
     <NuxtImg

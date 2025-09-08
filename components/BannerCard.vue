@@ -9,8 +9,6 @@ const props = defineProps<{
   link?: string
 }>()
 
-const areImagesLoaded = ref(false)
-
 const handleClick = () => {
   if (props.link) {
     navigateTo(props.link)
@@ -26,7 +24,6 @@ const handleClick = () => {
     <NuxtImg
       v-slot="{ src, isLoaded, imgAttrs }"
       :src="imageUrl"
-      alt="banner"
       :custom="true"
       sizes="sm:100vw md:50vw lg:25vw"
     >
@@ -41,6 +38,7 @@ const handleClick = () => {
         class="w-full h-full object-cover"
         :style="{ objectPosition: objectPosition || 'center' }"
         loading="lazy"
+        alt="banner"
       />
     </NuxtImg>
     <div
