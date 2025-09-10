@@ -11,7 +11,7 @@ const catalogStore = useCatalogStore()
 const isMobile = ref(false)
 
 const currentCardCount = computed(() =>
-  isMobile.value ? catalogStore.mobileStrokeCardCount : catalogStore.desktopStrokeCardCount,
+  isMobile.value ? catalogStore.mobileStrokeCardCount : catalogStore.desktopStrokeCardCount
 )
 
 const handleResize = () => {
@@ -23,64 +23,49 @@ onMounted(() => {
   window.addEventListener("resize", handleResize)
 })
 
+const route = useRoute()
+
+watch(
+	() => route.query,
+	(q) => {
+		let typesFromQuery: string[] = []
+		
+		if (Array.isArray(q.types)) {
+			typesFromQuery = q.types as string[]
+		} else if (typeof q.types === 'string') {
+			typesFromQuery = [q.types]
+		}
+		const validTypes = typesFromQuery.filter(t =>
+			catalogStore.filters.types.includes(t)
+		)
+		if (validTypes.length) {
+			catalogStore.pendingFilters.types = validTypes
+			catalogStore.applyFilters()
+		} else {
+			catalogStore.pendingFilters.types = []
+			catalogStore.applyFilters()
+		}
+	},
+	{ immediate: true }
+)
+
 onUnmounted(() => {
   window.removeEventListener("resize", handleResize)
 })
 
-const types = [
-  "Топ",
-  "Купальник",
-  "Лиф",
-  "Трусы",
-  "Шорты",
-  "Рубашка",
-  "Брюки",
-  "Туника",
-  "Панамка",
-  "Поло",
-  "Сумка",
-  "Полотенце",
-]
-const colors: { title: string; value: string }[] = [
-  { title: "Синий", value: "#4A66C5" },
-  { title: "Голубой", value: "#6B93DD" },
-  { title: "Бирюзовый", value: "#97D6D1" },
-  { title: "Зеленый", value: "#68C768" },
-  { title: "Желтый", value: "#F2D06C" },
-  { title: "Оранжевый", value: "#FDBF81" },
-  { title: "Красный", value: "#D85959" },
-  { title: "Фиолетовый", value: "#BA97D6" },
-]
-const sizes = ["XXS", "XS", "S", "M", "L", "XL"]
-const pants: {
-  title: string
-  src: string
-  altSrc: string
-}[] = [
-  { title: "Стринги", src: "/pant-1.svg", altSrc: "/pant-1-filled.svg" },
-  { title: "Бразилиана", src: "/pant-2.svg", altSrc: "/pant-2-filled.svg" },
-  { title: "Классика", src: "/pant-3.svg", altSrc: "/pant-3-filled.svg" },
-]
-const prices = ["до 5 000", "до 20 000", "до 50 000"]
-const sortTypes = [
-  "По умолчанию",
-  "По возрастанию цены",
-  "По убыванию цены",
-  "По популярности",
-  "По новизне",
-  "С промокодом ",
-  "Только со скидкой",
-  "В наличии",
-]
-const materials = ["Махра", "Вязаные", "В рубчик"]
-const useTypes = ["Повседневная одежда", "Пляж"]
-const breadcrumsItems: { name: string; path?: string }[] = [
-  {
-    name: "Главная",
-    path: "/",
-  },
-  { name: "Смотреть все" },
-]
+const breadcrumsItems = computed(() => {
+	const items: { name: string, path?: string }[] = [
+		{ name: 'Главная', path: '/' },
+		{ name: 'Смотреть все', path: '/catalog' }
+	]
+	
+	const labelFromQuery = route.query.label
+	if (typeof labelFromQuery === 'string' && labelFromQuery.trim() !== '') {
+		items.push({ name: labelFromQuery })
+	}
+	
+	return items
+})
 
 const visibleItems = computed(() => {
   return catalogStore.filteredItems.slice(0, catalogStore.currentVisibleCardCount)
@@ -217,16 +202,16 @@ const load = () => {
             Тип
           </h3>
           <div class="flex flex-wrap gap-4 items-center justify-center">
-            <SingleSelectButton
-              v-model="catalogStore.sortAndFilter.type"
-              :content="types"
-            />
+	          <MultiSelectButton
+		          v-model="catalogStore.pendingFilters.types"
+		          :content="catalogStore.filters.types"
+	          />
           </div>
         </div>
         <div class="grid grid-cols-4 gap-4 sm:gap-y-8">
           <ColorButton
-            v-model="catalogStore.sortAndFilter.color"
-            :colors="colors"
+            v-model="catalogStore.pendingFilters.colors"
+            :colors="catalogStore.filters.colors()"
             text
           />
         </div>
@@ -235,17 +220,11 @@ const load = () => {
             Размер
           </h3>
           <div class="flex gap-4 items-center justify-center">
-            <SingleSelectButton
-              v-model="catalogStore.sortAndFilter.size"
-              :content="sizes"
+            <MultiSelectButton
+	            v-model="catalogStore.pendingFilters.sizes"
+	            :content="catalogStore.filters.sizes"
             />
           </div>
-        </div>
-        <div class="flex justify-center items-center gap-6 text-xs">
-          <PantButton
-            v-model="catalogStore.sortAndFilter.pantsType"
-            :pants="pants"
-          />
         </div>
         <div class="flex flex-col items-center gap-4 sm:gap-6">
           <h3 class="font-[Inter] text-[17px] font-light sm:font-[Manrope] sm:font-light sm:text-base sm:uppercase">
@@ -253,25 +232,33 @@ const load = () => {
           </h3>
           <div class="flex flex-wrap gap-4 items-center justify-center">
             <SingleSelectButton
-              v-model="catalogStore.sortAndFilter.priceLimit"
-              :content="prices"
+              v-model="catalogStore.pendingFilters.maxPrice"
+              :content="catalogStore.filters.maxPrices()"
             />
           </div>
         </div>
         <div class="flex flex-wrap gap-4 items-center justify-center">
           <SingleSelectButton
-            v-model="catalogStore.sortAndFilter.price"
-            :content="sortTypes"
+            v-model="catalogStore.pendingFilters.sortType"
+            :content="catalogStore.filters.sortTypes"
           />
+	        <SingleSelectButton
+		        v-model="catalogStore.pendingFilters.inStock"
+		        :content="catalogStore.filters.inStock"
+	        />
+	        <SingleSelectButton
+		        v-model="catalogStore.pendingFilters.withDiscount"
+		        :content="catalogStore.filters.withDiscount"
+	        />
         </div>
         <div class="flex flex-col items-center gap-4 sm:gap-6">
           <h3 class="font-[Inter] text-[17px] font-light sm:font-[Manrope] sm:font-light sm:text-base sm:uppercase">
             Материал
           </h3>
           <div class="flex flex-wrap gap-4 items-center justify-center">
-            <SingleSelectButton
-              v-model="catalogStore.sortAndFilter.material"
-              :content="materials"
+            <MultiSelectButton
+              v-model="catalogStore.pendingFilters.materials"
+              :content="catalogStore.filters.materials"
             />
           </div>
         </div>
@@ -280,9 +267,9 @@ const load = () => {
             Назначение
           </h3>
           <div class="flex flex-wrap gap-4 items-center justify-center">
-            <SingleSelectButton
-              v-model="catalogStore.sortAndFilter.useType"
-              :content="useTypes"
+            <MultiSelectButton
+              v-model="catalogStore.pendingFilters.useTypes"
+              :content="catalogStore.filters.useTypes"
             />
           </div>
         </div>
@@ -290,12 +277,19 @@ const load = () => {
           <AppButton
             custom-class="py-4 px-4 sm:px-8"
             content="Сбросить"
-            @click="catalogStore.reset"
+            @click="() => {
+							catalogStore.reset
+							popupStore.close()
+            }"
           />
           <AppButton
-            custom-class="w-full py-4 sm:p-4"
-            variant="primary"
-            content="Показать результаты"
+	          custom-class="w-full py-4 sm:p-4"
+	          variant="primary"
+	          content="Показать результаты"
+	          @click="() => {
+					    catalogStore.applyFilters()
+					    popupStore.close()
+					  }"
           />
         </div>
       </div>

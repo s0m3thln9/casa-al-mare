@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import {useMenuStore} from "~/stores/menu"
-import {usePopupStore} from "~/stores/popup"
-
 type MenuItem = {
 	label: string
 	link?: string
 	submenu?: MenuItem[]
 	customClass?: string
 	func?: () => void
+	types?: string[]
 }
 
 const menuStore = useMenuStore()
@@ -22,43 +20,28 @@ const menuItems: MenuItem[] = [
 	{
 		label: 'Купальники',
 		submenu: [
-			{ label: 'Цельные', link: '/catalog' },
-			{ label: 'Бикини', link: '/catalog' },
-		],
-	},
-	{
-		label: 'Нижняя часть купальника',
-		submenu: [
-			{ label: 'Цельные', link: '/catalog' },
-			{ label: 'Бикини', link: '/catalog' },
-		],
-	},
-	{
-		label: 'Верхняя часть купальника',
-		submenu: [
-			{ label: 'Цельные', link: '/catalog' },
-			{ label: 'Бикини', link: '/catalog' },
+			{ label: 'Слитные', link: '/catalog', types: ['Комплект бикини'] },
+			{ label: 'Верх купальника', link: '/catalog', types: ['Топ'] },
+			{ label: 'Низ купальника', link: '/catalog', types: ['Трусы'] },
 		],
 	},
 	{
 		label: 'Одежда для пляжа',
 		submenu: [
-			{ label: 'Платья', link: '/catalog/beachwear/dresses' },
-			{ label: 'Шорты', link: '/catalog/beachwear/shorts' },
-		],
-	},
-	{
-		label: 'Головные уборы',
-		submenu: [
-			{ label: 'Цельные', link: '/catalog' },
-			{ label: 'Бикини', link: '/catalog' },
+			{ label: 'Шорты', link: '/catalog', types: ['Шорты'] },
+			{ label: 'Рубашки', link: '/catalog', types: ['Рубашки'] },
+			{ label: 'Поло', link: '/catalog', types: ['Поло'] },
+			{ label: 'Туники', link: '/catalog', types: ['Туника'] },
+			{ label: 'Брюки', link: '/catalog', types: ['Брюки'] },
 		],
 	},
 	{
 		label: 'Аксессуары',
 		submenu: [
-			{ label: 'Цельные', link: '/catalog' },
-			{ label: 'Бикини', link: '/catalog' },
+			{ label: 'Панамки', link: '/catalog', types: ['Панамка'] },
+			{ label: 'Сумки пляжные', link: '/catalog', types: ['Сумка пляжная'] },
+			{ label: 'Косметички', link: '/catalog', types: ['Косметичка'] },
+			{ label: 'Полотенца', link: '/catalog', types: ['Полотенце'] },
 		],
 	},
 ]
@@ -85,14 +68,34 @@ const secondMenuItems: MenuItem[] = [
 	},
 ]
 
-const handleItemClick = (item: MenuItem) => {
+const catalogStore = useCatalogStore()
+
+const handleMenuClick = (item: MenuItem) => {
 	if (item.submenu) {
 		selectedSubmenu.value = item.submenu
 		selectedSubmenuLabel.value = item.label
+		return
 	}
 	if (item.link) {
 		menuStore.close()
-		navigateTo(item.link)
+		if (item.label === 'Смотреть все') {
+			catalogStore.reset()
+			navigateTo({ path: item.link })
+			return
+		}
+		if (item.types) {
+			const validTypes = item.types.filter(t =>
+				catalogStore.filters.types.includes(t)
+			)
+			navigateTo({
+				path: item.link,
+				query: validTypes.length
+					? { label: item.label, types: validTypes }
+					: { label: item.label }
+			})
+			return
+		}
+		navigateTo({ path: item.link, query: { label: item.label } })
 		return
 	}
 	if (item.func) {
@@ -101,6 +104,7 @@ const handleItemClick = (item: MenuItem) => {
 		return
 	}
 }
+
 
 const goBack = () => {
 	selectedSubmenu.value = undefined
@@ -119,6 +123,15 @@ onUnmounted(() => {
 	window.removeEventListener('resize', updateIsMobile)
 })
 
+watch(
+	() => menuStore.isOpen,
+	(isOpen) => {
+		if (!isOpen) {
+			selectedSubmenu.value = undefined
+			selectedSubmenuLabel.value = undefined
+		}
+	}
+)
 </script>
 
 <template>
@@ -129,7 +142,7 @@ onUnmounted(() => {
 	  >
 		  <div
 			  class="flex flex-col z-31 bg-[#FFFFFA] overflow-y-auto"
-			  :class="[(selectedSubmenu !== undefined) && 'border-r-[0.5px] border-[#BBB8B6]', isMobile ? (selectedSubmenu !== undefined) ? 'w-0' : 'px-2 pt-8 pb-6 w-full justify-between' : 'p-6 gap-8']"
+			  :class="[(selectedSubmenu !== undefined) && 'border-r-[0.5px] border-[#BBB8B6]', isMobile ? (selectedSubmenu !== undefined) ? 'w-0' : 'px-2 pt-8 pb-6 w-full justify-between' : 'p-6 gap-6']"
 		  >
 			  <div
 				  class="w-[252px] min-h-[180px] relative overflow-hidden cursor-pointer"
@@ -158,7 +171,7 @@ onUnmounted(() => {
 					  :key="index"
 					  class="flex items-center justify-between cursor-pointer text-[#211D1D]"
 					  :class="isMobile ? 'font-[Inter] text-[17px] uppercase' : 'text-base font-[Manrope] font-light'"
-					  @click.stop="handleItemClick(item)"
+					  @click.stop="handleMenuClick(item)"
 				  >
 					  <span class="px-2 py-1">{{item.label}}</span>
 					  <NuxtImg
@@ -178,7 +191,7 @@ onUnmounted(() => {
 					  :key="index"
 					  class="flex items-center justify-between cursor-pointer text-[#211D1D]"
 					  :class="isMobile ? 'font-[Inter] text-[17px] uppercase' : 'text-base font-[Manrope] font-light'"
-					  @click.stop="handleItemClick(item)"
+					  @click.stop="handleMenuClick(item)"
 				  >
 					  <span :class="['px-2 py-1', !isMobile && item.customClass]">{{item.label}}</span>
 					  <NuxtImg
@@ -209,7 +222,7 @@ onUnmounted(() => {
 				    :key="index"
 				    class="flex items-center justify-between cursor-pointer text-[#211D1D]"
 				    :class="isMobile ? 'font-[Inter] text-[17px] uppercase' : 'text-base font-[Manrope] font-light'"
-				    @click.stop="handleItemClick(item)"
+				    @click.stop="handleMenuClick(item)"
 				  >
 					  {{item.label}}
 				  </li>

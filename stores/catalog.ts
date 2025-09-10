@@ -1,13 +1,3 @@
-type SortAndFilter = {
-  type: string | null
-  color: string | null
-  size: string | null
-  price: string | null
-  priceLimit: string | null
-  material: string | null
-  useType: string | null
-}
-
 type Item = {
   id: string
   name: string
@@ -33,6 +23,18 @@ type Item = {
   type: string
   material: string
   useType: string
+}
+
+type SortAndFilter = {
+  types: string[]
+  colors: { code: string, name: string, value: string }[]
+  sizes: string[]
+  maxPrice: number | null
+  sortType: string | null
+  withDiscount: string | null
+  inStock: string | null
+  materials: string[]
+  useTypes: string[]
 }
 
 const temporaryItems: Item[] = [
@@ -906,52 +908,186 @@ export const useCatalogStore = defineStore("catalog", () => {
   const desktopStrokeCardCount = ref("4")
   const mobileStrokeCardCount = ref("2")
   const currentVisibleCardCount = ref(12)
-  const sortAndFilter = ref<SortAndFilter>({
-    type: null,
-    color: null,
-    size: null,
-    price: null,
-    priceLimit: null,
-    material: null,
-    useType: null,
-  })
   const items = ref<Item[]>(temporaryItems)
-  const filteredItems = computed(() => {
-    return items.value.filter((item) => {
-      if (sortAndFilter.value.priceLimit)
-        console.log(parseInt(sortAndFilter.value.priceLimit.replace(/[^0-9.-]+/g, "")))
-      if (sortAndFilter.value.type && item.type !== sortAndFilter.value.type) return false
-      if (sortAndFilter.value.material && item.material !== sortAndFilter.value.material) return false
-      if (sortAndFilter.value.useType && item.useType !== sortAndFilter.value.useType) return false
-      // if (sortAndFilter.value.color && item.color !== sortAndFilter.value.color) return false
-      // if (sortAndFilter.value.priceLimit && item.price > parseInt(sortAndFilter.value.priceLimit.replace(/[^0-9.-]+/g, ""))) return false
-      return true
-    })
+  const pendingFilters = ref<SortAndFilter>({
+    types: [],
+    colors: [],
+    sizes: [],
+    maxPrice: null,
+    sortType: null,
+    withDiscount: null,
+    inStock: null,
+    materials: [],
+    useTypes: []
   })
-
+  
+  const activeFilters = ref<SortAndFilter>({ ...pendingFilters.value })
+  
+  const filters = computed(() => {
+    return {
+      types: [...new Set(items.value.map(item => item.type))],
+      colors: () => {
+        const colorsSet = new Set()
+        const colorsArray: { code: string, name: string, value: string }[] = []
+        items.value.forEach(item => {
+          Object.entries(item.colors).forEach(([code, colorData]) => {
+            const colorKey = `${code}-${colorData.value}`
+            if (!colorsSet.has(colorKey)) {
+              colorsSet.add(colorKey)
+              colorsArray.push({
+                code: code,
+                name: colorData.name,
+                value: colorData.value
+              })
+            }
+          })
+        })
+        return colorsArray
+      },
+      sizes: [...new Set(items.value.flatMap(item => item.sizes))],
+      maxPrices: () => {
+        const allPrices: number[] = []
+        items.value.forEach(item => {
+          Object.values(item.vector).forEach(variant => {
+            allPrices.push(variant.price)
+          })
+        })
+        const uniquePrices = [...new Set(allPrices)].sort((a, b) => a - b)
+        const minPrice = uniquePrices[0]
+        const maxPrice = uniquePrices[uniquePrices.length - 1]
+        const ranges: { label: string; value: number }[] = []
+        if (minPrice < 15000) ranges.push({ label: 'до 15000', value: 15000 })
+        if (maxPrice > 20000) ranges.push({ label: 'до 20000', value: 20000 })
+        if (maxPrice > 25000) ranges.push({ label: 'до 25000', value: 25000 })
+        if (maxPrice > 30000) ranges.push({ label: 'до 30000', value: 30000 })
+        if (maxPrice > 35000) ranges.push({ label: 'до 35000', value: 35000 })
+        if (maxPrice > 40000) ranges.push({ label: 'до 40000', value: 40000 })
+        if (maxPrice > 45000) ranges.push({ label: 'до 45000', value: 45000 })
+        return ranges.filter(range => range.value <= maxPrice)
+      },
+      inStock: ['В наличии'],
+      withDiscount: ['Со скидкой'],
+      sortTypes: ['По умолчанию', 'По убыванию цены', 'По возрастанию цены'],
+      materials: [...new Set(items.value.map(item => item.material))],
+      useTypes: [...new Set(items.value.map(item => item.useType))],
+    }
+  })
+  
+  const filteredItems = computed(() => {
+    let filtered = [...items.value]
+    const f = activeFilters.value
+    if (f.types.length > 0) {
+      filtered = filtered.filter(item => f.types.includes(item.type))
+    }
+    if (f.colors.length > 0) {
+      filtered = filtered.filter(item =>
+        Object.keys(item.colors).some(colorCode =>
+          f.colors.some(c => c.code === colorCode)
+        )
+      )
+    }
+    if (f.sizes.length > 0) {
+      filtered = filtered.filter(item =>
+        item.sizes.some(size => f.sizes.includes(size))
+      )
+    }
+    if (f.maxPrice !== null) {
+      filtered = filtered.filter(item =>
+        Object.values(item.vector).some(variant =>
+          variant.price <= f.maxPrice!
+        )
+      )
+    }
+    if (f.withDiscount) {
+      filtered = filtered.filter(item =>
+        Object.values(item.vector).some(variant =>
+          variant.oldPrice > 0 && variant.oldPrice > variant.price
+        )
+      )
+    }
+    if (f.inStock) {
+      filtered = filtered.filter(item =>
+        Object.values(item.vector).some(variant => variant.quantity > 0)
+      )
+    }
+    if (f.materials.length > 0) {
+      filtered = filtered.filter(item => f.materials.includes(item.material))
+    }
+    if (f.useTypes.length > 0) {
+      filtered = filtered.filter(item => f.useTypes.includes(item.useType))
+    }
+    if (f.sortType) {
+      switch (f.sortType) {
+        case 'По убыванию цены':
+          filtered.sort((a, b) => {
+            const firstPriceA = Object.values(a.vector)[0]?.price ?? 0
+            const firstPriceB = Object.values(b.vector)[0]?.price ?? 0
+            return firstPriceB - firstPriceA
+          })
+          break
+        case 'По возрастанию цены':
+          filtered.sort((a, b) => {
+            const firstPriceA = Object.values(a.vector)[0]?.price ?? 0
+            const firstPriceB = Object.values(b.vector)[0]?.price ?? 0
+            return firstPriceA - firstPriceB
+          })
+          break
+      }
+    }
+    return filtered
+  })
+  
+  
+  
   const reset = () => {
-    for (const key in sortAndFilter.value) {
-      sortAndFilter.value[key as keyof SortAndFilter] = null
+    activeFilters.value = {
+      types: [],
+      colors: [],
+      sizes: [],
+      maxPrice: null,
+      sortType: null,
+      withDiscount: null,
+      inStock: null,
+      materials: [],
+      useTypes: []
+    }
+    pendingFilters.value = {
+      types: [],
+      colors: [],
+      sizes: [],
+      maxPrice: null,
+      sortType: null,
+      withDiscount: null,
+      inStock: null,
+      materials: [],
+      useTypes: []
     }
     currentVisibleCardCount.value = 12
   }
-
+  
+  const applyFilters = () => {
+    activeFilters.value = JSON.parse(JSON.stringify(pendingFilters.value))
+    currentVisibleCardCount.value = 12
+  }
+  
   const getItemById = (id: string) => {
     return items.value.find((item) => item.id === id)
   }
-
+  
   watch(filteredItems, () => {
     currentVisibleCardCount.value = 12
   })
-
+  
   return {
     desktopStrokeCardCount,
     mobileStrokeCardCount,
     currentVisibleCardCount,
-    sortAndFilter,
+    pendingFilters,
     items,
+    filters,
     filteredItems,
     getItemById,
     reset,
+    applyFilters,
   }
 })

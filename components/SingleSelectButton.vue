@@ -5,42 +5,44 @@ type SizeItem = {
 	comingSoon: boolean
 }
 
+type LabelValueItem = {
+	label: string
+	value: number
+}
+
 const props = defineProps<{
 	customClass?: string
-	content: string[] | SizeItem[]
-	modelValue: string | null
+	content: string[] | SizeItem[] | LabelValueItem[]
+	modelValue: string | number | null
 }>()
 
 const emit = defineEmits<{
-	(e: 'update:modelValue', value: string | null): void
+	(e: 'update:modelValue', value: string | number | null): void
 }>()
 
-const getDisplayText = (item: string | SizeItem): string => {
-	return typeof item === 'string' ? item : item.size
+const getDisplayText = (item: string | SizeItem | LabelValueItem): string => {
+	if (typeof item === 'string') return item
+	if ('size' in item) return item.size
+	return item.label
 }
 
-const select = (item: string | SizeItem) => {
-	let value: string | null
-	
-	if (typeof item === 'string') {
-		value = props.modelValue === item ? null : item
-	} else {
-		value = props.modelValue === item.size ? null : item.size
-	}
-	
-	emit('update:modelValue', value)
+const getValue = (item: string | SizeItem | LabelValueItem): string | number => {
+	if (typeof item === 'string') return item
+	if ('size' in item) return item.size
+	return item.value
 }
 
-const isSelected = (item: string | SizeItem): boolean => {
-	if (typeof item === 'string') {
-		return props.modelValue === item
-	} else {
-		return props.modelValue === item.size
-	}
+const select = (item: string | SizeItem | LabelValueItem) => {
+	const value = getValue(item)
+	emit('update:modelValue', props.modelValue === value ? null : value)
 }
 
-const isComingSoon = (item: string | SizeItem): boolean => {
-	return typeof item !== 'string' && item.comingSoon
+const isSelected = (item: string | SizeItem | LabelValueItem): boolean => {
+	return props.modelValue === getValue(item)
+}
+
+const isComingSoon = (item: string | SizeItem | LabelValueItem): boolean => {
+	return typeof item !== 'string' && 'size' in item && item.comingSoon
 }
 </script>
 
@@ -61,10 +63,10 @@ const isComingSoon = (item: string | SizeItem): boolean => {
 	  @click="!isComingSoon(item) && select(item)"
   >
     {{ getDisplayText(item) }}
-	  <svg v-if="isComingSoon(item)" width="9" height="9" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
-			<path fill-rule="evenodd" clip-rule="evenodd" d="M4.5 0C3.67918 0 2.88937 0.329939 2.30498 0.921502C1.72013 1.51353 1.38891 2.31963 1.38891 3.16334C1.38891 4.74936 1.05372 5.74282 0.737982 6.32879C0.579548 6.62282 0.423963 6.81809 0.313115 6.93654C0.257604 6.99585 0.213104 7.03612 0.184807 7.05999C0.170655 7.07192 0.16055 7.07977 0.155143 7.08384L0.150802 7.08705C0.0281093 7.17171 -0.0278122 7.33117 0.0134412 7.47984C0.0550152 7.62966 0.185318 7.73261 0.333359 7.73261H8.66664C8.81468 7.73261 8.94498 7.62966 8.98656 7.47984C9.02781 7.33117 8.97189 7.17171 8.84919 7.08704L8.84486 7.08384C8.83945 7.07977 8.82934 7.07192 8.81519 7.05999C8.7869 7.03612 8.7424 6.99585 8.68688 6.93654C8.57604 6.81809 8.42045 6.62282 8.26202 6.32879C7.94628 5.74282 7.61109 4.74936 7.61109 3.16334C7.61109 2.31963 7.27987 1.51353 6.69502 0.921502C6.11063 0.329938 5.32082 0 4.5 0ZM7.68238 6.67606C7.7539 6.80877 7.82582 6.92624 7.8957 7.02965H1.1043C1.17418 6.92624 1.2461 6.80877 1.31762 6.67606C1.69632 5.97326 2.05557 4.85782 2.05557 3.16334C2.05557 2.51555 2.30966 1.89123 2.76667 1.42861C3.22414 0.965523 3.84741 0.702965 4.5 0.702965C5.15259 0.702965 5.77586 0.965523 6.23333 1.42861C6.69034 1.89123 6.94443 2.51555 6.94443 3.16334C6.94443 4.85782 7.30368 5.97326 7.68238 6.67606Z" fill="currentColor"/>
-			<path d="M3.98282 7.65843C3.92448 7.47431 3.73564 7.37493 3.56104 7.43645C3.38643 7.49796 3.29218 7.69708 3.35052 7.8812C3.44696 8.18555 3.5916 8.45936 3.78346 8.66167C3.97724 8.866 4.22367 9 4.5 9C4.77633 9 5.02276 8.866 5.21654 8.66167C5.4084 8.45936 5.55304 8.18555 5.64948 7.8812C5.70782 7.69708 5.61357 7.49796 5.43896 7.43645C5.26436 7.37493 5.07552 7.47431 5.01718 7.65843C4.94424 7.8886 4.84578 8.05848 4.74514 8.1646C4.64642 8.2687 4.56122 8.29704 4.5 8.29704C4.43878 8.29704 4.35358 8.2687 4.25486 8.1646C4.15422 8.05848 4.05576 7.8886 3.98282 7.65843Z" fill="currentColor"/>
-		</svg>
+      <svg v-if="isComingSoon(item)" width="9" height="9" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M4.5 0C3.67918 0 2.88937 0.329939 2.30498 0.921502C1.72013 1.51353 1.38891 2.31963 1.38891 3.16334C1.38891 4.74936 1.05372 5.74282 0.737982 6.32879C0.579548 6.62282 0.423963 6.81809 0.313115 6.93654C0.257604 6.99585 0.213104 7.03612 0.184807 7.05999C0.170655 7.07192 0.16055 7.07977 0.155143 7.08384L0.150802 7.08705C0.0281093 7.17171 -0.0278122 7.33117 0.0134412 7.47984C0.0550152 7.62966 0.185318 7.73261 0.333359 7.73261H8.66664C8.81468 7.73261 8.94498 7.62966 8.98656 7.47984C9.02781 7.33117 8.97189 7.17171 8.84919 7.08704L8.84486 7.08384C8.83945 7.07977 8.82934 7.07192 8.81519 7.05999C8.7869 7.03612 8.7424 6.99585 8.68688 6.93654C8.57604 6.81809 8.42045 6.62282 8.26202 6.32879C7.94628 5.74282 7.61109 4.74936 7.61109 3.16334C7.61109 2.31963 7.27987 1.51353 6.69502 0.921502C6.11063 0.329938 5.32082 0 4.5 0ZM7.68238 6.67606C7.7539 6.80877 7.82582 6.92624 7.8957 7.02965H1.1043C1.17418 6.92624 1.2461 6.80877 1.31762 6.67606C1.69632 5.97326 2.05557 4.85782 2.05557 3.16334C2.05557 2.51555 2.30966 1.89123 2.76667 1.42861C3.22414 0.965523 3.84741 0.702965 4.5 0.702965C5.15259 0.702965 5.77586 0.965523 6.23333 1.42861C6.69034 1.89123 6.94443 2.51555 6.94443 3.16334C6.94443 4.85782 7.30368 5.97326 7.68238 6.67606Z" fill="currentColor"/>
+            <path d="M3.98282 7.65843C3.92448 7.47431 3.73564 7.37493 3.56104 7.43645C3.38643 7.49796 3.29218 7.69708 3.35052 7.8812C3.44696 8.18555 3.5916 8.45936 3.78346 8.66167C3.97724 8.866 4.22367 9 4.5 9C4.77633 9 5.02276 8.866 5.21654 8.66167C5.4084 8.45936 5.55304 8.18555 5.64948 7.8812C5.70782 7.69708 5.61357 7.49796 5.43896 7.43645C5.26436 7.37493 5.07552 7.47431 5.01718 7.65843C4.94424 7.8886 4.84578 8.05848 4.74514 8.1646C4.64642 8.2687 4.56122 8.29704 4.5 8.29704C4.43878 8.29704 4.35358 8.2687 4.25486 8.1646C4.15422 8.05848 4.05576 7.8886 3.98282 7.65843Z" fill="currentColor"/>
+        </svg>
   </button>
 </template>
 
