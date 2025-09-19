@@ -2,12 +2,20 @@ import { Preferences } from "@capacitor/preferences"
 
 interface UserData {
   token: string
-
+  certificates: { code: string; sum: number }[]
+  points: number
   [key: string]: unknown
 }
 
 export const useUserStore = defineStore("user", () => {
-  const user = useState<UserData | null>("user", () => null)
+  const user = useState<UserData | null>("user", () => ({
+    token: "",
+    certificates: [
+      { code: "1234", sum: 123 },
+      { code: "4321", sum: 12345 },
+    ],
+    points: 10000,
+  }))
   const token = useState<string>("token", () => "")
 
   const loadToken = async (): Promise<string> => {
