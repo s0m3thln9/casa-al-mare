@@ -13,6 +13,27 @@ const selectCity = () => {
 
 const userStore = useUserStore()
 await userStore.fetchUser()
+
+// await useFetch<{
+//   success: boolean
+//   error?: string
+//   token?: string
+// }>("https://swimwear.kyokata.wtf/api/login", {
+//   method: "POST",
+//   body: {
+//     email: "dunlock67@gmail.com",
+//     firstname: "Даниил",
+//     lastname: "Лукин",
+//     phone: {
+//       code: "+375",
+//       phone: "293132144",
+//       country: "BY",
+//     },
+//     code: "413295",
+//     loginType: 2,
+//     token: userStore.user?.token || "",
+//   },
+// })
 </script>
 
 <template>

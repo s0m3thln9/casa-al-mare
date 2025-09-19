@@ -334,7 +334,8 @@ defineExpose({ validate, showError })
       :class="{
         'pt-[14px] !h-auto': isDropdownOpen,
         'border-[#E29650]': !!showError && !isDropdownOpen,
-        'border-[#BBB8B6]': !showError || isDropdownOpen,
+        'border-[#211D1D]': isActive || maskedNumber,
+        'border-[#5E5B58]': !isActive && !maskedNumber && !showError,
       }"
     >
       <div class="flex items-center w-full">
@@ -396,9 +397,11 @@ defineExpose({ validate, showError })
           <div
             v-for="(item, index) in filteredOptions"
             :key="index"
-            class="w-full rounded-lg px-2 py-1 flex items-center justify-between font-[Manrope] text-xs font-light cursor-pointer hover:bg-gray-50"
+            class="w-full rounded-lg px-2 py-1 flex items-center justify-between font-[Manrope] text-xs font-light cursor-pointer"
             :class="[
-              item.code === selectedCountry?.code ? 'bg-[#211D1D] text-[#FFFFFA]' : 'bg-[#FFFFFA] text-[#211D1D]',
+              item.code === selectedCountry?.code
+                ? 'bg-[#211D1D] text-[#FFFFFA] border border-transparent'
+                : 'bg-[#FFFFFA] text-[#211D1D] border border-transparent hover:border-[#211D1D]',
             ]"
             @click.stop="selectCode(item)"
           >
