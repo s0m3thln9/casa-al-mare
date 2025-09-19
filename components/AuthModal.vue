@@ -82,6 +82,7 @@ const handleSmsClick = async () => {
   authStore.smsButtonContent = "Проверка..."
 
   try {
+	  const token = await userStore.loadToken()
     const { data } = await useFetch<{
       success: boolean
       error?: string
@@ -95,29 +96,33 @@ const handleSmsClick = async () => {
         },
         code: smsCode,
         loginType: 1,
-        token: userStore.user?.token || "",
+        token,
       },
     })
-
-    if (data.value?.success) {
-      authStore.smsError2 = ""
-      authStore.smsButtonContent = "Успешно"
-      authStore.login() // Устанавливаем статус авторизации
-      authStore.smsStep = false // Закрываем шаг ввода SMS
-      userStore.user.token = data.value.token // Сохраняем токен, если он возвращается
-      authModalStore.close() // Закрываем модалку
+	  
+	  const response = data.value
+	  
+	  if (response?.success) {
+		  authStore.smsError2 = ""
+		  authStore.smsButtonContent = "Успешно"
+		  authStore.login()
+		  authStore.smsStep = false
+		  if (response.token) {
+			  await userStore.saveToken(response.token)
+		  }
+		  authModalStore.close()
     } else {
-      authStore.smsError2 = data.value?.error.code || "Неверный код или ошибка сервера"
-      authStore.smsButtonContent = "Попробовать снова"
-    }
-  } catch (error) {
-    console.error(error)
-    authStore.smsError2 = "Ошибка сети или сервера"
-    authStore.smsButtonContent = "Попробовать снова"
-  } finally {
-    authStore.isSending = false
-    authStore.smsButtonDisabled = false
-  }
+		authStore.smsError2 = response?.error || "Неверный код или ошибка сервера"
+		authStore.smsButtonContent = "Попробовать снова"
+	}
+} catch (err) {
+	console.error("SMS verification error:", err)
+	authStore.smsError2 = "Ошибка сети или сервера"
+	authStore.smsButtonContent = "Попробовать снова"
+} finally {
+	authStore.isSending = false
+	authStore.smsButtonDisabled = false
+}
 }
 
 onUnmounted(() => {

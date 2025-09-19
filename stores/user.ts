@@ -8,15 +8,15 @@ interface UserData {
 }
 
 export const useUserStore = defineStore("user", () => {
-  const user = useState<UserData | null>("user", () => ({
+  const user = ref<UserData | null>({
     token: "",
     certificates: [
       { code: "1234", sum: 123 },
       { code: "4321", sum: 12345 },
     ],
     points: 10000,
-  }))
-  const token = useState<string>("token", () => "")
+  })
+  const token = ref("")
 
   const loadToken = async (): Promise<string> => {
     if (import.meta.client) {
@@ -41,8 +41,6 @@ export const useUserStore = defineStore("user", () => {
   }
 
   const fetchUser = async (): Promise<void> => {
-    if (!token.value) await loadToken()
-
     const userData: UserData = await $fetch("https://swimwear.kyokata.wtf/api/testUser", {
       method: "POST",
       body: JSON.stringify({ token: token.value }),
