@@ -45,8 +45,13 @@ export const useUserStore = defineStore("user", () => {
       method: "POST",
       body: JSON.stringify({ token: token.value }),
     })
-
-    user.value = userData
+    
+    if (user.value) {
+      Object.assign(user.value, userData)
+    } else {
+      user.value = userData
+    }
+    
     if (userData?.token) await saveToken(userData.token)
   }
 
