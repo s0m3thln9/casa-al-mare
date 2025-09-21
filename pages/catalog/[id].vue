@@ -107,7 +107,8 @@ onMounted(() => {
   if (item && Object.keys(item.colors).length > 0) {
     const firstColorCode = Object.keys(item.colors)[0]
     const firstColorName = item.colors[firstColorCode].name
-    itemStore.color = { code: firstColorCode, name: firstColorName }
+    const firstColorValue = item.colors[firstColorCode].value
+    itemStore.color = { code: firstColorCode, name: firstColorName, value: firstColorValue }
   }
   if (item && item.sizes.length > 0) {
     itemStore.size = item.sizes[0]
@@ -183,7 +184,7 @@ onMounted(() => {
           />
         </NuxtImg>
       </div>
-      <div class="px-2 flex flex-col sm:px-0">
+      <div class="px-2 flex flex-col sm:px-0 sm:sticky sm:top-0 sm:h-screen sm:overflow-y-auto">
         <div class="flex justify-center items-center">
           <h2 class="font-[Inter] text-center text-[32px] sm:text-4xl">
             {{ item!.name }}
@@ -195,11 +196,16 @@ onMounted(() => {
             >{{ priceFormatter(currentPrice) }}</span
           >
           <span
+            v-if="currentOldPrice !== 0"
             class="font-[Inter] line-through font-light text-[17px] text-[#8C8785] sm:font-[Manrope] sm:font-normal sm:text-base sm:text-[#211D1D]"
-            >{{ priceFormatter(currentOldPrice) }}</span
           >
+            {{ priceFormatter(currentOldPrice) }}
+          </span>
         </div>
-        <div class="flex justify-center items-center mt-1 sm:mt-2">
+        <div
+          v-if="currentOldPrice !== 0"
+          class="flex justify-center items-center mt-1 sm:mt-2"
+        >
           <span class="font-light text-xs">Скидка {{ discount }}%</span>
         </div>
         <div class="flex flex-col justify-center items-center gap-6 mt-14">

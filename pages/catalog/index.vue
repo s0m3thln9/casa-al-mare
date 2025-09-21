@@ -11,7 +11,7 @@ const catalogStore = useCatalogStore()
 const isMobile = ref(false)
 
 const currentCardCount = computed(() =>
-  isMobile.value ? catalogStore.mobileStrokeCardCount : catalogStore.desktopStrokeCardCount
+  isMobile.value ? catalogStore.mobileStrokeCardCount : catalogStore.desktopStrokeCardCount,
 )
 
 const handleResize = () => {
@@ -26,27 +26,25 @@ onMounted(() => {
 const route = useRoute()
 
 watch(
-	() => route.query,
-	(q) => {
-		let typesFromQuery: string[] = []
-		
-		if (Array.isArray(q.types)) {
-			typesFromQuery = q.types as string[]
-		} else if (typeof q.types === 'string') {
-			typesFromQuery = [q.types]
-		}
-		const validTypes = typesFromQuery.filter(t =>
-			catalogStore.filters.types.includes(t)
-		)
-		if (validTypes.length) {
-			catalogStore.pendingFilters.types = validTypes
-			catalogStore.applyFilters()
-		} else {
-			catalogStore.pendingFilters.types = []
-			catalogStore.applyFilters()
-		}
-	},
-	{ immediate: true }
+  () => route.query,
+  (q) => {
+    let typesFromQuery: string[] = []
+
+    if (Array.isArray(q.types)) {
+      typesFromQuery = q.types as string[]
+    } else if (typeof q.types === "string") {
+      typesFromQuery = [q.types]
+    }
+    const validTypes = typesFromQuery.filter((t) => catalogStore.filters.types.includes(t))
+    if (validTypes.length) {
+      catalogStore.pendingFilters.types = validTypes
+      catalogStore.applyFilters()
+    } else {
+      catalogStore.pendingFilters.types = []
+      catalogStore.applyFilters()
+    }
+  },
+  { immediate: true },
 )
 
 onUnmounted(() => {
@@ -54,17 +52,17 @@ onUnmounted(() => {
 })
 
 const breadcrumsItems = computed(() => {
-	const items: { name: string, path?: string }[] = [
-		{ name: 'Главная', path: '/' },
-		{ name: 'Смотреть все', path: '/catalog' }
-	]
-	
-	const labelFromQuery = route.query.label
-	if (typeof labelFromQuery === 'string' && labelFromQuery.trim() !== '') {
-		items.push({ name: labelFromQuery })
-	}
-	
-	return items
+  const items: { name: string; path?: string }[] = [
+    { name: "Главная", path: "/" },
+    { name: "Смотреть все", path: "/catalog" },
+  ]
+
+  const labelFromQuery = route.query.label
+  if (typeof labelFromQuery === "string" && labelFromQuery.trim() !== "") {
+    items.push({ name: labelFromQuery })
+  }
+
+  return items
 })
 
 const visibleItems = computed(() => {
@@ -199,13 +197,13 @@ const load = () => {
       <div class="mt-6 flex flex-col gap-10 sm:mt-10">
         <div class="flex flex-col items-center gap-4 sm:gap-6">
           <h3 class="font-[Inter] text-[17px] font-light sm:font-[Manrope] sm:font-light sm:text-base sm:uppercase">
-            Тип
+            Категория
           </h3>
           <div class="flex flex-wrap gap-4 items-center justify-center">
-	          <MultiSelectButton
-		          v-model="catalogStore.pendingFilters.types"
-		          :content="catalogStore.filters.types"
-	          />
+            <MultiSelectButton
+              v-model="catalogStore.pendingFilters.types"
+              :content="catalogStore.filters.types"
+            />
           </div>
         </div>
         <div class="grid grid-cols-4 gap-4 sm:gap-y-8">
@@ -221,8 +219,8 @@ const load = () => {
           </h3>
           <div class="flex gap-4 items-center justify-center">
             <MultiSelectButton
-	            v-model="catalogStore.pendingFilters.sizes"
-	            :content="catalogStore.filters.sizes"
+              v-model="catalogStore.pendingFilters.sizes"
+              :content="catalogStore.filters.sizes"
             />
           </div>
         </div>
@@ -242,14 +240,14 @@ const load = () => {
             v-model="catalogStore.pendingFilters.sortType"
             :content="catalogStore.filters.sortTypes"
           />
-	        <SingleSelectButton
-		        v-model="catalogStore.pendingFilters.inStock"
-		        :content="catalogStore.filters.inStock"
-	        />
-	        <SingleSelectButton
-		        v-model="catalogStore.pendingFilters.withDiscount"
-		        :content="catalogStore.filters.withDiscount"
-	        />
+          <SingleSelectButton
+            v-model="catalogStore.pendingFilters.inStock"
+            :content="catalogStore.filters.inStock"
+          />
+          <SingleSelectButton
+            v-model="catalogStore.pendingFilters.withDiscount"
+            :content="catalogStore.filters.withDiscount"
+          />
         </div>
         <div class="flex flex-col items-center gap-4 sm:gap-6">
           <h3 class="font-[Inter] text-[17px] font-light sm:font-[Manrope] sm:font-light sm:text-base sm:uppercase">
@@ -277,19 +275,23 @@ const load = () => {
           <AppButton
             custom-class="py-4 px-4 sm:px-8"
             content="Сбросить"
-            @click="() => {
-							catalogStore.reset
-							popupStore.close()
-            }"
+            @click="
+              () => {
+                catalogStore.reset
+                popupStore.close()
+              }
+            "
           />
           <AppButton
-	          custom-class="w-full py-4 sm:p-4"
-	          variant="primary"
-	          content="Показать результаты"
-	          @click="() => {
-					    catalogStore.applyFilters()
-					    popupStore.close()
-					  }"
+            custom-class="w-full py-4 sm:p-4"
+            variant="primary"
+            content="Показать результаты"
+            @click="
+              () => {
+                catalogStore.applyFilters()
+                popupStore.close()
+              }
+            "
           />
         </div>
       </div>
