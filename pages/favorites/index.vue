@@ -1,9 +1,20 @@
 <script setup lang="ts">
 const authStore = useAuthStore()
 const authModalStore = useAuthModalStore()
-const favouritesStore = useFavouritesStore()
 const catalogStore = useCatalogStore()
-const favourites = computed(() => catalogStore.items.filter((item) => favouritesStore.favourites.includes(item.id)))
+const favoritesStore = useFavoritesStore()
+
+watch(
+  () => authStore.isAuth,
+  (isAuth) => {
+    if (isAuth) {
+      favoritesStore.syncFavorites()
+    }
+  },
+  { immediate: true },
+)
+
+const favoriteItems = computed(() => catalogStore.items.filter((item) => favoritesStore.favorites.includes(item.id)))
 </script>
 
 <template>
@@ -22,11 +33,11 @@ const favourites = computed(() => catalogStore.items.filter((item) => favourites
       </h3>
       <template v-else>
         <div
-          v-if="favouritesStore.favourites.length > 0"
+          v-if="favoriteItems.length > 0"
           class="mt-4 grid grid-cols-2 px-2 gap-x-1 gap-y-2 sm:mt-10 sm:grid-cols-4 sm:px-4 sm:gap-x-4 sm:gap-y-6"
         >
           <template
-            v-for="item in favourites"
+            v-for="item in favoriteItems"
             :key="item.id"
           >
             <CatalogCard

@@ -7,7 +7,7 @@ export function useCatalogCard(variant: "mini" | "large", id: string, link: bool
   const isWideScreen = ref(false)
   const touchStartX = ref(0)
   const item = catalogStore.getItemById(id)
-  const favouritesStore = useFavouritesStore()
+  const favoritesStore = useFavoritesStore()
   const selectedSize = ref<string | null>(null)
 
   const imageStyles = computed(() => (index: number) => ({
@@ -56,8 +56,7 @@ export function useCatalogCard(variant: "mini" | "large", id: string, link: bool
     const deltaX = e.changedTouches[0].clientX - touchStartX.value
     const threshold = 50
     if (Math.abs(deltaX) > threshold) {
-      currentImageIndex.value =
-        (currentImageIndex.value + (deltaX > 0 ? -1 : 1) + 3) % 3
+      currentImageIndex.value = (currentImageIndex.value + (deltaX > 0 ? -1 : 1) + 3) % 3
     }
   }
 
@@ -82,7 +81,7 @@ export function useCatalogCard(variant: "mini" | "large", id: string, link: bool
     isVisible,
     isWideScreen,
     selectedSize,
-    favouritesStore,
+    favoritesStore,
     imageStyles,
     barStyles,
     item,

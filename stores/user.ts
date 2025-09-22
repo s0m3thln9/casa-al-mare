@@ -7,7 +7,7 @@ interface UserData {
 export const useUserStore = defineStore("user", () => {
   const user = ref<UserData | null>(null)
   const token = ref("")
-  const authStore = useAuthStore()
+  const favoritesStore = useFavoritesStore()
 
   const loadToken = async (): Promise<string> => {
     if (import.meta.client) {
@@ -44,6 +44,7 @@ export const useUserStore = defineStore("user", () => {
     }
 
     if (userData?.token) await saveToken(userData.token as string)
+    await favoritesStore.syncFavorites()
   }
 
   return {

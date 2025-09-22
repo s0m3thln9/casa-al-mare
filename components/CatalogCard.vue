@@ -14,7 +14,7 @@ const {
   isVisible,
   isWideScreen,
   selectedSize,
-  favouritesStore,
+  favoritesStore,
   imageStyles,
   barStyles,
   item,
@@ -80,10 +80,10 @@ const {
     </div>
     <NuxtImg
       v-if="!isWideScreen || isHovered"
-      :src="favouritesStore.isFavourite(id) ? '/star-filled.svg' : '/star.svg'"
+      :src="favoritesStore.isFavorite(id) ? '/star-filled.svg' : '/star.svg'"
       alt="star"
       class="w-4 h-4 absolute z-10 right-2.5 top-2.5 sm:w-5 sm:h-5 sm:right-4 sm:top-4"
-      @click="favouritesStore.toggle(id)"
+      @click="favoritesStore.toggleFavorite(id)"
     />
   </div>
 
@@ -163,10 +163,10 @@ const {
     </NuxtImg>
     <NuxtImg
       v-if="!isWideScreen || isHovered"
-      :src="favouritesStore.isFavourite(id) ? '/star-filled.svg' : '/star.svg'"
+      :src="favoritesStore.isFavorite(id) ? '/star-filled.svg' : '/star.svg'"
       alt="star"
       class="w-4 h-4 absolute z-10 right-2.5 top-2.5 sm:w-5 sm:h-5 sm:right-4 sm:top-4"
-      @click="favouritesStore.toggle(id)"
+      @click="favoritesStore.toggleFavorite(id)"
     />
   </div>
 </template>
