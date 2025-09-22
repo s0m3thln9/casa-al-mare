@@ -1,3 +1,6 @@
+import { toKeyAlias } from "@babel/types"
+import uid = toKeyAlias.uid
+
 export const useAuthStore = defineStore("auth", () => {
   const email = ref("")
   const emailButtonContent = ref("Отправить СМС-код")
@@ -22,6 +25,9 @@ export const useAuthStore = defineStore("auth", () => {
   const surname = ref("")
   const regButtonContent = ref("Отправить СМС-код")
   const regButtonDisabled = ref(true)
+  const isAuth = ref(false)
+
+  const userStore = useUserStore()
 
   watch(
     phone,
@@ -46,7 +52,7 @@ export const useAuthStore = defineStore("auth", () => {
     },
     { immediate: true },
   )
-  
+
   watch(
     [emailReg, phoneReg, name, surname],
     () => {
@@ -54,6 +60,10 @@ export const useAuthStore = defineStore("auth", () => {
     },
     { immediate: true },
   )
+
+  watchEffect(() => {
+    isAuth.value = (userStore.user?.uid as number) > 0
+  })
 
   return {
     email,
@@ -79,5 +89,6 @@ export const useAuthStore = defineStore("auth", () => {
     surname,
     regButtonContent,
     regButtonDisabled,
+    isAuth,
   }
 })

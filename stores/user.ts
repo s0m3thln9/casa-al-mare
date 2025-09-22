@@ -7,6 +7,7 @@ interface UserData {
 export const useUserStore = defineStore("user", () => {
   const user = ref<UserData | null>(null)
   const token = ref("")
+  const authStore = useAuthStore()
 
   const loadToken = async (): Promise<string> => {
     if (import.meta.client) {
@@ -35,14 +36,14 @@ export const useUserStore = defineStore("user", () => {
       method: "POST",
       body: JSON.stringify({ token: token.value }),
     })
-    
+
     if (user.value) {
       Object.assign(user.value, userData)
     } else {
       user.value = userData
     }
-    
-    if (userData?.token) await saveToken(userData.token)
+
+    if (userData?.token) await saveToken(userData.token as string)
   }
 
   return {
