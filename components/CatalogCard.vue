@@ -24,6 +24,16 @@ const {
   handleTouchEnd,
   handleClick,
 } = useCatalogCard(props.variant, props.id, props.link)
+
+const isStarPressed = ref(false)
+
+const handleStarClick = () => {
+  isStarPressed.value = true
+  favoritesStore.toggleFavorite(props.id)
+  setTimeout(() => {
+    isStarPressed.value = false
+  }, 200)
+}
 </script>
 
 <template>
@@ -34,40 +44,57 @@ const {
       customClass,
       isWideScreen && 'justify-between flex-1',
     ]"
-    @mouseenter="isHovered = true"
-    @mouseleave="isHovered = false"
+    @mouseenter="!popup && (isHovered = true)"
+    @mouseleave="!popup && (isHovered = false)"
   >
-    <div class="w-full overflow-hidden rounded-lg">
-      <NuxtImg
-        v-slot="{ src, isLoaded, imgAttrs }"
-        :src="Object.values(item!.images)[0]"
-        :custom="true"
-        class="aspect-[300/450] transition-all duration-300 ease-out"
-      >
-        <div
-          v-if="!isLoaded"
-          class="w-full h-full aspect-[300/450] bg-[#F9F6EC]"
-        />
-        <img
-          v-else
-          v-bind="imgAttrs"
-          :src="src"
-          :class="['w-full object-cover', customImageClass]"
-          alt="card"
-          @click="handleClick"
-        />
-      </NuxtImg>
+    <div
+      class="w-full rounded-lg relative"
+      :style="{ height: !popup && isHovered ? 'calc(100% + 20px)' : '100%' }"
+    >
+      <div class="overflow-hidden rounded-lg h-full">
+        <NuxtImg
+          v-slot="{ src, isLoaded, imgAttrs }"
+          :src="Object.values(item!.images)[0]"
+          :custom="true"
+          class="aspect-[300/450] transition-all duration-300 ease-out"
+        >
+          <div
+            v-if="!isLoaded"
+            class="w-full h-full aspect-[300/450] bg-[#F9F6EC]"
+          />
+          <img
+            v-else
+            v-bind="imgAttrs"
+            :src="src"
+            :class="[
+              'w-full h-full object-cover transition-all duration-300 ease-out rounded-lg',
+              customImageClass,
+              popup && 'hover:scale-[1.05]',
+            ]"
+            :style="{
+              height: !popup && isHovered ? 'calc(100% + 20px)' : '100%',
+              objectPosition: !popup && isHovered ? 'center top' : 'center center',
+            }"
+            alt="card"
+            @click="handleClick"
+          />
+        </NuxtImg>
+      </div>
     </div>
     <h4 class="mt-1 sm:mt-2">{{ item!.name }}</h4>
-    <span class="mt-0.5 block sm:mt-1">
+    <span
+      class="mt-0.5 block sm:mt-1"
+      :class="{ 'mb-2': isHovered }"
+    >
       {{ priceFormatter(item!.vector[`${Object.keys(item!.colors)[0]}_${selectedSize ?? item!.sizes[0]}`].price) }}
       <span class="text-[#5E5B58] line-through">{{
         priceFormatter(item!.vector[`${Object.keys(item!.colors)[0]}_${selectedSize ?? item!.sizes[0]}`].oldPrice)
       }}</span>
     </span>
     <span
-      v-if="!isHovered"
+      v-if="!isHovered || popup"
       class="my-1 hidden sm:block"
+      :class="{ 'mb-2': popup }"
     >
       {{ Object.values(item!.colors)[0].name }}
     </span>
@@ -79,11 +106,15 @@ const {
       />
     </div>
     <NuxtImg
-      v-if="!isWideScreen || isHovered"
+      v-if="!isWideScreen || (!popup && isHovered)"
       :src="favoritesStore.isFavorite(id) ? '/star-filled.svg' : '/star.svg'"
       alt="star"
-      class="w-4 h-4 absolute z-10 right-2.5 top-2.5 sm:w-5 sm:h-5 sm:right-4 sm:top-4"
-      @click="favoritesStore.toggleFavorite(id)"
+      :class="[
+        'star-button absolute z-10 cursor-pointer transition-all duration-200 ease-out',
+        'w-5 h-5 right-2.5 top-2.5 md:w-6 md:h-6 md:right-4 md:top-4',
+        isStarPressed && 'star-pressed',
+      ]"
+      @click="handleStarClick"
     />
   </div>
 
@@ -92,10 +123,10 @@ const {
     :class="[
       'relative font-[Commissioner] font-light text-[10px] text-center text-[#211D1D] cursor-pointer sm:font-[Manrope] sm:text-sm',
       customClass,
-      isVisible ? 'animate-card-appear' : '',
+      !popup && isVisible ? 'animate-card-appear' : '',
     ]"
-    @mouseenter="isHovered = true"
-    @mouseleave="isHovered = false"
+    @mouseenter="!popup && (isHovered = true)"
+    @mouseleave="!popup && (isHovered = false)"
   >
     <NuxtImg
       v-slot="{ isLoaded }"
@@ -156,17 +187,25 @@ const {
       />
       <template v-else>
         <h4 class="mt-1">{{ item!.name }}</h4>
-        <span class="mt-0.5">{{
-          priceFormatter(item!.vector[`${Object.keys(item!.colors)[0]}_${selectedSize ?? item!.sizes[0]}`].price)
-        }}</span>
+        <span
+          class="mt-0.5"
+          :class="{ 'mb-2': popup }"
+          >{{
+            priceFormatter(item!.vector[`${Object.keys(item!.colors)[0]}_${selectedSize ?? item!.sizes[0]}`].price)
+          }}</span
+        >
       </template>
     </NuxtImg>
     <NuxtImg
-      v-if="!isWideScreen || isHovered"
+      v-if="!isWideScreen || (!popup && isHovered)"
       :src="favoritesStore.isFavorite(id) ? '/star-filled.svg' : '/star.svg'"
       alt="star"
-      class="w-4 h-4 absolute z-10 right-2.5 top-2.5 sm:w-5 sm:h-5 sm:right-4 sm:top-4"
-      @click="favoritesStore.toggleFavorite(id)"
+      :class="[
+        'star-button absolute z-10 cursor-pointer transition-all duration-200 ease-out',
+        'w-5 h-5 right-2.5 top-2.5 md:w-6 md:h-6 md:right-4 md:top-4',
+        isStarPressed && 'star-pressed',
+      ]"
+      @click="handleStarClick"
     />
   </div>
 </template>
@@ -183,7 +222,44 @@ const {
   }
 }
 
-.animate-card-appear {
+.animate-card-appear:not(.popup) {
   animation: card-appear 400ms ease-out forwards;
+}
+
+.star-button {
+  transform-origin: center;
+}
+
+.star-button:hover {
+  transform: scale(1.1);
+}
+
+.star-button:active,
+.star-button.star-pressed {
+  transform: scale(0.85);
+}
+
+@keyframes star-press {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.8);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.star-pressed {
+  animation: star-press 200ms ease-out;
+}
+
+@media (min-width: 475px) {
+  .star-button {
+    transition:
+      transform 0.2s ease-out,
+      filter 0.2s ease-out;
+  }
 }
 </style>
