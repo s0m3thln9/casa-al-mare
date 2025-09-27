@@ -55,7 +55,7 @@ watch(
     <slot />
     <div
       :class="[
-        'pointer-events-none absolute z-50 flex items-center gap-4 px-4 py-2 font-[Rubik] text-sm rounded-lg shadow-lg w-full max-w-2xs sm:max-w-xs break-words transition-opacity duration-200',
+        'pointer-events-none absolute z-50 flex items-center gap-4 px-4 py-2 font-[Rubik] text-sm rounded-lg w-full max-w-2xs sm:max-w-xs break-words transition-opacity duration-200',
         'before:content-[\'\'] before:absolute before:border-solid',
         visible ? 'opacity-100' : 'opacity-0',
         type === 'info' && 'text-[#FFFFFA] bg-[#211D1D]',

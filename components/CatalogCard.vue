@@ -87,7 +87,7 @@ const handleStarClick = () => {
       :class="{ 'mb-2': isHovered }"
     >
       {{ priceFormatter(item!.vector[`${Object.keys(item!.colors)[0]}_${selectedSize ?? item!.sizes[0]}`].price) }}
-      <span class="text-[#5E5B58] line-through">{{
+      <span class="text-[#5E5B58] line-through ml-1">{{
         priceFormatter(item!.vector[`${Object.keys(item!.colors)[0]}_${selectedSize ?? item!.sizes[0]}`].oldPrice)
       }}</span>
     </span>
@@ -106,7 +106,7 @@ const handleStarClick = () => {
       />
     </div>
     <NuxtImg
-      v-if="!isWideScreen || (!popup && isHovered)"
+      v-if="!isWideScreen || (!popup && isHovered) || favoritesStore.isFavorite(id)"
       :src="favoritesStore.isFavorite(id) ? '/star-filled.svg' : '/star.svg'"
       alt="star"
       :class="[
@@ -197,7 +197,7 @@ const handleStarClick = () => {
       </template>
     </NuxtImg>
     <NuxtImg
-      v-if="!isWideScreen || (!popup && isHovered)"
+      v-if="!isWideScreen || (!popup && isHovered) || favoritesStore.isFavorite(id)"
       :src="favoritesStore.isFavorite(id) ? '/star-filled.svg' : '/star.svg'"
       alt="star"
       :class="[

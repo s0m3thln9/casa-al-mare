@@ -283,6 +283,13 @@ const selectCode = (item: CountryOption) => {
 
 onMounted(() => {
   applyFromModel(props.modelValue)
+  if (!props.modelValue && !selectedCountry.value) {
+    const russiaOption = props.options.find((opt) => opt.code === "+7")
+    if (russiaOption) {
+      selectedCountry.value = russiaOption
+      isActive.value = true
+    }
+  }
   isActive.value = nationalNumber.value !== "" || selectedCountry.value !== null
   document.addEventListener("click", handleClickOutside)
 })
@@ -335,7 +342,7 @@ defineExpose({ validate, showError })
         'pt-[14px] !h-auto': isDropdownOpen,
         'border-[#E29650]': !!showError && !isDropdownOpen,
         'border-[#211D1D]': isActive || maskedNumber,
-        'border-[#5E5B58]': !isActive && !maskedNumber && !showError,
+        'border-[#B8B8B6]': !isActive && !maskedNumber && !showError,
       }"
     >
       <div class="flex items-center w-full">
@@ -358,7 +365,7 @@ defineExpose({ validate, showError })
         <div class="pl-2.5 w-full relative">
           <label
             v-if="!isActive"
-            class="absolute font-[Manrope] font-light text-[#8C8785] pointer-events-none text-xs"
+            class="absolute font-[Manrope] font-light text-[#5E5B58] pointer-events-none text-xs"
           >
             {{ label }}
             <span

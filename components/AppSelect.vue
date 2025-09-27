@@ -108,7 +108,7 @@ defineExpose({ validate, showError })
     <label
       v-if="!isDropdownOpen"
       class="absolute top-3.5 left-2.5 font-[Manrope] font-light text-sm text-[#8C8785] transition-all duration-200 pointer-events-none sm:text-xs"
-      :class="{ '!top-[3px]': isActive }"
+      :class="{ '!top-[3px] text-[#8C8785]': isActive, 'text-[#5E5B58]': !isActive }"
     >
       {{ label }}
       <span
@@ -122,7 +122,7 @@ defineExpose({ validate, showError })
       :class="{
         'border-[#E29650]': showError === true && !isDropdownOpen,
         'border-[#211D1D]': isActive || isDropdownOpen,
-        'border-[#5E5B58]': !isActive && !isDropdownOpen && showError === false,
+        'border-[#B8B8B6]': !isActive && !isDropdownOpen && showError === false,
         'pt-[21.5px] pb-1.5': isActive && !isDropdownOpen,
         'py-[8.75px] h-full max-h-[257.5px]': isDropdownOpen,
       }"

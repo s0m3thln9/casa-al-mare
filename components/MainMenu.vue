@@ -136,7 +136,7 @@ watch(
     @click.self="menuStore.close"
   >
     <div
-      class="max-h-[calc(100vh-32px)] sm:max-h-[calc(100vh-62px)] overflow-hidden absolute top-[32px] flex bg-[#FFFFFA] transition-all duration-300 h-full sm:top-[62px] sm:rounded-br-3xl sm:border-t-[0.5px] sm:border-r-[0.5px] sm:border-[#F9F6EC] sm:h-auto"
+      class="max-h-[calc(100vh-32px)] sm:max-h-[calc(100vh-62px)] overflow-hidden absolute top-[32px] flex bg-[#FFFFFA] transition-all duration-300 h-full sm:top-[62px] sm:rounded-b-3xl sm:border-t-[0.5px] sm:border-r-[0.5px] sm:border-b-[0.5px] sm:border-[#F9F6EC] sm:h-auto"
       :class="[
         menuStore.isOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0',
         isMobile ? 'w-full' : 'w-fit',

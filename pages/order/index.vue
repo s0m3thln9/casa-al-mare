@@ -319,11 +319,18 @@ function handleSave() {
                     class="rounded-2xl border-[0.5px] border-[#211D1D]"
                   />
                   <div class="flex flex-col gap-1">
-                    <span class="font-light text-sm text-[#414141]">{{ item!.name }}</span>
-                    <span class="font-light text-[13px]">Размер: {{ item!.size }} Цвет: {{ item!.color }}</span>
+                    <span
+                      class="font-light text-sm text-[#414141] cursor-pointer"
+                      @click="navigateTo(`/catalog/${item.id}`)"
+                    >
+                      {{ item!.name }}
+                    </span>
+                    <span class="font-light text-[13px]"
+                      >Размер: {{ item!.size }} <span class="ml-1">Цвет: {{ item!.color }}</span></span
+                    >
                     <span class="text-xs text-[#414141]"
                       >{{ orderStore.priceFormatter(item!.price) }}
-                      <span class="font-light text-[#606060]">за шт.</span></span
+                      <span class="font-light text-[#606060] ml-1">за шт.</span></span
                     >
                   </div>
                 </div>
@@ -367,7 +374,7 @@ function handleSave() {
                     >{{ orderStore.priceFormatter(item!.price * item!.count) }}
                     <span
                       v-if="item!.oldPrice > 0"
-                      class="line-through"
+                      class="line-through ml-1"
                       >{{ orderStore.priceFormatter(item!.oldPrice * item!.count) }}</span
                     ></span
                   >
@@ -600,17 +607,24 @@ function handleSave() {
                   class="rounded-2xl border-[0.5px] border-[#211D1D]"
                 />
                 <div class="flex flex-col gap-1">
-                  <span class="font-light text-sm text-[#414141]">{{ item!.name }}</span>
-                  <span class="font-light text-[13px]">Размер: {{ item!.size }} Цвет: {{ item!.color }}</span>
+                  <span
+                    class="font-light text-sm text-[#414141] cursor-pointer"
+                    @click="navigateTo(`/catalog/${item.id}`)"
+                  >
+                    {{ item!.name }}
+                  </span>
+                  <span class="font-light text-[13px]"
+                    >Размер: {{ item!.size }} <span class="ml-1">Цвет: {{ item!.color }}</span></span
+                  >
                   <span class="text-xs text-[#414141]"
                     >{{ orderStore.priceFormatter(item!.price) }}
-                    <span class="font-light text-[#606060]">за шт.</span></span
+                    <span class="font-light text-[#606060] ml-1">за шт.</span></span
                   >
                 </div>
               </div>
               <div class="flex flex-col items-end gap-4">
                 <div class="flex items-center gap-2">
-                  <div class="py-1 px-2 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light">
+                  <div class="py-1 px-3 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light">
                     {{ item!.count }}
                   </div>
                 </div>
@@ -618,7 +632,7 @@ function handleSave() {
                   >{{ orderStore.priceFormatter(item!.price * item!.count) }}
                   <span
                     v-if="item!.oldPrice > 0"
-                    class="line-through"
+                    class="line-through ml-1"
                     >{{ orderStore.priceFormatter(item!.oldPrice * item!.count) }}</span
                   ></span
                 >
@@ -653,7 +667,12 @@ function handleSave() {
                   class="rounded-2xl border-[0.5px] border-[#211D1D]"
                 />
                 <div class="flex flex-col gap-1">
-                  <span class="font-light text-sm text-[#414141]">{{ item!.name }}</span>
+                  <span
+                    class="font-light text-sm text-[#414141] cursor-pointer"
+                    @click="navigateTo(`/catalog/${item.id}`)"
+                  >
+                    {{ item!.name }}
+                  </span>
                   <span class="font-light text-[13px]">Размер: {{ item!.size }} Цвет: {{ item!.color }}</span>
                   <span class="text-xs text-[#414141]"
                     >{{ orderStore.priceFormatter(item!.price) }}
@@ -701,7 +720,7 @@ function handleSave() {
                   >{{ orderStore.priceFormatter(item!.price * item!.count) }}
                   <span
                     v-if="item!.oldPrice > 0"
-                    class="line-through"
+                    class="line-through ml-1"
                     >{{ orderStore.priceFormatter(item!.oldPrice * item!.count) }}</span
                   ></span
                 >

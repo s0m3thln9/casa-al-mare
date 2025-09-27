@@ -6,7 +6,7 @@ const menuStore = useMenuStore()
 
 <template>
   <header
-    class="font-[Manrope] text-xs flex justify-between items-center p-2 bg-[#FFFFFA] text-[#211D1D] sm:text-sm sm:p-4"
+    class="sticky top-0 left-0 z-10 font-[Manrope] text-xs flex justify-between items-center p-2 bg-[#FFFFFA] text-[#211D1D] sm:text-sm sm:p-4"
   >
     <div>
       <NuxtLink to="/">

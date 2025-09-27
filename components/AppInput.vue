@@ -90,8 +90,8 @@ defineExpose({ validate, showError })
   >
     <label
       :for="id"
-      class="absolute top-3.5 left-2.5 font-[Manrope] font-light text-sm text-[#8C8785] transition-all duration-200 pointer-events-none sm:text-xs"
-      :class="{ '!top-[3px]': isActive }"
+      class="absolute top-3.5 left-2.5 font-[Manrope] font-light text-sm transition-all duration-200 pointer-events-none sm:text-xs"
+      :class="{ '!top-[3px] text-[#8C8785]': isActive, 'text-[#5E5B58]': !isActive }"
     >
       {{ label }}
       <span class="text-[#E29650]">{{ required ? "*" : "" }}</span>
@@ -105,7 +105,7 @@ defineExpose({ validate, showError })
       :class="{
         'border-[#E29650]': showError,
         'border-[#211D1D]': isActive && !showError,
-        'border-[#5E5B58]': !isActive && !showError,
+        'border-[#B8B8B6]': !isActive && !showError,
       }"
       @focus="isActive = true"
       @blur="
