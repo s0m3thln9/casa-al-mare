@@ -1,12 +1,8 @@
-import { toKeyAlias } from "@babel/types"
-import uid = toKeyAlias.uid
-
 export const useAuthStore = defineStore("auth", () => {
   const email = ref("")
   const emailButtonContent = ref("Отправить СМС-код")
   const emailButtonDisabled = ref(true)
   const emailReg = ref("")
-  const isSending = ref(false)
   const method = ref("По телефону")
   const type = ref("Авторизация")
   const password = ref("")
@@ -18,7 +14,9 @@ export const useAuthStore = defineStore("auth", () => {
   const sms = ref("")
   const smsError = ref("")
   const smsError2 = ref("")
+  const regError = ref("")
   const smsStep = ref(false)
+  const regStep = ref(false)
   const smsButtonContent = ref("Подтвердить")
   const smsButtonDisabled = ref(true)
   const name = ref("")
@@ -38,9 +36,9 @@ export const useAuthStore = defineStore("auth", () => {
   )
 
   watch(
-    email,
+    [email, password],
     () => {
-      emailButtonDisabled.value = !email.value
+      emailButtonDisabled.value = !email.value && !password.value
     },
     { immediate: true },
   )
@@ -70,7 +68,6 @@ export const useAuthStore = defineStore("auth", () => {
     emailButtonContent,
     emailButtonDisabled,
     emailReg,
-    isSending,
     method,
     type,
     password,
@@ -82,7 +79,9 @@ export const useAuthStore = defineStore("auth", () => {
     sms,
     smsError,
     smsError2,
+    regError,
     smsStep,
+    regStep,
     smsButtonContent,
     smsButtonDisabled,
     name,
