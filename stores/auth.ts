@@ -21,7 +21,7 @@ export const useAuthStore = defineStore("auth", () => {
   const smsButtonDisabled = ref(true)
   const name = ref("")
   const surname = ref("")
-  const regButtonContent = ref("Отправить СМС-код")
+  const regButtonContent = ref("Зарегистрироваться")
   const regButtonDisabled = ref(true)
   const isAuth = ref(false)
 
