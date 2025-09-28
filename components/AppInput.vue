@@ -106,6 +106,7 @@ defineExpose({ validate, showError })
         'border-[#E29650]': showError,
         'border-[#211D1D]': isActive && !showError,
         'border-[#B8B8B6]': !isActive && !showError,
+        'pr-12': type === 'password',
       }"
       @focus="isActive = true"
       @blur="

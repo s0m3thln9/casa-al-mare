@@ -24,6 +24,10 @@ export const useAuthStore = defineStore("auth", () => {
   const regButtonContent = ref("Зарегистрироваться")
   const regButtonDisabled = ref(true)
   const isAuth = ref(false)
+  const resetEmail = ref("")
+  const resetButtonContent = ref("Отправить письмо")
+  const resetButtonDisabled = ref(true)
+  const resetError = ref("")
 
   const userStore = useUserStore()
 
@@ -59,6 +63,14 @@ export const useAuthStore = defineStore("auth", () => {
     { immediate: true },
   )
 
+  watch(
+    resetEmail,
+    () => {
+      resetButtonDisabled.value = !resetEmail.value
+    },
+    { immediate: true },
+  )
+
   watchEffect(() => {
     isAuth.value = (userStore.user?.uid as number) > 0
   })
@@ -89,5 +101,9 @@ export const useAuthStore = defineStore("auth", () => {
     regButtonContent,
     regButtonDisabled,
     isAuth,
+    resetEmail,
+    resetButtonContent,
+    resetButtonDisabled,
+    resetError,
   }
 })
