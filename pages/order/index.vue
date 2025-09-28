@@ -15,11 +15,21 @@ const authStore = useAuthStore()
 const orderStore = useOrderStore()
 const userStore = useUserStore()
 
-onMounted(() => {
-  orderStore.setCartItems([
-    { id: "1", vector: "red_XS-S", count: 1 },
-    { id: "2", vector: "blue_XS-S", count: 2 },
-  ])
+onMounted(async () => {
+  const getCart = async (): Promise<void> => {
+    const token = await userStore.loadToken()
+    try {
+      const { data } = await useFetch("https://swimwear.kyokata.wtf/api/getCart", {
+        method: "POST",
+        body: {
+          token: token,
+        },
+      })
+    } catch (error) {
+      console.log(error)
+    }
+  }
+  await getCart()
 })
 
 function handlePay() {
