@@ -25,8 +25,19 @@ onMounted(async () => {
           token: token,
         },
       })
+      if (data.value?.success && data.value.cart) {
+        const rawCart = data.value.cart
+        const parsedCart = Object.entries(rawCart).map(([_, item]) => {
+          return {
+            id: String(item.productId),
+            vector: item.variant,
+            count: item.count,
+          }
+        })
+        orderStore.setCartItems(parsedCart)
+      }
     } catch (error) {
-      console.log(error)
+      console.error("Ошибка при получении корзины:", error)
     }
   }
   await getCart()

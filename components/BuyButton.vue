@@ -10,6 +10,8 @@ const props = defineProps<{
 const isLoading = ref(false)
 const showSuccess = ref(false)
 const isInCart = ref(false)
+const errorMessage = ref("")
+const showError = ref(false)
 const userStore = useUserStore()
 
 const styleBase =
@@ -67,7 +69,7 @@ const handleClick = async () => {
     return
   }
   if (!props.isParametersSelected) {
-    alert("Пожалуйста, выберите все параметры")
+    errorMessage.value = "Выберите все параметры"
     return
   }
   if (isInCart.value) {
@@ -76,10 +78,9 @@ const handleClick = async () => {
   }
   if (!isLoading.value && !showSuccess.value) {
     isLoading.value = true
-
     try {
       const token = await userStore.loadToken()
-      await $fetch("https://swimwear.kyokata.wtf/api/addToCart", {
+      const response = await $fetch("https://swimwear.kyokata.wtf/api/addToCart", {
         method: "POST",
         body: {
           id: props.id,
@@ -88,30 +89,40 @@ const handleClick = async () => {
           token: token,
         },
       })
-
-      isInCart.value = true
-      showSuccess.value = true
+      if (response.success) {
+        showSuccess.value = true
+        setTimeout(() => {
+          showSuccess.value = false
+          isInCart.value = true
+        }, 1500)
+      } else {
+        errorMessage.value = response.error
+        showError.value = true
+      }
     } catch (err) {
-      console.error("Ошибка добавления в корзину:", err)
-      alert("Не удалось добавить товар в корзину")
+      errorMessage.value = err.message ?? "Ошибка"
+      showError.value = true
     } finally {
       isLoading.value = false
-      setTimeout(() => {
-        showSuccess.value = false
-      }, 1500)
     }
   }
 }
 </script>
 
 <template>
-  <button
-    :class="currentState.style"
-    :disabled="currentState.disabled"
-    @click="handleClick"
+  <AppTooltip
+    :text="errorMessage"
+    :show="showError"
+    type="error"
   >
-    {{ currentState.content }}
-  </button>
+    <button
+      :class="currentState.style"
+      :disabled="currentState.disabled"
+      @click="handleClick"
+    >
+      {{ currentState.content }}
+    </button>
+  </AppTooltip>
 </template>
 
 <style scoped></style>

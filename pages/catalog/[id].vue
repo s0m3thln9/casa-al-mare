@@ -236,7 +236,7 @@ onMounted(() => {
           <span class="font-light text-xs">На модели размер: S</span>
           <span class="text-[11px] text-[#363636]">Параметры модели: 175 80/60/89</span>
         </div>
-        <div class="flex flex-col justify-center items-center gap-4 mt-6">
+        <div class="flex flex-col justify-center items-stretch gap-4 mt-6">
           <BuyButton
             :id="item!.id"
             :vector="`${currentColorCode}_${currentSize}`"
