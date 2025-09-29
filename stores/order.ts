@@ -40,11 +40,6 @@ export const useOrderStore = defineStore("order", () => {
   const pointsError = ref("")
   const pointsToUse = ref(0)
 
-  const availableCertificates = ref<{ code: string; sum: number }[]>([
-    { code: "CERT1000", sum: 1000 },
-    { code: "CERT2000", sum: 2000 },
-    { code: "CERT6000", sum: 6000 },
-  ])
   const certificateError = ref("")
   const isExpandedCert = ref(false)
   const newCertificateCode = ref("")
@@ -94,7 +89,7 @@ export const useOrderStore = defineStore("order", () => {
     if (selectedCertificates.value.length > 0) {
       const certSum = selectedCertificates.value.reduce((sum, code) => {
         const cert = userStore.user?.certificates.find((c) => c.code === code)
-        return cert ? sum + cert.sum : sum
+        return cert ? sum + cert.value_now : sum
       }, 0)
       price -= certSum
     }
@@ -288,7 +283,6 @@ export const useOrderStore = defineStore("order", () => {
     pointsError,
     pointsToUse,
 
-    availableCertificates,
     certificateError,
     isExpandedCert,
     newCertificateCode,

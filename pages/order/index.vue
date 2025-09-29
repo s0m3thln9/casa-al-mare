@@ -563,7 +563,7 @@ function handleSave() {
                     <AppCheckbox
                       v-model="orderStore.selectedCertificates"
                       size="S"
-                      :label="`Сертификат ${cert.code} на сумму ${cert.sum} рублей`"
+                      :label="`Сертификат ${cert.code} на сумму ${cert.value_now} рублей`"
                       :value="cert.code"
                     />
                   </template>
