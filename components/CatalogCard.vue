@@ -26,14 +26,35 @@ const {
 } = useCatalogCard(props.variant, props.id, props.link)
 
 const isStarPressed = ref(false)
+const isFavoriteLocal = ref(favoritesStore.isFavorite(props.id))
 
-const handleStarClick = () => {
+const handleStarClick = async () => {
   isStarPressed.value = true
-  favoritesStore.toggleFavorite(props.id)
+
+  // Немедленно меняем локальное состояние
+  isFavoriteLocal.value = !isFavoriteLocal.value
+
+  try {
+    await favoritesStore.toggleFavorite(props.id)
+  } catch (error) {
+    // Если произошла ошибка, возвращаем предыдущее состояние
+    isFavoriteLocal.value = !isFavoriteLocal.value
+    // Можно добавить уведомление пользователю об ошибке
+    console.error("Не удалось обновить избранное:", error)
+  }
+
   setTimeout(() => {
     isStarPressed.value = false
   }, 200)
 }
+
+// Синхронизируем локальное состояние с глобальным при изменении
+watch(
+  () => favoritesStore.isFavorite(props.id),
+  (newValue) => {
+    isFavoriteLocal.value = newValue
+  },
+)
 </script>
 
 <template>
@@ -106,8 +127,8 @@ const handleStarClick = () => {
       />
     </div>
     <NuxtImg
-      v-if="!isWideScreen || (!popup && isHovered) || favoritesStore.isFavorite(id)"
-      :src="favoritesStore.isFavorite(id) ? '/star-filled.svg' : '/star.svg'"
+      v-if="!isWideScreen || (!popup && isHovered) || isFavoriteLocal"
+      :src="isFavoriteLocal ? '/star-filled.svg' : '/star.svg'"
       alt="star"
       :class="[
         'star-button absolute z-10 cursor-pointer transition-all duration-200 ease-out',
@@ -197,8 +218,8 @@ const handleStarClick = () => {
       </template>
     </NuxtImg>
     <NuxtImg
-      v-if="!isWideScreen || (!popup && isHovered) || favoritesStore.isFavorite(id)"
-      :src="favoritesStore.isFavorite(id) ? '/star-filled.svg' : '/star.svg'"
+      v-if="!isWideScreen || (!popup && isHovered) || isFavoriteLocal"
+      :src="isFavoriteLocal ? '/star-filled.svg' : '/star.svg'"
       alt="star"
       :class="[
         'star-button absolute z-10 cursor-pointer transition-all duration-200 ease-out',
