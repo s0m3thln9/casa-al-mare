@@ -1,3 +1,49 @@
+import type { Ref } from "vue"
+
+interface Certificate {
+  id: number
+  code: string
+  value: number
+  value_now: number
+}
+
+interface UserExtended {
+  addresses: string[]
+}
+
+interface User {
+  points: number
+  certificates: Certificate[]
+  extended?: UserExtended
+}
+
+interface UserStore {
+  user: Ref<User | null>
+  loadToken: () => Promise<string | null>
+}
+
+interface ApiResponse<T = unknown> {
+  success: boolean
+  data?: T
+  error?: string
+}
+
+interface PointsResponse {
+  success: boolean
+  points: number
+}
+
+interface PromoCode {
+  code: string
+  value: number
+  percent: boolean
+}
+
+interface PromoResponse {
+  success: boolean
+  promo: PromoCode
+}
+
 export type CartItem = {
   id: string
   vector: string
@@ -6,11 +52,12 @@ export type CartItem = {
 
 export const useOrderStore = defineStore("order", () => {
   const catalogStore = useCatalogStore()
-  const userStore = useUserStore()
+  const userStore = useUserStore() as UserStore
+  const authStore = useAuthStore()
 
   const cartItems = ref<CartItem[]>([])
 
-  const addresses = ref<string[]>(["Ул. Заречная, дом 19, кв. 5", "Ул. Октябрьская, дом 32, к. 4, офис 219"])
+  const addresses = ref<string[]>([])
   const city = ref<string | null>(null)
   const commentForCourier = ref("")
   const currentAddress = ref<string | null>(null)
@@ -22,85 +69,98 @@ export const useOrderStore = defineStore("order", () => {
   const isPaymentSuccessful = ref<boolean | null>(null)
   const paymentMethod = ref<string | null>(null)
   const showErrorPaymentMethod = ref<boolean>(false)
+  const isLoadingPayment = ref<boolean>(false)
 
-  const addPromoCodeError = ref("")
-  const availablePromoCodes = ref<{ code: string; discount: number }[] | null>([
-    { code: "12345678", discount: 10 },
-    { code: "87654321", discount: 20 },
-  ])
-  const currentPromoCodes = ref<{ code: string; discount: number }[]>([])
-  const isExpandedPromoCode = ref(false)
+  const addPromoCodeError = ref<string>("")
+  const currentPromoCodes = ref<PromoCode[]>([])
+  const isExpandedPromoCode = ref<boolean>(false)
   const pendingPromoCode = ref<string | null>(null)
-  const promoCode = ref("")
+  const promoCode = ref<string>("")
   const selectedPromoCode = ref<string | null>(null)
-  const usePromoCodeError = ref("")
+  const isLoadingPromo = ref<boolean>(false)
 
-  const isExpandedPoints = ref(false)
-  const pendingPoints = ref("")
-  const pointsError = ref("")
-  const pointsToUse = ref(0)
+  const isExpandedPoints = ref<boolean>(false)
+  const pendingPoints = ref<string>("")
+  const pointsError = ref<string>("")
+  const pointsToUse = ref<number>(0)
+  const usedPointsBackup = ref<number>(0)
+  const isLoadingPoints = ref<boolean>(false)
 
-  const certificateError = ref("")
-  const isExpandedCert = ref(false)
-  const newCertificateCode = ref("")
+  const certificateError = ref<string>("")
+  const isExpandedCert = ref<boolean>(false)
+  const newCertificateCode = ref<string>("")
   const selectedCertificates = ref<string[]>([])
+  const isLoadingCert = ref<boolean>(false)
 
-  const email = ref("")
-  const name = ref("")
-  const phone = ref<{ code: string | null; phone: string; country: string | null } | null>(null)
-  const surname = ref("")
+  const email = ref<string>("")
+  const name = ref<string>("")
+  const phone = ref<{
+    code: string
+    phone: string
+    country: string
+  } | null>(null)
+  const surname = ref<string>("")
+
+  async function loadUserData() {
+    const token = await userStore.loadToken()
+    if (!token) return
+
+    try {
+      const { data: pointsData, error } = await useFetch<PointsResponse>("https://swimwear.kyokata.wtf/api/getPoints", {
+        method: "POST",
+        body: { token },
+      })
+
+      if (error.value) {
+        console.error("Network error loading points:", error.value)
+        return
+      }
+
+      if (pointsData.value?.success && pointsData.value.points !== undefined) {
+        if (userStore.user) {
+          userStore.user.points = pointsData.value.points
+        }
+      }
+
+      if (userStore.user?.extended?.addresses) {
+        addresses.value = userStore.user.extended.addresses
+      } else {
+        addresses.value = []
+      }
+    } catch (error) {
+      console.error("Ошибка загрузки user data:", error)
+    }
+  }
 
   const cartDetailed = computed(() => {
     return cartItems.value.map((cartItem) => {
       const product = catalogStore.items.find((p) => p.id === cartItem.id)
-      const vectorData = product?.vector?.[cartItem.vector]
+      const vectorData = product?.vector?.[cartItem.vector] ?? {
+        price: 0,
+        oldPrice: 0,
+      }
       const [colorKey, size] = cartItem.vector.split("_")
-      const colorData = product?.colors?.[colorKey]
+      const colorData = product?.colors?.[colorKey] ?? { name: "", images: [] }
 
       return {
         id: cartItem.id,
         vector: cartItem.vector,
         count: cartItem.count,
-        name: product?.name || "",
-        color: colorData?.name || "",
-        images: colorData?.images?.map((id) => product?.images?.[id]) || [],
+        name: product?.name ?? "",
+        color: colorData.name,
+        images: (colorData.images ?? []).map((id) => product?.images?.[id] ?? "") ?? [],
         size,
-        price: vectorData?.price ?? 0,
-        oldPrice: vectorData?.oldPrice ?? 0,
+        price: vectorData.price,
+        oldPrice: vectorData.oldPrice,
       }
     })
-  })
-
-  const finalPrice = computed(() => {
-    let price = totalSum.value
-    if (selectedPromoCode.value) {
-      const promo = availablePromoCodes.value?.find((p) => p.code === selectedPromoCode.value)
-      if (promo) {
-        const sumWithoutDiscount = cartDetailed.value.reduce((sum, item) => {
-          const isNonDiscounted = item.oldPrice === 0 || item.oldPrice === item.price
-          return isNonDiscounted ? sum + item.price * item.count : sum
-        }, 0)
-        price -= sumWithoutDiscount * (promo.discount / 100)
-      }
-    }
-    if (pointsToUse.value > 0) {
-      price -= Math.min(pointsToUse.value, price)
-    }
-    if (selectedCertificates.value.length > 0) {
-      const certSum = selectedCertificates.value.reduce((sum, code) => {
-        const cert = userStore.user?.certificates.find((c) => c.code === code)
-        return cert ? sum + cert.value_now : sum
-      }, 0)
-      price -= certSum
-    }
-    return Math.max(price, 0.01)
   })
 
   const totalOldSum = computed(() => {
     return cartItems.value.reduce((sum, cartItem) => {
       const product = catalogStore.items.find((p) => p.id === cartItem.id)
       if (!product) return sum
-      const vectorData = product.vector[cartItem.vector]
+      const vectorData = product.vector?.[cartItem.vector]
       if (!vectorData) return sum
       return sum + (vectorData.oldPrice > 0 ? vectorData.oldPrice : vectorData.price) * cartItem.count
     }, 0)
@@ -110,16 +170,71 @@ export const useOrderStore = defineStore("order", () => {
     return cartItems.value.reduce((sum, cartItem) => {
       const product = catalogStore.items.find((p) => p.id === cartItem.id)
       if (!product) return sum
-      const vectorData = product.vector[cartItem.vector]
+      const vectorData = product.vector?.[cartItem.vector]
       if (!vectorData) return sum
       return sum + vectorData.price * cartItem.count
     }, 0)
   })
 
+  const finalPrice = computed(() => {
+    let price = totalSum.value
+
+    // Apply promo code
+    if (selectedPromoCode.value) {
+      const promo = currentPromoCodes.value.find((p) => p.code === selectedPromoCode.value)
+      if (promo) {
+        const sumWithoutDiscount = cartDetailed.value.reduce((sum, item) => {
+          const isNonDiscounted = item.oldPrice === 0 || item.oldPrice === item.price
+          return isNonDiscounted ? sum + item.price * item.count : sum
+        }, 0)
+
+        if (promo.percent) {
+          price -= sumWithoutDiscount * promo.value
+        } else {
+          price -= Math.min(promo.value, sumWithoutDiscount)
+        }
+      }
+    }
+
+    // Apply points
+    if (pointsToUse.value > 0 && userStore.user) {
+      price -= Math.min(pointsToUse.value, price)
+    }
+
+    // Apply certificates
+    if (selectedCertificates.value.length > 0 && userStore.user) {
+      const certSum = selectedCertificates.value.reduce((sum, code) => {
+        const cert = userStore.user!.certificates.find((c) => c.code === code)
+        return cert ? sum + cert.value_now : sum
+      }, 0)
+      price -= Math.min(certSum, price)
+    }
+
+    return Math.max(price, 0.01)
+  })
+
+  async function syncCartToBackend() {
+    const token = await userStore.loadToken()
+    if (!token) return
+
+    try {
+      await useFetch("https://swimwear.kyokata.wtf/api/updateCart", {
+        method: "POST",
+        body: {
+          token,
+          cart: cartItems.value,
+        },
+      })
+    } catch (error) {
+      console.error("Ошибка синхронизации корзины:", error)
+    }
+  }
+
   function decrementQuantity(id: string, vector: string) {
     const item = cartItems.value.find((i) => i.id === id && i.vector === vector)
     if (item && item.count > 1) {
       item.count--
+      syncCartToBackend()
     }
   }
 
@@ -127,135 +242,363 @@ export const useOrderStore = defineStore("order", () => {
     const item = cartItems.value.find((i) => i.id === id && i.vector === vector)
     if (item) {
       item.count++
+      syncCartToBackend()
     }
   }
 
   function removeItemFromCart(id: string, vector: string) {
     cartItems.value = cartItems.value.filter((item) => !(item.id === id && item.vector === vector))
+    syncCartToBackend()
   }
 
   function setCartItems(items: CartItem[] | null | undefined) {
     cartItems.value = Array.isArray(items) ? items : []
   }
 
-  function saveNewAddress() {
-    let newAddress = `${newAddressFirstLine.value}, ${newAddressSecondLine.value}`.trim()
-    if (newAddressSecondLine.value.trim() === "") {
-      newAddress = newAddressFirstLine.value.trim()
-    }
-    if (newAddress) {
-      addresses.value.push(newAddress)
-      currentAddress.value = newAddress
-      newAddressFirstLine.value = ""
-      newAddressSecondLine.value = ""
+  async function saveNewAddress() {
+    const token = await userStore.loadToken()
+    if (!token) return
+
+    const firstLine = newAddressFirstLine.value.trim()
+    const secondLine = newAddressSecondLine.value.trim()
+
+    if (!firstLine) return
+
+    const newAddress = secondLine ? `${firstLine}, ${secondLine}` : firstLine
+
+    try {
+      const { data, error } = await useFetch<ApiResponse>("https://swimwear.kyokata.wtf/api/saveAddress", {
+        method: "POST",
+        body: { token, address: newAddress },
+      })
+
+      if (error.value) {
+        console.error("Network error saving address:", error.value)
+        return
+      }
+
+      if (data.value?.success) {
+        addresses.value.push(newAddress)
+        currentAddress.value = newAddress
+        newAddressFirstLine.value = ""
+        newAddressSecondLine.value = ""
+
+        if (userStore.user) {
+          if (!userStore.user.extended) {
+            userStore.user.extended = { addresses: [] }
+          }
+          userStore.user.extended.addresses.push(newAddress)
+        }
+      } else {
+        console.error("Ошибка сохранения адреса:", data.value?.error)
+      }
+    } catch (error) {
+      console.error("Ошибка API saveAddress:", error)
     }
   }
 
-  function attemptPayment() {
-    isPaymentSuccessful.value = Math.random() >= 0.5
-  }
+  async function attemptPayment() {
+    if (isLoadingPayment.value) return
 
-  function addPromoCode() {
-    const promo = availablePromoCodes.value?.find((p) => p.code === promoCode.value)
-    if (!promo) {
-      addPromoCodeError.value = "Данного промокода не существует"
+    if (cartItems.value.length === 0) {
       return
     }
-    const alreadyAdded = currentPromoCodes.value.some((p) => p.code === promo.code)
-    if (!alreadyAdded) {
-      currentPromoCodes.value.push(promo)
-      promoCode.value = ""
+
+    isLoadingPayment.value = true
+    const token = await userStore.loadToken()
+
+    if (!token) {
+      isLoadingPayment.value = false
+      return
     }
+
+    usedPointsBackup.value = pointsToUse.value
+
+    try {
+      const orderData = {
+        token,
+        cartItems: cartItems.value,
+        deliveryMethod: deliveryMethod.value,
+        city: city.value,
+        currentAddress: currentAddress.value,
+        commentForCourier: commentForCourier.value,
+        paymentMethod: paymentMethod.value,
+        promoCode: selectedPromoCode.value,
+        points: pointsToUse.value,
+        certificates: selectedCertificates.value,
+        userInfo: authStore.isAuth
+          ? null
+          : {
+              name: name.value,
+              surname: surname.value,
+              phone: phone.value,
+              email: email.value,
+            },
+      }
+
+      const { data, error } = await useFetch<ApiResponse>("https://swimwear.kyokata.wtf/api/createOrder", {
+        method: "POST",
+        body: orderData,
+      })
+
+      if (error.value) {
+        console.error("Network error during payment:", error.value)
+        isPaymentSuccessful.value = false
+        if (userStore.user) {
+          userStore.user.points += usedPointsBackup.value
+        }
+        return
+      }
+
+      if (data.value?.success) {
+        isPaymentSuccessful.value = true
+        cartItems.value = []
+        selectedPromoCode.value = null
+        pointsToUse.value = 0
+        usedPointsBackup.value = 0
+        selectedCertificates.value = []
+      } else {
+        isPaymentSuccessful.value = false
+        if (userStore.user) {
+          userStore.user.points += usedPointsBackup.value
+          pointsToUse.value = 0
+        }
+      }
+    } catch (error) {
+      console.error("Ошибка оплаты:", error)
+      isPaymentSuccessful.value = false
+      if (userStore.user) {
+        userStore.user.points += usedPointsBackup.value
+        pointsToUse.value = 0
+      }
+    } finally {
+      isLoadingPayment.value = false
+    }
+  }
+
+  async function addPromoCode() {
+    if (isLoadingPromo.value) return
+
+    isLoadingPromo.value = true
     addPromoCodeError.value = ""
+
+    const code = promoCode.value.trim()
+
+    if (!code) {
+      addPromoCodeError.value = "Введите промокод"
+      isLoadingPromo.value = false
+      return
+    }
+
+    const token = await userStore.loadToken()
+
+    try {
+      const { data, error } = await useFetch<PromoResponse>("https://swimwear.kyokata.wtf/api/checkPromoCode", {
+        method: "POST",
+        body: { token, code },
+      })
+
+      if (error.value) {
+        addPromoCodeError.value = "Ошибка сети"
+        isLoadingPromo.value = false
+        return
+      }
+
+      if (data.value?.success && data.value.promo) {
+        const alreadyAdded = currentPromoCodes.value.some((p) => p.code === data.value!.promo.code)
+
+        if (!alreadyAdded) {
+          currentPromoCodes.value.push(data.value.promo)
+          promoCode.value = ""
+          addPromoCodeError.value = ""
+        } else {
+          addPromoCodeError.value = "Промокод уже добавлен"
+        }
+      } else {
+        addPromoCodeError.value = "Промокод не найден"
+      }
+    } catch (error) {
+      addPromoCodeError.value = "Ошибка проверки промокода"
+      console.error(error)
+    } finally {
+      isLoadingPromo.value = false
+    }
   }
 
   function applyPromoCode() {
+    if (!pendingPromoCode.value) {
+      return
+    }
+
+    // Применяем промокод только на фронте
+    selectedPromoCode.value = pendingPromoCode.value
+    // Очищаем баллы при применении промокода
     pendingPoints.value = ""
     pointsToUse.value = 0
-    if (!pendingPromoCode.value) {
-      usePromoCodeError.value = "Выберите промокод"
-      return
-    }
-    const hasNonDiscountedItems = cartDetailed.value.some((item) => item.oldPrice === 0 || item.oldPrice === item.price)
-    if (!hasNonDiscountedItems) {
-      usePromoCodeError.value = "Промокод не применяется к товарам со скидкой"
-      return
-    }
-    selectedPromoCode.value = pendingPromoCode.value
-    usePromoCodeError.value = ""
   }
 
-  function savedMoney(discount: number) {
+  function savedMoney(promoValue: number): number {
+    const promo = currentPromoCodes.value.find((p) => p.value === promoValue)
+    if (!promo) return 0
+
     const sumWithoutDiscount = cartDetailed.value.reduce((sum, item) => {
-      const isNonDiscounted = item.oldPrice === 0
+      const isNonDiscounted = item.oldPrice === 0 || item.oldPrice === item.price
       return isNonDiscounted ? sum + item.price * item.count : sum
     }, 0)
-    return sumWithoutDiscount * (discount / 100)
+
+    if (promo.percent) {
+      return Math.round(sumWithoutDiscount * promo.value)
+    } else {
+      return Math.min(promo.value, sumWithoutDiscount)
+    }
   }
 
   function togglePromoCode() {
     isExpandedPromoCode.value = !isExpandedPromoCode.value
   }
 
-  function applyPoints() {
+  async function applyPoints() {
+    if (isLoadingPoints.value) return
+
+    isLoadingPoints.value = true
+    pointsError.value = ""
+
+    // Очищаем промокод при применении баллов
     selectedPromoCode.value = null
     pendingPromoCode.value = null
-    const maxPoints = totalSum.value * 0.2
-    const points = +pendingPoints.value
-    if (points > (userStore.user?.points || 99999999)) {
-      pointsError.value = "Недостаточно баллов"
+
+    const points = Number(pendingPoints.value)
+
+    if (isNaN(points) || points <= 0) {
+      pointsError.value = "Введите корректное количество баллов"
+      isLoadingPoints.value = false
       return
     }
+
+    const maxPoints = Math.floor(totalSum.value * 0.2)
+
+    if (points > (userStore.user?.points || 0)) {
+      pointsError.value = "Недостаточно баллов"
+      isLoadingPoints.value = false
+      return
+    }
+
     if (points > maxPoints) {
       pointsError.value = `Нельзя списать больше ${maxPoints} баллов (20% от суммы заказа)`
+      isLoadingPoints.value = false
       return
     }
-    pointsError.value = ""
-    pointsToUse.value = points
+
+    const token = await userStore.loadToken()
+
+    try {
+      const { data, error } = await useFetch<ApiResponse>("https://swimwear.kyokata.wtf/api/usePoints", {
+        method: "POST",
+        body: { token, points },
+      })
+
+      if (error.value) {
+        pointsError.value = "Ошибка сети"
+        isLoadingPoints.value = false
+        return
+      }
+
+      if (data.value?.success) {
+        pointsError.value = ""
+        pointsToUse.value = points
+        if (userStore.user) {
+          userStore.user.points -= points
+        }
+      } else {
+        pointsError.value = data.value?.error || "Ошибка списания баллов"
+      }
+    } catch (error) {
+      pointsError.value = "Ошибка API"
+      console.error(error)
+    } finally {
+      isLoadingPoints.value = false
+    }
   }
 
   function togglePoints() {
     isExpandedPoints.value = !isExpandedPoints.value
   }
 
-  function addCertificate() {
+  async function addCertificate() {
+    if (isLoadingCert.value) return
+
+    isLoadingCert.value = true
+    certificateError.value = ""
+
     const code = newCertificateCode.value.trim()
+
     if (!code) {
       certificateError.value = "Введите код сертификата"
+      isLoadingCert.value = false
       return
     }
-    const certFromServer = availableCertificates.value.find((c) => c.code === code)
-    if (!certFromServer) {
-      certificateError.value = "Сертификат не найден"
+
+    if (userStore.user?.certificates.some((c: Certificate) => c.code === code)) {
+      certificateError.value = "Сертификат уже добавлен"
+      isLoadingCert.value = false
       return
     }
-    if (userStore.user?.certificates.some((c) => c.code === code)) {
-      return
+
+    const token = await userStore.loadToken()
+
+    try {
+      const { data, error } = await useFetch<ApiResponse<{ certificate: Certificate }>>(
+        "https://swimwear.kyokata.wtf/api/addCertificate",
+        {
+          method: "POST",
+          body: { token, code },
+        },
+      )
+
+      if (error.value) {
+        certificateError.value = "Ошибка сети"
+        isLoadingCert.value = false
+        return
+      }
+
+      if (data.value?.success && data.value.data?.certificate) {
+        if (userStore.user) {
+          if (!userStore.user.certificates) {
+            userStore.user.certificates = []
+          }
+          userStore.user.certificates.push(data.value.data.certificate)
+        }
+        newCertificateCode.value = ""
+        certificateError.value = ""
+      } else {
+        certificateError.value = data.value?.error || "Сертификат не найден"
+      }
+    } catch (error) {
+      certificateError.value = "Ошибка API"
+      console.error(error)
+    } finally {
+      isLoadingCert.value = false
     }
-    userStore.user?.certificates.push({ ...certFromServer })
-    newCertificateCode.value = ""
-    certificateError.value = ""
   }
 
   function toggleCert() {
     isExpandedCert.value = !isExpandedCert.value
   }
 
-  function priceFormatter(value: number) {
-    const formattedValue = new Intl.NumberFormat("ru-RU").format(value)
+  function priceFormatter(value: number): string {
+    const formattedValue = new Intl.NumberFormat("ru-RU").format(Math.round(value))
     return `${formattedValue} ₽`
   }
 
-  watch(pendingPromoCode, (newVal) => {
-    if (newVal === null && selectedPromoCode.value) {
-      selectedPromoCode.value = null
+  watchEffect(() => {
+    const newAddresses = userStore?.user?.extended?.addresses
+    if (newAddresses && Array.isArray(newAddresses)) {
+      addresses.value = newAddresses
     }
   })
 
   return {
     cartItems,
-    cartDetailed,
-
     addresses,
     city,
     commentForCourier,
@@ -264,53 +607,50 @@ export const useOrderStore = defineStore("order", () => {
     newAddressFirstLine,
     newAddressSecondLine,
     showErrorDeliveryMethod,
-
     isPaymentSuccessful,
     paymentMethod,
     showErrorPaymentMethod,
-
+    isLoadingPayment,
     addPromoCodeError,
-    availablePromoCodes,
     currentPromoCodes,
     isExpandedPromoCode,
     pendingPromoCode,
     promoCode,
     selectedPromoCode,
-    usePromoCodeError,
-
+    isLoadingPromo,
     isExpandedPoints,
     pendingPoints,
     pointsError,
     pointsToUse,
-
+    isLoadingPoints,
     certificateError,
     isExpandedCert,
     newCertificateCode,
     selectedCertificates,
-
+    isLoadingCert,
     email,
     name,
     phone,
     surname,
-
-    finalPrice,
-    savedMoney,
+    cartDetailed,
     totalOldSum,
     totalSum,
-
-    addCertificate,
-    addPromoCode,
-    applyPoints,
-    applyPromoCode,
-    attemptPayment,
+    finalPrice,
+    loadUserData,
     decrementQuantity,
     incrementQuantity,
-    priceFormatter,
     removeItemFromCart,
-    saveNewAddress,
     setCartItems,
-    toggleCert,
-    togglePoints,
+    saveNewAddress,
+    attemptPayment,
+    addPromoCode,
+    applyPromoCode,
+    savedMoney,
     togglePromoCode,
+    applyPoints,
+    togglePoints,
+    addCertificate,
+    toggleCert,
+    priceFormatter,
   }
 })

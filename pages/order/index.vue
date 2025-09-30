@@ -4,6 +4,12 @@ interface AppComponentExposed {
   showError: boolean
 }
 
+interface ApiResponse<T = unknown> {
+  success: boolean
+  data?: T
+  error?: string
+}
+
 const cityRef = ref<ComponentPublicInstance<object, AppComponentExposed> | null>(null)
 const emailRef = ref<ComponentPublicInstance<object, AppComponentExposed> | null>(null)
 const nameRef = ref<ComponentPublicInstance<object, AppComponentExposed> | null>(null)
@@ -18,13 +24,33 @@ const userStore = useUserStore()
 onMounted(async () => {
   const getCart = async (): Promise<void> => {
     const token = await userStore.loadToken()
+    if (!token) return
+
     try {
-      const { data } = await useFetch("https://swimwear.kyokata.wtf/api/getCart", {
+      const { data, error } = await useFetch<
+        ApiResponse<{
+          success: boolean
+          cart: Record<
+            string,
+            {
+              productId: number
+              variant: string
+              count: number
+            }
+          >
+        }>
+      >("https://swimwear.kyokata.wtf/api/getCart", {
         method: "POST",
         body: {
           token: token,
         },
       })
+
+      if (error.value) {
+        console.error("Network error fetching cart:", error.value)
+        return
+      }
+
       if (data.value?.success && data.value.cart) {
         const rawCart = data.value.cart
         const parsedCart = Object.entries(rawCart).map(([_, item]) => {
@@ -40,36 +66,68 @@ onMounted(async () => {
       console.error("Ошибка при получении корзины:", error)
     }
   }
+
   await getCart()
+  await orderStore.loadUserData()
 })
 
 function handlePay() {
+  // Check if payment is already in progress or completed
+  if (orderStore.isLoadingPayment) return
+
+  // Validate cart is not empty
+  if (orderStore.cartItems.length === 0) {
+    return
+  }
+
+  // If not in post-payment state, validate inputs
   if (orderStore.isPaymentSuccessful === null) {
+    // Validate guest user info
     if (!authStore.isAuth) {
       const inputs = [nameRef.value, surnameRef.value, phoneRef.value, emailRef.value]
       const isValid = inputs.every((input) => input?.validate?.())
       if (!isValid) return
     }
+
+    // Validate city
     if (!cityRef.value?.validate()) return
-    if (
-      orderStore.deliveryMethod === null ||
-      (orderStore.deliveryMethod === "Курьер" && !orderStore.currentAddress) ||
-      (orderStore.deliveryMethod === "Курьер" && orderStore.currentAddress === "Новый адрес")
-    ) {
+
+    // Validate delivery method and address
+    if (!orderStore.deliveryMethod) {
       orderStore.showErrorDeliveryMethod = true
       return
     }
+
+    if (orderStore.deliveryMethod === "Курьер") {
+      if (!orderStore.currentAddress) {
+        orderStore.showErrorDeliveryMethod = true
+        return
+      }
+
+      // If new address is selected, validate it
+      if (orderStore.currentAddress === "Новый адрес") {
+        if (!newAddressRef.value?.validate()) {
+          return
+        }
+        // Address must be saved before payment
+        orderStore.showErrorDeliveryMethod = true
+        return
+      }
+    }
   }
+
+  // Validate payment method
   if (orderStore.paymentMethod === null) {
     orderStore.showErrorPaymentMethod = true
     return
   }
+
   orderStore.attemptPayment()
 }
 
-function handleSave() {
+async function handleSave() {
   if (!newAddressRef.value?.validate()) return
-  orderStore.saveNewAddress()
+  await orderStore.saveNewAddress()
 }
 </script>
 
@@ -89,8 +147,8 @@ function handleSave() {
             <span class="text-xs"
               >Есть аккаунт?
               <span
-                class="cursor-pointer"
-                @click="authStore.login"
+                class="cursor-pointer underline"
+                @click="navigateTo('/login')"
                 >Войти</span
               ></span
             >
@@ -251,6 +309,7 @@ function handleSave() {
                     custom-class="w-full"
                     content="Сохранить"
                     variant="primary"
+                    :disabled="orderStore.isLoadingPayment"
                     @click="handleSave"
                   />
                 </div>
@@ -324,7 +383,10 @@ function handleSave() {
       </div>
       <div class="p-8 w-full max-w-[564px] h-fit rounded-lg border-[0.7px] border-[#BBB8B6]">
         <template v-if="orderStore.isPaymentSuccessful === null">
-          <div class="flex flex-col gap-8">
+          <div
+            class="flex flex-col gap-8"
+            :class="{ 'opacity-50': orderStore.isLoadingPayment }"
+          >
             <div class="flex flex-col gap-6">
               <div
                 v-for="(item, index) in orderStore.cartDetailed"
@@ -360,6 +422,7 @@ function handleSave() {
                     <div class="py-1 px-2 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light">
                       <button
                         class="w-4 h-4 flex items-center justify-center cursor-pointer"
+                        :disabled="orderStore.isLoadingPayment"
                         @click="orderStore.decrementQuantity(item!.id, item!.vector)"
                       >
                         <NuxtImg
@@ -371,6 +434,7 @@ function handleSave() {
                       {{ item!.count }}
                       <button
                         class="w-4 h-4 flex items-center justify-center cursor-pointer"
+                        :disabled="orderStore.isLoadingPayment"
                         @click="orderStore.incrementQuantity(item!.id, item!.vector)"
                       >
                         <NuxtImg
@@ -382,6 +446,7 @@ function handleSave() {
                     </div>
                     <button
                       class="w-6 h-6 flex items-center justify-center cursor-pointer"
+                      :disabled="orderStore.isLoadingPayment"
                       @click="orderStore.removeItemFromCart(item!.id, item!.vector)"
                     >
                       <NuxtImg
@@ -408,7 +473,7 @@ function handleSave() {
                 >
                   <span class="font-light text-sm">Промокод</span>
                   <button
-                    class="w-4 h-4 flex items-center justify-center cursor-pointer"
+                    class="w-4 h-4 flex items-center justify-center cursor-pointer transition-transform duration-300"
                     :class="orderStore.isExpandedPromoCode ? 'rotate-0' : 'rotate-180'"
                   >
                     <NuxtImg
@@ -429,12 +494,14 @@ function handleSave() {
                     v-model="orderStore.promoCode"
                     label="Введите код"
                     type="text"
+                    :disabled="orderStore.isLoadingPromo"
                   />
                   <AppButton
                     v-if="orderStore.promoCode"
                     variant="primary"
                     custom-class="w-full"
                     content="Использовать"
+                    :disabled="orderStore.isLoadingPromo"
                     @click="orderStore.addPromoCode"
                   />
                   <span
@@ -449,7 +516,7 @@ function handleSave() {
                     <AppCheckbox
                       v-model="orderStore.pendingPromoCode"
                       size="S"
-                      :label="`Промокод “${promoCode.code}” -${promoCode.discount}% Выгода ${orderStore.savedMoney(promoCode.discount)} ₽`"
+                      :label="`Промокод «${promoCode.code}» -${promoCode.percent ? promoCode.value * 100 : promoCode.value}${promoCode.percent ? '%' : ' ₽'} Выгода ${orderStore.savedMoney(promoCode.value)} ₽`"
                       :value="promoCode.code"
                     />
                   </template>
@@ -457,6 +524,7 @@ function handleSave() {
                     variant="primary"
                     custom-class="w-full"
                     content="Применить промокод"
+                    :disabled="!orderStore.pendingPromoCode || orderStore.isLoadingPromo"
                     @click="orderStore.applyPromoCode"
                   />
                   <span
@@ -476,7 +544,7 @@ function handleSave() {
                 >
                   <span class="font-light text-sm">Баллы</span>
                   <button
-                    class="w-4 h-4 flex items-center justify-center cursor-pointer"
+                    class="w-4 h-4 flex items-center justify-center cursor-pointer transition-transform duration-300"
                     :class="orderStore.isExpandedPoints ? 'rotate-0' : 'rotate-180'"
                   >
                     <NuxtImg
@@ -498,11 +566,13 @@ function handleSave() {
                     v-model="orderStore.pendingPoints"
                     label="Введите сумму баллов для списания"
                     type="text"
+                    :disabled="orderStore.isLoadingPoints"
                   />
                   <AppButton
                     variant="primary"
                     custom-class="w-full"
                     :content="`Списать ${orderStore.pendingPoints || 0} рублей`"
+                    :disabled="orderStore.isLoadingPoints || !orderStore.pendingPoints"
                     @click="orderStore.applyPoints"
                   />
                   <span
@@ -522,7 +592,7 @@ function handleSave() {
                 >
                   <span class="font-light text-sm">Сертификат</span>
                   <button
-                    class="w-4 h-4 flex items-center justify-center cursor-pointer"
+                    class="w-4 h-4 flex items-center justify-center cursor-pointer transition-transform duration-300"
                     :class="orderStore.isExpandedCert ? 'rotate-0' : 'rotate-180'"
                   >
                     <NuxtImg
@@ -543,12 +613,14 @@ function handleSave() {
                     v-model="orderStore.newCertificateCode"
                     label="Введите код"
                     type="text"
+                    :disabled="orderStore.isLoadingCert"
                   />
                   <AppButton
                     v-if="orderStore.newCertificateCode"
                     variant="primary"
                     custom-class="w-full"
                     content="Добавить сертификат"
+                    :disabled="orderStore.isLoadingCert"
                     @click="orderStore.addCertificate"
                   />
                   <span
@@ -601,6 +673,7 @@ function handleSave() {
                 <AppButton
                   class="w-full"
                   content="Оплатить заказ"
+                  :disabled="orderStore.isLoadingPayment || orderStore.cartItems.length === 0"
                   @click="handlePay"
                 />
                 <p class="text-xs text-[#8C8785]">
@@ -673,7 +746,10 @@ function handleSave() {
           </div>
         </div>
         <div v-else>
-          <div class="flex flex-col gap-6">
+          <div
+            class="flex flex-col gap-6"
+            :class="{ 'opacity-50': orderStore.isLoadingPayment }"
+          >
             <div
               v-for="(item, index) in orderStore.cartDetailed"
               :key="index"
@@ -706,6 +782,7 @@ function handleSave() {
                   <div class="py-1 px-2 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light">
                     <button
                       class="w-4 h-4 flex items-center justify-center cursor-pointer"
+                      :disabled="orderStore.isLoadingPayment"
                       @click="orderStore.decrementQuantity(item!.id, item!.vector)"
                     >
                       <NuxtImg
@@ -717,6 +794,7 @@ function handleSave() {
                     {{ item!.count }}
                     <button
                       class="w-4 h-4 flex items-center justify-center cursor-pointer"
+                      :disabled="orderStore.isLoadingPayment"
                       @click="orderStore.incrementQuantity(item!.id, item!.vector)"
                     >
                       <NuxtImg
@@ -728,6 +806,7 @@ function handleSave() {
                   </div>
                   <button
                     class="w-6 h-6 flex items-center justify-center cursor-pointer"
+                    :disabled="orderStore.isLoadingPayment"
                     @click="orderStore.removeItemFromCart(item!.id, item!.vector)"
                   >
                     <NuxtImg
@@ -785,6 +864,7 @@ function handleSave() {
           <AppButton
             class="w-full mt-8"
             content="Оплатить заказ"
+            :disabled="orderStore.isLoadingPayment || orderStore.cartItems.length === 0"
             @click="handlePay"
           />
         </div>
