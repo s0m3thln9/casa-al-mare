@@ -6,6 +6,11 @@ const props = defineProps<{
   variant: "mini" | "large"
   popup?: boolean
   link?: boolean
+  modelValue?: string
+}>()
+
+const emit = defineEmits<{
+  "update:modelValue": [value: string]
 }>()
 
 const {
@@ -24,6 +29,23 @@ const {
   handleTouchEnd,
   handleClick,
 } = useCatalogCard(props.variant, props.id, props.link)
+
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    if (newValue && newValue !== selectedSize.value) {
+      selectedSize.value = newValue
+    }
+  },
+)
+
+watch(selectedSize, (newValue) => {
+  emit("update:modelValue", newValue)
+})
+
+if (props.modelValue) {
+  selectedSize.value = props.modelValue
+}
 
 const isStarPressed = ref(false)
 const isFavoriteLocal = ref(favoritesStore.isFavorite(props.id))
@@ -123,7 +145,7 @@ watch(
       <SingleSelectButton
         v-model="selectedSize"
         :content="item!.sizes"
-        custom-class="text-xs"
+        custom-class="text-xs mt-1"
       />
     </div>
     <NuxtImg

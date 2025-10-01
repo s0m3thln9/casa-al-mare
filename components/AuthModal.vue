@@ -388,7 +388,22 @@ const handleResetPassword = async (): Promise<void> => {
   }
 }
 
+const toggleBodyScroll = (disable: boolean) => {
+  if (import.meta.client) {
+    if (disable) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = ""
+    }
+  }
+}
+
+onMounted(() => {
+  toggleBodyScroll(true)
+})
+
 onUnmounted(() => {
+  toggleBodyScroll(false)
   if (timeoutId.value) clearTimeout(timeoutId.value)
   if (intervalId.value) clearInterval(intervalId.value)
 })

@@ -286,6 +286,7 @@ const load = () => {
             custom-class="w-full py-4 sm:p-4"
             variant="primary"
             content="Показать результаты"
+            extra
             @click="
               () => {
                 catalogStore.applyFilters()

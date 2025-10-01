@@ -15,6 +15,54 @@ const popupStore = usePopupStore()
 const itemStore = useItemStore()
 const setStore = useSetStore()
 
+// Создаем массив предметов для добавления в корзину
+const setItems = computed(() => {
+  const items = []
+
+  // Для верха
+  if (setStore.top) {
+    // setStore.top содержит выбранный размер
+    const topItem = catalogStore.getItemById("1") // ID из CatalogCard
+    if (topItem) {
+      // Берем первый цвет из объекта colors
+      const firstColorCode = Object.keys(topItem.colors)[0]
+
+      items.push({
+        id: topItem.id,
+        vector: `${firstColorCode}_${setStore.top}`, // setStore.top = выбранный размер
+      })
+    }
+  }
+
+  // Для низа
+  if (setStore.bottom) {
+    const bottomItem = catalogStore.getItemById("2")
+    if (bottomItem) {
+      const firstColorCode = Object.keys(bottomItem.colors)[0]
+
+      items.push({
+        id: bottomItem.id,
+        vector: `${firstColorCode}_${setStore.bottom}`,
+      })
+    }
+  }
+
+  // Для аксессуара
+  if (setStore.accessory) {
+    const accessoryItem = catalogStore.getItemById("3")
+    if (accessoryItem) {
+      const firstColorCode = Object.keys(accessoryItem.colors)[0]
+
+      items.push({
+        id: accessoryItem.id,
+        vector: `${firstColorCode}_${setStore.accessory}`,
+      })
+    }
+  }
+
+  return items
+})
+
 const currentColorCode = computed(() => {
   return itemStore.color?.code || (item ? Object.keys(item.colors)[0] : "")
 })
@@ -30,6 +78,7 @@ const currentSize = computed(() => {
 const currentColorImages = computed(() => {
   if (!item || !currentColorCode.value) return []
   const colorData = item.colors[currentColorCode.value]
+  if (!colorData) return []
   return colorData.images.map((id) => item.images[id]) || []
 })
 
@@ -325,30 +374,6 @@ onMounted(() => {
         />
       </div>
     </div>
-    <div
-      class="px-2 flex flex-col justify-center items-start gap-4 mt-18 mb-18 sm:items-center sm:gap-12 sm:mt-12 sm:mb-4"
-    >
-      <h2 class="font-[Manrope] text-[15px] font-light sm:font-[Inter] sm:text-4xl sm:font-normal">
-        Вы недавно смотрели
-      </h2>
-      <div class="w-full grid gap-2 grid-cols-3 sm:gap-4 sm:px-[15%]">
-        <CatalogCard
-          id="1"
-          variant="large"
-          link
-        />
-        <CatalogCard
-          id="1"
-          variant="large"
-          link
-        />
-        <CatalogCard
-          id="1"
-          variant="large"
-          link
-        />
-      </div>
-    </div>
     <AppPopup
       title="Собрать комплект"
       popup-id="set"
@@ -359,6 +384,7 @@ onMounted(() => {
             <span class="font-[Manrope] text-sm">Верх</span>
             <CatalogCard
               id="1"
+              v-model="setStore.top"
               custom-image-class="aspect-[200/300] w-full"
               popup
               variant="mini"
@@ -367,7 +393,8 @@ onMounted(() => {
           <div class="flex flex-col gap-2">
             <span class="font-[Manrope] text-sm">Низ</span>
             <CatalogCard
-              id="1"
+              id="2"
+              v-model="setStore.bottom"
               custom-image-class="aspect-[200/300] w-full"
               popup
               variant="mini"
@@ -376,7 +403,8 @@ onMounted(() => {
           <div class="flex flex-col gap-2">
             <span class="font-[Manrope] text-sm">Аксессуар</span>
             <CatalogCard
-              id="1"
+              id="3"
+              v-model="setStore.accessory"
               custom-image-class="aspect-[200/300] w-full"
               popup
               variant="mini"
@@ -384,8 +412,7 @@ onMounted(() => {
           </div>
         </div>
         <BuyButton
-          :id="item!.id"
-          :vector="`${currentColorCode}_${currentSize}`"
+          :items="setItems"
           available-quantity
           in-stock
           :is-parameters-selected="setStore.canAddToCart"

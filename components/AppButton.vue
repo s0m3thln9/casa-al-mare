@@ -6,6 +6,7 @@ const props = defineProps<{
   disabled?: boolean
   isLoading?: boolean
   showSuccess?: boolean
+  extra?: boolean
 }>()
 
 const styleBase =
@@ -13,8 +14,7 @@ const styleBase =
   (props.customClass ? props.customClass + " " : " ")
 const styleVariants = {
   default: {
-    primary:
-      "bg-[#211D1D] border-[#211D1D] text-[#FFFFFA] cursor-pointer hover:bg-[#FFFFFA] hover:border-[#211D1D] hover:text-[#211D1D]",
+    primary: `bg-[#211D1D] border-[#211D1D] text-[#FFFFFA] cursor-pointer ${props.extra ? "hover:bg-[#F3A454] hover:border-[#F3A454]" : "hover:bg-[#FFFFFA] hover:border-[#211D1D] hover:text-[#211D1D]"}`,
     secondary:
       "bg-[#FFFFFA] border-[#211D1D] text-[#211D1D] cursor-pointer hover:bg-[#211D1D] hover:border-[#211D1D] hover:text-[#FFFFFA]",
   },

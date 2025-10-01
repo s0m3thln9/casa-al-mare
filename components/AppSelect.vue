@@ -153,7 +153,7 @@ defineExpose({ validate, showError })
         <div
           v-for="(item, index) in options"
           :key="index"
-          class="w-full rounded-lg border border-[#BBB8B6] py-2 flex items-center justify-center font-[Manrope] text-[15px] font-light"
+          class="w-full rounded-lg border border-[#BBB8B6] py-2 flex items-center justify-center font-[Manrope] text-[15px] font-light hover:bg-[#F3A454] hover:border-[#F3A454] hover:text-[#FFFFFA]"
           :class="[item === selected ? 'bg-[#211D1D] text-[#FFFFFA]' : 'bg-[#FFFFFA] text-[#211D1D]']"
           @click.stop="select(item)"
         >

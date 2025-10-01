@@ -3,8 +3,9 @@ const props = defineProps<{
   isParametersSelected?: boolean
   inStock?: boolean
   availableQuantity?: boolean
-  id: string
-  vector: string
+  items?: Array<{ id: string; vector: string }> // Для комплекта из нескольких товаров
+  id?: string // Для одного товара
+  vector?: string // Для одного товара
 }>()
 
 const isLoading = ref(false)
@@ -54,7 +55,7 @@ const currentState = computed(() => {
     style = styleBase + styleVariants.default
     disabled = false
   } else {
-    content = "Добавить в корзину"
+    content = props.items ? "Добавить комплект в корзину" : "Добавить в корзину"
     style = styleBase + styleVariants.default
     disabled = false
   }
@@ -80,24 +81,62 @@ const handleClick = async () => {
     isLoading.value = true
     try {
       const token = await userStore.loadToken()
-      const response = await $fetch("https://swimwear.kyokata.wtf/api/addToCart", {
-        method: "POST",
-        body: {
-          id: props.id,
-          vector: props.vector,
-          count: 1,
-          token: token,
-        },
-      })
-      if (response.success) {
-        showSuccess.value = true
-        setTimeout(() => {
-          showSuccess.value = false
-          isInCart.value = true
-        }, 1500)
+
+      // Если передан массив items, добавляем каждый товар
+      if (props.items && props.items.length > 0) {
+        const results = await Promise.allSettled(
+          props.items.map((item) =>
+            $fetch("https://swimwear.kyokata.wtf/api/addToCart", {
+              method: "POST",
+              body: {
+                id: item.id,
+                vector: item.vector,
+                count: 1,
+                token: token,
+              },
+            }),
+          ),
+        )
+
+        // Проверяем результаты
+        const failedItems = results.filter((r) => r.status === "rejected" || !r.value?.success)
+
+        if (failedItems.length === 0) {
+          showSuccess.value = true
+          setTimeout(() => {
+            showSuccess.value = false
+            isInCart.value = true
+          }, 1500)
+        } else {
+          const successCount = results.length - failedItems.length
+          if (successCount > 0) {
+            errorMessage.value = `Добавлено ${successCount} из ${results.length} товаров`
+          } else {
+            errorMessage.value = "Не удалось добавить товары в корзину"
+          }
+          showError.value = true
+        }
       } else {
-        errorMessage.value = response.error
-        showError.value = true
+        // Добавляем один товар (старая логика)
+        const response = await $fetch("https://swimwear.kyokata.wtf/api/addToCart", {
+          method: "POST",
+          body: {
+            id: props.id,
+            vector: props.vector,
+            count: 1,
+            token: token,
+          },
+        })
+        if (response.success) {
+          showSuccess.value = true
+          setTimeout(() => {
+            showSuccess.value = false
+            isInCart.value = true
+          }, 1500)
+        } else {
+          errorMessage.value = response.error
+          showError.value = true
+        }
       }
     } catch (err) {
       errorMessage.value = err.message ?? "Ошибка"

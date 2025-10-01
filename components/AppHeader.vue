@@ -50,6 +50,6 @@ const menuStore = useMenuStore()
         </li>
       </ul>
     </nav>
-    <MainMenu />
   </header>
+  <MainMenu />
 </template>
