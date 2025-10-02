@@ -222,7 +222,7 @@ export const useOrderStore = defineStore("order", () => {
         method: "POST",
         body: {
           token,
-          cart: cartItems.value,
+          items: cartItems.value,
         },
       })
     } catch (error) {
@@ -424,17 +424,21 @@ export const useOrderStore = defineStore("order", () => {
       isLoadingPromo.value = false
     }
   }
-
+  
   function applyPromoCode() {
     if (!pendingPromoCode.value) {
       return
     }
-
-    // Применяем промокод только на фронте
+    
     selectedPromoCode.value = pendingPromoCode.value
-    // Очищаем баллы при применении промокода
-    pendingPoints.value = ""
+    
+    if (pointsToUse.value > 0 && userStore.user) {
+      userStore.user.points += pointsToUse.value
+    }
     pointsToUse.value = 0
+    pendingPoints.value = ""
+    
+    pendingPromoCode.value = null
   }
 
   function savedMoney(promoValue: number): number {
@@ -456,70 +460,48 @@ export const useOrderStore = defineStore("order", () => {
   function togglePromoCode() {
     isExpandedPromoCode.value = !isExpandedPromoCode.value
   }
-
+  
   async function applyPoints() {
     if (isLoadingPoints.value) return
-
+    
     isLoadingPoints.value = true
     pointsError.value = ""
-
-    // Очищаем промокод при применении баллов
+    
     selectedPromoCode.value = null
     pendingPromoCode.value = null
-
+    
     const points = Number(pendingPoints.value)
-
+    
     if (isNaN(points) || points <= 0) {
       pointsError.value = "Введите корректное количество баллов"
       isLoadingPoints.value = false
       return
     }
-
+    
     const maxPoints = Math.floor(totalSum.value * 0.2)
-
+    
     if (points > (userStore.user?.points || 0)) {
       pointsError.value = "Недостаточно баллов"
       isLoadingPoints.value = false
       return
     }
-
+    
     if (points > maxPoints) {
       pointsError.value = `Нельзя списать больше ${maxPoints} баллов (20% от суммы заказа)`
       isLoadingPoints.value = false
       return
     }
-
-    const token = await userStore.loadToken()
-
-    try {
-      const { data, error } = await useFetch<ApiResponse>("https://back.casaalmare.com/api/usePoints", {
-        method: "POST",
-        body: { token, points },
-      })
-
-      if (error.value) {
-        pointsError.value = "Ошибка сети"
-        isLoadingPoints.value = false
-        return
-      }
-
-      if (data.value?.success) {
-        pointsError.value = ""
-        pointsToUse.value = points
-        if (userStore.user) {
-          userStore.user.points -= points
-        }
-      } else {
-        pointsError.value = data.value?.error || "Ошибка списания баллов"
-      }
-    } catch (error) {
-      pointsError.value = "Ошибка API"
-      console.error(error)
-    } finally {
-      isLoadingPoints.value = false
+    
+    pointsError.value = ""
+    pointsToUse.value = points
+    if (userStore.user) {
+      userStore.user.points -= points
     }
+    pendingPoints.value = ""
+    
+    isLoadingPoints.value = false
   }
-
+  
   function togglePoints() {
     isExpandedPoints.value = !isExpandedPoints.value
   }
