@@ -1,31 +1,14 @@
-import type { Ref } from "vue"
+interface ApiResponse<T = unknown> {
+  success: boolean
+  data?: T
+  error?: string
+}
 
 interface Certificate {
   id: number
   code: string
   value: number
   value_now: number
-}
-
-interface UserExtended {
-  addresses: string[]
-}
-
-interface User {
-  points: number
-  certificates: Certificate[]
-  extended?: UserExtended
-}
-
-interface UserStore {
-  user: Ref<User | null>
-  loadToken: () => Promise<string | null>
-}
-
-interface ApiResponse<T = unknown> {
-  success: boolean
-  data?: T
-  error?: string
 }
 
 interface PointsResponse {
@@ -44,6 +27,40 @@ interface PromoResponse {
   promo: PromoCode
 }
 
+interface UserInfo {
+  name: string
+  surname: string
+  phone: {
+    code: string
+    phone: string
+    country: string
+  } | null
+  email: string
+}
+
+interface OrderState {
+  deliveryMethod?: string | null
+  city?: string | null
+  currentAddress?: string | null
+  commentForCourier?: string
+  paymentMethod?: string | null
+  promoCode?: string | null
+  points?: number
+  certificates?: string[]
+  promoCodes?: PromoCode[]
+  pendingPromoCode?: string | null
+  userInfo?: UserInfo | null
+}
+
+interface UpdateOrderResponse {
+  updated: boolean
+  last_update: number
+}
+
+interface GetOrderResponse {
+  order: OrderState
+}
+
 export type CartItem = {
   id: string
   vector: string
@@ -52,11 +69,11 @@ export type CartItem = {
 
 export const useOrderStore = defineStore("order", () => {
   const catalogStore = useCatalogStore()
-  const userStore = useUserStore() as UserStore
+  const userStore = useUserStore()
   const authStore = useAuthStore()
-
+  
   const cartItems = ref<CartItem[]>([])
-
+  
   const addresses = ref<string[]>([])
   const city = ref<string | null>(null)
   const commentForCourier = ref("")
@@ -65,12 +82,12 @@ export const useOrderStore = defineStore("order", () => {
   const newAddressFirstLine = ref("")
   const newAddressSecondLine = ref("")
   const showErrorDeliveryMethod = ref<boolean>(false)
-
+  
   const isPaymentSuccessful = ref<boolean | null>(null)
   const paymentMethod = ref<string | null>(null)
   const showErrorPaymentMethod = ref<boolean>(false)
   const isLoadingPayment = ref<boolean>(false)
-
+  
   const addPromoCodeError = ref<string>("")
   const currentPromoCodes = ref<PromoCode[]>([])
   const isExpandedPromoCode = ref<boolean>(false)
@@ -78,20 +95,20 @@ export const useOrderStore = defineStore("order", () => {
   const promoCode = ref<string>("")
   const selectedPromoCode = ref<string | null>(null)
   const isLoadingPromo = ref<boolean>(false)
-
+  
   const isExpandedPoints = ref<boolean>(false)
   const pendingPoints = ref<string>("")
   const pointsError = ref<string>("")
   const pointsToUse = ref<number>(0)
   const usedPointsBackup = ref<number>(0)
   const isLoadingPoints = ref<boolean>(false)
-
+  
   const certificateError = ref<string>("")
   const isExpandedCert = ref<boolean>(false)
   const newCertificateCode = ref<string>("")
   const selectedCertificates = ref<string[]>([])
   const isLoadingCert = ref<boolean>(false)
-
+  
   const email = ref<string>("")
   const name = ref<string>("")
   const phone = ref<{
@@ -100,28 +117,43 @@ export const useOrderStore = defineStore("order", () => {
     country: string
   } | null>(null)
   const surname = ref<string>("")
-
+  
+  const orderState = ref<OrderState>({})
+  
+  function debounce<T extends (...args: unknown[]) => unknown>(func: T, wait: number): (...args: Parameters<T>) => ReturnType<T> {
+    let timeout: NodeJS.Timeout | null = null
+    return function (this: ThisParameterType<T> | undefined, ...args: Parameters<T>) {
+      if (timeout !== null) {
+        clearTimeout(timeout)
+      }
+      timeout = setTimeout(() => {
+        timeout = null
+        func.apply(this, args)
+      }, wait)
+    } as (...args: Parameters<T>) => ReturnType<T>
+  }
+  
   async function loadUserData() {
     const token = await userStore.loadToken()
     if (!token) return
-
+    
     try {
       const { data: pointsData, error } = await useFetch<PointsResponse>("https://back.casaalmare.com/api/getPoints", {
         method: "POST",
         body: { token },
       })
-
+      
       if (error.value) {
         console.error("Network error loading points:", error.value)
         return
       }
-
+      
       if (pointsData.value?.success && pointsData.value.points !== undefined) {
         if (userStore.user) {
           userStore.user.points = pointsData.value.points
         }
       }
-
+      
       if (userStore.user?.extended?.addresses) {
         addresses.value = userStore.user.extended.addresses
       } else {
@@ -131,7 +163,120 @@ export const useOrderStore = defineStore("order", () => {
       console.error("Ошибка загрузки user data:", error)
     }
   }
-
+  
+  async function loadOrderState() {
+    const token = await userStore.loadToken()
+    if (!token) return
+    
+    try {
+      const { data, error } = await useFetch<ApiResponse<GetOrderResponse>>("https://back.casaalmare.com/api/getOrderState", {
+        method: "POST",
+        body: { token },
+      })
+      
+      if (error.value) {
+        console.error("Network error loading order state:", error.value)
+        return
+      }
+      
+      if (data.value?.success && data.value.data?.order) {
+        const loadedOrder: OrderState = data.value.data.order
+        
+        if (loadedOrder.deliveryMethod) deliveryMethod.value = loadedOrder.deliveryMethod
+        if (loadedOrder.city) city.value = loadedOrder.city
+        if (loadedOrder.currentAddress) currentAddress.value = loadedOrder.currentAddress
+        if (loadedOrder.commentForCourier) commentForCourier.value = loadedOrder.commentForCourier
+        if (loadedOrder.paymentMethod) paymentMethod.value = loadedOrder.paymentMethod
+        if (loadedOrder.promoCode) selectedPromoCode.value = loadedOrder.promoCode
+        if (loadedOrder.points !== undefined) {
+          pointsToUse.value = loadedOrder.points
+          if (userStore.user) userStore.user.points += usedPointsBackup.value - loadedOrder.points
+        }
+        if (loadedOrder.certificates) selectedCertificates.value = loadedOrder.certificates
+        
+        if (loadedOrder.promoCodes && Array.isArray(loadedOrder.promoCodes)) {
+          currentPromoCodes.value = loadedOrder.promoCodes
+        }
+        if (loadedOrder.pendingPromoCode) {
+          pendingPromoCode.value = loadedOrder.pendingPromoCode
+        }
+        
+        if (!authStore.isAuth && loadedOrder.userInfo) {
+          if (loadedOrder.userInfo.name) name.value = loadedOrder.userInfo.name
+          if (loadedOrder.userInfo.surname) surname.value = loadedOrder.userInfo.surname
+          if (loadedOrder.userInfo.phone) phone.value = loadedOrder.userInfo.phone
+          if (loadedOrder.userInfo.email) email.value = loadedOrder.userInfo.email
+        }
+        
+        orderState.value = loadedOrder
+        console.log("Order state loaded successfully:", loadedOrder)
+      } else {
+        console.error("Server error loading order state:", data.value?.error)
+      }
+    } catch (error) {
+      console.error("Ошибка загрузки состояния заказа:", error)
+    }
+  }
+  
+  const updateOrderState = async () => {
+    if (isPaymentSuccessful.value !== null) return
+    
+    const token = await userStore.loadToken()
+    if (!token) return
+    
+    const orderStateObj: Partial<OrderState> = {
+      deliveryMethod: deliveryMethod.value,
+      city: city.value,
+      currentAddress: currentAddress.value,
+      commentForCourier: commentForCourier.value,
+      paymentMethod: paymentMethod.value,
+      promoCode: selectedPromoCode.value,
+      points: pointsToUse.value,
+      certificates: selectedCertificates.value,
+      promoCodes: currentPromoCodes.value,
+      pendingPromoCode: pendingPromoCode.value,
+      userInfo: !authStore.isAuth
+        ? {
+          name: name.value,
+          surname: surname.value,
+          phone: phone.value,
+          email: email.value,
+        }
+        : null,
+    }
+    
+    const lastUpdate = Math.floor(Date.now() / 1000)
+    
+    try {
+      const { data, error } = await useFetch<ApiResponse<UpdateOrderResponse>>("https://back.casaalmare.com/api/updateOrderState", {
+        method: "POST",
+        body: {
+          token: token,
+          orderState: orderStateObj,
+          last_update: lastUpdate
+        },
+      })
+      
+      if (error.value) {
+        console.error("Network error updating order state:", error.value)
+        return
+      }
+      
+      if (!data.value?.success) {
+        console.error("Server error updating order state:", data.value?.error)
+        return
+      }
+      
+      if (data.value.data?.updated === false) {
+        console.warn("Order state update ignored: timestamp too old", { lastUpdate, serverLastUpdate: data.value.data.last_update })
+      }
+    } catch (error) {
+      console.error("Ошибка обновления состояния заказа:", error)
+    }
+  }
+  
+  const debouncedUpdateOrderState = debounce(updateOrderState, 500)
+  
   const cartDetailed = computed(() => {
     return cartItems.value.map((cartItem) => {
       const product = catalogStore.items.find((p) => p.id === cartItem.id)
@@ -141,7 +286,7 @@ export const useOrderStore = defineStore("order", () => {
       }
       const [colorKey, size] = cartItem.vector.split("_")
       const colorData = product?.colors?.[colorKey] ?? { name: "", images: [] }
-
+      
       return {
         id: cartItem.id,
         vector: cartItem.vector,
@@ -155,7 +300,7 @@ export const useOrderStore = defineStore("order", () => {
       }
     })
   })
-
+  
   const totalOldSum = computed(() => {
     return cartItems.value.reduce((sum, cartItem) => {
       const product = catalogStore.items.find((p) => p.id === cartItem.id)
@@ -165,7 +310,7 @@ export const useOrderStore = defineStore("order", () => {
       return sum + (vectorData.oldPrice > 0 ? vectorData.oldPrice : vectorData.price) * cartItem.count
     }, 0)
   })
-
+  
   const totalSum = computed(() => {
     return cartItems.value.reduce((sum, cartItem) => {
       const product = catalogStore.items.find((p) => p.id === cartItem.id)
@@ -175,11 +320,10 @@ export const useOrderStore = defineStore("order", () => {
       return sum + vectorData.price * cartItem.count
     }, 0)
   })
-
+  
   const finalPrice = computed(() => {
     let price = totalSum.value
-
-    // Apply promo code
+    
     if (selectedPromoCode.value) {
       const promo = currentPromoCodes.value.find((p) => p.code === selectedPromoCode.value)
       if (promo) {
@@ -187,7 +331,7 @@ export const useOrderStore = defineStore("order", () => {
           const isNonDiscounted = item.oldPrice === 0 || item.oldPrice === item.price
           return isNonDiscounted ? sum + item.price * item.count : sum
         }, 0)
-
+        
         if (promo.percent) {
           price -= sumWithoutDiscount * promo.value
         } else {
@@ -195,13 +339,11 @@ export const useOrderStore = defineStore("order", () => {
         }
       }
     }
-
-    // Apply points
+    
     if (pointsToUse.value > 0 && userStore.user) {
       price -= Math.min(pointsToUse.value, price)
     }
-
-    // Apply certificates
+    
     if (selectedCertificates.value.length > 0 && userStore.user) {
       const certSum = selectedCertificates.value.reduce((sum, code) => {
         const cert = userStore.user!.certificates.find((c) => c.code === code)
@@ -209,14 +351,14 @@ export const useOrderStore = defineStore("order", () => {
       }, 0)
       price -= Math.min(certSum, price)
     }
-
+    
     return Math.max(price, 0.01)
   })
-
+  
   async function syncCartToBackend() {
     const token = await userStore.loadToken()
     if (!token) return
-
+    
     try {
       await useFetch("https://back.casaalmare.com/api/updateCart", {
         method: "POST",
@@ -229,7 +371,7 @@ export const useOrderStore = defineStore("order", () => {
       console.error("Ошибка синхронизации корзины:", error)
     }
   }
-
+  
   function decrementQuantity(id: string, vector: string) {
     const item = cartItems.value.find((i) => i.id === id && i.vector === vector)
     if (item && item.count > 1) {
@@ -237,7 +379,7 @@ export const useOrderStore = defineStore("order", () => {
       syncCartToBackend()
     }
   }
-
+  
   function incrementQuantity(id: string, vector: string) {
     const item = cartItems.value.find((i) => i.id === id && i.vector === vector)
     if (item) {
@@ -245,44 +387,44 @@ export const useOrderStore = defineStore("order", () => {
       syncCartToBackend()
     }
   }
-
+  
   function removeItemFromCart(id: string, vector: string) {
     cartItems.value = cartItems.value.filter((item) => !(item.id === id && item.vector === vector))
     syncCartToBackend()
   }
-
+  
   function setCartItems(items: CartItem[] | null | undefined) {
     cartItems.value = Array.isArray(items) ? items : []
   }
-
+  
   async function saveNewAddress() {
     const token = await userStore.loadToken()
     if (!token) return
-
+    
     const firstLine = newAddressFirstLine.value.trim()
     const secondLine = newAddressSecondLine.value.trim()
-
+    
     if (!firstLine) return
-
+    
     const newAddress = secondLine ? `${firstLine}, ${secondLine}` : firstLine
-
+    
     try {
       const { data, error } = await useFetch<ApiResponse>("https://back.casaalmare.com/api/saveAddress", {
         method: "POST",
         body: { token, address: newAddress },
       })
-
+      
       if (error.value) {
         console.error("Network error saving address:", error.value)
         return
       }
-
+      
       if (data.value?.success) {
         addresses.value.push(newAddress)
         currentAddress.value = newAddress
         newAddressFirstLine.value = ""
         newAddressSecondLine.value = ""
-
+        
         if (userStore.user) {
           if (!userStore.user.extended) {
             userStore.user.extended = { addresses: [] }
@@ -296,24 +438,24 @@ export const useOrderStore = defineStore("order", () => {
       console.error("Ошибка API saveAddress:", error)
     }
   }
-
+  
   async function attemptPayment() {
     if (isLoadingPayment.value) return
-
+    
     if (cartItems.value.length === 0) {
       return
     }
-
+    
     isLoadingPayment.value = true
     const token = await userStore.loadToken()
-
+    
     if (!token) {
       isLoadingPayment.value = false
       return
     }
-
+    
     usedPointsBackup.value = pointsToUse.value
-
+    
     try {
       const orderData = {
         token,
@@ -326,21 +468,22 @@ export const useOrderStore = defineStore("order", () => {
         promoCode: selectedPromoCode.value,
         points: pointsToUse.value,
         certificates: selectedCertificates.value,
+        promoCodes: currentPromoCodes.value,
         userInfo: authStore.isAuth
           ? null
           : {
-              name: name.value,
-              surname: surname.value,
-              phone: phone.value,
-              email: email.value,
-            },
+            name: name.value,
+            surname: surname.value,
+            phone: phone.value,
+            email: email.value,
+          },
       }
-
+      
       const { data, error } = await useFetch<ApiResponse>("https://back.casaalmare.com/api/createOrder", {
         method: "POST",
         body: orderData,
       })
-
+      
       if (error.value) {
         console.error("Network error during payment:", error.value)
         isPaymentSuccessful.value = false
@@ -349,7 +492,7 @@ export const useOrderStore = defineStore("order", () => {
         }
         return
       }
-
+      
       if (data.value?.success) {
         isPaymentSuccessful.value = true
         cartItems.value = []
@@ -357,6 +500,8 @@ export const useOrderStore = defineStore("order", () => {
         pointsToUse.value = 0
         usedPointsBackup.value = 0
         selectedCertificates.value = []
+        currentPromoCodes.value = []
+        pendingPromoCode.value = null
       } else {
         isPaymentSuccessful.value = false
         if (userStore.user) {
@@ -375,42 +520,43 @@ export const useOrderStore = defineStore("order", () => {
       isLoadingPayment.value = false
     }
   }
-
+  
   async function addPromoCode() {
     if (isLoadingPromo.value) return
-
+    
     isLoadingPromo.value = true
     addPromoCodeError.value = ""
-
+    
     const code = promoCode.value.trim()
-
+    
     if (!code) {
       addPromoCodeError.value = "Введите промокод"
       isLoadingPromo.value = false
       return
     }
-
+    
     const token = await userStore.loadToken()
-
+    
     try {
       const { data, error } = await useFetch<PromoResponse>("https://back.casaalmare.com/api/checkPromoCode", {
         method: "POST",
         body: { token, code },
       })
-
+      
       if (error.value) {
         addPromoCodeError.value = "Ошибка сети"
         isLoadingPromo.value = false
         return
       }
-
+      
       if (data.value?.success && data.value.promo) {
         const alreadyAdded = currentPromoCodes.value.some((p) => p.code === data.value!.promo.code)
-
+        
         if (!alreadyAdded) {
           currentPromoCodes.value.push(data.value.promo)
           promoCode.value = ""
           addPromoCodeError.value = ""
+          updateOrderState()
         } else {
           addPromoCodeError.value = "Промокод уже добавлен"
         }
@@ -439,24 +585,26 @@ export const useOrderStore = defineStore("order", () => {
     pendingPoints.value = ""
     
     pendingPromoCode.value = null
+    
+    updateOrderState()
   }
-
+  
   function savedMoney(promoValue: number): number {
     const promo = currentPromoCodes.value.find((p) => p.value === promoValue)
     if (!promo) return 0
-
+    
     const sumWithoutDiscount = cartDetailed.value.reduce((sum, item) => {
       const isNonDiscounted = item.oldPrice === 0 || item.oldPrice === item.price
       return isNonDiscounted ? sum + item.price * item.count : sum
     }, 0)
-
+    
     if (promo.percent) {
       return Math.round(sumWithoutDiscount * promo.value)
     } else {
       return Math.min(promo.value, sumWithoutDiscount)
     }
   }
-
+  
   function togglePromoCode() {
     isExpandedPromoCode.value = !isExpandedPromoCode.value
   }
@@ -505,29 +653,29 @@ export const useOrderStore = defineStore("order", () => {
   function togglePoints() {
     isExpandedPoints.value = !isExpandedPoints.value
   }
-
+  
   async function addCertificate() {
     if (isLoadingCert.value) return
-
+    
     isLoadingCert.value = true
     certificateError.value = ""
-
+    
     const code = newCertificateCode.value.trim()
-
+    
     if (!code) {
       certificateError.value = "Введите код сертификата"
       isLoadingCert.value = false
       return
     }
-
+    
     if (userStore.user?.certificates.some((c: Certificate) => c.code === code)) {
       certificateError.value = "Сертификат уже добавлен"
       isLoadingCert.value = false
       return
     }
-
+    
     const token = await userStore.loadToken()
-
+    
     try {
       const { data, error } = await useFetch<ApiResponse<{ certificate: Certificate }>>(
         "https://back.casaalmare.com/api/addCertificate",
@@ -536,13 +684,13 @@ export const useOrderStore = defineStore("order", () => {
           body: { token, code },
         },
       )
-
+      
       if (error.value) {
         certificateError.value = "Ошибка сети"
         isLoadingCert.value = false
         return
       }
-
+      
       if (data.value?.success && data.value.data?.certificate) {
         if (userStore.user) {
           if (!userStore.user.certificates) {
@@ -562,23 +710,47 @@ export const useOrderStore = defineStore("order", () => {
       isLoadingCert.value = false
     }
   }
-
+  
   function toggleCert() {
     isExpandedCert.value = !isExpandedCert.value
   }
-
+  
   function priceFormatter(value: number): string {
     const formattedValue = new Intl.NumberFormat("ru-RU").format(Math.round(value))
     return `${formattedValue} ₽`
   }
-
+  
   watchEffect(() => {
     const newAddresses = userStore?.user?.extended?.addresses
     if (newAddresses && Array.isArray(newAddresses)) {
       addresses.value = newAddresses
     }
   })
-
+  
+  watch(
+    [
+      deliveryMethod,
+      city,
+      currentAddress,
+      commentForCourier,
+      paymentMethod,
+      selectedPromoCode,
+      pointsToUse,
+      selectedCertificates,
+      currentPromoCodes,
+      pendingPromoCode,
+      name,
+      surname,
+      phone,
+      email,
+      () => authStore.isAuth,
+    ],
+    () => {
+      debouncedUpdateOrderState()
+    },
+    { deep: true }
+  )
+  
   return {
     cartItems,
     addresses,
@@ -614,11 +786,13 @@ export const useOrderStore = defineStore("order", () => {
     name,
     phone,
     surname,
+    orderState,
     cartDetailed,
     totalOldSum,
     totalSum,
     finalPrice,
     loadUserData,
+    loadOrderState,
     decrementQuantity,
     incrementQuantity,
     removeItemFromCart,

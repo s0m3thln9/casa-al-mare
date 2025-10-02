@@ -1,36 +1,42 @@
+interface PhoneNumber {
+  code: string | null
+  phone: string
+  country: string | null
+}
+
 export const useAuthStore = defineStore("auth", () => {
-  const email = ref("")
-  const emailButtonContent = ref("Отправить СМС-код")
-  const emailButtonDisabled = ref(true)
-  const emailReg = ref("")
-  const method = ref("По телефону")
-  const type = ref("Авторизация")
-  const password = ref("")
-  const phone = ref<{ code: string | null; phone: string; country: string | null } | null>(null)
-  const tel = ref<{ code: string | null; phone: string; country: string | null } | null>(null)
-  const phoneButtonContent = ref("Отправить СМС-код")
-  const phoneButtonDisabled = ref(true)
-  const phoneReg = ref<{ code: string | null; phone: string; country: string | null } | null>(null)
-  const sms = ref("")
-  const smsError = ref("")
-  const smsError2 = ref("")
-  const regError = ref("")
-  const smsStep = ref(false)
-  const regStep = ref(false)
-  const smsButtonContent = ref("Подтвердить")
-  const smsButtonDisabled = ref(true)
-  const name = ref("")
-  const surname = ref("")
-  const regButtonContent = ref("Зарегистрироваться")
-  const regButtonDisabled = ref(true)
-  const isAuth = ref(false)
-  const resetEmail = ref("")
-  const resetButtonContent = ref("Отправить письмо")
-  const resetButtonDisabled = ref(true)
-  const resetError = ref("")
-
+  const email = ref<string>("")
+  const emailButtonContent = ref<string>("Отправить СМС-код")
+  const emailButtonDisabled = ref<boolean>(true)
+  const emailReg = ref<string>("")
+  const method = ref<string>("По телефону")
+  const type = ref<string>("Авторизация")
+  const password = ref<string>("")
+  const phone = ref<PhoneNumber | null>(null)
+  const tel = ref<PhoneNumber | null>(null)
+  const phoneButtonContent = ref<string>("Отправить СМС-код")
+  const phoneButtonDisabled = ref<boolean>(true)
+  const phoneReg = ref<PhoneNumber | null>(null)
+  const sms = ref<string>("")
+  const smsError = ref<string>("")
+  const smsError2 = ref<string>("")
+  const regError = ref<string>("")
+  const smsStep = ref<boolean>(false)
+  const regStep = ref<boolean>(false)
+  const smsButtonContent = ref<string>("Подтвердить")
+  const smsButtonDisabled = ref<boolean>(true)
+  const name = ref<string>("")
+  const surname = ref<string>("")
+  const regButtonContent = ref<string>("Зарегистрироваться")
+  const regButtonDisabled = ref<boolean>(true)
+  const isAuth = ref<boolean>(false)
+  const resetEmail = ref<string>("")
+  const resetButtonContent = ref<string>("Отправить письмо")
+  const resetButtonDisabled = ref<boolean>(true)
+  const resetError = ref<string>("")
+  
   const userStore = useUserStore()
-
+  
   watch(
     phone,
     () => {
@@ -38,7 +44,7 @@ export const useAuthStore = defineStore("auth", () => {
     },
     { immediate: true },
   )
-
+  
   watch(
     [email, password],
     () => {
@@ -46,7 +52,7 @@ export const useAuthStore = defineStore("auth", () => {
     },
     { immediate: true },
   )
-
+  
   watch(
     sms,
     () => {
@@ -54,7 +60,7 @@ export const useAuthStore = defineStore("auth", () => {
     },
     { immediate: true },
   )
-
+  
   watch(
     [emailReg, phoneReg, name, surname],
     () => {
@@ -62,7 +68,7 @@ export const useAuthStore = defineStore("auth", () => {
     },
     { immediate: true },
   )
-
+  
   watch(
     resetEmail,
     () => {
@@ -70,11 +76,11 @@ export const useAuthStore = defineStore("auth", () => {
     },
     { immediate: true },
   )
-
+  
   watchEffect(() => {
     isAuth.value = (userStore.user?.uid as number) > 0
   })
-
+  
   return {
     email,
     emailButtonContent,

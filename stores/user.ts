@@ -1,14 +1,38 @@
 import { Preferences } from "@capacitor/preferences"
 
-interface UserData {
-  [key: string]: unknown
+interface Certificate {
+  id: number
+  code: string
+  value: number
+  value_now: number
+}
+
+interface UserExtended {
+  addresses: string[]
+}
+
+export interface User {
+  uid: number
+  points: number
+  certificates: Certificate[]
+  extended?: UserExtended
+  token?: string
+}
+
+export interface UserStore {
+  user: Ref<User | null>
+  token: Ref<string>
+  loadToken: () => Promise<string>
+  saveToken: (newToken: string) => Promise<void>
+  removeToken: () => Promise<void>
+  fetchUser: () => Promise<void>
 }
 
 export const useUserStore = defineStore("user", () => {
-  const user = ref<UserData | null>(null)
+  const user = ref<User | null>(null)
   const token = ref("")
   const favoritesStore = useFavoritesStore()
-
+  
   const loadToken = async (): Promise<string> => {
     if (import.meta.client) {
       const { value } = await Preferences.get({ key: "token" })
@@ -16,37 +40,39 @@ export const useUserStore = defineStore("user", () => {
     }
     return token.value
   }
-
+  
   const saveToken = async (newToken: string): Promise<void> => {
     token.value = newToken
     if (import.meta.client) {
       await Preferences.set({ key: "token", value: newToken })
     }
   }
-
+  
   const removeToken = async (): Promise<void> => {
     token.value = ""
     if (import.meta.client) {
       await Preferences.set({ key: "token", value: "" })
     }
   }
-
+  
   const fetchUser = async (): Promise<void> => {
-    const userData: UserData = await $fetch("https://back.casaalmare.com/api/testUser", {
+    const response: Partial<User> & { token?: string } = await $fetch("https://back.casaalmare.com/api/testUser", {
       method: "POST",
       body: JSON.stringify({ token: token.value }),
     })
-
+    
+    const { token: userToken, ...userData } = response
+    
     if (user.value) {
       Object.assign(user.value, userData)
     } else {
-      user.value = userData
+      user.value = userData as User
     }
-
-    if (userData?.token) await saveToken(userData.token as string)
+    
+    if (userToken) await saveToken(userToken)
     await favoritesStore.syncFavorites()
   }
-
+  
   return {
     user,
     token,
@@ -54,5 +80,5 @@ export const useUserStore = defineStore("user", () => {
     saveToken,
     removeToken,
     fetchUser,
-  }
+  } satisfies UserStore
 })
