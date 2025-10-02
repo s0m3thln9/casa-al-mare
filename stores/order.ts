@@ -106,7 +106,7 @@ export const useOrderStore = defineStore("order", () => {
     if (!token) return
 
     try {
-      const { data: pointsData, error } = await useFetch<PointsResponse>("https://swimwear.kyokata.wtf/api/getPoints", {
+      const { data: pointsData, error } = await useFetch<PointsResponse>("https://back.casaalmare.com/api/getPoints", {
         method: "POST",
         body: { token },
       })
@@ -218,7 +218,7 @@ export const useOrderStore = defineStore("order", () => {
     if (!token) return
 
     try {
-      await useFetch("https://swimwear.kyokata.wtf/api/updateCart", {
+      await useFetch("https://back.casaalmare.com/api/updateCart", {
         method: "POST",
         body: {
           token,
@@ -267,7 +267,7 @@ export const useOrderStore = defineStore("order", () => {
     const newAddress = secondLine ? `${firstLine}, ${secondLine}` : firstLine
 
     try {
-      const { data, error } = await useFetch<ApiResponse>("https://swimwear.kyokata.wtf/api/saveAddress", {
+      const { data, error } = await useFetch<ApiResponse>("https://back.casaalmare.com/api/saveAddress", {
         method: "POST",
         body: { token, address: newAddress },
       })
@@ -336,7 +336,7 @@ export const useOrderStore = defineStore("order", () => {
             },
       }
 
-      const { data, error } = await useFetch<ApiResponse>("https://swimwear.kyokata.wtf/api/createOrder", {
+      const { data, error } = await useFetch<ApiResponse>("https://back.casaalmare.com/api/createOrder", {
         method: "POST",
         body: orderData,
       })
@@ -393,7 +393,7 @@ export const useOrderStore = defineStore("order", () => {
     const token = await userStore.loadToken()
 
     try {
-      const { data, error } = await useFetch<PromoResponse>("https://swimwear.kyokata.wtf/api/checkPromoCode", {
+      const { data, error } = await useFetch<PromoResponse>("https://back.casaalmare.com/api/checkPromoCode", {
         method: "POST",
         body: { token, code },
       })
@@ -492,7 +492,7 @@ export const useOrderStore = defineStore("order", () => {
     const token = await userStore.loadToken()
 
     try {
-      const { data, error } = await useFetch<ApiResponse>("https://swimwear.kyokata.wtf/api/usePoints", {
+      const { data, error } = await useFetch<ApiResponse>("https://back.casaalmare.com/api/usePoints", {
         method: "POST",
         body: { token, points },
       })
@@ -548,7 +548,7 @@ export const useOrderStore = defineStore("order", () => {
 
     try {
       const { data, error } = await useFetch<ApiResponse<{ certificate: Certificate }>>(
-        "https://swimwear.kyokata.wtf/api/addCertificate",
+        "https://back.casaalmare.com/api/addCertificate",
         {
           method: "POST",
           body: { token, code },

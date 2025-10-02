@@ -6,7 +6,7 @@ export const useFavoritesStore = defineStore("favorites", () => {
 
   const syncFavorites = async () => {
     const token = await userStore.loadToken()
-    const response = await $fetch("https://swimwear.kyokata.wtf/api/getFavorites", {
+    const response = await $fetch("https://back.casaalmare.com/api/getFavorites", {
       method: "POST",
       body: JSON.stringify({ token }),
     })
@@ -32,7 +32,7 @@ export const useFavoritesStore = defineStore("favorites", () => {
     }
 
     try {
-      const response = await $fetch("https://swimwear.kyokata.wtf/api/addOrRemoveFavorites", {
+      const response = await $fetch("https://back.casaalmare.com/api/addOrRemoveFavorites", {
         method: "POST",
         body: JSON.stringify({ id, token }),
       })

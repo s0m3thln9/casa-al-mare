@@ -105,7 +105,7 @@ const handleClick = async (login: "phone" | "email"): Promise<void> => {
 
   if (login === "phone") {
     try {
-      const { data } = await useFetch<SmsResponse>("https://swimwear.kyokata.wtf/api/createSmsCode", {
+      const { data } = await useFetch<SmsResponse>("https://back.casaalmare.com/api/createSmsCode", {
         method: "POST",
         body: {
           phone: {
@@ -144,7 +144,7 @@ const handleClick = async (login: "phone" | "email"): Promise<void> => {
     }
   } else {
     try {
-      const { data } = await useFetch<LoginResponse>("https://swimwear.kyokata.wtf/api/login", {
+      const { data } = await useFetch<LoginResponse>("https://back.casaalmare.com/api/login", {
         method: "POST",
         body: {
           email,
@@ -192,7 +192,7 @@ const handleSmsClick = async (): Promise<void> => {
 
   try {
     const token = await userStore.loadToken()
-    const { data } = await useFetch<LoginResponse>("https://swimwear.kyokata.wtf/api/login", {
+    const { data } = await useFetch<LoginResponse>("https://back.casaalmare.com/api/login", {
       method: "POST",
       body: {
         phone: {
@@ -251,7 +251,7 @@ const handleRegClick = async (): Promise<void> => {
   authStore.regButtonContent = "Отправка..."
 
   try {
-    const { data } = await useFetch<SmsResponse>("https://swimwear.kyokata.wtf/api/createSmsCode", {
+    const { data } = await useFetch<SmsResponse>("https://back.casaalmare.com/api/createSmsCode", {
       method: "POST",
       body: {
         phone: {
@@ -308,7 +308,7 @@ const handleRegSmsClick = async (): Promise<void> => {
 
   try {
     const token = await userStore.loadToken()
-    const { data } = await useFetch<LoginResponse>("https://swimwear.kyokata.wtf/api/login", {
+    const { data } = await useFetch<LoginResponse>("https://back.casaalmare.com/api/login", {
       method: "POST",
       body: {
         email,
@@ -364,7 +364,7 @@ const handleResetPassword = async (): Promise<void> => {
   authStore.resetButtonContent = "Отправка..."
 
   try {
-    const { data } = await useFetch<ResetPasswordResponse>("https://swimwear.kyokata.wtf/api/resetPassword", {
+    const { data } = await useFetch<ResetPasswordResponse>("https://back.casaalmare.com/api/resetPassword", {
       method: "POST",
       body: {
         email,

@@ -32,7 +32,7 @@ export const useUserStore = defineStore("user", () => {
   }
 
   const fetchUser = async (): Promise<void> => {
-    const userData: UserData = await $fetch("https://swimwear.kyokata.wtf/api/testUser", {
+    const userData: UserData = await $fetch("https://back.casaalmare.com/api/testUser", {
       method: "POST",
       body: JSON.stringify({ token: token.value }),
     })

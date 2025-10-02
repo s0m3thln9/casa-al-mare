@@ -18,6 +18,7 @@ const phoneRef = ref<ComponentPublicInstance<object, AppComponentExposed> | null
 const surnameRef = ref<ComponentPublicInstance<object, AppComponentExposed> | null>(null)
 
 const authStore = useAuthStore()
+const authModalStore = useAuthModalStore()
 const orderStore = useOrderStore()
 const userStore = useUserStore()
 
@@ -39,7 +40,7 @@ onMounted(async () => {
             }
           >
         }>
-      >("https://swimwear.kyokata.wtf/api/getCart", {
+      >("https://back.casaalmare.com/api/getCart", {
         method: "POST",
         body: {
           token: token,
@@ -133,6 +134,7 @@ async function handleSave() {
 
 <template>
   <main class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D] flex justify-start items-center pt-8 pb-8 flex-col">
+	  <AuthModal v-if="authModalStore.isOpen" />
     <h2 class="uppercase">Оформление</h2>
     <div class="mt-8 flex max-w-[1264px] flex-col px-2 sm:px-0 sm:flex-row h-fit w-full gap-12">
       <div
@@ -148,7 +150,7 @@ async function handleSave() {
               >Есть аккаунт?
               <span
                 class="cursor-pointer underline"
-                @click="navigateTo('/login')"
+                @click="authModalStore.open"
                 >Войти</span
               ></span
             >

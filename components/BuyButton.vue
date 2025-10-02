@@ -86,7 +86,7 @@ const handleClick = async () => {
       if (props.items && props.items.length > 0) {
         const results = await Promise.allSettled(
           props.items.map((item) =>
-            $fetch("https://swimwear.kyokata.wtf/api/addToCart", {
+            $fetch("https://back.casaalmare.com/api/addToCart", {
               method: "POST",
               body: {
                 id: item.id,
@@ -118,7 +118,7 @@ const handleClick = async () => {
         }
       } else {
         // Добавляем один товар (старая логика)
-        const response = await $fetch("https://swimwear.kyokata.wtf/api/addToCart", {
+        const response = await $fetch("https://back.casaalmare.com/api/addToCart", {
           method: "POST",
           body: {
             id: props.id,
