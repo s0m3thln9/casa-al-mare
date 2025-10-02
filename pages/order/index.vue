@@ -1,5 +1,7 @@
 <script setup lang="ts">
 
+import {AppInput, AppSelect, SelectInput} from "#components"
+
 interface ApiResponse<T = unknown> {
 	success: boolean
 	data?: T
