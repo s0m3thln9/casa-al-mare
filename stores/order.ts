@@ -179,8 +179,8 @@ export const useOrderStore = defineStore("order", () => {
         return
       }
       
-      if (data.value?.success && data.value.data?.order) {
-        const loadedOrder: OrderState = data.value.data.order
+      if (data.value?.success && data.value?.order) {
+        const loadedOrder: OrderState = data.value.order
         
         if (loadedOrder.deliveryMethod) deliveryMethod.value = loadedOrder.deliveryMethod
         if (loadedOrder.city) city.value = loadedOrder.city

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import {AppInput, AppSelect, SelectInput} from "#components"
+import {AppInput, type AppSelect, SelectInput} from "#components"
 
 interface ApiResponse<T = unknown> {
 	success: boolean
@@ -69,8 +69,8 @@ onMounted(async () => {
 				return
 			}
 			
-			if (data.value?.success && data.value.data?.cart) {
-				const rawCart = data.value.data.cart
+			if (data.value?.success && data.value?.cart) {
+				const rawCart = data.value.cart
 				const parsedCart: CartItem[] = Object.entries(rawCart).map(([_, item]) => ({
 					id: String(item.productId),
 					vector: item.variant,
