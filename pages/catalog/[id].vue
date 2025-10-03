@@ -564,18 +564,6 @@ watch(
       </div>
     </AppPopup>
   </main>
-  <div
-    v-else-if="isLoading"
-    class="flex justify-center items-center h-screen"
-  >
-    Загрузка товара...
-  </div>
-  <div
-    v-else-if="error"
-    class="flex justify-center items-center h-screen text-red-500"
-  >
-    Ошибка: {{ error }}. <NuxtLink to="/catalog">Вернуться к каталогу</NuxtLink>
-  </div>
 </template>
 
 <style scoped></style>
