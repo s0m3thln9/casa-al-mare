@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const props = defineProps<{
-  id: string
+  id: number
   customClass?: string
   customImageClass?: string
   variant: "mini" | "large"
@@ -50,6 +50,13 @@ if (props.modelValue) {
 const isStarPressed = ref(false)
 const isFavoriteLocal = ref(favoritesStore.isFavorite(props.id))
 
+const getPriceData = () => {
+  const firstColor = Object.keys(item?.colors || {})[0] || ""
+  const sizeKey = selectedSize.value || item?.sizes?.[0] || ""
+  const key = `${firstColor}_${sizeKey}`
+  return item?.vector?.[key]
+}
+
 const handleStarClick = async () => {
   isStarPressed.value = true
 
@@ -89,6 +96,7 @@ watch(
     ]"
     @mouseenter="!popup && (isHovered = true)"
     @mouseleave="!popup && (isHovered = false)"
+    @click="handleClick"
   >
     <div
       class="w-full rounded-lg relative"
@@ -119,21 +127,29 @@ watch(
               objectPosition: !popup && isHovered ? 'center top' : 'center center',
             }"
             alt="card"
-            @click="handleClick"
           />
         </NuxtImg>
       </div>
     </div>
     <h4 class="mt-1 sm:mt-2">{{ item!.name }}</h4>
     <span
+      v-if="getPriceData()"
       class="mt-0.5 block sm:mt-1"
       :class="{ 'mb-2': isHovered }"
     >
-      {{ priceFormatter(item!.vector[`${Object.keys(item!.colors)[0]}_${selectedSize ?? item!.sizes[0]}`].price) }}
-      <span class="text-[#5E5B58] line-through ml-1">{{
-        priceFormatter(item!.vector[`${Object.keys(item!.colors)[0]}_${selectedSize ?? item!.sizes[0]}`].oldPrice)
-      }}</span>
+      {{ priceFormatter(getPriceData().price) }}
+      <span
+        v-if="getPriceData().oldPrice"
+        class="text-[#5E5B58] line-through ml-1"
+      >
+        {{ priceFormatter(getPriceData().oldPrice) }}
+      </span>
     </span>
+    <span
+      v-else
+      class="mt-0.5 block sm:mt-1 text-gray-500"
+      >Цена не указана</span
+    >
     <span
       v-if="!isHovered || popup"
       class="my-1 hidden sm:block"
@@ -157,7 +173,7 @@ watch(
         'w-5 h-5 right-2.5 top-2.5 md:w-6 md:h-6 md:right-4 md:top-4',
         isStarPressed && 'star-pressed',
       ]"
-      @click="handleStarClick"
+      @click.stop="handleStarClick"
     />
   </div>
 
@@ -189,6 +205,7 @@ watch(
         @touchstart="handleTouchStart"
         @touchend="handleTouchEnd"
         @mousemove="handleMouseMove"
+        @click="handleClick"
       >
         <NuxtImg
           v-for="(img, index) in Object.values(item!.images).slice(0, 3)"
@@ -205,7 +222,6 @@ watch(
             :class="['rounded-lg sm:rounded-2xl absolute top-0 left-0 w-full h-full', customImageClass]"
             :style="imageStyles(index)"
             alt="card"
-            @click="handleClick"
           />
         </NuxtImg>
       </div>
@@ -231,11 +247,15 @@ watch(
       <template v-else>
         <h4 class="mt-1">{{ item!.name }}</h4>
         <span
+          v-if="getPriceData()"
           class="mt-0.5"
           :class="{ 'mb-2': popup }"
-          >{{
-            priceFormatter(item!.vector[`${Object.keys(item!.colors)[0]}_${selectedSize ?? item!.sizes[0]}`].price)
-          }}</span
+          >{{ priceFormatter(getPriceData()!.price) }}</span
+        >
+        <span
+          v-else
+          class="mt-0.5 text-gray-500"
+          >Цена не указана</span
         >
       </template>
     </NuxtImg>
@@ -248,7 +268,7 @@ watch(
         'w-5 h-5 right-2.5 top-2.5 md:w-6 md:h-6 md:right-4 md:top-4',
         isStarPressed && 'star-pressed',
       ]"
-      @click="handleStarClick"
+      @click.stop="handleStarClick"
     />
   </div>
 </template>

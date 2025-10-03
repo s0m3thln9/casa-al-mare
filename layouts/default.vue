@@ -3,6 +3,7 @@ const isCookieAccepted = ref(false)
 const isCitySelected = ref(false)
 const email = ref("")
 const emailRef = ref()
+const catalogStore = useCatalogStore()
 
 const acceptCookie = () => {
   isCookieAccepted.value = true
@@ -38,6 +39,10 @@ const handleEmail = () => {
     }, 1000)
   }
 }
+
+onMounted(() => {
+  catalogStore.loadItems()
+})
 </script>
 
 <template>

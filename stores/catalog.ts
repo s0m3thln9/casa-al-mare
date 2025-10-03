@@ -1,5 +1,5 @@
-type Item = {
-  id: string
+export type Item = {
+  id: number
   name: string
   colors: {
     [color: string]: {
@@ -1058,7 +1058,7 @@ export const useCatalogStore = defineStore("catalog", () => {
     currentVisibleCardCount.value = 12
   }
 
-  const getItemById = (id: string) => {
+  const getItemById = (id: number) => {
     return items.value.find((item) => item.id === id)
   }
 

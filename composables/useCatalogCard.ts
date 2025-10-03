@@ -1,4 +1,4 @@
-export function useCatalogCard(variant: "mini" | "large", id: string, link: boolean) {
+export function useCatalogCard(variant: "mini" | "large", id: number, link: boolean) {
   const catalogStore = useCatalogStore()
   const currentImageIndex = ref(0)
   const isTransitioning = ref(false)
@@ -60,8 +60,19 @@ export function useCatalogCard(variant: "mini" | "large", id: string, link: bool
     }
   }
 
-  const handleClick = () => {
-    if (link) navigateTo(`/catalog/${id}`)
+  const handleClick = async () => {
+    // ФИКС: async для navigateTo (если нужно await)
+    console.log("handleClick triggered:", { id, link, path: `/catalog/${id}` }) // ФИКС: Лог для дебага
+    if (link && item) {
+      // ФИКС: + проверка item, чтобы не навигировать на пустой товар
+      try {
+        await navigateTo(`/catalog/${id}`) // ФИКС: await для обработки ошибок
+      } catch (error) {
+        console.error("Navigation error:", error) // ФИКС: Лог ошибок (напр. 404)
+      }
+    } else {
+      console.warn("Navigation skipped: link=false or no item") // ФИКС: Лог, если пропуск
+    }
   }
 
   onMounted(() => {

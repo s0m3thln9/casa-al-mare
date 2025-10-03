@@ -3,8 +3,8 @@ const props = defineProps<{
   isParametersSelected?: boolean
   inStock?: boolean
   availableQuantity?: boolean
-  items?: Array<{ id: string; vector: string }> // Для комплекта из нескольких товаров
-  id?: string // Для одного товара
+  items?: Array<{ id: number; vector: string }> // Для комплекта из нескольких товаров
+  id?: number // Для одного товара
   vector?: string // Для одного товара
 }>()
 
