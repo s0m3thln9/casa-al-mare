@@ -19,6 +19,7 @@ const handleResize = () => {
 }
 
 onMounted(() => {
+  catalogStore.loadItems()
   isMobile.value = window.innerWidth < 640
   window.addEventListener("resize", handleResize)
 })
