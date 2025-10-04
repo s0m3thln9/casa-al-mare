@@ -116,8 +116,8 @@ export const useOrderStore = defineStore("order", () => {
     country: string
   } | null>(null)
   const surname = ref<string>("")
-
   const orderState = ref<OrderState>({})
+  const isLoaded = ref(false)
 
   function debounce<T extends (...args: unknown[]) => unknown>(
     func: T,
@@ -220,6 +220,8 @@ export const useOrderStore = defineStore("order", () => {
       }
     } catch (error) {
       console.error("Ошибка загрузки состояния заказа:", error)
+    } finally {
+      isLoaded.value = true
     }
   }
 
@@ -767,6 +769,7 @@ export const useOrderStore = defineStore("order", () => {
       () => authStore.isAuth,
     ],
     () => {
+      if (!isLoaded.value) return
       debouncedUpdateOrderState()
     },
     { deep: true },
