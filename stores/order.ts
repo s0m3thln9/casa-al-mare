@@ -1,6 +1,5 @@
-interface ApiResponse<T = unknown> {
+interface ApiResponse {
   success: boolean
-  data?: T
   error?: string
 }
 
@@ -14,6 +13,10 @@ interface Certificate {
 interface PointsResponse {
   success: boolean
   points: number
+}
+
+interface UpdateCartResponse {
+  cart: CartItem
 }
 
 interface PromoCode {
@@ -388,13 +391,35 @@ export const useOrderStore = defineStore("order", () => {
         variant: item.vector,
         count: item.count,
       }))
-      await useFetch("https://back.casaalmare.com/api/updateCart", {
-        method: "POST",
-        body: {
-          token,
-          items: backendItems,
+      const { data, error } = await useFetch<ApiResponse & UpdateCartResponse>(
+        "https://back.casaalmare.com/api/updateCart",
+        {
+          // UpdateCartResponse = { cart: Record<string, CartBackendItem>, ... }
+          method: "POST",
+          body: {
+            token,
+            items: backendItems,
+          },
         },
-      })
+      )
+
+      if (error.value) {
+        console.error("Network error syncing cart:", error.value)
+        return
+      }
+
+      if (data.value?.success && data.value?.cart) {
+        const rawCart = data.value.cart
+        const parsedCart: CartItem[] = Object.entries(rawCart).map(([_, item]) => ({
+          id: item.productId,
+          vector: item.variant,
+          count: item.count,
+        }))
+        setCartItems(parsedCart) // Синхронизируем клиент с сервером
+        console.log("Cart synced from server:", parsedCart) // Для дебага
+      } else {
+        console.error("Server error syncing cart:", data.value?.error)
+      }
     } catch (error) {
       console.error("Ошибка синхронизации корзины:", error)
     }
@@ -781,9 +806,10 @@ export const useOrderStore = defineStore("order", () => {
   }
 
   watchEffect(() => {
-    const newAddresses = userStore?.user?.extended?.addresses
+    const newAddresses = userStore?.user?.addresses
     if (newAddresses && Array.isArray(newAddresses)) {
       addresses.value = newAddresses
+      console.log("WatchEffect: Addresses updated:", addresses.value) // Для дебага
     }
   })
 
