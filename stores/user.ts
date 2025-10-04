@@ -15,6 +15,7 @@ export interface User {
   uid: number
   points: number
   certificates: Certificate[]
+  addresses: string[]
   extended?: UserExtended
   token?: string
 }
@@ -32,7 +33,7 @@ export const useUserStore = defineStore("user", () => {
   const user = ref<User | null>(null)
   const token = ref("")
   const favoritesStore = useFavoritesStore()
-  
+
   const loadToken = async (): Promise<string> => {
     if (import.meta.client) {
       const { value } = await Preferences.get({ key: "token" })
@@ -40,39 +41,39 @@ export const useUserStore = defineStore("user", () => {
     }
     return token.value
   }
-  
+
   const saveToken = async (newToken: string): Promise<void> => {
     token.value = newToken
     if (import.meta.client) {
       await Preferences.set({ key: "token", value: newToken })
     }
   }
-  
+
   const removeToken = async (): Promise<void> => {
     token.value = ""
     if (import.meta.client) {
       await Preferences.set({ key: "token", value: "" })
     }
   }
-  
+
   const fetchUser = async (): Promise<void> => {
     const response: Partial<User> & { token?: string } = await $fetch("https://back.casaalmare.com/api/testUser", {
       method: "POST",
       body: JSON.stringify({ token: token.value }),
     })
-    
+
     const { token: userToken, ...userData } = response
-    
+
     if (user.value) {
       Object.assign(user.value, userData)
     } else {
       user.value = userData as User
     }
-    
+
     if (userToken) await saveToken(userToken)
     await favoritesStore.syncFavorites()
   }
-  
+
   return {
     user,
     token,

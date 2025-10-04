@@ -36,6 +36,7 @@ interface UserInfo {
     country: string
   } | null
   email: string
+  addresses?: string[]
 }
 
 interface OrderState {
@@ -158,8 +159,8 @@ export const useOrderStore = defineStore("order", () => {
         }
       }
 
-      if (userStore.user?.extended?.addresses) {
-        addresses.value = userStore.user.extended.addresses
+      if (userStore.user?.addresses) {
+        addresses.value = userStore.user.addresses
       } else {
         addresses.value = []
       }
@@ -215,6 +216,7 @@ export const useOrderStore = defineStore("order", () => {
           if (loadedOrder.userInfo.surname) surname.value = loadedOrder.userInfo.surname
           if (loadedOrder.userInfo.phone) phone.value = loadedOrder.userInfo.phone
           if (loadedOrder.userInfo.email) email.value = loadedOrder.userInfo.email
+          if (loadedOrder.userInfo.addresses) addresses.value = loadedOrder.userInfo.addresses
         }
 
         orderState.value = loadedOrder
@@ -254,6 +256,7 @@ export const useOrderStore = defineStore("order", () => {
             surname: surname.value,
             phone: phone.value,
             email: email.value,
+            addresses: addresses.value,
           }
         : null,
     }
@@ -423,9 +426,6 @@ export const useOrderStore = defineStore("order", () => {
   }
 
   async function saveNewAddress() {
-    const token = await userStore.loadToken()
-    if (!token) return
-
     const firstLine = newAddressFirstLine.value.trim()
     const secondLine = newAddressSecondLine.value.trim()
 
@@ -433,34 +433,54 @@ export const useOrderStore = defineStore("order", () => {
 
     const newAddress = secondLine ? `${firstLine}, ${secondLine}` : firstLine
 
-    try {
-      const { data, error } = await useFetch<ApiResponse>("https://back.casaalmare.com/api/saveAddress", {
-        method: "POST",
-        body: { token, address: newAddress },
-      })
+    if (authStore.isAuth) {
+      // Авторизованный: сохраняем через API в user.extended
+      const token = await userStore.loadToken()
+      if (!token) return
 
-      if (error.value) {
-        console.error("Network error saving address:", error.value)
-        return
-      }
+      try {
+        const { data, error } = await useFetch<ApiResponse>("https://back.casaalmare.com/api/saveAddress", {
+          method: "POST",
+          body: { token, address: newAddress },
+        })
 
-      if (data.value?.success) {
-        addresses.value.push(newAddress)
-        currentAddress.value = newAddress
-        newAddressFirstLine.value = ""
-        newAddressSecondLine.value = ""
-
-        if (userStore.user) {
-          if (!userStore.user.extended) {
-            userStore.user.extended = { addresses: [] }
-          }
-          userStore.user.extended.addresses.push(newAddress)
+        if (error.value) {
+          console.error("Network error saving address:", error.value)
+          return
         }
-      } else {
-        console.error("Ошибка сохранения адреса:", data.value?.error)
+
+        if (data.value?.success) {
+          currentAddress.value = newAddress
+          newAddressFirstLine.value = ""
+          newAddressSecondLine.value = ""
+          // addresses.value обновится через watchEffect из user.extended
+          if (userStore.user) {
+            if (!userStore.user.extended) {
+              userStore.user.extended = { addresses: [] }
+            }
+            if (!userStore.user.extended.addresses) {
+              userStore.user.extended.addresses = []
+            }
+            // Проверяем на дубликат (на всякий случай)
+            if (!userStore.user.extended.addresses.includes(newAddress)) {
+              userStore.user.extended.addresses.push(newAddress)
+            }
+          }
+        } else {
+          console.error("Ошибка сохранения адреса:", data.value?.error)
+        }
+      } catch (error) {
+        console.error("Ошибка API saveAddress:", error)
       }
-    } catch (error) {
-      console.error("Ошибка API saveAddress:", error)
+    } else {
+      // Гость: сохраняем локально и в orderState
+      if (!addresses.value.includes(newAddress)) {
+        addresses.value.push(newAddress)
+      }
+      currentAddress.value = newAddress
+      newAddressFirstLine.value = ""
+      newAddressSecondLine.value = ""
+      debouncedUpdateOrderState()
     }
   }
 
@@ -508,6 +528,7 @@ export const useOrderStore = defineStore("order", () => {
               surname: surname.value,
               phone: phone.value,
               email: email.value,
+              addresses: addresses.value,
             },
       }
 
