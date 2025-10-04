@@ -1,5 +1,6 @@
-interface ApiResponse {
+interface ApiResponse<T = unknown> {
   success: boolean
+  data?: T
   error?: string
 }
 
@@ -21,10 +22,10 @@ interface PromoCode {
   percent: boolean
 }
 
-interface PromoResponse {
-  success: boolean
-  promo: PromoCode
-}
+// interface PromoResponse {
+//   success: boolean
+//   promo: PromoCode
+// }
 
 interface UserInfo {
   name: string
@@ -87,13 +88,14 @@ export const useOrderStore = defineStore("order", () => {
   const showErrorPaymentMethod = ref<boolean>(false)
   const isLoadingPayment = ref<boolean>(false)
 
-  const addPromoCodeError = ref<string>("")
-  const currentPromoCodes = ref<PromoCode[]>([])
-  const isExpandedPromoCode = ref<boolean>(false)
-  const pendingPromoCode = ref<string | null>(null)
-  const promoCode = ref<string>("")
-  const selectedPromoCode = ref<string | null>(null)
-  const isLoadingPromo = ref<boolean>(false)
+  // ЗАКОММЕНТИРОВАНО: промокоды
+  // const addPromoCodeError = ref<string>("")
+  // const currentPromoCodes = ref<PromoCode[]>([])
+  // const isExpandedPromoCode = ref<boolean>(false)
+  // const pendingPromoCode = ref<string | null>(null)
+  // const promoCode = ref<string>("")
+  // const selectedPromoCode = ref<string | null>(null)
+  // const isLoadingPromo = ref<boolean>(false)
 
   const isExpandedPoints = ref<boolean>(false)
   const pendingPoints = ref<string>("")
@@ -192,19 +194,21 @@ export const useOrderStore = defineStore("order", () => {
         if (loadedOrder.currentAddress) currentAddress.value = loadedOrder.currentAddress
         if (loadedOrder.commentForCourier) commentForCourier.value = loadedOrder.commentForCourier
         if (loadedOrder.paymentMethod) paymentMethod.value = loadedOrder.paymentMethod
-        if (loadedOrder.promoCode) selectedPromoCode.value = loadedOrder.promoCode
+        // ЗАКОММЕНТИРОВАНО: промокоды
+        // if (loadedOrder.promoCode) selectedPromoCode.value = loadedOrder.promoCode
         if (loadedOrder.points !== undefined) {
           pointsToUse.value = loadedOrder.points
           if (userStore.user) userStore.user.points += usedPointsBackup.value - loadedOrder.points
         }
         if (loadedOrder.certificates) selectedCertificates.value = loadedOrder.certificates
 
-        if (loadedOrder.promoCodes && Array.isArray(loadedOrder.promoCodes)) {
-          currentPromoCodes.value = loadedOrder.promoCodes
-        }
-        if (loadedOrder.pendingPromoCode) {
-          pendingPromoCode.value = loadedOrder.pendingPromoCode
-        }
+        // ЗАКОММЕНТИРОВАНО: промокоды
+        // if (loadedOrder.promoCodes && Array.isArray(loadedOrder.promoCodes)) {
+        //   currentPromoCodes.value = loadedOrder.promoCodes
+        // }
+        // if (loadedOrder.pendingPromoCode) {
+        //   pendingPromoCode.value = loadedOrder.pendingPromoCode
+        // }
 
         if (!authStore.isAuth && loadedOrder.userInfo) {
           if (loadedOrder.userInfo.name) name.value = loadedOrder.userInfo.name
@@ -237,11 +241,13 @@ export const useOrderStore = defineStore("order", () => {
       currentAddress: currentAddress.value,
       commentForCourier: commentForCourier.value,
       paymentMethod: paymentMethod.value,
-      promoCode: selectedPromoCode.value,
+      // ЗАКОММЕНТИРОВАНО: промокоды
+      // promoCode: selectedPromoCode.value,
       points: pointsToUse.value,
       certificates: selectedCertificates.value,
-      promoCodes: currentPromoCodes.value,
-      pendingPromoCode: pendingPromoCode.value,
+      // ЗАКОММЕНТИРОВАНО: промокоды
+      // promoCodes: currentPromoCodes.value,
+      // pendingPromoCode: pendingPromoCode.value,
       userInfo: !authStore.isAuth
         ? {
             name: name.value,
@@ -337,21 +343,22 @@ export const useOrderStore = defineStore("order", () => {
   const finalPrice = computed(() => {
     let price = totalSum.value
 
-    if (selectedPromoCode.value) {
-      const promo = currentPromoCodes.value.find((p) => p.code === selectedPromoCode.value)
-      if (promo) {
-        const sumWithoutDiscount = cartDetailed.value.reduce((sum, item) => {
-          const isNonDiscounted = item.oldPrice === 0 || item.oldPrice === item.price
-          return isNonDiscounted ? sum + item.price * item.count : sum
-        }, 0)
-
-        if (promo.percent) {
-          price -= sumWithoutDiscount * promo.value
-        } else {
-          price -= Math.min(promo.value, sumWithoutDiscount)
-        }
-      }
-    }
+    // ЗАКОММЕНТИРОВАНО: промокоды
+    // if (selectedPromoCode.value) {
+    //   const promo = currentPromoCodes.value.find((p) => p.code === selectedPromoCode.value)
+    //   if (promo) {
+    //     const sumWithoutDiscount = cartDetailed.value.reduce((sum, item) => {
+    //       const isNonDiscounted = item.oldPrice === 0 || item.oldPrice === item.price
+    //       return isNonDiscounted ? sum + item.price * item.count : sum
+    //     }, 0)
+    //
+    //     if (promo.percent) {
+    //       price -= sumWithoutDiscount * promo.value
+    //     } else {
+    //       price -= Math.min(promo.value, sumWithoutDiscount)
+    //     }
+    //   }
+    // }
 
     if (pointsToUse.value > 0 && userStore.user) {
       price -= Math.min(pointsToUse.value, price)
@@ -488,10 +495,12 @@ export const useOrderStore = defineStore("order", () => {
         currentAddress: currentAddress.value,
         commentForCourier: commentForCourier.value,
         paymentMethod: paymentMethod.value,
-        promoCode: selectedPromoCode.value,
+        // ЗАКОММЕНТИРОВАНО: промокоды
+        // promoCode: selectedPromoCode.value,
         points: pointsToUse.value,
         certificates: selectedCertificates.value,
-        promoCodes: currentPromoCodes.value,
+        // ЗАКОММЕНТИРОВАНО: промокоды
+        // promoCodes: currentPromoCodes.value,
         userInfo: authStore.isAuth
           ? null
           : {
@@ -519,12 +528,14 @@ export const useOrderStore = defineStore("order", () => {
       if (data.value?.success) {
         isPaymentSuccessful.value = true
         cartItems.value = []
-        selectedPromoCode.value = null
+        // ЗАКОММЕНТИРОВАНО: промокоды
+        // selectedPromoCode.value = null
         pointsToUse.value = 0
         usedPointsBackup.value = 0
         selectedCertificates.value = []
-        currentPromoCodes.value = []
-        pendingPromoCode.value = null
+        // ЗАКОММЕНТИРОВАНО: промокоды
+        // currentPromoCodes.value = []
+        // pendingPromoCode.value = null
       } else {
         isPaymentSuccessful.value = false
         if (userStore.user) {
@@ -544,93 +555,97 @@ export const useOrderStore = defineStore("order", () => {
     }
   }
 
-  async function addPromoCode() {
-    if (isLoadingPromo.value) return
+  // ЗАКОММЕНТИРОВАНО: промокоды
+  // async function addPromoCode() {
+  //   if (isLoadingPromo.value) return
+  //
+  //   isLoadingPromo.value = true
+  //   addPromoCodeError.value = ""
+  //
+  //   const code = promoCode.value.trim()
+  //
+  //   if (!code) {
+  //     addPromoCodeError.value = "Введите промокод"
+  //     isLoadingPromo.value = false
+  //     return
+  //   }
+  //
+  //   const token = await userStore.loadToken()
+  //
+  //   try {
+  //     const { data, error } = await useFetch<PromoResponse>("https://back.casaalmare.com/api/checkPromoCode", {
+  //       method: "POST",
+  //       body: { token, code },
+  //     })
+  //
+  //     if (error.value) {
+  //       addPromoCodeError.value = "Ошибка сети"
+  //       isLoadingPromo.value = false
+  //       return
+  //     }
+  //
+  //     if (data.value?.success && data.value.promo) {
+  //       const alreadyAdded = currentPromoCodes.value.some((p) => p.code === data.value!.promo.code)
+  //
+  //       if (!alreadyAdded) {
+  //         currentPromoCodes.value.push(data.value.promo)
+  //         promoCode.value = ""
+  //         addPromoCodeError.value = ""
+  //         updateOrderState()
+  //       } else {
+  //         addPromoCodeError.value = "Промокод уже добавлен"
+  //       }
+  //     } else {
+  //       addPromoCodeError.value = "Промокод не найден"
+  //     }
+  //   } catch (error) {
+  //     addPromoCodeError.value = "Ошибка проверки промокода"
+  //     console.error(error)
+  //   } finally {
+  //     isLoadingPromo.value = false
+  //   }
+  // }
 
-    isLoadingPromo.value = true
-    addPromoCodeError.value = ""
+  // ЗАКОММЕНТИРОВАНО: промокоды
+  // function applyPromoCode() {
+  //   if (!pendingPromoCode.value) {
+  //     return
+  //   }
+  //
+  //   selectedPromoCode.value = pendingPromoCode.value
+  //
+  //   if (pointsToUse.value > 0 && userStore.user) {
+  //     userStore.user.points += pointsToUse.value
+  //   }
+  //   pointsToUse.value = 0
+  //   pendingPoints.value = ""
+  //
+  //   pendingPromoCode.value = null
+  //
+  //   updateOrderState()
+  // }
 
-    const code = promoCode.value.trim()
+  // ЗАКОММЕНТИРОВАНО: промокоды
+  // function savedMoney(promoValue: number): number {
+  //   const promo = currentPromoCodes.value.find((p) => p.value === promoValue)
+  //   if (!promo) return 0
+  //
+  //   const sumWithoutDiscount = cartDetailed.value.reduce((sum, item) => {
+  //     const isNonDiscounted = item.oldPrice === 0 || item.oldPrice === item.price
+  //     return isNonDiscounted ? sum + item.price * item.count : sum
+  //   }, 0)
+  //
+  //   if (promo.percent) {
+  //     return Math.round(sumWithoutDiscount * promo.value)
+  //   } else {
+  //     return Math.min(promo.value, sumWithoutDiscount)
+  //   }
+  // }
 
-    if (!code) {
-      addPromoCodeError.value = "Введите промокод"
-      isLoadingPromo.value = false
-      return
-    }
-
-    const token = await userStore.loadToken()
-
-    try {
-      const { data, error } = await useFetch<PromoResponse>("https://back.casaalmare.com/api/checkPromoCode", {
-        method: "POST",
-        body: { token, code },
-      })
-
-      if (error.value) {
-        addPromoCodeError.value = "Ошибка сети"
-        isLoadingPromo.value = false
-        return
-      }
-
-      if (data.value?.success && data.value.promo) {
-        const alreadyAdded = currentPromoCodes.value.some((p) => p.code === data.value!.promo.code)
-
-        if (!alreadyAdded) {
-          currentPromoCodes.value.push(data.value.promo)
-          promoCode.value = ""
-          addPromoCodeError.value = ""
-          updateOrderState()
-        } else {
-          addPromoCodeError.value = "Промокод уже добавлен"
-        }
-      } else {
-        addPromoCodeError.value = "Промокод не найден"
-      }
-    } catch (error) {
-      addPromoCodeError.value = "Ошибка проверки промокода"
-      console.error(error)
-    } finally {
-      isLoadingPromo.value = false
-    }
-  }
-
-  function applyPromoCode() {
-    if (!pendingPromoCode.value) {
-      return
-    }
-
-    selectedPromoCode.value = pendingPromoCode.value
-
-    if (pointsToUse.value > 0 && userStore.user) {
-      userStore.user.points += pointsToUse.value
-    }
-    pointsToUse.value = 0
-    pendingPoints.value = ""
-
-    pendingPromoCode.value = null
-
-    updateOrderState()
-  }
-
-  function savedMoney(promoValue: number): number {
-    const promo = currentPromoCodes.value.find((p) => p.value === promoValue)
-    if (!promo) return 0
-
-    const sumWithoutDiscount = cartDetailed.value.reduce((sum, item) => {
-      const isNonDiscounted = item.oldPrice === 0 || item.oldPrice === item.price
-      return isNonDiscounted ? sum + item.price * item.count : sum
-    }, 0)
-
-    if (promo.percent) {
-      return Math.round(sumWithoutDiscount * promo.value)
-    } else {
-      return Math.min(promo.value, sumWithoutDiscount)
-    }
-  }
-
-  function togglePromoCode() {
-    isExpandedPromoCode.value = !isExpandedPromoCode.value
-  }
+  // ЗАКОММЕНТИРОВАНО: промокоды
+  // function togglePromoCode() {
+  //   isExpandedPromoCode.value = !isExpandedPromoCode.value
+  // }
 
   async function applyPoints() {
     if (isLoadingPoints.value) return
@@ -638,8 +653,9 @@ export const useOrderStore = defineStore("order", () => {
     isLoadingPoints.value = true
     pointsError.value = ""
 
-    selectedPromoCode.value = null
-    pendingPromoCode.value = null
+    // ЗАКОММЕНТИРОВАНО: промокоды
+    // selectedPromoCode.value = null
+    // pendingPromoCode.value = null
 
     const points = Number(pendingPoints.value)
 
@@ -757,11 +773,13 @@ export const useOrderStore = defineStore("order", () => {
       currentAddress,
       commentForCourier,
       paymentMethod,
-      selectedPromoCode,
+      // ЗАКОММЕНТИРОВАНО: промокоды
+      // selectedPromoCode,
       pointsToUse,
       selectedCertificates,
-      currentPromoCodes,
-      pendingPromoCode,
+      // ЗАКОММЕНТИРОВАНО: промокоды
+      // currentPromoCodes,
+      // pendingPromoCode,
       name,
       surname,
       phone,
@@ -789,13 +807,14 @@ export const useOrderStore = defineStore("order", () => {
     paymentMethod,
     showErrorPaymentMethod,
     isLoadingPayment,
-    addPromoCodeError,
-    currentPromoCodes,
-    isExpandedPromoCode,
-    pendingPromoCode,
-    promoCode,
-    selectedPromoCode,
-    isLoadingPromo,
+    // ЗАКОММЕНТИРОВАНО: промокоды
+    // addPromoCodeError,
+    // currentPromoCodes,
+    // isExpandedPromoCode,
+    // pendingPromoCode,
+    // promoCode,
+    // selectedPromoCode,
+    // isLoadingPromo,
     isExpandedPoints,
     pendingPoints,
     pointsError,
@@ -823,10 +842,11 @@ export const useOrderStore = defineStore("order", () => {
     setCartItems,
     saveNewAddress,
     attemptPayment,
-    addPromoCode,
-    applyPromoCode,
-    savedMoney,
-    togglePromoCode,
+    // ЗАКОММЕНТИРОВАНО: промокоды
+    // addPromoCode,
+    // applyPromoCode,
+    // savedMoney,
+    // togglePromoCode,
     applyPoints,
     togglePoints,
     addCertificate,

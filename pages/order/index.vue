@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { AppInput, type AppSelect, SelectInput } from "#components"
 
-interface ApiResponse<T = unknown> {
+interface ApiResponse {
   success: boolean
-  data?: T
   error?: string
 }
 
@@ -56,12 +55,15 @@ onMounted(async () => {
     if (!token) return
 
     try {
-      const { data, error } = await useFetch<ApiResponse<CartResponseData>>("https://back.casaalmare.com/api/getCart", {
-        method: "POST",
-        body: {
-          token: token,
+      const { data, error } = await useFetch<ApiResponse & CartResponseData>(
+        "https://back.casaalmare.com/api/getCart",
+        {
+          method: "POST",
+          body: {
+            token: token,
+          },
         },
-      })
+      )
 
       if (error.value) {
         console.error("Network error fetching cart:", error.value)
@@ -118,7 +120,6 @@ function handlePay(): void {
         if (!newAddressRef.value?.validate()) {
           return
         }
-        orderStore.saveNewAddress() // Автосейв, если нужно
         orderStore.showErrorDeliveryMethod = true
         return
       }
@@ -462,6 +463,8 @@ async function handleSave(): Promise<void> {
                   </span>
                 </div>
               </div>
+              <!-- ЗАКОММЕНТИРОВАНО: Блок промокодов -->
+              <!--
               <div class="flex flex-col gap-4">
                 <div
                   class="flex items-center justify-between cursor-pointer"
@@ -525,6 +528,7 @@ async function handleSave(): Promise<void> {
                   />
                 </div>
               </div>
+              -->
               <div
                 v-if="authStore.isAuth"
                 class="flex flex-col gap-4"
