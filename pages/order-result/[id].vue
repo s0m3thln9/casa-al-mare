@@ -37,7 +37,7 @@ async function handleRetryPay() {
           class="flex flex-col gap-4"
         >
           <h2 class="font-[Inter] text-[17px] text-[#211D1D] uppercase">
-            Благодарим Вас за заказ №{{ orderStore.orderId }}!
+            Благодарим Вас за заказ №{{ orderId }}!
           </h2>
           <p class="font-[Manrope] text-sm text-[#211D1D] font-light">
             Мы уже проверяем ваш платеж и в течение 30 минут информация появится в вашем личном кабинете
