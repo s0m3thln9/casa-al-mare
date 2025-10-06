@@ -31,7 +31,11 @@ const email = ref("")
         <h3 class="font-normal text-base uppercase">О бренде</h3>
         <ul class="flex flex-col gap-4">
           <li><NuxtLink to="/about-us">О нас</NuxtLink></li>
-          <li><NuxtLink to="/">Telegram</NuxtLink></li>
+          <li>
+	          <a href="https://t.me/casaalmare_swim" target="_blank" rel="noopener noreferrer">
+					    Telegram
+					  </a>
+          </li>
           <li><NuxtLink to="/">WhatsApp</NuxtLink></li>
           <li><NuxtLink to="/">Pinterest</NuxtLink></li>
         </ul>
@@ -73,7 +77,11 @@ const email = ref("")
       <div class="w-full flex flex-col gap-2">
         <div class="flex gap-2">
           <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Whatsapp</button>
-          <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Telegram</button>
+	        <a class="w-full h-full" href="https://t.me/casaalmare_swim" target="_blank" rel="noopener noreferrer">
+            <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">
+					    Telegram
+            </button>
+	        </a>
           <button
             class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]"
             @click="popupStore.open('subscription')"
