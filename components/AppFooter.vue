@@ -2,6 +2,31 @@
 const popupStore = usePopupStore()
 
 const email = ref("")
+const emailFooterRef = ref()
+
+const buttonStateFooter = ref({
+  content: "Подписаться",
+  isLoading: false,
+  showSuccess: false,
+})
+
+const handleSubscribeFooter = () => {
+  if (emailFooterRef.value?.validate()) {
+    buttonStateFooter.value.isLoading = true
+    setTimeout(() => {
+      buttonStateFooter.value.isLoading = false
+      buttonStateFooter.value.content = "Вы подписаны"
+      buttonStateFooter.value.showSuccess = true
+      setTimeout(() => {
+        buttonStateFooter.value.content = "Подписаться"
+        buttonStateFooter.value.showSuccess = false
+        email.value = ""
+      }, 1000)
+    }, 1000)
+  } else {
+    console.warn("Email не валиден для подписки")
+  }
+}
 </script>
 
 <template>
@@ -23,7 +48,12 @@ const email = ref("")
           <li><NuxtLink to="/">Доставка и оплата</NuxtLink></li>
           <li><NuxtLink to="/">Возврат</NuxtLink></li>
           <li><NuxtLink to="/">Реквизиты</NuxtLink></li>
-          <li><NuxtLink to="/">Обратная связь</NuxtLink></li>
+          <li
+            class="cursor-pointer"
+            @click="popupStore.open('reverse')"
+          >
+            Обратная связь
+          </li>
           <li><NuxtLink to="/">Уход за изделиями</NuxtLink></li>
         </ul>
       </div>
@@ -32,9 +62,13 @@ const email = ref("")
         <ul class="flex flex-col gap-4">
           <li><NuxtLink to="/about-us">О нас</NuxtLink></li>
           <li>
-	          <a href="https://t.me/casaalmare_swim" target="_blank" rel="noopener noreferrer">
-					    Telegram
-					  </a>
+            <a
+              href="https://t.me/casaalmare_swim"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Telegram
+            </a>
           </li>
           <li><NuxtLink to="/">WhatsApp</NuxtLink></li>
           <li><NuxtLink to="/">Pinterest</NuxtLink></li>
@@ -44,7 +78,7 @@ const email = ref("")
         <h3 class="font-normal text-base uppercase">Аккаунт</h3>
         <ul class="flex flex-col gap-4">
           <li><NuxtLink to="/profile">В личный кабинет</NuxtLink></li>
-          <li><NuxtLink to="/pages/favorites">Избранное</NuxtLink></li>
+          <li><NuxtLink to="/favorites">Избранное</NuxtLink></li>
           <li><NuxtLink to="/">Заказы</NuxtLink></li>
           <li><NuxtLink to="/certificate">Сертификат</NuxtLink></li>
         </ul>
@@ -52,17 +86,28 @@ const email = ref("")
       <div class="flex flex-col gap-4 w-full mt-4 lg:w-auto lg:mt-0">
         <h3 class="font-normal text-base uppercase">Аккаунт</h3>
         <div class="flex flex-col items-start gap-4 xl:flex-row">
-          <AppInput
-            id="email"
-            v-model="email"
-            label="Введите e-mail для получения новостей"
-            type="email"
-            custom-class="min-w-[245px]"
-          />
+          <AppTooltip
+            text="Это поле обязательно для заполнения"
+            type="error"
+            :show="emailFooterRef?.showError"
+          >
+            <AppInput
+              id="email"
+              ref="emailFooterRef"
+              v-model="email"
+              label="Введите e-mail для получения новостей"
+              type="email"
+              custom-class="min-w-[245px]"
+              required
+            />
+          </AppTooltip>
           <AppButton
-            content="Подписаться"
+            :content="buttonStateFooter.content"
+            :is-loading="buttonStateFooter.isLoading"
+            :show-success="buttonStateFooter.showSuccess"
             variant="primary"
             custom-class="w-full px-0 max-xl:w-[245px]"
+            @click="handleSubscribeFooter"
           />
         </div>
         <p class="max-w-[300px] text-[10px] font-[Commissioner] xl:max-w-[416px]">
@@ -77,11 +122,14 @@ const email = ref("")
       <div class="w-full flex flex-col gap-2">
         <div class="flex gap-2">
           <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Whatsapp</button>
-	        <a class="w-full h-full" href="https://t.me/casaalmare_swim" target="_blank" rel="noopener noreferrer">
-            <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">
-					    Telegram
-            </button>
-	        </a>
+          <a
+            class="w-full h-full"
+            href="https://t.me/casaalmare_swim"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Telegram</button>
+          </a>
           <button
             class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]"
             @click="popupStore.open('subscription')"
@@ -89,7 +137,12 @@ const email = ref("")
             Рассылка
           </button>
         </div>
-        <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Обратная связь</button>
+        <button
+          class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]"
+          @click="popupStore.open('reverse')"
+        >
+          Обратная связь
+        </button>
         <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Реквизиты</button>
         <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">
           Политика конфиденциальности и оферта

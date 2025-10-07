@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { SelectInput } from "#components"
+
 interface ApiResponse {
   success: boolean
   error?: string
@@ -8,10 +10,28 @@ interface CartResponseData {
   cart: Record<string, CartBackendItem>
 }
 
+interface CartBackendItem {
+  productId: number
+  variant: string
+  count: number
+}
+
 const isCookieAccepted = ref(false)
 // const isCitySelected = ref(false)
 const email = ref("")
+const emailReverse = ref("")
+const name = ref("")
+const phone = ref<{
+  code: string
+  phone: string
+  country: string
+} | null>(null)
+const text = ref("")
 const emailRef = ref()
+const emailReverseRef = ref()
+const nameRef = ref()
+const phoneRef = ref()
+const textRef = ref()
 const catalogStore = useCatalogStore()
 const orderStore = useOrderStore()
 
@@ -35,7 +55,13 @@ const buttonState = ref({
   showSuccess: false,
 })
 
-const handleEmail = () => {
+const buttonStateReverse = ref({
+  content: "Отправить",
+  isLoading: false,
+  showSuccess: false,
+})
+
+const handleSubscription = () => {
   if (emailRef.value.validate()) {
     buttonState.value.isLoading = true
     setTimeout(() => {
@@ -47,6 +73,32 @@ const handleEmail = () => {
         buttonState.value.showSuccess = false
       }, 1000)
     }, 1000)
+  }
+}
+
+const handleReverseForm = () => {
+  const isNameValid = nameRef.value?.validate()
+  const isEmailValid = emailReverseRef.value?.validate()
+  const isPhoneValid = phoneRef.value?.validate()
+  const isTextValid = textRef.value?.validate()
+
+  if (isNameValid && isEmailValid && isPhoneValid && isTextValid) {
+    buttonStateReverse.value.isLoading = true
+    setTimeout(() => {
+      buttonStateReverse.value.isLoading = false
+      buttonStateReverse.value.content = "Благодарим за обращение"
+      buttonStateReverse.value.showSuccess = true
+      setTimeout(() => {
+        buttonStateReverse.value.content = "Отправить"
+        buttonStateReverse.value.showSuccess = false
+        name.value = ""
+        emailReverse.value = ""
+        phone.value = null
+        text.value = ""
+      }, 1000)
+    }, 1000)
+  } else {
+    console.warn("Форма обратной связи не валидна")
   }
 }
 
@@ -93,6 +145,27 @@ onMounted(async () => {
   await orderStore.loadUserData()
   await orderStore.loadOrderState()
 })
+
+interface PhoneOption {
+  code: string
+  country: string
+  iso: string
+}
+
+const phoneOptions: PhoneOption[] = [
+  { code: "+7", country: "Россия", iso: "RU" },
+  { code: "+375", country: "Беларусь", iso: "BY" },
+  { code: "+380", country: "Украина", iso: "UA" },
+  { code: "+77", country: "Казахстан", iso: "KZ" },
+  { code: "+998", country: "Узбекистан", iso: "UZ" },
+  { code: "+992", country: "Таджикистан", iso: "TJ" },
+  { code: "+993", country: "Туркменистан", iso: "TM" },
+  { code: "+996", country: "Кыргызстан", iso: "KG" },
+  { code: "+374", country: "Армения", iso: "AM" },
+  { code: "+994", country: "Азербайджан", iso: "AZ" },
+  { code: "+373", country: "Молдова", iso: "MD" },
+  { code: "+995", country: "Грузия", iso: "GE" },
+]
 </script>
 
 <template>
@@ -143,11 +216,98 @@ onMounted(async () => {
           :show-success="buttonState.showSuccess"
           variant="primary"
           custom-class="w-full px-0"
-          @click="handleEmail"
+          @click="handleSubscription"
         />
         <p class="w-full font-light text-[10px] text-[#5E5B58] font-[Commissioner] sm:w-[350px]">
           Нажимая на кнопку «Подписаться», я соглашаюсь на обработку моих персональных данных и ознакомлен(а) с
           условиями конфиденциальности.
+        </p>
+      </div>
+    </AppPopup>
+    <AppPopup
+      title="Обратная связь"
+      popup-id="reverse"
+    >
+      <div class="flex flex-col items-stretch gap-6 mt-8 sm:mt-14">
+        <NuxtImg
+          src="/pop-up-sub.jpg"
+          alt="sub"
+          width="390"
+          height="532"
+          class="rounded-lg"
+        />
+        <h2 class="font-[Manrope] uppercase text-[#211D1D]">Текст</h2>
+        <AppTooltip
+          text="Это поле обязательно для заполнения"
+          type="error"
+          :show="nameRef?.showError"
+        >
+          <AppInput
+            id="name"
+            ref="nameRef"
+            v-model="name"
+            label="Имя"
+            type="text"
+            custom-class="w-full"
+            required
+          />
+        </AppTooltip>
+        <AppTooltip
+          text="Это поле обязательно для заполнения"
+          type="error"
+          :show="emailReverseRef?.showError"
+        >
+          <AppInput
+            id="emailReverse"
+            ref="emailReverseRef"
+            v-model="emailReverse"
+            label="E-mail"
+            type="email"
+            custom-class="w-full"
+            required
+          />
+        </AppTooltip>
+        <AppTooltip
+          text="Это поле обязательно для заполнения"
+          type="error"
+          :show="phoneRef?.showError"
+        >
+          <SelectInput
+            id="phone"
+            ref="phoneRef"
+            v-model="phone"
+            custom-class="w-full"
+            :options="phoneOptions"
+            label="Номер телефона"
+            required
+          />
+        </AppTooltip>
+        <AppTooltip
+          text="Это поле обязательно для заполнения"
+          type="error"
+          :show="textRef?.showError"
+        >
+          <AppInput
+            id="text"
+            ref="textRef"
+            v-model="text"
+            label="Сообщение"
+            type="text"
+            custom-class="w-full"
+            required
+          />
+        </AppTooltip>
+        <AppButton
+          :content="buttonStateReverse.content"
+          :is-loading="buttonStateReverse.isLoading"
+          :show-success="buttonStateReverse.showSuccess"
+          variant="primary"
+          custom-class="w-full px-0"
+          @click="handleReverseForm"
+        />
+        <p class="w-full font-light text-[10px] text-[#5E5B58] font-[Commissioner] sm:w-[350px]">
+          Нажимая на кнопку «Отправить», я соглашаюсь на обработку моих персональных данных и ознакомлен(а) с условиями
+          конфиденциальности.
         </p>
       </div>
     </AppPopup>

@@ -38,17 +38,25 @@ onMounted(async () => {
   }
 })
 
-const breadcrumsItems = computed(() => [
-  { name: "Главная", path: "/" },
-  { name: "Смотреть все", path: "/catalog" },
-  { name: item.value?.name || "Товар не найден" },
-])
+const breadcrumsItems = computed(() => {
+  if (isLoading.value) {
+    return [{ name: "Главная", path: "/" }, { name: "Смотреть все", path: "/catalog" }, { name: "Название" }]
+  }
+  return [
+    { name: "Главная", path: "/" },
+    { name: "Смотреть все", path: "/catalog" },
+    { name: item.value?.name || "Товар не найден" },
+  ]
+})
 
 const currentImageIndex = ref(0)
 const touchStartX = ref(0)
 
 const setItems = computed(() => {
   const items: { id: number; vector: string }[] = []
+
+  // ФИКС: Добавил ранний возврат, если store пустой (для безопасности computed)
+  if (catalogStore.items.length === 0) return items
 
   if (setStore.top) {
     const topItem =
@@ -192,14 +200,123 @@ watch(
 </script>
 
 <template>
-  <main
-    v-if="!isLoading && !error"
-    class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D] w-full"
-  >
-    <div class="p-2 sm:px-4 sm:py-6">
+  <main class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D] w-full">
+    <div
+      v-if="error"
+      class="p-4 text-center text-red-500"
+    >
+      {{ error }}
+    </div>
+
+    <div
+      v-if="isLoading"
+      class="p-2 sm:px-4 sm:py-6"
+    >
+      <AppBreadcrumbs :items="breadcrumsItems" />
+
+      <div
+        class="px-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[4fr_1fr] xl:grid-cols-[3fr_1fr] w-full gap-8 sm:px-4"
+      >
+        <div class="block sm:hidden">
+          <div class="relative w-full aspect-[460/680] overflow-hidden bg-[#F9F6EC]">
+            <!-- Пустой прелоадер -->
+          </div>
+          <div class="flex justify-center items-center gap-1 px-4 mt-2">
+            <div class="flex-1 border-y border-[#A6CEFF]" />
+            <div class="flex-1 border-y border-[#A6CEFF]" />
+          </div>
+        </div>
+        <div class="hidden sm:grid grid-cols-1 gap-2 lg:grid-cols-2">
+          <div class="aspect-[726/1080] bg-[#F9F6EC] rounded-lg" />
+          <div class="aspect-[726/1080] bg-[#F9F6EC] rounded-lg" />
+        </div>
+
+        <div class="px-2 flex flex-col sm:px-0 sm:sticky sm:top-0 sm:h-screen sm:overflow-y-auto">
+          <div class="flex justify-center items-center">
+            <h2 class="font-[Inter] text-center text-[32px] sm:text-4xl">Название</h2>
+          </div>
+          <div class="flex justify-center items-center gap-2 mt-4 sm:mt-6">
+            <span
+              class="font-[Inter] font-light text-[17px] text-[#8C8785] sm:font-[Manrope] sm:font-normal sm:text-base sm:text-[#211D1D]"
+            >
+              Цена
+            </span>
+            <span
+              class="font-[Inter] line-through font-light text-[17px] text-[#8C8785] sm:font-[Manrope] sm:font-normal sm:text-base sm:text-[#211D1D]"
+            >
+              Старая цена
+            </span>
+          </div>
+          <div class="flex justify-center items-center mt-1 sm:mt-2">
+            <span class="font-light text-xs">Скидка 0%</span>
+          </div>
+          <div class="flex flex-col justify-center items-center gap-6 mt-14">
+            <div class="flex justify-center items-center gap-4">
+              <div>Цвет</div>
+            </div>
+            <span class="text-xs">Цвет</span>
+          </div>
+          <div class="flex flex-col justify-center items-center gap-4 mt-12 sm:mt-10">
+            <div class="flex justify-center items-center gap-3 font-light sm:gap-4 sm:font-normal">
+              <div>Размер</div>
+            </div>
+            <span class="text-xs">Размер</span>
+          </div>
+          <div class="flex flex-col justify-center items-center gap-1 mt-12 sm:mt-10">
+            <span class="font-light text-xs">На модели размер: S</span>
+            <span class="text-[11px] text-[#363636]">Параметры модели: 175 80/60/89</span>
+          </div>
+          <div class="flex flex-col justify-center items-stretch gap-4 mt-6">
+            <div>Кнопка купить</div>
+            <div>Собрать комплект</div>
+          </div>
+          <div class="flex justify-center items-center mt-4 sm:mt-6">
+            <div>В избранное</div>
+          </div>
+          <div class="mt-14 flex flex-col justify-center items-center gap-3 p-4 rounded-2xl border border-[#BBB8B6]">
+            <div class="flex justify-center gap-2.5 items-center w-full sm:justify-between cursor-pointer sm:gap-0">
+              <span class="font-light text-sm">Состав и уход</span>
+              <div>?</div>
+            </div>
+            <div class="w-full h-[1px] bg-[#BBB8B6]" />
+            <div class="flex justify-center gap-2.5 items-center w-full sm:justify-between cursor-pointer sm:gap-0">
+              <span class="font-light text-sm">Определить размер</span>
+              <div>?</div>
+            </div>
+            <div class="w-full h-[1px] bg-[#BBB8B6]" />
+            <div class="flex justify-center gap-2.5 items-center w-full sm:justify-between cursor-pointer sm:gap-0">
+              <span class="font-light text-sm">Доставка и возврат</span>
+              <div>?</div>
+            </div>
+            <div class="w-full h-[1px] bg-[#BBB8B6]" />
+            <div class="flex justify-center gap-2.5 items-center w-full sm:justify-between cursor-pointer sm:gap-0">
+              <span class="font-light text-sm">Подписаться на рассылку</span>
+              <div>@</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-2 flex flex-col justify-center items-start gap-4 mt-18 sm:items-center sm:gap-12 sm:mt-24">
+        <h2 class="font-[Manrope] text-[15px] font-light sm:font-[Inter] sm:text-4xl sm:font-normal">
+          Вам может понравиться
+        </h2>
+        <div class="w-full grid gap-2 grid-cols-3 sm:gap-4 sm:px-[15%]">
+          <div>Карточка 1</div>
+          <div>Карточка 2</div>
+          <div>Карточка 3</div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-else
+      class="p-2 sm:px-4 sm:py-6"
+    >
       <AppBreadcrumbs :items="breadcrumsItems" />
     </div>
     <div
+      v-if="!isLoading"
       class="px-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[4fr_1fr] xl:grid-cols-[3fr_1fr] w-full gap-8 sm:px-4"
     >
       <div
@@ -390,28 +507,36 @@ watch(
         </div>
       </div>
     </div>
-    <div class="px-2 flex flex-col justify-center items-start gap-4 mt-18 sm:items-center sm:gap-12 sm:mt-24">
+    <div
+      v-if="!isLoading"
+      class="px-2 flex flex-col justify-center items-start gap-4 mt-18 sm:items-center sm:gap-12 sm:mt-24"
+    >
       <h2 class="font-[Manrope] text-[15px] font-light sm:font-[Inter] sm:text-4xl sm:font-normal">
         Вам может понравиться
       </h2>
       <div class="w-full grid gap-2 grid-cols-3 sm:gap-4 sm:px-[15%]">
+        <!-- ФИКС: Добавил v-if на CatalogCard для защиты от пустого store -->
         <CatalogCard
+          v-if="catalogStore.items.length > 0"
           :id="31"
           variant="large"
           link
         />
         <CatalogCard
+          v-if="catalogStore.items.length > 0"
           :id="31"
           variant="large"
           link
         />
         <CatalogCard
+          v-if="catalogStore.items.length > 0"
           :id="31"
           variant="large"
           link
         />
       </div>
     </div>
+    <!-- Попапы остаются как есть, но с фиксом внутри -->
     <AppPopup
       title="Собрать комплект"
       popup-id="set"
@@ -420,32 +545,48 @@ watch(
         <div class="grid grid-cols-2 gap-y-6 gap-x-4 sm:gap-x-2">
           <div class="flex flex-col gap-2">
             <span class="font-[Manrope] text-sm">Верх</span>
+            <!-- ФИКС: Добавил v-if на CatalogCard + fallback-заглушка -->
             <CatalogCard
+              v-if="catalogStore.items.length > 0"
               :id="31"
               v-model="setStore.top"
               custom-image-class="aspect-[200/300] w-full"
               popup
               variant="mini"
             />
+            <div
+              v-else
+              class="aspect-[200/300] w-full bg-[#F9F6EC]"
+            />
           </div>
           <div class="flex flex-col gap-2">
             <span class="font-[Manrope] text-sm">Низ</span>
             <CatalogCard
+              v-if="catalogStore.items.length > 0"
               :id="31"
               v-model="setStore.bottom"
               custom-image-class="aspect-[200/300] w-full"
               popup
               variant="mini"
             />
+            <div
+              v-else
+              class="aspect-[200/300] w-full bg-[#F9F6EC]"
+            />
           </div>
           <div class="flex flex-col gap-2">
             <span class="font-[Manrope] text-sm">Аксессуар</span>
             <CatalogCard
+              v-if="catalogStore.items.length > 0"
               :id="31"
               v-model="setStore.accessory"
               custom-image-class="aspect-[200/300] w-full"
               popup
               variant="mini"
+            />
+            <div
+              v-else
+              class="aspect-[200/300] w-full bg-[#F9F6EC]"
             />
           </div>
         </div>
