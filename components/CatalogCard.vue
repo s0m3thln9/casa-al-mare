@@ -28,6 +28,8 @@ const {
   handleTouchStart,
   handleTouchEnd,
   handleClick,
+  numImages,
+  barIndices,
 } = useCatalogCard(props.variant, props.id, props.link)
 
 watch(
@@ -60,15 +62,12 @@ const getPriceData = () => {
 const handleStarClick = async () => {
   isStarPressed.value = true
 
-  // Немедленно меняем локальное состояние
   isFavoriteLocal.value = !isFavoriteLocal.value
 
   try {
     await favoritesStore.toggleFavorite(props.id)
   } catch (error) {
-    // Если произошла ошибка, возвращаем предыдущее состояние
     isFavoriteLocal.value = !isFavoriteLocal.value
-    // Можно добавить уведомление пользователю об ошибке
     console.error("Не удалось обновить избранное:", error)
   }
 
@@ -77,7 +76,6 @@ const handleStarClick = async () => {
   }, 200)
 }
 
-// Синхронизируем локальное состояние с глобальным при изменении
 watch(
   () => favoritesStore.isFavorite(props.id),
   (newValue) => {
@@ -176,7 +174,6 @@ watch(
       @click.stop="handleStarClick"
     />
   </div>
-
   <div
     v-else
     :class="[
@@ -200,7 +197,7 @@ watch(
         class="aspect-[460/680] bg-[#F9F6EC] rounded-lg w-full"
       />
       <div
-        v-else
+        v-else-if="numImages > 1"
         class="relative w-full aspect-[460/680] overflow-hidden"
         @touchstart="handleTouchStart"
         @touchend="handleTouchEnd"
@@ -208,7 +205,7 @@ watch(
         @click="handleClick"
       >
         <NuxtImg
-          v-for="(img, index) in Object.values(item!.images).slice(0, 3)"
+          v-for="(img, index) in Object.values(item!.images).slice(0, numImages)"
           :key="index"
           v-slot="{ src, imgAttrs }"
           :src="img"
@@ -225,16 +222,32 @@ watch(
           />
         </NuxtImg>
       </div>
+      <NuxtImg
+        v-else-if="Object.values(item!.images).length === 1"
+        v-slot="{ src, imgAttrs }"
+        :src="Object.values(item!.images)[0]"
+        width="460"
+        height="680"
+        :custom="true"
+      >
+        <img
+          v-bind="imgAttrs"
+          :src="src"
+          :class="['rounded-lg sm:rounded-2xl w-full aspect-[460/680] object-cover', customImageClass]"
+          alt="card"
+          @click="handleClick"
+        />
+      </NuxtImg>
       <div
         v-if="!isLoaded"
         class="w-full h-0.5 bg-[#F9F6EC] rounded-lg mt-1"
       />
       <div
-        v-else
+        v-else-if="numImages > 1"
         class="flex justify-center items-center gap-1 px-6 py-2"
       >
         <div
-          v-for="(_, index) in Object.values(item!.images).slice(0, 3)"
+          v-for="index in barIndices"
           :key="index"
           class="flex-1 border-y border-[#A6CEFF]"
           :style="barStyles(index)"

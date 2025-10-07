@@ -1,4 +1,4 @@
-type FavoriteId = string
+type FavoriteId = number
 
 export const useFavoritesStore = defineStore("favorites", () => {
   const favorites = ref<FavoriteId[]>([])
@@ -18,7 +18,7 @@ export const useFavoritesStore = defineStore("favorites", () => {
     }
   }
 
-  const toggleFavorite = async (id: string) => {
+  const toggleFavorite = async (id: number) => {
     const token = await userStore.loadToken()
 
     // Сохраняем предыдущее состояние для возможного отката
@@ -59,7 +59,7 @@ export const useFavoritesStore = defineStore("favorites", () => {
     }
   }
 
-  const isFavorite = (id: string) => favorites.value.includes(id)
+  const isFavorite = (id: number) => favorites.value.includes(id)
 
   return {
     favorites,

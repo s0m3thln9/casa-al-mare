@@ -10,6 +10,14 @@ export function useCatalogCard(variant: "mini" | "large", id: number, link: bool
   const favoritesStore = useFavoritesStore()
   const selectedSize = ref<string | null>(null)
 
+  const numImages = computed(() => {
+    return Math.min(3, Object.values(item?.images || {}).length || 0)
+  })
+
+  const barIndices = computed(() => {
+    return Array.from({ length: numImages.value }, (_, i) => i)
+  })
+
   const imageStyles = computed(() => (index: number) => ({
     transform:
       index === currentImageIndex.value
@@ -37,10 +45,11 @@ export function useCatalogCard(variant: "mini" | "large", id: number, link: bool
   }
 
   const handleMouseMove = (e: MouseEvent) => {
-    if (isTransitioning.value || !isWideScreen.value) return
+    if (isTransitioning.value || !isWideScreen.value || numImages.value <= 1) return
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-    const section = rect.width / 3
-    const newIndex = Math.max(0, Math.floor((e.clientX - rect.left) / section))
+    const numSections = numImages.value
+    const section = rect.width / numSections
+    const newIndex = Math.max(0, Math.min(numSections - 1, Math.floor((e.clientX - rect.left) / section)))
     if (newIndex !== currentImageIndex.value) {
       isTransitioning.value = true
       currentImageIndex.value = newIndex
@@ -53,25 +62,24 @@ export function useCatalogCard(variant: "mini" | "large", id: number, link: bool
   }
 
   const handleTouchEnd = (e: TouchEvent) => {
+    if (numImages.value <= 1) return
     const deltaX = e.changedTouches[0].clientX - touchStartX.value
     const threshold = 50
     if (Math.abs(deltaX) > threshold) {
-      currentImageIndex.value = (currentImageIndex.value + (deltaX > 0 ? -1 : 1) + 3) % 3
+      currentImageIndex.value = (currentImageIndex.value + (deltaX > 0 ? -1 : 1) + numImages.value) % numImages.value
     }
   }
 
   const handleClick = async () => {
-    // ФИКС: async для navigateTo (если нужно await)
-    console.log("handleClick triggered:", { id, link, path: `/catalog/${id}` }) // ФИКС: Лог для дебага
+    console.log("handleClick triggered:", { id, link, path: `/catalog/${id}` })
     if (link && item) {
-      // ФИКС: + проверка item, чтобы не навигировать на пустой товар
       try {
-        await navigateTo(`/catalog/${id}`) // ФИКС: await для обработки ошибок
+        await navigateTo(`/catalog/${id}`)
       } catch (error) {
-        console.error("Navigation error:", error) // ФИКС: Лог ошибок (напр. 404)
+        console.error("Navigation error:", error)
       }
     } else {
-      console.warn("Navigation skipped: link=false or no item") // ФИКС: Лог, если пропуск
+      console.warn("Navigation skipped: link=false or no item")
     }
   }
 
@@ -96,6 +104,8 @@ export function useCatalogCard(variant: "mini" | "large", id: number, link: bool
     imageStyles,
     barStyles,
     item,
+    numImages,
+    barIndices,
     priceFormatter,
     handleMouseMove,
     handleTouchStart,
