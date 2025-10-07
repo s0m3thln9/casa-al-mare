@@ -1,17 +1,27 @@
 <script setup lang="ts">
+interface ApiResponse {
+  success: boolean
+  error?: string
+}
+
+interface CartResponseData {
+  cart: Record<string, CartBackendItem>
+}
+
 const isCookieAccepted = ref(false)
-const isCitySelected = ref(false)
+// const isCitySelected = ref(false)
 const email = ref("")
 const emailRef = ref()
 const catalogStore = useCatalogStore()
+const orderStore = useOrderStore()
 
 const acceptCookie = () => {
   isCookieAccepted.value = true
 }
 
-const selectCity = () => {
-  isCitySelected.value = true
-}
+// const selectCity = () => {
+//   isCitySelected.value = true
+// }
 
 const userStore = useUserStore()
 onMounted(async () => {
@@ -43,6 +53,46 @@ const handleEmail = () => {
 onMounted(() => {
   catalogStore.loadItems()
 })
+
+onMounted(async () => {
+  const getCart = async (): Promise<void> => {
+    const token = await userStore.loadToken()
+    if (!token) return
+
+    try {
+      const { data, error } = await useFetch<ApiResponse & CartResponseData>(
+        "https://back.casaalmare.com/api/getCart",
+        {
+          method: "POST",
+          body: {
+            token: token,
+          },
+        },
+      )
+
+      if (error.value) {
+        console.error("Network error fetching cart:", error.value)
+        return
+      }
+
+      if (data.value?.success && data.value?.cart) {
+        const rawCart = data.value.cart
+        const parsedCart: CartItem[] = Object.entries(rawCart).map(([_, item]) => ({
+          id: item.productId,
+          vector: item.variant,
+          count: item.count,
+        }))
+        orderStore.setCartItems(parsedCart)
+      }
+    } catch (error) {
+      console.error("Ошибка при получении корзины:", error)
+    }
+  }
+
+  await getCart()
+  await orderStore.loadUserData()
+  await orderStore.loadOrderState()
+})
 </script>
 
 <template>
@@ -52,10 +102,10 @@ onMounted(() => {
       <NuxtPage />
     </main>
     <AppFooter />
-    <CitySelection
-      v-show="!isCitySelected"
-      @select-city="selectCity"
-    />
+    <!--    <CitySelection-->
+    <!--      v-show="!isCitySelected"-->
+    <!--      @select-city="selectCity"-->
+    <!--    />-->
     <CookieConsent
       v-show="!isCookieAccepted"
       @accept-cookie="acceptCookie"

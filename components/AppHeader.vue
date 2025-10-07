@@ -2,6 +2,15 @@
 import { useMenuStore } from "~/stores/menu"
 
 const menuStore = useMenuStore()
+const favoritesStore = useFavoritesStore()
+const orderStore = useOrderStore()
+const favoritesCount = computed(() => favoritesStore.favorites.length)
+
+const cartCount = computed(() => {
+  return orderStore.cartItems.reduce((total, item) => total + item.count, 0)
+})
+
+const badgeText = (count: number) => (count > 99 ? "99+" : count.toString())
 </script>
 
 <template>
@@ -31,15 +40,41 @@ const menuStore = useMenuStore()
         <li class="hover:text-[#F3A454]"><NuxtLink to="/catalog">Новинки</NuxtLink></li>
         <li class="hover:text-[#F3A454]"><NuxtLink to="/blog">Блог</NuxtLink></li>
         <li class="hover:text-[#F3A454]"><NuxtLink to="/collections/collection">NEW COLLECTION</NuxtLink></li>
-        <li class="hover:text-[#F3A454]"><NuxtLink to="/">Telegram</NuxtLink></li>
+        <li class="hover:text-[#F3A454]">
+          <a
+            href="https://t.me/casaalmare_swim"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Telegram
+          </a>
+        </li>
         <li class="hover:text-[#F3A454]"><NuxtLink to="/">WhatsApp</NuxtLink></li>
       </ul>
     </nav>
     <nav>
       <ul class="flex gap-2 sm:gap-4">
         <li class="hover:text-[#F3A454]"><button>Поиск</button></li>
-        <li class="hidden hover:text-[#F3A454] lg:block"><NuxtLink to="/favorites">Избранное</NuxtLink></li>
-        <li class="hover:text-[#F3A454]"><NuxtLink to="/order">Корзина</NuxtLink></li>
+        <li class="hidden hover:text-[#F3A454] lg:block relative">
+          <NuxtLink to="/favorites"
+            >Избранное
+            <span
+              v-if="favoritesCount > 0"
+              class="absolute top-0 -right-2 text-[#211D1D] text-[10px]"
+            >
+              {{ badgeText(favoritesCount) }}
+            </span>
+          </NuxtLink>
+        </li>
+        <li class="hover:text-[#F3A454] relative">
+          <NuxtLink to="/order">Корзина</NuxtLink>
+          <span
+            v-if="cartCount > 0"
+            class="absolute top-0 -right-2 text-[#211D1D] text-[10px]"
+          >
+            {{ badgeText(cartCount) }}
+          </span>
+        </li>
         <li class="block hover:text-[#F3A454] lg:hidden">
           <button
             class="menu-button2"
