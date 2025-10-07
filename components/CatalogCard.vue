@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { NuxtImg } from "#components"
+
 const props = defineProps<{
   id: number
   customClass?: string
@@ -49,6 +51,7 @@ if (props.modelValue) {
   selectedSize.value = props.modelValue
 }
 
+const starRef = ref<InstanceType<typeof NuxtImg> | null>(null)
 const isStarPressed = ref(false)
 const isFavoriteLocal = ref(favoritesStore.isFavorite(props.id))
 
@@ -59,8 +62,19 @@ const getPriceData = () => {
   return item?.vector?.[key]
 }
 
-const handleStarClick = async () => {
+const handleStarClick = async (e: MouseEvent | TouchEvent) => {
+  e.stopPropagation()
+  if (isStarPressed.value) {
+    e.preventDefault()
+    return
+  }
+
   isStarPressed.value = true
+
+  const starEl = starRef.value?.$el as HTMLElement | null
+  if (starEl) {
+    starEl.style.pointerEvents = "none"
+  }
 
   isFavoriteLocal.value = !isFavoriteLocal.value
 
@@ -72,8 +86,25 @@ const handleStarClick = async () => {
   }
 
   setTimeout(() => {
+    if (starEl) {
+      starEl.style.pointerEvents = "auto"
+    }
     isStarPressed.value = false
-  }, 200)
+  }, 250)
+}
+
+const handleStarMouseDown = (e: MouseEvent) => {
+  e.stopPropagation()
+  if (isStarPressed.value) {
+    e.preventDefault()
+  }
+}
+
+const handleStarTouchStart = (e: TouchEvent) => {
+  e.stopPropagation()
+  if (isStarPressed.value) {
+    e.preventDefault()
+  }
 }
 
 watch(
@@ -164,13 +195,16 @@ watch(
     </div>
     <NuxtImg
       v-if="!isWideScreen || (!popup && isHovered) || isFavoriteLocal"
+      ref="starRef"
       :src="isFavoriteLocal ? '/star-filled.svg' : '/star.svg'"
       alt="star"
       :class="[
-        'star-button absolute z-10 cursor-pointer transition-all duration-200 ease-out',
+        'star-button absolute z-10 cursor-pointer',
         'w-5 h-5 right-2.5 top-2.5 md:w-6 md:h-6 md:right-4 md:top-4',
         isStarPressed && 'star-pressed',
       ]"
+      @mousedown="handleStarMouseDown"
+      @touchstart="handleStarTouchStart"
       @click.stop="handleStarClick"
     />
   </div>
@@ -274,13 +308,16 @@ watch(
     </NuxtImg>
     <NuxtImg
       v-if="!isWideScreen || (!popup && isHovered) || isFavoriteLocal"
+      ref="starRef"
       :src="isFavoriteLocal ? '/star-filled.svg' : '/star.svg'"
       alt="star"
       :class="[
-        'star-button absolute z-10 cursor-pointer transition-all duration-200 ease-out',
+        'star-button absolute z-10 cursor-pointer',
         'w-5 h-5 right-2.5 top-2.5 md:w-6 md:h-6 md:right-4 md:top-4',
         isStarPressed && 'star-pressed',
       ]"
+      @mousedown="handleStarMouseDown"
+      @touchstart="handleStarTouchStart"
       @click.stop="handleStarClick"
     />
   </div>
@@ -308,11 +345,11 @@ watch(
 
 .star-button:hover {
   transform: scale(1.1);
+  transition: transform 0.2s ease-in-out;
 }
 
-.star-button:active,
-.star-button.star-pressed {
-  transform: scale(0.85);
+.star-pressed {
+  animation: star-press 250ms ease-in-out;
 }
 
 @keyframes star-press {
@@ -320,21 +357,21 @@ watch(
     transform: scale(1);
   }
   50% {
-    transform: scale(0.8);
+    transform: scale(0.85);
   }
   100% {
     transform: scale(1);
   }
 }
 
-.star-pressed {
-  animation: star-press 200ms ease-out;
-}
-
 @media (min-width: 475px) {
   .star-button {
+    transition: filter 0.2s ease-out;
+  }
+
+  .star-button:hover {
     transition:
-      transform 0.2s ease-out,
+      transform 0.2s ease-in-out,
       filter 0.2s ease-out;
   }
 }
