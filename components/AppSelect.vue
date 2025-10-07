@@ -37,14 +37,12 @@ watch(
     if (props.required && newValue) {
       clearError()
     }
-    // <-- ФИКС: Синхронизируем searchQuery с selected при внешнем обновлении modelValue (если закрыто)
     if (!isDropdownOpen.value && props.searchable) {
       searchQuery.value = newValue || ""
     }
   },
 )
 
-// <-- ФИКС: Watch на selected для синхронизации searchQuery (если закрыто)
 watch(selected, (newValue) => {
   if (!isDropdownOpen.value && props.searchable) {
     searchQuery.value = newValue || ""
@@ -61,7 +59,6 @@ const filteredOptions = computed(() => {
 const toggleSelect = () => {
   isDropdownOpen.value = !isDropdownOpen.value
   if (props.searchable && isDropdownOpen.value) {
-    // <-- ФИКС: Устанавливаем searchQuery = selected при открытии, чтобы input начинался с текущим значением
     searchQuery.value = selected.value || ""
     nextTick(() => inputRef.value?.focus())
   }
@@ -102,7 +99,6 @@ watch(isDropdownOpen, (newValue) => {
 
 const select = (item: string) => {
   selected.value = item
-  // <-- ФИКС: Устанавливаем searchQuery = item (вместо очистки ""), чтобы input показал выбранный текст после закрытия
   searchQuery.value = item
   isDropdownOpen.value = false
   emit("update:modelValue", selected.value!)
@@ -116,6 +112,15 @@ const handleSearchInput = (event: Event) => {
   searchQuery.value = target.value
   selected.value = target.value || null
   emit("update:modelValue", selected.value)
+
+  if (props.searchable && !isDropdownOpen.value && searchQuery.value.trim().length > 0) {
+    isDropdownOpen.value = true
+    nextTick(() => inputRef.value?.focus())
+  }
+
+  if (props.searchable && isDropdownOpen.value && searchQuery.value.trim() === "") {
+    isDropdownOpen.value = false
+  }
 }
 
 onMounted(() => {
