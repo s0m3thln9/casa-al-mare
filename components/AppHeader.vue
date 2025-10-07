@@ -61,6 +61,7 @@ const badgeText = (count: number) => (count > 99 ? "99+" : count.toString())
             <span
               v-if="favoritesCount > 0"
               class="absolute top-0 -right-2 text-[#211D1D] text-[10px]"
+              :class="favoritesCount > 9 && '-right-2.5'"
             >
               {{ badgeText(favoritesCount) }}
             </span>
@@ -71,6 +72,7 @@ const badgeText = (count: number) => (count > 99 ? "99+" : count.toString())
           <span
             v-if="cartCount > 0"
             class="absolute top-0 -right-2 text-[#211D1D] text-[10px]"
+            :class="cartCount > 9 && '-right-2.5'"
           >
             {{ badgeText(cartCount) }}
           </span>

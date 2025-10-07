@@ -15,6 +15,7 @@ const isInCart = ref(false)
 const errorMessage = ref("")
 const showError = ref(false)
 const userStore = useUserStore()
+const orderStore = useOrderStore()
 
 const styleBase =
   "flex justify-center items-center w-full py-4 border rounded-[18px] text-[13px]/snug font-[Manrope] sm:text-sm/snug "
@@ -74,6 +75,17 @@ const currentState = computed(() => {
   return { content, style, disabled }
 })
 
+watch(
+  [() => props.vector, () => props.items],
+  () => {
+    showSuccess.value = false
+    isInCart.value = false
+    isLoading.value = false
+    showError.value = false
+  },
+  { deep: true, immediate: false },
+)
+
 const handleClick = async () => {
   if (!props.inStock) return
   if (!props.availableQuantity) {
@@ -94,6 +106,9 @@ const handleClick = async () => {
     try {
       const token = await userStore.loadToken()
 
+      let successfulCount = 0
+      const totalItems = props.items ? props.items.length : 1
+
       if (props.items && props.items.length > 0) {
         const results = await Promise.allSettled(
           props.items.map((item) =>
@@ -109,20 +124,32 @@ const handleClick = async () => {
           ),
         )
 
-        const failedItems = results.filter((r) => r.status === "rejected" || !r.value?.success)
+        for (let i = 0; i < results.length; i++) {
+          const r = results[i]
+          if (r.status === "fulfilled" && r.value?.success) {
+            const item = props.items![i]
+            const newItem: CartItem = { id: item.id, vector: item.vector, count: 1 }
+            const existing = orderStore.cartItems.find(
+              (e: CartItem) => e.id === newItem.id && e.vector === newItem.vector,
+            )
+            if (existing) {
+              existing.count += 1
+            } else {
+              orderStore.cartItems.push(newItem)
+            }
+            successfulCount++
+          }
+        }
 
-        if (failedItems.length === 0) {
+        const failedItems = totalItems - successfulCount
+        if (failedItems === 0) {
           showSuccess.value = true
           setTimeout(() => {
             showSuccess.value = false
             isInCart.value = true
           }, 1500)
         } else {
-          const successCount = results.length - failedItems.length
-          errorMessage.value =
-            successCount > 0
-              ? `Добавлено ${successCount} из ${results.length} товаров`
-              : "Не удалось добавить товары в корзину"
+          errorMessage.value = `Добавлено ${successfulCount} из ${totalItems} товаров`
           showError.value = true
         }
       } else {
@@ -136,6 +163,15 @@ const handleClick = async () => {
           },
         })
         if (response.success) {
+          const newItem: CartItem = { id: props.id!, vector: props.vector!, count: 1 }
+          const existing = orderStore.cartItems.find(
+            (e: CartItem) => e.id === newItem.id && e.vector === newItem.vector,
+          )
+          if (existing) {
+            existing.count += 1
+          } else {
+            orderStore.cartItems.push(newItem)
+          }
           showSuccess.value = true
           setTimeout(() => {
             showSuccess.value = false
