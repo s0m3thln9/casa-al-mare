@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { AppInput, AppSelect, SelectInput } from "#components"
+import cities from "public/cities.json"
 
 interface ApiResponse {
   success: boolean
@@ -27,6 +28,13 @@ const authStore = useAuthStore()
 const authModalStore = useAuthModalStore()
 const orderStore = useOrderStore()
 const userStore = useUserStore()
+
+const russianCities = computed(() => {
+  return cities
+    .map((city) => city.name)
+    .filter((name, index, self) => self.indexOf(name) === index)
+    .sort((a, b) => a.localeCompare(b, "ru"))
+})
 
 interface PhoneOption {
   code: string
@@ -236,10 +244,11 @@ async function handleSave(): Promise<void> {
                 <AppSelect
                   ref="cityRef"
                   v-model="orderStore.city"
-                  :options="['Москва', 'Питер', 'Ростов', 'Краснодар', 'Мурманск', 'Брянск']"
+                  :options="russianCities"
                   label="Город"
                   custom-class="w-full"
                   required
+                  searchable
                 />
               </AppTooltip>
               <div class="flex flex-col gap-6">
