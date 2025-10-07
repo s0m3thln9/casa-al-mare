@@ -339,7 +339,7 @@ watch(
           />
         </div>
         <div class="flex justify-center items-center mt-4 sm:mt-6">
-          <WishlistButton />
+          <WishlistButton :item-id="item?.id" />
         </div>
         <div class="mt-14 flex flex-col justify-center items-center gap-3 p-4 rounded-2xl border border-[#BBB8B6]">
           <div class="flex justify-center gap-2.5 items-center w-full sm:justify-between cursor-pointer sm:gap-0">
