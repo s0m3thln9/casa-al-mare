@@ -473,7 +473,7 @@ watch(
               >Сопоставьте ваши параметры с указанными значениями, чтобы определить свой размер</span
             >
           </div>
-          <div class="border border-[#BBB8B6] rounded-lg flex flex-col pt-2 pb-4 gap-5">
+          <div class="border border-[#8C8785] rounded-lg flex flex-col pt-2 pb-4 gap-5">
             <div class="flex flex-col gap-2">
               <div class="grid grid-cols-9 border-b-[0.7px] border-[#8C8785] gap-4 pb-2 px-6">
                 <div class="col-span-3 font-[Manrope] text-xs text-[#211D1D]">INT</div>
