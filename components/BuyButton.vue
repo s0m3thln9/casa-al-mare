@@ -3,9 +3,10 @@ const props = defineProps<{
   isParametersSelected?: boolean
   inStock?: boolean
   availableQuantity?: boolean
-  items?: Array<{ id: number; vector: string }> // Для комплекта из нескольких товаров
-  id?: number // Для одного товара
-  vector?: string // Для одного товара
+  items?: Array<{ id: number; vector: string }>
+  id?: number
+  vector?: string
+  missingParams?: "color" | "size" | "both" | null
 }>()
 
 const isLoading = ref(false)
@@ -38,24 +39,34 @@ const currentState = computed(() => {
     content = "Уведомить о размерах"
     style = styleBase + styleVariants.notify
     disabled = false
-  } else if (!props.isParametersSelected) {
-    content = "Выберите все параметры"
-    style = styleBase + styleVariants.default
-    disabled = false
-  } else if (isLoading.value) {
-    content = "Добавление..."
-    style = styleBase + styleVariants.preload
-    disabled = true
-  } else if (showSuccess.value) {
-    content = "Добавлено"
-    style = styleBase + styleVariants.success
-    disabled = true
-  } else if (isInCart.value) {
-    content = "Перейти в корзину"
-    style = styleBase + styleVariants.default
-    disabled = false
+  } else if (props.isParametersSelected) {
+    if (isLoading.value) {
+      content = "Добавление..."
+      style = styleBase + styleVariants.preload
+      disabled = true
+    } else if (showSuccess.value) {
+      content = "Добавлено"
+      style = styleBase + styleVariants.success
+      disabled = true
+    } else if (isInCart.value) {
+      content = "Перейти в корзину"
+      style = styleBase + styleVariants.default
+      disabled = false
+    } else {
+      content = props.items ? "Добавить комплект в корзину" : "Добавить в корзину"
+      style = styleBase + styleVariants.default
+      disabled = false
+    }
   } else {
-    content = props.items ? "Добавить комплект в корзину" : "Добавить в корзину"
+    if (props.missingParams === "both") {
+      content = "Выберите цвет и размер"
+    } else if (props.missingParams === "color") {
+      content = "Выберите цвет"
+    } else if (props.missingParams === "size") {
+      content = "Выберите размер"
+    } else {
+      content = "Выберите все параметры"
+    }
     style = styleBase + styleVariants.default
     disabled = false
   }
@@ -70,7 +81,8 @@ const handleClick = async () => {
     return
   }
   if (!props.isParametersSelected) {
-    errorMessage.value = "Выберите все параметры"
+    errorMessage.value = currentState.value.content
+    showError.value = true
     return
   }
   if (isInCart.value) {
@@ -82,7 +94,6 @@ const handleClick = async () => {
     try {
       const token = await userStore.loadToken()
 
-      // Если передан массив items, добавляем каждый товар
       if (props.items && props.items.length > 0) {
         const results = await Promise.allSettled(
           props.items.map((item) =>
@@ -98,7 +109,6 @@ const handleClick = async () => {
           ),
         )
 
-        // Проверяем результаты
         const failedItems = results.filter((r) => r.status === "rejected" || !r.value?.success)
 
         if (failedItems.length === 0) {
@@ -109,15 +119,13 @@ const handleClick = async () => {
           }, 1500)
         } else {
           const successCount = results.length - failedItems.length
-          if (successCount > 0) {
-            errorMessage.value = `Добавлено ${successCount} из ${results.length} товаров`
-          } else {
-            errorMessage.value = "Не удалось добавить товары в корзину"
-          }
+          errorMessage.value =
+            successCount > 0
+              ? `Добавлено ${successCount} из ${results.length} товаров`
+              : "Не удалось добавить товары в корзину"
           showError.value = true
         }
       } else {
-        // Добавляем один товар (старая логика)
         const response = await $fetch("https://back.casaalmare.com/api/addToCart", {
           method: "POST",
           body: {
@@ -134,12 +142,12 @@ const handleClick = async () => {
             isInCart.value = true
           }, 1500)
         } else {
-          errorMessage.value = response.error
+          errorMessage.value = response.error || "Ошибка добавления"
           showError.value = true
         }
       }
     } catch (err) {
-      errorMessage.value = err.message ?? "Ошибка"
+      errorMessage.value = err instanceof Error ? err.message : "Ошибка"
       showError.value = true
     } finally {
       isLoading.value = false

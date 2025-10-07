@@ -8,69 +8,52 @@ const popupStore = usePopupStore()
 const itemStore = useItemStore()
 const setStore = useSetStore()
 
-// ФИКС: Состояния для устойчивости
 const isLoading = ref(true)
 const error = ref<string | null>(null)
-const item = ref<Item | null>(null) // Ref для реактивности
+const item = ref<Item | null>(null)
 
-// ФИКС: Async setup — ждём загрузку store
 onMounted(async () => {
   try {
     isLoading.value = true
     error.value = null
 
-    // Загружаем store, если пусто
     if (catalogStore.items.length === 0) {
       await catalogStore.loadItems()
     }
 
-    // ФИКС: Парсим id в number, с проверкой
     const id = Number(segment)
     if (isNaN(id)) {
       throw new Error("Неверный ID товара")
     }
 
-    // Ищем в items (или filteredItems, если фильтры важны)
     item.value = catalogStore.items.find((i) => i.id === id) || null
     if (!item.value) {
       throw new Error("Товар не найден")
     }
-
-    // ФИКС: Устанавливаем дефолт color/size сразу, если item готов
-    if (Object.keys(item.value.colors).length > 0) {
-      const firstColorCode = Object.keys(item.value.colors)[0]
-      const firstColor = item.value.colors[firstColorCode]
-      itemStore.color = { code: firstColorCode, name: firstColor.name, value: firstColor.value }
-    }
-    if (item.value.sizes.length > 0) {
-      itemStore.size = item.value.sizes[0]
-    }
   } catch (err) {
     console.error("Ошибка загрузки страницы товара:", err)
     error.value = err instanceof Error ? err.message : "Неизвестная ошибка"
-    // Опционально: navigateTo('/catalog') для редиректа
   } finally {
     isLoading.value = false
   }
 })
 
-// ФИКС: Безопасные breadcrumbs (с ?.)
 const breadcrumsItems = computed(() => [
   { name: "Главная", path: "/" },
   { name: "Смотреть все", path: "/catalog" },
-  { name: item.value?.name || "Товар не найден" }, // ФИКС: Fallback
+  { name: item.value?.name || "Товар не найден" },
 ])
 
 const currentImageIndex = ref(0)
 const touchStartX = ref(0)
 
-// ФИКС: setItems — динамические ID? (здесь хардкод, но с проверкой)
 const setItems = computed(() => {
   const items: { id: number; vector: string }[] = []
 
-  // Верх: ID 31 (замени на динамику, напр. setStore.topId)
   if (setStore.top) {
-    const topItem = catalogStore.getItemById(31) // ФИКС: getItemById вместо find
+    const topItem =
+      catalogStore.getItemById?.(setStore.topId || 31) ||
+      catalogStore.items.find((i) => i.id === (setStore.topId || 31))
     if (topItem) {
       const firstColorCode = Object.keys(topItem.colors)[0] || ""
       items.push({
@@ -80,9 +63,10 @@ const setItems = computed(() => {
     }
   }
 
-  // Низ: ID 32? (пример; подставь реальные)
   if (setStore.bottom) {
-    const bottomItem = catalogStore.getItemById(32) // ФИКС: Разные ID для комплекта
+    const bottomItem =
+      catalogStore.getItemById?.(setStore.bottomId || 32) ||
+      catalogStore.items.find((i) => i.id === (setStore.bottomId || 32))
     if (bottomItem) {
       const firstColorCode = Object.keys(bottomItem.colors)[0] || ""
       items.push({
@@ -92,9 +76,10 @@ const setItems = computed(() => {
     }
   }
 
-  // Аксессуар: ID 33?
   if (setStore.accessory) {
-    const accessoryItem = catalogStore.getItemById(33)
+    const accessoryItem =
+      catalogStore.getItemById?.(setStore.accessoryId || 33) ||
+      catalogStore.items.find((i) => i.id === (setStore.accessoryId || 33))
     if (accessoryItem) {
       const firstColorCode = Object.keys(accessoryItem.colors)[0] || ""
       items.push({
@@ -107,7 +92,6 @@ const setItems = computed(() => {
   return items
 })
 
-// ФИКС: Все computed с ? и fallback
 const currentColorCode = computed(() => itemStore.color?.code || (item.value ? Object.keys(item.value.colors)[0] : ""))
 const currentColorName = computed(() => itemStore.color?.name || "")
 const currentSize = computed(() => itemStore.size || item.value?.sizes[0] || "")
@@ -115,7 +99,7 @@ const currentColorImages = computed(() => {
   if (!item.value || !currentColorCode.value) return []
   const colorData = item.value.colors[currentColorCode.value]
   if (!colorData) return []
-  return colorData.images.map((id) => item.value.images[id]).filter(Boolean) || [] // ФИКС: Фильтр null
+  return colorData.images.map((id) => item.value.images[id]).filter(Boolean) || []
 })
 const currentVectorData = computed(() => {
   if (!item.value || !currentColorCode.value || !currentSize.value) return null
@@ -124,12 +108,20 @@ const currentVectorData = computed(() => {
 })
 const currentPrice = computed(() => currentVectorData.value?.price || 0)
 const currentOldPrice = computed(() => currentVectorData.value?.oldPrice || 0)
-const canAddToCart = computed(() => !!(itemStore.color && itemStore.size)) // ФИКС: !! для boolean
+const canAddToCart = computed(() => !!(itemStore.color && itemStore.size))
 
-// ФИКС: imageStyles и barStyles с проверкой длины
+const missingParams = computed<"color" | "size" | "both" | null>(() => {
+  if (canAddToCart.value) return null
+  const hasColor = !!itemStore.color
+  const hasSize = !!itemStore.size
+  if (!hasColor && !hasSize) return "both"
+  if (!hasColor) return "color"
+  return "size"
+})
+
 const imageStyles = computed(() => (index: number) => {
   const len = currentColorImages.value.length
-  if (len === 0 || index >= len) return { opacity: 0, visibility: "hidden" } // ФИКС: Пустой слайдер
+  if (len === 0 || index >= len) return { opacity: 0, visibility: "hidden" }
   if (index === currentImageIndex.value) {
     return {
       transform: "translateX(0)",
@@ -160,7 +152,7 @@ const handleTouchEnd = (e: TouchEvent) => {
   const deltaX = touchEndX - touchStartX.value
   const threshold = 50
   const len = currentColorImages.value.length
-  if (len === 0) return // ФИКС: Нет изображений — не свайпай
+  if (len === 0) return
   if (deltaX > threshold) {
     currentImageIndex.value = (currentImageIndex.value - 1 + len) % len
   } else if (deltaX < -threshold) {
@@ -176,17 +168,15 @@ const calculateDiscount = (price: number, oldPrice: number) => {
 const discount = computed(() => calculateDiscount(currentPrice.value, currentOldPrice.value))
 
 const priceFormatter = (value: number) => {
-  if (value === 0) return "Цена не указана" // ФИКС: Fallback для пустого vector
+  if (value === 0 || isNaN(value)) return "Цена не указана"
   const formattedValue = new Intl.NumberFormat("ru-RU").format(value)
   return `${formattedValue} ₽`
 }
 
-// ФИКС: Watch на item для автообновления (если store изменится)
 watch(
   item,
   (newItem) => {
     if (newItem && !itemStore.color) {
-      // Логика дефолта из onMounted
       const firstColorCode = Object.keys(newItem.colors)[0]
       if (firstColorCode) {
         const firstColor = newItem.colors[firstColorCode]
@@ -206,19 +196,16 @@ watch(
     v-if="!isLoading && !error"
     class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D] w-full"
   >
-    <!-- ФИКС: v-if для всего main -->
     <div class="p-2 sm:px-4 sm:py-6">
       <AppBreadcrumbs :items="breadcrumsItems" />
     </div>
     <div
       class="px-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[4fr_1fr] xl:grid-cols-[3fr_1fr] w-full gap-8 sm:px-4"
     >
-      <!-- Мобильные изображения -->
       <div
         v-if="currentColorImages.length > 0"
         class="block sm:hidden"
       >
-        <!-- ФИКС: v-if если изображения есть -->
         <div
           class="relative w-full aspect-[460/680] overflow-hidden"
           @touchstart="handleTouchStart"
@@ -287,7 +274,6 @@ watch(
       >
         <div class="flex justify-center items-center">
           <h2 class="font-[Inter] text-center text-[32px] sm:text-4xl">{{ item.name }}</h2>
-          <!-- Без ! -->
         </div>
         <div class="flex justify-center items-center gap-2 mt-4 sm:mt-6">
           <span
@@ -343,6 +329,7 @@ watch(
             in-stock
             available-quantity
             :is-parameters-selected="canAddToCart"
+            :missing-params="missingParams"
           />
           <AppButton
             variant="secondary"
@@ -413,7 +400,6 @@ watch(
           variant="large"
           link
         />
-        <!-- ФИКС: id как number: 1 -->
         <CatalogCard
           :id="31"
           variant="large"
