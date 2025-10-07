@@ -547,18 +547,18 @@ watch(
               </div>
             </div>
           </div>
-          <div class="border border-[#BBB8B6] rounded-lg flex flex-col p-4 gap-4">
-            <div class="flex gap-1 flex-col">
-              <h3 class="font-[Manrope] text-sm text-[#211D1D]">Обмеры изделия</h3>
-              <span class="font-[Manrope] text-xs text-[#363636]"
-                >Сравните обмеры аналогичных вещей из вашего гардероба, чтобы выбрать подходящую посадку</span
-              >
-            </div>
-            <div class="flex flex-col gap-2">
-              <span class="font-[Manrope] text-xs text-[#363636]">Размер S:</span>
-              <span class="font-[Manrope] text-xs text-[#363636]">Размер M:</span>
-              <span class="font-[Manrope] text-xs text-[#363636]">Размер L:</span>
-            </div>
+        </div>
+        <div class="border border-[#BBB8B6] rounded-2xl flex flex-col p-4 gap-4">
+          <div class="flex gap-1 flex-col">
+            <h3 class="font-[Manrope] text-sm text-[#211D1D]">Обмеры изделия</h3>
+            <span class="font-[Manrope] text-xs text-[#363636]"
+              >Сравните обмеры аналогичных вещей из вашего гардероба, чтобы выбрать подходящую посадку</span
+            >
+          </div>
+          <div class="flex flex-col gap-2">
+            <span class="font-[Manrope] text-xs text-[#363636]">Размер S:</span>
+            <span class="font-[Manrope] text-xs text-[#363636]">Размер M:</span>
+            <span class="font-[Manrope] text-xs text-[#363636]">Размер L:</span>
           </div>
         </div>
       </div>
