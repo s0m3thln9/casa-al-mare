@@ -29,6 +29,12 @@ const authModalStore = useAuthModalStore()
 const orderStore = useOrderStore()
 const userStore = useUserStore()
 
+const isExpanded = ref(false)
+
+const toggleExpanded = () => {
+  isExpanded.value = !isExpanded.value
+}
+
 const russianCities = computed(() => {
   return cities
     .map((city) => city.name)
@@ -156,13 +162,189 @@ const hasItemsInCart = computed(() => orderStore.cartItems.length > 0)
   >
     <AuthModal v-if="authModalStore.isOpen" />
     <template v-if="hasItemsInCart">
-      <h2 class="uppercase">Оформление</h2>
-      <div class="mt-8 flex max-w-[1264px] flex-col px-2 sm:px-0 sm:flex-row h-fit w-full gap-12">
-        <div class="p-10 flex flex-col gap-12 w-full max-w-[652px] rounded-4xl border-[0.7px] border-[#BBB8B6] h-fit">
+      <h2 class="uppercase max-sm:font-[Inter] max-sm:text-[17px] msx-sm:self-start max-sm:w-full">Оформление</h2>
+      <div class="mt-8 flex max-w-[1264px] flex-col sm:flex-row h-fit w-full gap-6 sm:gap-12">
+        <div
+          class="sm:hidden"
+          :class="[isExpanded && 'p-4 rounded-2xl border-[0.7px] border-[#BBB8B6]']"
+        >
+          <div class="flex flex-col">
+            <div
+              class="overflow-hidden transition-all duration-300 ease-in-out"
+              :class="[isExpanded ? 'max-h-96 opacity-100 mb-6' : 'max-h-0 opacity-0']"
+            >
+              <div class="flex flex-col gap-6">
+                <div
+                  v-for="(item, index) in orderStore.cartDetailed"
+                  :key="index"
+                  class="flex items-center justify-between w-full"
+                >
+                  <div class="flex items-center gap-2">
+                    <NuxtImg
+                      :src="item?.images[0] || ''"
+                      alt="order-img"
+                      width="57"
+                      height="72"
+                      class="rounded-2xl border-[0.5px] border-[#211D1D]"
+                    />
+                    <div class="flex flex-col gap-1">
+                      <span
+                        class="font-light text-sm text-[#414141] cursor-pointer"
+                        @click="navigateTo(`/catalog/${item.id}`)"
+                      >
+                        {{ item.name }}
+                      </span>
+                      <span class="font-light text-[13px]">
+                        Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
+                      </span>
+                      <span class="text-xs text-[#414141]">
+                        {{ orderStore.priceFormatter(item.price) }}
+                        <span class="font-light text-[#606060] ml-1">за шт.</span>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="flex flex-col items-end gap-4">
+                    <div class="flex items-center gap-2">
+                      <div class="py-1 px-2 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light">
+                        <button
+                          class="w-4 h-4 flex items-center justify-center cursor-pointer"
+                          :disabled="orderStore.isLoadingPayment"
+                          @click="orderStore.decrementQuantity(item.id, item.vector)"
+                        >
+                          <NuxtImg
+                            src="/minus.svg"
+                            alt="minus"
+                            class="w-full"
+                          />
+                        </button>
+                        {{ item.count }}
+                        <button
+                          class="w-4 h-4 flex items-center justify-center cursor-pointer"
+                          :disabled="orderStore.isLoadingPayment"
+                          @click="orderStore.incrementQuantity(item.id, item.vector)"
+                        >
+                          <NuxtImg
+                            src="/plus.svg"
+                            alt="plus"
+                            class="w-full"
+                          />
+                        </button>
+                      </div>
+                      <button
+                        class="w-6 h-6 flex items-center justify-center cursor-pointer"
+                        :disabled="orderStore.isLoadingPayment"
+                        @click="orderStore.removeItemFromCart(item.id, item.vector)"
+                      >
+                        <NuxtImg
+                          src="/x.svg"
+                          alt="x"
+                          class="w-full"
+                        />
+                      </button>
+                    </div>
+                    <span class="text-xs font-light">
+                      {{ orderStore.priceFormatter(item.price * item.count) }}
+                      <span
+                        v-if="item.oldPrice > 0"
+                        class="line-through ml-1"
+                        >{{ orderStore.priceFormatter(item.oldPrice * item.count) }}</span
+                      >
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <AppButton
+              :content="isExpanded ? 'Скрыть все товары в корзине' : 'Показать все товары в корзине'"
+              custom-class="w-full"
+              @click="toggleExpanded"
+            />
+          </div>
+        </div>
+        <div
+          v-if="!authStore.isAuth"
+          class="sm:hidden p-4 flex flex-col gap-6 w-full max-w-[652px] rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
+        >
+          <template v-if="orderStore.isPaymentSuccessful === null">
+            <div class="flex flex-col gap-4">
+              <span class="text-xs">
+                Есть аккаунт?
+                <span
+                  class="cursor-pointer underline"
+                  @click="authModalStore.open"
+                  >Войти</span
+                >
+              </span>
+              <AppTooltip
+                text="Это поле обязательно для заполнения"
+                type="error"
+                :show="nameRef?.showError"
+              >
+                <AppInput
+                  id="name"
+                  ref="nameRef"
+                  v-model="orderStore.name"
+                  type="text"
+                  label="Имя"
+                  custom-class="w-full"
+                  required
+                />
+              </AppTooltip>
+              <AppTooltip
+                text="Это поле обязательно для заполнения"
+                type="error"
+                :show="surnameRef?.showError"
+              >
+                <AppInput
+                  id="surname"
+                  ref="surnameRef"
+                  v-model="orderStore.surname"
+                  type="text"
+                  label="Фамилия"
+                  custom-class="w-full"
+                  required
+                />
+              </AppTooltip>
+              <AppTooltip
+                text="Это поле обязательно для заполнения"
+                type="error"
+                :show="phoneRef?.showError"
+              >
+                <SelectInput
+                  id="phone"
+                  ref="phoneRef"
+                  v-model="orderStore.phone"
+                  custom-class="w-full"
+                  :options="phoneOptions"
+                  label="Номер телефона"
+                  required
+                />
+              </AppTooltip>
+              <AppTooltip
+                text="Это поле обязательно для заполнения"
+                type="error"
+                :show="emailRef?.showError"
+              >
+                <AppInput
+                  id="email"
+                  ref="emailRef"
+                  v-model="orderStore.email"
+                  type="text"
+                  label="E-mail"
+                  custom-class="w-full"
+                  required
+                />
+              </AppTooltip>
+            </div>
+          </template>
+        </div>
+        <div
+          class="sm:p-10 p-4 flex flex-col sm:gap-12 gap-6 w-full max-w-[652px] sm:rounded-4xl rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
+        >
           <template v-if="orderStore.isPaymentSuccessful === null">
             <div
               v-if="!authStore.isAuth"
-              class="flex flex-col gap-4"
+              class="hidden sm:flex flex-col gap-4"
             >
               <span class="text-xs">
                 Есть аккаунт?
@@ -240,7 +422,7 @@ const hasItemsInCart = computed(() => orderStore.cartItems.length > 0)
               @update:show="(value) => (orderStore.showErrorDeliveryMethod = value)"
             >
               <div class="relative flex flex-col gap-6 w-full">
-                <span class="font-light text-sm">Доставка</span>
+                <span class="sm:font-light text-[17px] sm:text-sm">Доставка</span>
                 <AppTooltip
                   text="Это поле обязательно для заполнения"
                   type="error"
@@ -337,6 +519,38 @@ const hasItemsInCart = computed(() => orderStore.cartItems.length > 0)
                 />
               </div>
             </AppTooltip>
+            <div class="max-sm:hidden">
+              <AppTooltip
+                text="Выберите способ оплаты"
+                type="error"
+                :show="orderStore.showErrorPaymentMethod"
+                @update:show="(value) => (orderStore.showErrorPaymentMethod = value)"
+              >
+                <div class="relative flex flex-col gap-6">
+                  <span class="font-light text-sm">Способ оплаты</span>
+                  <div class="flex flex-col gap-4">
+                    <AppCheckbox
+                      v-model="orderStore.paymentMethod"
+                      size="S"
+                      label="Картой на сайте"
+                      value="Картой на сайте"
+                    />
+                    <AppCheckbox
+                      v-model="orderStore.paymentMethod"
+                      size="S"
+                      label="Оплата при получении"
+                      value="Оплата при получении"
+                    />
+                  </div>
+                </div>
+              </AppTooltip>
+            </div>
+          </template>
+        </div>
+        <div
+          class="sm:hidden p-4 flex flex-col gap-6 w-full max-w-[652px] rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
+        >
+          <template v-if="orderStore.isPaymentSuccessful === null">
             <AppTooltip
               text="Выберите способ оплаты"
               type="error"
@@ -344,7 +558,7 @@ const hasItemsInCart = computed(() => orderStore.cartItems.length > 0)
               @update:show="(value) => (orderStore.showErrorPaymentMethod = value)"
             >
               <div class="relative flex flex-col gap-6">
-                <span class="font-light text-sm">Способ оплаты</span>
+                <span class="text-[17px]">Способ оплаты</span>
                 <div class="flex flex-col gap-4">
                   <AppCheckbox
                     v-model="orderStore.paymentMethod"
@@ -363,7 +577,167 @@ const hasItemsInCart = computed(() => orderStore.cartItems.length > 0)
             </AppTooltip>
           </template>
         </div>
-        <div class="p-8 w-full max-w-[564px] h-fit rounded-lg border-[0.7px] border-[#BBB8B6]">
+        <div
+          v-if="authStore.isAuth"
+          class="sm:hidden p-4 flex flex-col gap-6 w-full max-w-[652px] rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
+        >
+          <template v-if="orderStore.isPaymentSuccessful === null">
+            <div class="flex flex-col gap-4">
+              <div
+                class="flex items-center justify-between cursor-pointer"
+                @click="orderStore.togglePoints"
+              >
+                <span class="font-light text-sm">Баллы</span>
+                <button
+                  class="w-4 h-4 flex items-center justify-center cursor-pointer transition-transform duration-300"
+                  :class="orderStore.isExpandedPoints ? 'rotate-0' : 'rotate-180'"
+                >
+                  <NuxtImg
+                    src="/order-arrow.svg"
+                    class="w-full"
+                  />
+                </button>
+              </div>
+              <div
+                class="collapsible-div flex flex-col gap-4 transition-max-height duration-300 ease-in-out overflow-hidden"
+                :class="{
+                  'max-h-500 opacity-100': orderStore.isExpandedPoints,
+                  'max-h-0 opacity-0': !orderStore.isExpandedPoints,
+                }"
+              >
+                <span class="text-[13px]">Сумма баллов: {{ userStore.user?.points ?? 0 }}</span>
+                <AppInput
+                  id="points"
+                  v-model="orderStore.pendingPoints"
+                  label="Введите сумму баллов для списания"
+                  type="text"
+                  :disabled="orderStore.isLoadingPoints"
+                />
+                <AppButton
+                  variant="primary"
+                  custom-class="w-full"
+                  :content="`Списать ${Number(orderStore.pendingPoints) || 0} баллов`"
+                  :disabled="orderStore.isLoadingPoints || !orderStore.pendingPoints"
+                  @click="orderStore.applyPoints"
+                />
+                <span
+                  v-if="orderStore.pointsError"
+                  class="font-light text-[13px] text-[#E57979]"
+                  >{{ orderStore.pointsError }}</span
+                >
+              </div>
+            </div>
+          </template>
+        </div>
+        <div
+          v-if="authStore.isAuth"
+          class="sm:hidden p-4 flex flex-col gap-6 w-full max-w-[652px] rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
+        >
+          <template v-if="orderStore.isPaymentSuccessful === null">
+            <div class="flex flex-col gap-4">
+              <div
+                class="flex items-center justify-between cursor-pointer"
+                @click="orderStore.toggleCert"
+              >
+                <span class="font-light text-sm">Сертификат</span>
+                <button
+                  class="w-4 h-4 flex items-center justify-center cursor-pointer transition-transform duration-300"
+                  :class="orderStore.isExpandedCert ? 'rotate-0' : 'rotate-180'"
+                >
+                  <NuxtImg
+                    src="/order-arrow.svg"
+                    class="w-full"
+                  />
+                </button>
+              </div>
+              <div
+                class="collapsible-div flex flex-col gap-4 transition-max-height duration-300 ease-in-out overflow-hidden"
+                :class="{
+                  'max-h-500 opacity-100': orderStore.isExpandedCert,
+                  'max-h-0 opacity-0': !orderStore.isExpandedCert,
+                }"
+              >
+                <AppInput
+                  id="certificate"
+                  v-model="orderStore.newCertificateCode"
+                  label="Введите код"
+                  type="text"
+                  :disabled="orderStore.isLoadingCert"
+                />
+                <AppButton
+                  v-if="orderStore.newCertificateCode"
+                  variant="primary"
+                  custom-class="w-full"
+                  content="Добавить сертификат"
+                  :disabled="orderStore.isLoadingCert"
+                  @click="orderStore.addCertificate"
+                />
+                <span
+                  v-if="orderStore.certificateError"
+                  class="font-light text-[13px] text-[#E57979]"
+                  >{{ orderStore.certificateError }}</span
+                >
+                <template
+                  v-for="cert in userStore.user?.certificates ?? []"
+                  :key="cert.code"
+                >
+                  <AppCheckbox
+                    v-model="orderStore.selectedCertificates"
+                    size="S"
+                    :label="`Сертификат ${cert.code} на сумму ${cert.value_now} рублей`"
+                    :value="cert.code"
+                  />
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+        <div class="sm:hidden flex flex-col gap-6 w-full max-w-[652px] h-fit">
+          <template v-if="orderStore.isPaymentSuccessful === null">
+            <div class="flex flex-col gap-1 text-sm font-light">
+              <div class="flex items-center justify-between">
+                <span>Доставка:</span>
+                <span>0 ₽ при сумме заказа от 30 000 ₽</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span>Стоимость товаров:</span>
+                <span class="flex items-center gap-2">
+                  {{ orderStore.priceFormatter(orderStore.totalSum) }}
+                  <span
+                    v-if="orderStore.totalOldSum > orderStore.totalSum"
+                    class="font-extralight line-through"
+                    >{{ orderStore.priceFormatter(orderStore.totalOldSum) }}</span
+                  >
+                </span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span>Окончательная стоимость:</span>
+                <span class="flex items-center gap-2">
+                  {{ orderStore.priceFormatter(orderStore.finalPrice) }}
+                  <span
+                    v-if="orderStore.totalSum > orderStore.finalPrice"
+                    class="font-extralight line-through"
+                    >{{ orderStore.priceFormatter(orderStore.totalSum) }}</span
+                  >
+                </span>
+              </div>
+            </div>
+            <div class="flex flex-col gap-2">
+              <AppButton
+                class="w-full"
+                content="Оплатить заказ"
+                variant="primary"
+                :disabled="orderStore.isLoadingPayment || orderStore.cartItems.length === 0"
+                @click="handlePay"
+              />
+              <p class="text-xs text-[#8C8785]">
+                Нажимая на кнопку «Оплатить», Вы соглашаетесь с условиями публичной оферты, принимаете политику защиты и
+                обработки персональных данных и даете свое согласие на их обработку.
+              </p>
+            </div>
+          </template>
+        </div>
+        <div class="max-sm:hidden p-8 w-full max-w-[564px] h-fit rounded-lg border-[0.7px] border-[#BBB8B6]">
           <template v-if="orderStore.isPaymentSuccessful === null">
             <div
               class="flex flex-col gap-8"
