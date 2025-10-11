@@ -151,7 +151,9 @@ const hasItemsInCart = computed(() => orderStore.cartItems.length > 0)
 </script>
 
 <template>
-  <main class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D] flex justify-start items-center pt-8 pb-8 flex-col">
+  <main
+    class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D] flex justify-start items-center pt-8 pb-8 flex-col max-sm:px-2"
+  >
     <AuthModal v-if="authModalStore.isOpen" />
     <template v-if="hasItemsInCart">
       <h2 class="uppercase">Оформление</h2>
@@ -666,22 +668,34 @@ const hasItemsInCart = computed(() => orderStore.cartItems.length > 0)
       </div>
     </template>
     <template v-else>
-      <h2 class="uppercase">Корзина пуста</h2>
-      <div class="grid grid-cols-4 mt-[10%] gap-8 justify-items-center">
-        <div class="font-light text-[#211D1D] cursor-pointer">Смотреть все</div>
-        <div class="font-light text-[#211D1D] cursor-pointer">Нижняя часть купальника</div>
-        <div class="font-light text-[#211D1D] cursor-pointer">Головные уборы</div>
+      <h2 class="uppercase max-sm:text-left max-sm:text-[17px] max-sm:font-[Inter] max-sm:self-start">Корзина пуста</h2>
+      <div class="grid sm:grid-cols-4 mt-[10%] gap-8 sm:justify-items-center max-sm:self-start">
+        <div class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter max-sm:uppercase">
+          Смотреть все
+        </div>
+        <div class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter max-sm:uppercase">
+          Нижняя часть купальника
+        </div>
+        <div class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter max-sm:uppercase">
+          Головные уборы
+        </div>
         <div
-          class="font-light text-[#211D1D] cursor-pointer"
+          class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter max-sm:uppercase"
           @click="navigateTo('/certificate')"
         >
           Cертификаты
         </div>
-        <div class="font-light text-[#211D1D] cursor-pointer">Купальники</div>
-        <div class="font-light text-[#211D1D] cursor-pointer">Верхняя часть купальника</div>
-        <div class="font-light text-[#211D1D] cursor-pointer">Аксессуары</div>
+        <div class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter max-sm:uppercase">
+          Купальники
+        </div>
+        <div class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter max-sm:uppercase">
+          Верхняя часть купальника
+        </div>
+        <div class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter max-sm:uppercase">
+          Аксессуары
+        </div>
         <div
-          class="font-light text-[#211D1D] cursor-pointer"
+          class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter max-sm:uppercase"
           @click="navigateTo('/profile')"
         >
           В личный кабинет
