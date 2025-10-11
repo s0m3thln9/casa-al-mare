@@ -39,6 +39,8 @@ const days = computed(() => {
   const daysInMonth = new Date(yearNum, monthIndex + 1, 0).getDate()
   return Array.from({ length: daysInMonth }, (_, i) => String(i + 1))
 })
+
+const userStore = useUserStore()
 </script>
 
 <template>
@@ -169,27 +171,26 @@ const days = computed(() => {
       >
         <div class="mt-8 gap-4 flex flex-col w-full justify-center items-center">
           <OrderBox
+            v-for="(order, index) in userStore.user?.orders"
             :state="{
-              orderId: 720,
+              orderId: order.orderId,
               orderDate: '16.09.25',
               status: 'pending',
               deliveryDate: '20.10.25 12:00-15:00',
               address: 'Москва; Ленинский проспект 62; кв 13',
-              deliveryMethod: 'Доставка курьером',
-              paymentMethod: 'Оплата при получении',
-              receiver: 'Иванова Елена Сергеевна',
-              items: [
-                {
-                  id: '1',
-                  bottom: 'XS',
-                  color: 'Цвет',
-                  img: '/order.jpg',
-                  count: 2,
-                  name: 'Название',
-                  top: 'XS',
-                  price: 10000,
-                },
-              ],
+              deliveryMethod: order.order.deliveryMethod,
+              paymentMethod: order.order.paymentMethod,
+              receiver: userStore.user.profile.fullname,
+              items: Object.values(order.cart).map((item) => ({
+                id: item.productId,
+                bottom: 'XS',
+                color: 'Цвет',
+                img: '/order.jpg',
+                count: item.count,
+                name: 'Название',
+                top: 'XS',
+                price: 10000,
+              })),
             }"
           />
         </div>

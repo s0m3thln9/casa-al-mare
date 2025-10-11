@@ -15,6 +15,7 @@ export interface User {
   uid: number
   points: number
   certificates: Certificate[]
+  orders?: unknown[]
   addresses: string[]
   extended?: UserExtended
   token?: string
