@@ -53,7 +53,7 @@ const badgeText = (count: number) => (count > 99 ? "99+" : count.toString())
       </ul>
     </nav>
     <nav>
-      <ul class="flex gap-2 sm:gap-4">
+      <ul class="flex gap-3 sm:gap-4">
         <li class="hover:text-[#F3A454]"><button>Поиск</button></li>
         <li class="hidden hover:text-[#F3A454] lg:block relative">
           <NuxtLink to="/favorites"
