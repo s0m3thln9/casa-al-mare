@@ -92,7 +92,6 @@ const resultsCount = computed(() => searchResults.value.length)
   <div>
     <button
       class="hover:text-[#F3A454] text-xs sm:text-sm font-[Manrope] text-[#211D1D] focus:outline-none"
-      aria-label="Открыть поиск"
       @click.stop="toggleSearch"
     >
       Поиск
@@ -112,7 +111,6 @@ const resultsCount = computed(() => searchResults.value.length)
             type="text"
             placeholder="Введите запрос, например 'Лиф'..."
             class="w-full py-2 text-[#211D1D] font-[Manrope] text-sm focus:outline-none"
-            aria-label="Строка поиска"
             @keydown.enter="handleSubmit"
           />
           <button @click="handleSubmit">
@@ -126,8 +124,6 @@ const resultsCount = computed(() => searchResults.value.length)
         <ul
           v-if="searchResults.length > 0"
           class="max-h-64 overflow-y-auto"
-          role="listbox"
-          :aria-label="`Результаты поиска: ${resultsCount} элементов`"
         >
           <li
             v-for="(result, index) in searchResults"
