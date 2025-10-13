@@ -1,20 +1,20 @@
 <script setup lang="ts">
 const props = defineProps<{
   state: {
-    status: "processing" | "pending" | "way" | "recieved"
+    status: number
     items?: {
-      id: string
-      img: string
+      id: number
+      image: string
       name: string
-      top: string
-      bottom: string
+      size: string
       color: string
       price: number
+      oldPrice: number
       count: number
     }[]
     orderId: number
     receiver: string
-    address: string
+    address?: string
     orderDate: string
     deliveryDate: string
     deliveryMethod: string
@@ -51,22 +51,22 @@ const calculateSum = () => {
         <span class="text-sm">№ {{ state.orderId }} от {{ state.orderDate }}</span>
         <div
           :class="[
-            state.status === 'pending'
+            state.status === 1
               ? 'bg-[#E57979] border-[#E57979]'
-              : state.status === 'processing'
+              : state.status === 2
                 ? 'bg-[#E29650] border-[#E29650]'
-                : state.status === 'way'
+                : state.status === 3
                   ? 'bg-[#4395C2] border-[#4395C2]'
                   : 'bg-[#008C49] border-[#008C49]',
             'text-xs text-[#FFFFFA] p-1 rounded-md border',
           ]"
         >
           {{
-            state.status === "pending"
+            state.status === 1
               ? "Ожидает оплаты"
-              : state.status === "processing"
+              : state.status === 2
                 ? "Обрабатывается"
-                : state.status === "way"
+                : state.status === 3
                   ? "В пути"
                   : "Получен"
           }}
@@ -95,7 +95,7 @@ const calculateSum = () => {
         >
           <div class="flex items-center gap-2">
             <NuxtImg
-              :src="item.img"
+              :src="item.image || ''"
               alt="order-img"
               width="57"
               height="72"
@@ -105,22 +105,32 @@ const calculateSum = () => {
               <span
                 class="font-light text-sm text-[#414141] cursor-pointer"
                 @click="navigateTo(`/catalog/${item.id}`)"
-                >{{ item.name }}</span
               >
-              <span class="font-light text-[13px]"
-                >Размер: {{ item.top }} <span class="ml-1">Цвет: {{ item.color }}</span></span
-              >
-              <span class="text-xs text-[#414141]"
-                >{{ priceFormatter(item.price) }} <span class="font-light text-[#606060] ml-1">за шт.</span></span
-              >
+                {{ item.name }}
+              </span>
+              <span class="font-light text-[13px]">
+                Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
+              </span>
+              <span class="text-xs text-[#414141]">
+                {{ priceFormatter(item.price) }}
+                <span class="font-light text-[#606060] ml-1">за шт.</span>
+              </span>
             </div>
           </div>
           <div class="flex flex-col items-end gap-4">
-            <div class="py-1 px-3 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light">{{ item.count }}</div>
-            <span class="text-xs font-light"
-              >{{ priceFormatter(item.price * item.count) }}
-              <span class="line-through ml-1">{{ priceFormatter(item.price * item.count + 1000) }}</span></span
-            >
+            <div class="flex items-center gap-2">
+              <div class="py-1 px-3 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light">
+                {{ item.count }}
+              </div>
+            </div>
+            <span class="text-xs font-light">
+              {{ priceFormatter(item.price * item.count) }}
+              <span
+                v-if="item.oldPrice > 0"
+                class="line-through ml-1"
+                >{{ priceFormatter(item.oldPrice * item.count) }}</span
+              >
+            </span>
           </div>
         </div>
       </div>
@@ -128,7 +138,10 @@ const calculateSum = () => {
         <span class="text-xs font-light"
           >Получатель: <span class="font-normal">{{ state.receiver }}</span></span
         >
-        <div class="flex items-center gap-1">
+        <div
+          v-if="state.address"
+          class="flex items-center gap-1"
+        >
           <span class="text-xs font-light"
             >Адрес доставки: <span class="font-normal">{{ state.address }}</span></span
           >

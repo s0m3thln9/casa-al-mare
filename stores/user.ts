@@ -15,7 +15,21 @@ export interface User {
   uid: number
   points: number
   certificates: Certificate[]
-  orders?: unknown[]
+  orders?: {
+    orderId: number
+    cart: Record<string, import("~/stores/order").CartItem>
+    order: {
+      deliveryMethod: string
+      paymentMethod: string
+      currentAddress?: string
+    }
+    status: number
+    orderDate: string
+    deliveryDate: string
+  }[]
+  profile: {
+    [key: string]: string
+  }
   addresses: string[]
   extended?: UserExtended
   token?: string
@@ -28,6 +42,7 @@ export interface UserStore {
   saveToken: (newToken: string) => Promise<void>
   removeToken: () => Promise<void>
   fetchUser: () => Promise<void>
+  logout: () => Promise<void>
 }
 
 export const useUserStore = defineStore("user", () => {
@@ -75,6 +90,18 @@ export const useUserStore = defineStore("user", () => {
     await favoritesStore.syncFavorites()
   }
 
+  const logout = async (): Promise<void> => {
+    await removeToken()
+    user.value = null
+    // Переход на главную страницу
+    await navigateTo("/")
+
+    // Обновление страницы
+    if (import.meta.client) {
+      window.location.reload()
+    }
+  }
+
   return {
     user,
     token,
@@ -82,5 +109,6 @@ export const useUserStore = defineStore("user", () => {
     saveToken,
     removeToken,
     fetchUser,
+    logout,
   } satisfies UserStore
 })

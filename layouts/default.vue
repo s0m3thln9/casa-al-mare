@@ -1,19 +1,11 @@
 <script setup lang="ts">
 import { SelectInput } from "#components"
 
-interface ApiResponse {
-  success: boolean
-  error?: string
-}
-
 interface CartResponseData {
-  cart: Record<string, CartBackendItem>
-}
-
-interface CartBackendItem {
-  productId: number
-  variant: string
-  count: number
+  success: boolean
+  cart_items_count?: number
+  total_quantity?: number
+  cart: Record<string, import("~/stores/order").CartItem>
 }
 
 const isCookieAccepted = ref(false)
@@ -112,15 +104,12 @@ onMounted(async () => {
     if (!token) return
 
     try {
-      const { data, error } = await useFetch<ApiResponse & CartResponseData>(
-        "https://back.casaalmare.com/api/getCart",
-        {
-          method: "POST",
-          body: {
-            token: token,
-          },
+      const { data, error } = await useFetch<CartResponseData>("https://back.casaalmare.com/api/getCart", {
+        method: "POST",
+        body: {
+          token: token,
         },
-      )
+      })
 
       if (error.value) {
         console.error("Network error fetching cart:", error.value)
@@ -129,10 +118,19 @@ onMounted(async () => {
 
       if (data.value?.success && data.value?.cart) {
         const rawCart = data.value.cart
-        const parsedCart: CartItem[] = Object.entries(rawCart).map(([_, item]) => ({
-          id: item.productId,
-          vector: item.variant,
+        const parsedCart: import("~/stores/order").CartItem[] = Object.entries(rawCart).map(([_, item]) => ({
+          id: item.id,
+          variant: item.variant,
           count: item.count,
+          updated_at: item.updated_at,
+          name: item.name,
+          colors: item.colors,
+          sizes: item.sizes,
+          images: item.images,
+          vector: item.vector,
+          type: item.type,
+          material: item.material,
+          useType: item.useType,
         }))
         orderStore.setCartItems(parsedCart)
       }

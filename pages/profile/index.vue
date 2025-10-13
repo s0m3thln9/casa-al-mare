@@ -41,6 +41,10 @@ const days = computed(() => {
 })
 
 const userStore = useUserStore()
+
+const handleLogout = async () => {
+  await userStore.logout()
+}
 </script>
 
 <template>
@@ -56,6 +60,7 @@ const userStore = useUserStore()
         <span class="font-[Inter] text-[17px] text-[#1A1A1A] uppercase">Личный кабинет</span>
         <button
           class="flex justify-center items-center px-4 py-2 rounded-xl border border-transparent cursor-pointer text-[13px]/snug font-light hover:border-[#211D1D] sm:text-sm/snug sm:font-normal"
+          @click="handleLogout"
         >
           Выйти
         </button>
@@ -172,24 +177,25 @@ const userStore = useUserStore()
         <div class="mt-8 gap-4 flex flex-col w-full justify-center items-center">
           <OrderBox
             v-for="(order, index) in userStore.user?.orders"
+            :key="index"
             :state="{
               orderId: order.orderId,
-              orderDate: '16.09.25',
-              status: 'pending',
-              deliveryDate: '20.10.25 12:00-15:00',
-              address: 'Москва; Ленинский проспект 62; кв 13',
+              orderDate: order.orderDate,
+              status: order.status,
+              deliveryDate: order.deliveryDate,
+              address: order.order.currentAddress,
               deliveryMethod: order.order.deliveryMethod,
               paymentMethod: order.order.paymentMethod,
-              receiver: userStore.user.profile.fullname,
+              receiver: userStore.user!.profile.fullname,
               items: Object.values(order.cart).map((item) => ({
-                id: item.productId,
-                bottom: 'XS',
-                color: 'Цвет',
-                img: '/order.jpg',
+                id: item.id,
+                size: item.variant.split('_')[1],
+                color: item.colors[item.variant.split('_')[0]].name,
+                image: item.images[item.colors[item.variant.split('_')[0]].images[0]],
                 count: item.count,
-                name: 'Название',
-                top: 'XS',
-                price: 10000,
+                name: item.name,
+                price: item.vector[item.variant].price,
+                oldPrice: item.vector[item.variant].oldPrice,
               })),
             }"
           />

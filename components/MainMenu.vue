@@ -10,6 +10,8 @@ type MenuItem = {
 
 const menuStore = useMenuStore()
 const popupStore = usePopupStore()
+const authStore = useAuthStore()
+const authModalStore = useAuthModalStore()
 
 const selectedSubmenu = ref<MenuItem[] | null>(null)
 const selectedSubmenuLabel = ref<string | null>(null)
@@ -51,7 +53,17 @@ const menuItems: MenuItem[] = [
 ]
 
 const secondMenuItems: MenuItem[] = [
-  { label: "В личный кабинет", link: "/profile" },
+  {
+    label: "В личный кабинет",
+    func: () => {
+      menuStore.close()
+      if (authStore.isAuth) {
+        navigateTo("/profile")
+      } else {
+        authModalStore.open()
+      }
+    },
+  },
   {
     label: "Покупателям",
     submenu: [

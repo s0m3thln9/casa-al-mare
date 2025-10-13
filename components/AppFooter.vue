@@ -10,6 +10,9 @@ const buttonStateFooter = ref({
   showSuccess: false,
 })
 
+const authStore = useAuthStore()
+const authModalStore = useAuthModalStore()
+
 const handleSubscribeFooter = () => {
   if (emailFooterRef.value?.validate()) {
     buttonStateFooter.value.isLoading = true
@@ -27,10 +30,19 @@ const handleSubscribeFooter = () => {
     console.warn("Email не валиден для подписки")
   }
 }
+
+const handleProfileClick = () => {
+  if (authStore.isAuth) {
+    navigateTo("/profile")
+  } else {
+    authModalStore.open()
+  }
+}
 </script>
 
 <template>
   <footer class="py-6 px-4 font-[Manrope] font-light text-sm text-[#211D1D] bg-[#FFFFFA]">
+    <AuthModal v-if="authModalStore.isOpen" />
     <div class="border border-[#BBB8B6] rounded-lg px-6 py-8 hidden justify-between flex-wrap sm:flex">
       <div class="flex flex-col gap-4">
         <h3 class="font-normal text-base uppercase">Каталог</h3>
@@ -77,7 +89,14 @@ const handleSubscribeFooter = () => {
       <div class="flex flex-col gap-4">
         <h3 class="font-normal text-base uppercase">Аккаунт</h3>
         <ul class="flex flex-col gap-4">
-          <li><NuxtLink to="/profile">В личный кабинет</NuxtLink></li>
+          <li>
+            <button
+              class="cursor-pointer"
+              @click="handleProfileClick"
+            >
+              В личный кабинет
+            </button>
+          </li>
           <li><NuxtLink to="/favorites">Избранное</NuxtLink></li>
           <li><NuxtLink to="/">Заказы</NuxtLink></li>
           <li><NuxtLink to="/certificate">Сертификат</NuxtLink></li>

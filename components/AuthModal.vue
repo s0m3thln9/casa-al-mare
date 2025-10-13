@@ -119,12 +119,12 @@ const handleClick = async (login: "phone" | "email"): Promise<void> => {
         console.log(data.value.success)
         authStore.smsError = ""
         authStore.phoneButtonContent = "Код отправлен"
-	      authStore.phoneButtonDisabled = false
+        authStore.phoneButtonDisabled = false
         authStore.smsStep = true
       } else {
         console.error(data.value?.error)
         authStore.smsError = data.value?.error ?? "Неизвестная ошибка"
-	      authStore.phoneButtonDisabled = false
+        authStore.phoneButtonDisabled = false
         authStore.phoneButtonContent = "Отправить код"
         authStore.smsStep = false
       }
@@ -159,8 +159,8 @@ const handleClick = async (login: "phone" | "email"): Promise<void> => {
         console.log(data.value.success)
         authStore.smsError = ""
         authStore.emailButtonContent = "Успешно"
-	      authStore.emailButtonDisabled = false
-	      if (data.value.token) {
+        authStore.emailButtonDisabled = false
+        if (data.value.token) {
           await userStore.saveToken(data.value.token)
           await userStore.loadToken()
           await userStore.fetchUser()
@@ -213,7 +213,7 @@ const handleSmsClick = async (): Promise<void> => {
     if (response?.success) {
       authStore.smsError2 = ""
       authStore.smsButtonContent = "Успешно"
-	    authStore.smsButtonDisabled = false
+      authStore.smsButtonDisabled = false
       authStore.smsStep = false
       if (response.token) {
         await userStore.saveToken(response.token)
@@ -269,7 +269,7 @@ const handleRegClick = async (): Promise<void> => {
       console.log(data.value.success)
       authStore.regError = ""
       authStore.regButtonContent = "Код отправлен"
-	    authStore.regButtonDisabled = false
+      authStore.regButtonDisabled = false
       authStore.regStep = true
     } else {
       console.error(data.value?.error)
@@ -415,7 +415,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="absolute inset-0 z-10 flex justify-center items-center">
+  <div class="fixed inset-0 z-10 flex justify-center items-center">
     <div class="w-[300px] bg-[#FFFFFA] border-[0.7px] border-[#211D1D] rounded-2xl">
       <div class="flex justify-end items-center">
         <button
