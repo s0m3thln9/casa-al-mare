@@ -10,19 +10,9 @@ interface Certificate {
   value_now: number
 }
 
-interface CartBackendItem {
-  productId: number
-  variant: string
-  count: number
-}
-
 interface PointsResponse {
   success: boolean
   points: number
-}
-
-interface UpdateCartResponse {
-  cart: Record<string, CartBackendItem>
 }
 
 interface PromoCode {
@@ -36,7 +26,7 @@ interface CheckOrderStatusResponse {
   order?: OrderState
   error?: string
   orderId?: number
-  cart?: Record<string, CartBackendItem>
+  cart?: Record<string, CartItem>
 }
 
 // interface PromoResponse {
@@ -56,7 +46,7 @@ interface UserInfo {
   addresses?: string[]
 }
 
-interface OrderState {
+export interface OrderState {
   deliveryMethod?: string | null
   city?: string | null
   currentAddress?: string | null
@@ -68,7 +58,7 @@ interface OrderState {
   promoCodes?: PromoCode[]
   pendingPromoCode?: string | null
   userInfo?: UserInfo | null
-  cart?: Record<string, CartBackendItem[]>
+  cart?: Record<string, CartItem>
 }
 
 interface UpdateOrderResponse {
@@ -82,19 +72,35 @@ interface GetOrderResponse {
   orderId: number
 }
 
+interface UpdateCartResponse {
+  success: boolean
+  message?: string
+  cart_items_count?: number
+  total_quantity?: number
+  cart: Record<string, CartItem>
+}
+
 export type CartItem = {
   id: number
-  vector: string
+  variant: string
   count: number
+  updated_at?: number
+  name: string
+  colors: Record<string, { name: string; value: string; images: number[] }>
+  sizes: string[]
+  images: Record<number, string>
+  vector: Record<string, { oldPrice: number; price: number; quantity: number; comingSoon: boolean }>
+  type: string
+  material: string[]
+  useType: string[]
 }
 
 export const useOrderStore = defineStore("order", () => {
-  const catalogStore = useCatalogStore()
   const userStore = useUserStore()
   const authStore = useAuthStore()
-
+  
   const cartItems = ref<CartItem[]>([])
-
+  
   const addresses = ref<string[]>([])
   const city = ref<string | null>(null)
   const commentForCourier = ref("")
@@ -103,12 +109,12 @@ export const useOrderStore = defineStore("order", () => {
   const newAddressFirstLine = ref("")
   const newAddressSecondLine = ref("")
   const showErrorDeliveryMethod = ref<boolean>(false)
-
+  
   const isPaymentSuccessful = ref<boolean | null>(null)
   const paymentMethod = ref<string | null>(null)
   const showErrorPaymentMethod = ref<boolean>(false)
   const isLoadingPayment = ref<boolean>(false)
-
+  
   // ЗАКОММЕНТИРОВАНО: промокоды
   // const addPromoCodeError = ref<string>("")
   // const currentPromoCodes = ref<PromoCode[]>([])
@@ -117,20 +123,20 @@ export const useOrderStore = defineStore("order", () => {
   // const promoCode = ref<string>("")
   // const selectedPromoCode = ref<string | null>(null)
   // const isLoadingPromo = ref<boolean>(false)
-
+  
   const isExpandedPoints = ref<boolean>(false)
   const pendingPoints = ref<string>("")
   const pointsError = ref<string>("")
   const pointsToUse = ref<number>(0)
   const usedPointsBackup = ref<number>(0)
   const isLoadingPoints = ref<boolean>(false)
-
+  
   const certificateError = ref<string>("")
   const isExpandedCert = ref<boolean>(false)
   const newCertificateCode = ref<string>("")
   const selectedCertificates = ref<string[]>([])
   const isLoadingCert = ref<boolean>(false)
-
+  
   const email = ref<string>("")
   const name = ref<string>("")
   const phone = ref<{
@@ -142,7 +148,7 @@ export const useOrderStore = defineStore("order", () => {
   const orderState = ref<OrderState>(<OrderState>{})
   const isLoaded = ref(false)
   const orderId = ref<number | null>(null)
-
+  
   function debounce<T extends (...args: unknown[]) => unknown>(
     func: T,
     wait: number,
@@ -158,28 +164,28 @@ export const useOrderStore = defineStore("order", () => {
       }, wait)
     } as (...args: Parameters<T>) => ReturnType<T>
   }
-
+  
   async function loadUserData() {
     const token = await userStore.loadToken()
     if (!token) return
-
+    
     try {
       const { data: pointsData, error } = await useFetch<PointsResponse>("https://back.casaalmare.com/api/getPoints", {
         method: "POST",
         body: { token },
       })
-
+      
       if (error.value) {
         console.error("Network error loading points:", error.value)
         return
       }
-
+      
       if (pointsData.value?.success && pointsData.value.points !== undefined) {
         if (userStore.user) {
           userStore.user.points = pointsData.value.points
         }
       }
-
+      
       if (userStore.user?.addresses) {
         addresses.value = userStore.user.addresses
       } else {
@@ -189,11 +195,11 @@ export const useOrderStore = defineStore("order", () => {
       console.error("Ошибка загрузки user data:", error)
     }
   }
-
+  
   async function loadOrderState() {
     const token = await userStore.loadToken()
     if (!token) return
-
+    
     try {
       const { data, error } = await useFetch<ApiResponse & GetOrderResponse>(
         "https://back.casaalmare.com/api/getOrderState",
@@ -202,18 +208,18 @@ export const useOrderStore = defineStore("order", () => {
           body: { token },
         },
       )
-
+      
       if (error.value) {
         console.error("Network error loading order state:", error.value)
         return
       }
-
+      
       if (data.value?.success && data.value?.order) {
         const loadedOrder: OrderState = data.value.order
-
+        
         // ИСПРАВЛЕНО: Сохраняем ID заказа
         if (data.value.orderId) orderId.value = data.value.orderId
-
+        
         if (loadedOrder.deliveryMethod) deliveryMethod.value = loadedOrder.deliveryMethod
         if (loadedOrder.city) city.value = loadedOrder.city
         if (loadedOrder.currentAddress) currentAddress.value = loadedOrder.currentAddress
@@ -226,7 +232,7 @@ export const useOrderStore = defineStore("order", () => {
           if (userStore.user) userStore.user.points += usedPointsBackup.value - loadedOrder.points
         }
         if (loadedOrder.certificates) selectedCertificates.value = loadedOrder.certificates
-
+        
         // ЗАКОММЕНТИРОВАНО: промокоды
         // if (loadedOrder.promoCodes && Array.isArray(loadedOrder.promoCodes)) {
         //   currentPromoCodes.value = loadedOrder.promoCodes
@@ -234,7 +240,7 @@ export const useOrderStore = defineStore("order", () => {
         // if (loadedOrder.pendingPromoCode) {
         //   pendingPromoCode.value = loadedOrder.pendingPromoCode
         // }
-
+        
         if (!authStore.isAuth && loadedOrder.userInfo) {
           if (loadedOrder.userInfo.name) name.value = loadedOrder.userInfo.name
           if (loadedOrder.userInfo.surname) surname.value = loadedOrder.userInfo.surname
@@ -242,7 +248,7 @@ export const useOrderStore = defineStore("order", () => {
           if (loadedOrder.userInfo.email) email.value = loadedOrder.userInfo.email
           if (loadedOrder.userInfo.addresses) addresses.value = loadedOrder.userInfo.addresses
         }
-
+        
         orderState.value = loadedOrder
         console.log("Order state loaded successfully:", loadedOrder)
       } else {
@@ -254,13 +260,13 @@ export const useOrderStore = defineStore("order", () => {
       isLoaded.value = true
     }
   }
-
+  
   const updateOrderState = async () => {
     if (isPaymentSuccessful.value !== null) return
-
+    
     const token = await userStore.loadToken()
     if (!token) return
-
+    
     const orderStateObj: Partial<OrderState> = {
       deliveryMethod: deliveryMethod.value,
       city: city.value,
@@ -276,17 +282,17 @@ export const useOrderStore = defineStore("order", () => {
       // pendingPromoCode: pendingPromoCode.value,
       userInfo: !authStore.isAuth
         ? {
-            name: name.value,
-            surname: surname.value,
-            phone: phone.value,
-            email: email.value,
-            addresses: addresses.value,
-          }
+          name: name.value,
+          surname: surname.value,
+          phone: phone.value,
+          email: email.value,
+          addresses: addresses.value,
+        }
         : null,
     }
-
+    
     const lastUpdate = Math.floor(Date.now() / 1000)
-
+    
     try {
       const { data, error } = await useFetch<ApiResponse & UpdateOrderResponse>(
         "https://back.casaalmare.com/api/updateOrderState",
@@ -299,21 +305,21 @@ export const useOrderStore = defineStore("order", () => {
           },
         },
       )
-
+      
       if (error.value) {
         console.error("Network error updating order state:", error.value)
         return
       }
-
+      
       if (!data.value?.success) {
         console.error("Server error updating order state:", data.value?.error)
         return
       }
-
+      
       if (data.value?.orderId) {
         orderId.value = data.value.orderId
       }
-
+      
       if (data.value?.updated === false) {
         console.warn("Order state update ignored: timestamp too old", {
           lastUpdate,
@@ -324,56 +330,52 @@ export const useOrderStore = defineStore("order", () => {
       console.error("Ошибка обновления состояния заказа:", error)
     }
   }
-
+  
   const debouncedUpdateOrderState = debounce(updateOrderState, 500)
-
+  
   const cartDetailed = computed(() => {
     return cartItems.value.map((cartItem) => {
-      const product = catalogStore.items.find((p) => p.id === cartItem.id)
-      const vectorData = product?.vector?.[cartItem.vector] ?? {
+      if (!cartItem.variant) return
+      const [colorKey, size] = cartItem.variant.split("_")
+      const vectorData = cartItem.vector[cartItem.variant] ?? {
         price: 0,
         oldPrice: 0,
       }
-      const [colorKey, size] = cartItem.vector.split("_")
-      const colorData = product?.colors?.[colorKey] ?? { name: "", images: [] }
-
+      const colorData = cartItem.colors[colorKey] ?? { name: "", images: [] }
+      
       return {
         id: cartItem.id,
-        vector: cartItem.vector,
+        vector: cartItem.variant,
         count: cartItem.count,
-        name: product?.name ?? "",
+        name: cartItem.name,
         color: colorData.name,
-        images: (colorData.images ?? []).map((id) => product?.images?.[id] ?? "") ?? [],
+        images: (colorData.images ?? []).map((id) => cartItem.images[id] ?? "") ?? [],
         size,
         price: vectorData.price,
         oldPrice: vectorData.oldPrice,
       }
     })
   })
-
+  
   const totalOldSum = computed(() => {
     return cartItems.value.reduce((sum, cartItem) => {
-      const product = catalogStore.items.find((p) => p.id === cartItem.id)
-      if (!product) return sum
-      const vectorData = product.vector?.[cartItem.vector]
+      const vectorData = cartItem.vector[cartItem.variant]
       if (!vectorData) return sum
       return sum + (vectorData.oldPrice > 0 ? vectorData.oldPrice : vectorData.price) * cartItem.count
     }, 0)
   })
-
+  
   const totalSum = computed(() => {
     return cartItems.value.reduce((sum, cartItem) => {
-      const product = catalogStore.items.find((p) => p.id === cartItem.id)
-      if (!product) return sum
-      const vectorData = product.vector?.[cartItem.vector]
+      const vectorData = cartItem.vector[cartItem.variant]
       if (!vectorData) return sum
       return sum + vectorData.price * cartItem.count
     }, 0)
   })
-
+  
   const finalPrice = computed(() => {
     let price = totalSum.value
-
+    
     // ЗАКОММЕНТИРОВАНО: промокоды
     // if (selectedPromoCode.value) {
     //   const promo = currentPromoCodes.value.find((p) => p.code === selectedPromoCode.value)
@@ -390,11 +392,11 @@ export const useOrderStore = defineStore("order", () => {
     //     }
     //   }
     // }
-
+    
     if (pointsToUse.value > 0 && userStore.user) {
       price -= Math.min(pointsToUse.value, price)
     }
-
+    
     if (selectedCertificates.value.length > 0 && userStore.user) {
       const certSum = selectedCertificates.value.reduce((sum, code) => {
         const cert = userStore.user!.certificates.find((c) => c.code === code)
@@ -402,24 +404,23 @@ export const useOrderStore = defineStore("order", () => {
       }, 0)
       price -= Math.min(certSum, price)
     }
-
+    
     return Math.max(price, 0.01)
   })
-
+  
   async function syncCartToBackend() {
     const token = await userStore.loadToken()
     if (!token) return
-
+    
     try {
       const backendItems = cartItems.value.map((item) => ({
-        productId: item.id,
-        variant: item.vector,
+        id: item.id,
+        variant: item.variant,
         count: item.count,
       }))
-      const { data, error } = await useFetch<ApiResponse & UpdateCartResponse>(
+      const { data, error } = await useFetch<UpdateCartResponse>(
         "https://back.casaalmare.com/api/updateCart",
         {
-          // UpdateCartResponse = { cart: Record<string, CartBackendItem>, ... }
           method: "POST",
           body: {
             token,
@@ -427,18 +428,27 @@ export const useOrderStore = defineStore("order", () => {
           },
         },
       )
-
+      
       if (error.value) {
         console.error("Network error syncing cart:", error.value)
         return
       }
-
+      
       if (data.value?.success && data.value?.cart) {
         const rawCart = data.value.cart
         const parsedCart: CartItem[] = Object.entries(rawCart).map(([_, item]) => ({
-          id: item.productId,
-          vector: item.variant,
+          id: item.id,
+          variant: item.variant,
           count: item.count,
+          updated_at: item.updated_at,
+          name: item.name,
+          colors: item.colors,
+          sizes: item.sizes,
+          images: item.images,
+          vector: item.vector,
+          type: item.type,
+          material: item.material,
+          useType: item.useType,
         }))
         setCartItems(parsedCart) // Синхронизируем клиент с сервером
         console.log("Cart synced from server:", parsedCart) // Для дебага
@@ -449,56 +459,56 @@ export const useOrderStore = defineStore("order", () => {
       console.error("Ошибка синхронизации корзины:", error)
     }
   }
-
-  function decrementQuantity(id: number, vector: string) {
-    const item = cartItems.value.find((i) => i.id === id && i.vector === vector)
+  
+  function decrementQuantity(id: number, variant: string) {
+    const item = cartItems.value.find((i) => i.id === id && i.variant === variant)
     if (item && item.count > 1) {
       item.count--
       syncCartToBackend()
     }
   }
-
-  function incrementQuantity(id: number, vector: string) {
-    const item = cartItems.value.find((i) => i.id === id && i.vector === vector)
+  
+  function incrementQuantity(id: number, variant: string) {
+    const item = cartItems.value.find((i) => i.id === id && i.variant === variant)
     if (item) {
       item.count++
       syncCartToBackend()
     }
   }
-
-  function removeItemFromCart(id: number, vector: string) {
-    cartItems.value = cartItems.value.filter((item) => !(item.id === id && item.vector === vector))
+  
+  function removeItemFromCart(id: number, variant: string) {
+    cartItems.value = cartItems.value.filter((item) => !(item.id === id && item.variant === variant))
     syncCartToBackend()
   }
-
+  
   function setCartItems(items: CartItem[] | null | undefined) {
     cartItems.value = Array.isArray(items) ? items : []
   }
-
+  
   async function saveNewAddress() {
     const firstLine = newAddressFirstLine.value.trim()
     const secondLine = newAddressSecondLine.value.trim()
-
+    
     if (!firstLine) return
-
+    
     const newAddress = secondLine ? `${firstLine}, ${secondLine}` : firstLine
-
+    
     if (authStore.isAuth) {
       // Авторизованный: сохраняем через API в user.extended
       const token = await userStore.loadToken()
       if (!token) return
-
+      
       try {
         const { data, error } = await useFetch<ApiResponse>("https://back.casaalmare.com/api/saveAddress", {
           method: "POST",
           body: { token, address: newAddress },
         })
-
+        
         if (error.value) {
           console.error("Network error saving address:", error.value)
           return
         }
-
+        
         if (data.value?.success) {
           currentAddress.value = newAddress
           newAddressFirstLine.value = ""
@@ -533,29 +543,29 @@ export const useOrderStore = defineStore("order", () => {
       debouncedUpdateOrderState()
     }
   }
-
+  
   async function createOrder() {
     if (isLoadingPayment.value) return
-
+    
     if (cartItems.value.length === 0) {
       return
     }
-
+    
     if (!orderId.value) {
       console.error("Нет ID заказа для оплаты")
       return
     }
-
+    
     isLoadingPayment.value = true
     const token = await userStore.loadToken()
-
+    
     if (!token) {
       isLoadingPayment.value = false
       return
     }
-
+    
     usedPointsBackup.value = pointsToUse.value
-
+    
     try {
       const { data, error } = await useFetch<ApiResponse>("https://back.casaalmare.com/api/createOrder", {
         method: "POST",
@@ -564,12 +574,12 @@ export const useOrderStore = defineStore("order", () => {
           orderId: orderId.value,
         },
       })
-
+      
       if (error.value) {
         console.error("Network error during payment:", error.value)
         return
       }
-
+      
       if (data.value?.success) {
         await navigateTo(`/order-result/${orderId.value}`)
       } else {
@@ -581,11 +591,11 @@ export const useOrderStore = defineStore("order", () => {
       isLoadingPayment.value = false
     }
   }
-
+  
   async function checkOrderStatus(id: number) {
     const token = await userStore.loadToken()
     if (!token) return null
-
+    
     try {
       const { data, error } = await useFetch<CheckOrderStatusResponse>(
         "https://back.casaalmare.com/api/checkOrderStatus",
@@ -594,21 +604,21 @@ export const useOrderStore = defineStore("order", () => {
           body: { token, orderId: id },
         },
       )
-
+      
       if (error.value) {
         console.error("Network error checking order status:", error.value)
         return null
       }
-
+      
       if (data.value?.success !== undefined) {
         isPaymentSuccessful.value = data.value.success // true/false
-
+        
         // Если success=true, загружаем данные
         if (data.value.success && data.value.order) {
           // Восстанавливаем состояние заказа (аналогично loadOrderState)
           const loadedOrder = data.value.order
           if (data.value.orderId) orderId.value = data.value.orderId
-
+          
           if (loadedOrder.deliveryMethod) deliveryMethod.value = loadedOrder.deliveryMethod
           if (loadedOrder.city) city.value = loadedOrder.city
           if (loadedOrder.currentAddress) currentAddress.value = loadedOrder.currentAddress
@@ -621,7 +631,7 @@ export const useOrderStore = defineStore("order", () => {
             if (userStore.user) userStore.user.points += usedPointsBackup.value - loadedOrder.points
           }
           if (loadedOrder.certificates) selectedCertificates.value = loadedOrder.certificates
-
+          
           // ЗАКОММЕНТИРОВАНО: промокоды
           // if (loadedOrder.promoCodes && Array.isArray(loadedOrder.promoCodes)) {
           //   currentPromoCodes.value = loadedOrder.promoCodes
@@ -629,7 +639,7 @@ export const useOrderStore = defineStore("order", () => {
           // if (loadedOrder.pendingPromoCode) {
           //   pendingPromoCode.value = loadedOrder.pendingPromoCode
           // }
-
+          
           if (!authStore.isAuth && loadedOrder.userInfo) {
             if (loadedOrder.userInfo.name) name.value = loadedOrder.userInfo.name
             if (loadedOrder.userInfo.surname) surname.value = loadedOrder.userInfo.surname
@@ -637,13 +647,22 @@ export const useOrderStore = defineStore("order", () => {
             if (loadedOrder.userInfo.email) email.value = loadedOrder.userInfo.email
             if (loadedOrder.userInfo.addresses) addresses.value = loadedOrder.userInfo.addresses
           }
-
+          
           // Синхронизируем корзину
           if (data.value.cart) {
             const parsedCart: CartItem[] = Object.entries(data.value.cart).map(([_, item]) => ({
-              id: item.productId,
-              vector: item.variant,
+              id: item.id,
+              variant: item.variant,
               count: item.count,
+              updated_at: item.updated_at,
+              name: item.name,
+              colors: item.colors,
+              sizes: item.sizes,
+              images: item.images,
+              vector: item.vector,
+              type: item.type,
+              material: item.material,
+              useType: item.useType,
             }))
             setCartItems(parsedCart)
           }
@@ -655,7 +674,7 @@ export const useOrderStore = defineStore("order", () => {
     }
     return null
   }
-
+  
   // ЗАКОММЕНТИРОВАНО: промокоды
   // async function addPromoCode() {
   //   if (isLoadingPromo.value) return
@@ -706,7 +725,7 @@ export const useOrderStore = defineStore("order", () => {
   //     isLoadingPromo.value = false
   //   }
   // }
-
+  
   // ЗАКОММЕНТИРОВАНО: промокоды
   // function applyPromoCode() {
   //   if (!pendingPromoCode.value) {
@@ -725,7 +744,7 @@ export const useOrderStore = defineStore("order", () => {
   //
   //   updateOrderState()
   // }
-
+  
   // ЗАКОММЕНТИРОВАНО: промокоды
   // function savedMoney(promoValue: number): number {
   //   const promo = currentPromoCodes.value.find((p) => p.value === promoValue)
@@ -742,80 +761,80 @@ export const useOrderStore = defineStore("order", () => {
   //     return Math.min(promo.value, sumWithoutDiscount)
   //   }
   // }
-
+  
   // ЗАКОММЕНТИРОВАНО: промокоды
   // function togglePromoCode() {
   //   isExpandedPromoCode.value = !isExpandedPromoCode.value
   // }
-
+  
   async function applyPoints() {
     if (isLoadingPoints.value) return
-
+    
     isLoadingPoints.value = true
     pointsError.value = ""
-
+    
     // ЗАКОММЕНТИРОВАНО: промокоды
     // selectedPromoCode.value = null
     // pendingPromoCode.value = null
-
+    
     const points = Number(pendingPoints.value)
-
+    
     if (isNaN(points) || points <= 0) {
       pointsError.value = "Введите корректное количество баллов"
       isLoadingPoints.value = false
       return
     }
-
+    
     const maxPoints = Math.floor(totalSum.value * 0.2)
-
+    
     if (points > (userStore.user?.points || 0)) {
       pointsError.value = "Недостаточно баллов"
       isLoadingPoints.value = false
       return
     }
-
+    
     if (points > maxPoints) {
       pointsError.value = `Нельзя списать больше ${maxPoints} баллов (20% от суммы заказа)`
       isLoadingPoints.value = false
       return
     }
-
+    
     pointsError.value = ""
     pointsToUse.value = points
     if (userStore.user) {
       userStore.user.points -= points
     }
     pendingPoints.value = ""
-
+    
     isLoadingPoints.value = false
   }
-
+  
   function togglePoints() {
     isExpandedPoints.value = !isExpandedPoints.value
   }
-
+  
   async function addCertificate() {
     if (isLoadingCert.value) return
-
+    
     isLoadingCert.value = true
     certificateError.value = ""
-
+    
     const code = newCertificateCode.value.trim()
-
+    
     if (!code) {
       certificateError.value = "Введите код сертификата"
       isLoadingCert.value = false
       return
     }
-
+    
     if (userStore.user?.certificates.some((c: Certificate) => c.code === code)) {
       certificateError.value = "Сертификат уже добавлен"
       isLoadingCert.value = false
       return
     }
-
+    
     const token = await userStore.loadToken()
-
+    
     try {
       const { data, error } = await useFetch<ApiResponse & { certificate: Certificate }>(
         "https://back.casaalmare.com/api/addCertificate",
@@ -824,13 +843,13 @@ export const useOrderStore = defineStore("order", () => {
           body: { token, code },
         },
       )
-
+      
       if (error.value) {
         certificateError.value = "Ошибка сети"
         isLoadingCert.value = false
         return
       }
-
+      
       if (data.value?.success && data.value?.certificate) {
         if (userStore.user) {
           if (!userStore.user.certificates) {
@@ -850,16 +869,16 @@ export const useOrderStore = defineStore("order", () => {
       isLoadingCert.value = false
     }
   }
-
+  
   function toggleCert() {
     isExpandedCert.value = !isExpandedCert.value
   }
-
+  
   function priceFormatter(value: number): string {
     const formattedValue = new Intl.NumberFormat("ru-RU").format(Math.round(value))
     return `${formattedValue} ₽`
   }
-
+  
   watchEffect(() => {
     const newAddresses = userStore?.user?.addresses
     if (newAddresses && Array.isArray(newAddresses)) {
@@ -867,7 +886,7 @@ export const useOrderStore = defineStore("order", () => {
       console.log("WatchEffect: Addresses updated:", addresses.value) // Для дебага
     }
   })
-
+  
   watch(
     [
       deliveryMethod,
@@ -894,7 +913,7 @@ export const useOrderStore = defineStore("order", () => {
     },
     { deep: true },
   )
-
+  
   return {
     cartItems,
     addresses,
