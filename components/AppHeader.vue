@@ -54,8 +54,8 @@ const badgeText = (count: number) => (count > 99 ? "99+" : count.toString())
     </nav>
     <nav>
       <ul class="flex gap-3 sm:gap-4">
-        <li class="hover:text-[#F3A454]"><AppSearch /></li>
-        <li class="hidden hover:text-[#F3A454] lg:block relative">
+        <li class="hover:text-[#F3A454] cursor-pointer"><AppSearch /></li>
+        <li class="hidden hover:text-[#F3A454] cursor-pointer lg:block relative">
           <NuxtLink to="/favorites"
             >Избранное
             <span
@@ -77,7 +77,7 @@ const badgeText = (count: number) => (count > 99 ? "99+" : count.toString())
             {{ badgeText(cartCount) }}
           </span>
         </li>
-        <li class="block hover:text-[#F3A454] lg:hidden">
+        <li class="block hover:text-[#F3A454] cursor-pointer lg:hidden">
           <button
             class="menu-button2"
             @click="menuStore.open"

@@ -200,7 +200,7 @@ defineExpose({ validate, showError })
           :class="{ 'text-[#8C8785]': !selected }"
           type="text"
           @input="handleSearchInput"
-        />
+        >
         <button class="w-4 h-4 flex justify-center items-center cursor-pointer focus:outline-none">
           <NuxtImg
             src="/chevron-down.svg"

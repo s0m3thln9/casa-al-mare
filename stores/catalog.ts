@@ -24,6 +24,9 @@ export type Item = {
   material: string[]
   useType: string[]
   keystrings: string[]
+  withItems: number[]
+  complex: number[]
+  content: { header: string; content: string[] }[]
 }
 
 type SortAndFilter = {
@@ -59,10 +62,10 @@ export const useCatalogStore = defineStore("catalog", () => {
     keystrings: [],
     searchQuery: "",
   })
-
+  
   const activeFilters = ref<SortAndFilter>({ ...pendingFilters.value })
-
-  const loadItems = async () => {
+  
+  const loadItems = async (): Promise<void> => {
     try {
       isLoading.value = true
       const response = await $fetch("https://back.casaalmare.com/api/getProducts")
@@ -78,64 +81,62 @@ export const useCatalogStore = defineStore("catalog", () => {
       isLoading.value = false
     }
   }
-
-  const generateKeystringPath = (keys?: string[]) => {
+  
+  const generateKeystringPath = (keys?: string[]): string => {
     const currentKeys = keys || activeFilters.value.keystrings
     if (currentKeys.length === 0) return "/catalog"
     const path = currentKeys.join("/")
     return `/catalog?keystrings=/${path}/`
   }
-
-  const filters = computed(() => {
-    return {
-      types: [...new Set(items.value.map((item) => item.type))],
-      colors: () => {
-        const colorsSet = new Set()
-        const colorsArray: { code: string; name: string; value: string }[] = []
-        items.value.forEach((item) => {
-          Object.entries(item.colors).forEach(([code, colorData]) => {
-            const colorKey = `${code}-${colorData.value}`
-            if (!colorsSet.has(colorKey)) {
-              colorsSet.add(colorKey)
-              colorsArray.push({
-                code: code,
-                name: colorData.name,
-                value: colorData.value,
-              })
-            }
-          })
+  
+  const filters = computed(() => ({
+    types: [...new Set(items.value.map((item) => item.type))],
+    colors: (): { code: string; name: string; value: string }[] => {
+      const colorsSet = new Set()
+      const colorsArray: { code: string; name: string; value: string }[] = []
+      items.value.forEach((item) => {
+        Object.entries(item.colors).forEach(([code, colorData]) => {
+          const colorKey = `${code}-${colorData.value}`
+          if (!colorsSet.has(colorKey)) {
+            colorsSet.add(colorKey)
+            colorsArray.push({
+              code: code,
+              name: colorData.name,
+              value: colorData.value,
+            })
+          }
         })
-        return colorsArray
-      },
-      sizes: [...new Set(items.value.flatMap((item) => item.sizes))],
-      maxPrices: () => {
-        const allPrices: number[] = []
-        items.value.forEach((item) => {
-          Object.values(item.vector).forEach((variant) => {
-            allPrices.push(variant.price)
-          })
+      })
+      return colorsArray
+    },
+    sizes: [...new Set(items.value.flatMap((item) => item.sizes))],
+    maxPrices: (): { label: string; value: number }[] => {
+      const allPrices: number[] = []
+      items.value.forEach((item) => {
+        Object.values(item.vector).forEach((variant) => {
+          allPrices.push(variant.price)
         })
-        const uniquePrices = [...new Set(allPrices)].sort((a, b) => a - b)
-        const minPrice = uniquePrices[0] ?? 0
-        const maxPrice = uniquePrices[uniquePrices.length - 1] ?? 0
-        const ranges: { label: string; value: number }[] = []
-        if (minPrice < 15000) ranges.push({ label: "до 15000", value: 15000 })
-        if (maxPrice > 20000) ranges.push({ label: "до 20000", value: 20000 })
-        if (maxPrice > 25000) ranges.push({ label: "до 25000", value: 25000 })
-        if (maxPrice > 30000) ranges.push({ label: "до 30000", value: 30000 })
-        if (maxPrice > 35000) ranges.push({ label: "до 35000", value: 35000 })
-        if (maxPrice > 40000) ranges.push({ label: "до 40000", value: 40000 })
-        if (maxPrice > 45000) ranges.push({ label: "до 45000", value: 45000 })
-        return ranges.filter((range) => range.value <= maxPrice)
-      },
-      inStock: ["В наличии"],
-      withDiscount: ["Со скидкой"],
-      sortTypes: ["По умолчанию", "По убыванию цены", "По возрастанию цены"],
-      materials: [...new Set(items.value.flatMap((item) => item.material).filter((m) => m.trim() !== ""))],
-      useTypes: [...new Set(items.value.flatMap((item) => item.useType).filter((u) => u.trim() !== ""))],
-    }
-  })
-
+      })
+      const uniquePrices = [...new Set(allPrices)].sort((a, b) => a - b)
+      const minPrice = uniquePrices[0] ?? 0
+      const maxPrice = uniquePrices[uniquePrices.length - 1] ?? 0
+      const ranges: { label: string; value: number }[] = []
+      if (minPrice < 15000) ranges.push({ label: "до 15000", value: 15000 })
+      if (maxPrice > 20000) ranges.push({ label: "до 20000", value: 20000 })
+      if (maxPrice > 25000) ranges.push({ label: "до 25000", value: 25000 })
+      if (maxPrice > 30000) ranges.push({ label: "до 30000", value: 30000 })
+      if (maxPrice > 35000) ranges.push({ label: "до 35000", value: 35000 })
+      if (maxPrice > 40000) ranges.push({ label: "до 40000", value: 40000 })
+      if (maxPrice > 45000) ranges.push({ label: "до 45000", value: 45000 })
+      return ranges.filter((range) => range.value <= maxPrice)
+    },
+    inStock: ["В наличии"],
+    withDiscount: ["Со скидкой"],
+    sortTypes: ["По умолчанию", "По убыванию цены", "По возрастанию цены"],
+    materials: [...new Set(items.value.flatMap((item) => item.material).filter((m) => m.trim() !== ""))],
+    useTypes: [...new Set(items.value.flatMap((item) => item.useType).filter((u) => u.trim() !== ""))],
+  }))
+  
   const filteredItems = computed(() => {
     let filtered = [...items.value]
     const f = activeFilters.value
@@ -187,8 +188,8 @@ export const useCatalogStore = defineStore("catalog", () => {
     }
     return filtered
   })
-
-  const reset = () => {
+  
+  const reset = (): void => {
     activeFilters.value = {
       types: [],
       colors: [],
@@ -205,22 +206,22 @@ export const useCatalogStore = defineStore("catalog", () => {
     pendingFilters.value = { ...activeFilters.value }
     currentVisibleCardCount.value = 12
   }
-
-  const applyFilters = () => {
+  
+  const applyFilters = (): void => {
     activeFilters.value = JSON.parse(JSON.stringify(pendingFilters.value))
     currentVisibleCardCount.value = 12
   }
-
-  const getItemById = (id: number) => {
+  
+  const getItemById = (id: number): Item | undefined => {
     return items.value.find((item) => item.id === id)
   }
-
+  
   watch(filteredItems, () => {
     if (filteredItems.value.length > 0) {
       currentVisibleCardCount.value = 12
     }
   })
-
+  
   return {
     desktopStrokeCardCount,
     mobileStrokeCardCount,

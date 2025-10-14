@@ -1,386 +1,331 @@
 <script setup lang="ts">
-import type { NuxtImg } from "#components"
+import {useCatalogCard} from "~/composables/useCatalogCard"
 
 const props = defineProps<{
-  id: number
-  customClass?: string
-  customImageClass?: string
-  variant: "mini" | "large"
-  popup?: boolean
-  link?: boolean
-  modelValue?: string
+	id: number
+	customClass?: string
+	customImageClass?: string
+	variant: "mini" | "large"
+	popup?: boolean
+	link?: boolean
+	modelValue?: string
+	currentColorCode?: string
 }>()
 
 const emit = defineEmits<{
-  "update:modelValue": [value: string]
+	"update:modelValue": [value: string]
 }>()
 
 const {
-  currentImageIndex,
-  isHovered,
-  isVisible,
-  isWideScreen,
-  selectedSize,
-  favoritesStore,
-  imageStyles,
-  barStyles,
-  item,
-  priceFormatter,
-  handleMouseMove,
-  handleTouchStart,
-  handleTouchEnd,
-  handleClick,
-  numImages,
-  barIndices,
-} = useCatalogCard(props.variant, props.id, props.link)
+	currentImageIndex,
+	isTransitioning,
+	isHovered,
+	isVisible,
+	isWideScreen,
+	selectedSize,
+	favoritesStore,
+	imageStyles,
+	barStyles,
+	item,
+	numImages,
+	barIndices,
+	priceFormatter,
+	handleMouseMove,
+	handleTouchStart,
+	handleTouchEnd,
+	handleClick,
+	currentColorImages,
+	currentColorName,
+	getPriceData,
+	isFavoriteLocal,
+	isStarPressed,
+	starRef,
+	handleStarClick,
+	handleStarMouseDown,
+	handleStarTouchStart,
+} = useCatalogCard({
+	variant: props.variant,
+	id: props.id,
+	link: props.link || false,
+	currentColorCode: props.currentColorCode,
+})
 
 watch(
-  () => props.modelValue,
-  (newValue) => {
-    if (newValue && newValue !== selectedSize.value) {
-      selectedSize.value = newValue
-    }
-  },
+	() => props.modelValue,
+	(newValue) => {
+		if (newValue && newValue !== selectedSize.value) {
+			selectedSize.value = newValue
+		}
+	},
 )
 
 watch(selectedSize, (newValue) => {
-  emit("update:modelValue", newValue)
+	emit("update:modelValue", newValue || "")
 })
 
 if (props.modelValue) {
-  selectedSize.value = props.modelValue
+	selectedSize.value = props.modelValue
 }
-
-const starRef = ref<InstanceType<typeof NuxtImg> | null>(null)
-const isStarPressed = ref(false)
-const isFavoriteLocal = ref(favoritesStore.isFavorite(props.id))
-
-const isDataLoaded = computed(() => !!item)
-const hasImages = computed(() => item?.images && Object.keys(item.images).length > 0)
-
-const getPriceData = () => {
-  if (!item) return null
-  const firstColor = Object.keys(item.colors || {})[0] || ""
-  const sizeKey = selectedSize.value || item.sizes?.[0] || ""
-  const key = `${firstColor}_${sizeKey}`
-  return item.vector?.[key]
-}
-
-const handleStarClick = async (e: MouseEvent | TouchEvent) => {
-  e.stopPropagation()
-  if (isStarPressed.value) {
-    e.preventDefault()
-    return
-  }
-
-  isStarPressed.value = true
-
-  const starEl = starRef.value?.$el as HTMLElement | null
-  if (starEl) {
-    starEl.style.pointerEvents = "none"
-  }
-
-  isFavoriteLocal.value = !isFavoriteLocal.value
-
-  try {
-    await favoritesStore.toggleFavorite(props.id)
-  } catch (error) {
-    isFavoriteLocal.value = !isFavoriteLocal.value
-    console.error("Не удалось обновить избранное:", error)
-  }
-
-  setTimeout(() => {
-    if (starEl) {
-      starEl.style.pointerEvents = "auto"
-    }
-    isStarPressed.value = false
-  }, 250)
-}
-
-const handleStarMouseDown = (e: MouseEvent) => {
-  e.stopPropagation()
-  if (isStarPressed.value) {
-    e.preventDefault()
-  }
-}
-
-const handleStarTouchStart = (e: TouchEvent) => {
-  e.stopPropagation()
-  if (isStarPressed.value) {
-    e.preventDefault()
-  }
-}
-
-watch(
-  () => favoritesStore.isFavorite(props.id),
-  (newValue) => {
-    isFavoriteLocal.value = newValue
-  },
-)
 </script>
 
 <template>
-  <!-- Mini вариант -->
   <div
-    v-if="variant === 'mini'"
-    :class="[
+	  v-if="variant === 'mini'"
+	  :class="[
       'flex flex-col items-center relative font-[Commissioner] text-[#211D1D] font-light text-[11px] text-center cursor-pointer sm:font-[Manrope] sm:text-xs',
       customClass,
       isWideScreen && 'justify-between flex-1',
     ]"
-    @mouseenter="!popup && (isHovered = true)"
-    @mouseleave="!popup && (isHovered = false)"
-    @click="handleClick"
+	  @mouseenter="!popup && (isHovered = true)"
+	  @mouseleave="!popup && (isHovered = false)"
+	  @click="handleClick"
   >
-    <!-- Изображение -->
     <div
-      class="w-full rounded-lg relative"
-      :style="{ height: !popup && isHovered ? 'calc(100% + 20px)' : '100%' }"
+	    class="w-full rounded-lg relative"
+	    :style="{ height: !popup && isHovered ? 'calc(100% + 20px)' : '100%' }"
     >
       <div class="overflow-hidden rounded-lg h-full">
         <NuxtImg
-          v-if="isDataLoaded && hasImages"
-          v-slot="{ src, isLoaded, imgAttrs }"
-          :src="Object.values(item.images)[0]"
-          :custom="true"
-          class="aspect-[300/450] transition-all duration-300 ease-out"
+	        v-if="item && currentColorImages.length > 0"
+	        v-slot="{ src, isLoaded, imgAttrs }"
+	        :src="currentColorImages[0]"
+	        :custom="true"
+	        class="aspect-[300/450] transition-all duration-300 ease-out"
         >
           <div
-            v-if="!isLoaded"
-            class="w-full h-full aspect-[300/450] bg-[#F9F6EC]"
+	          v-if="!isLoaded"
+	          class="w-full h-full aspect-[300/450] bg-[#F9F6EC]"
           />
           <img
-            v-else
-            v-bind="imgAttrs"
-            :src="src"
-            :class="[
+	          v-else
+	          v-bind="imgAttrs"
+	          :src="src"
+	          :class="[
               'w-full h-full object-cover transition-all duration-300 ease-out rounded-lg',
               customImageClass,
               popup && 'hover:scale-[1.05]',
             ]"
-            :style="{
+	          :style="{
               height: !popup && isHovered ? 'calc(100% + 20px)' : '100%',
               objectPosition: !popup && isHovered ? 'center top' : 'center center',
             }"
-            alt="card"
-          />
+	          alt="card"
+          >
         </NuxtImg>
         <div
-          v-else
-          class="w-full h-full aspect-[300/450] bg-[#F9F6EC]"
+	        v-else
+	        class="w-full h-full aspect-[300/450] bg-[#F9F6EC]"
         />
       </div>
     </div>
 
-    <!-- Если данные не загружены - показываем плейсхолдеры -->
-    <template v-if="!isDataLoaded">
+    <template v-if="!item">
       <div class="w-full h-4 bg-[#F9F6EC] rounded mt-1 sm:mt-2" />
       <div class="w-20 h-4 bg-[#F9F6EC] rounded mt-0.5 sm:mt-1" />
       <div
-        v-if="!isHovered || popup"
-        class="w-16 h-4 bg-[#F9F6EC] rounded my-1 hidden sm:block"
-        :class="{ 'mb-2': popup }"
+	      v-if="!isHovered || popup"
+	      class="w-16 h-4 bg-[#F9F6EC] rounded my-1 hidden sm:block"
+	      :class="{ 'mb-2': popup }"
       />
     </template>
 
-    <!-- Если данные загружены - показываем контент -->
     <template v-else>
       <h4 class="mt-1 sm:mt-2">
         {{ item.name }}
       </h4>
 
       <span
-        v-if="getPriceData()"
-        class="mt-0.5 block sm:mt-1"
-        :class="{ 'mb-2': isHovered }"
+	      v-if="getPriceData()"
+	      class="mt-0.5 block sm:mt-1"
+	      :class="{ 'mb-2': isHovered }"
       >
         {{ priceFormatter(getPriceData().price) }}
         <span
-          v-if="getPriceData().oldPrice"
-          class="text-[#5E5B58] line-through ml-1"
+	        v-if="getPriceData().oldPrice"
+	        class="text-[#5E5B58] line-through ml-1"
         >
           {{ priceFormatter(getPriceData().oldPrice) }}
         </span>
       </span>
       <span
-        v-else
-        class="mt-0.5 block sm:mt-1 text-gray-500"
+	      v-else
+	      class="mt-0.5 block sm:mt-1 text-gray-500"
       >
         Цена не указана
       </span>
 
       <span
-        v-if="!isHovered || popup"
-        class="my-1 hidden sm:block"
-        :class="{ 'mb-2': popup }"
+	      v-if="!isHovered || popup"
+	      class="my-1 hidden sm:block"
+	      :class="{ 'mb-2': popup }"
       >
-        {{ Object.values(item.colors)[0].name }}
+        {{ currentColorName }}
       </span>
-
-      <!-- Размеры -->
+	    
+	    <!-- Обновлённый блок: выбор размера всегда виден в попапе, независимо от экрана -->
       <div
-        :class="['hidden gap-1 2xl:flex', popup && 'flex-wrap justify-center']"
-        @click.stop
+	      v-if="popup"
+	      class="flex gap-1 flex-wrap justify-center mt-1 @click.stop"
       >
         <SingleSelectButton
-          v-model="selectedSize"
-          :content="item.sizes"
-          custom-class="text-xs mt-1"
+	        v-model="selectedSize"
+	        :content="item.sizes"
+	        custom-class="text-xs"
+        />
+      </div>
+	    
+	    <!-- Оригинальный блок для не-попап режимов (остаётся без изменений) -->
+      <div
+	      v-else
+	      :class="['hidden gap-1 2xl:flex']"
+	      @click.stop
+      >
+        <SingleSelectButton
+	        v-model="selectedSize"
+	        :content="item.sizes"
+	        custom-class="text-xs mt-1"
         />
       </div>
 
-      <!-- Звезда избранного -->
       <NuxtImg
-        v-if="!isWideScreen || (!popup && isHovered) || isFavoriteLocal"
-        ref="starRef"
-        :src="isFavoriteLocal ? '/star-filled.svg' : '/star.svg'"
-        alt="star"
-        :class="[
+	      v-if="!isWideScreen || (!popup && isHovered) || isFavoriteLocal"
+	      ref="starRef"
+	      :src="isFavoriteLocal ? '/star-filled.svg' : '/star.svg'"
+	      alt="star"
+	      :class="[
           'star-button absolute z-10 cursor-pointer',
           'w-5 h-5 right-2.5 top-2.5 md:w-6 md:h-6 md:right-4 md:top-4',
           isStarPressed && 'star-pressed',
         ]"
-        @mousedown="handleStarMouseDown"
-        @touchstart="handleStarTouchStart"
-        @click.stop="handleStarClick"
+	      @mousedown="handleStarMouseDown"
+	      @touchstart="handleStarTouchStart"
+	      @click.stop="handleStarClick"
       />
     </template>
   </div>
 
-  <!-- Large вариант -->
   <div
-    v-else
-    :class="[
+	  v-else
+	  :class="[
       'relative font-[Commissioner] font-light text-[10px] text-center text-[#211D1D] cursor-pointer sm:font-[Manrope] sm:text-sm',
       customClass,
       !popup && isVisible ? 'animate-card-appear' : '',
     ]"
-    @mouseenter="!popup && (isHovered = true)"
-    @mouseleave="!popup && (isHovered = false)"
-    @click="handleClick"
+	  @mouseenter="!popup && (isHovered = true)"
+	  @mouseleave="!popup && (isHovered = false)"
+	  @click="handleClick"
   >
-    <!-- Если данные не загружены - показываем полный плейсхолдер -->
-    <template v-if="!isDataLoaded">
+    <template v-if="!item">
       <div class="aspect-[460/680] bg-[#F9F6EC] rounded-lg w-full" />
       <div class="w-full h-0.5 bg-[#F9F6EC] rounded-lg mt-1" />
       <div class="w-full h-10 bg-[#F9F6EC] rounded-lg mt-1" />
     </template>
 
-    <!-- Если данные загружены -->
     <template v-else>
-      <!-- Если нет изображений - показываем только плейсхолдер изображения -->
-      <template v-if="!hasImages">
+      <template v-if="currentColorImages.length === 0">
         <div class="aspect-[460/680] bg-[#F9F6EC] rounded-lg w-full" />
       </template>
 
-      <!-- Если есть изображения -->
       <NuxtImg
-        v-else
-        v-slot="{ isLoaded }"
-        :src="Object.values(item.images)[currentImageIndex]"
-        alt="card"
-        width="460"
-        height="680"
-        :custom="true"
+	      v-else
+	      v-slot="{ isLoaded }"
+	      :src="currentColorImages[currentImageIndex]"
+	      alt="card"
+	      width="460"
+	      height="680"
+	      :custom="true"
       >
-        <!-- Плейсхолдер загрузки изображения -->
         <div
-          v-if="!isLoaded"
-          class="aspect-[460/680] bg-[#F9F6EC] rounded-lg w-full"
+	        v-if="!isLoaded"
+	        class="aspect-[460/680] bg-[#F9F6EC] rounded-lg w-full"
         />
 
-        <!-- Загруженное изображение -->
         <template v-else>
-          <!-- Множественные изображения с навигацией -->
           <div
-            v-if="numImages > 1"
-            class="relative w-full aspect-[460/680] overflow-hidden"
-            @touchstart="handleTouchStart"
-            @touchend="handleTouchEnd"
-            @mousemove="handleMouseMove"
+	          v-if="numImages > 1"
+	          class="relative w-full aspect-[460/680] overflow-hidden"
+	          @touchstart="handleTouchStart"
+	          @touchend="handleTouchEnd"
+	          @mousemove="handleMouseMove"
           >
             <NuxtImg
-              v-for="(img, index) in Object.values(item.images).slice(0, numImages)"
-              :key="index"
-              v-slot="{ src, imgAttrs }"
-              :src="img"
-              width="460"
-              height="680"
-              :custom="true"
+	            v-for="(img, index) in currentColorImages.slice(0, numImages)"
+	            :key="index"
+	            v-slot="{ src, imgAttrs }"
+	            :src="img"
+	            width="460"
+	            height="680"
+	            :custom="true"
             >
               <img
-                v-bind="imgAttrs"
-                :src="src"
-                :class="['rounded-lg sm:rounded-2xl absolute top-0 left-0 w-full h-full', customImageClass]"
-                :style="imageStyles(index)"
-                alt="card"
-              />
+	              v-bind="imgAttrs"
+	              :src="src"
+	              :class="['rounded-lg sm:rounded-2xl absolute top-0 left-0 w-full h-full', customImageClass]"
+	              :style="imageStyles(index)"
+	              alt="card"
+              >
             </NuxtImg>
           </div>
 
-          <!-- Одиночное изображение -->
           <NuxtImg
-            v-else
-            v-slot="{ src, imgAttrs }"
-            :src="Object.values(item.images)[0]"
-            width="460"
-            height="680"
-            :custom="true"
+	          v-else
+	          v-slot="{ src, imgAttrs }"
+	          :src="currentColorImages[0]"
+	          width="460"
+	          height="680"
+	          :custom="true"
           >
             <img
-              v-bind="imgAttrs"
-              :src="src"
-              :class="['rounded-lg sm:rounded-2xl w-full aspect-[460/680] object-cover', customImageClass]"
-              alt="card"
-              @click="handleClick"
-            />
+	            v-bind="imgAttrs"
+	            :src="src"
+	            :class="['rounded-lg sm:rounded-2xl w-full aspect-[460/680] object-cover', customImageClass]"
+	            alt="card"
+	            @click="handleClick"
+            >
           </NuxtImg>
 
-          <!-- Индикаторы навигации -->
           <div
-            v-if="numImages > 1"
-            class="flex justify-center items-center gap-1 px-6 py-2"
+	          v-if="numImages > 1"
+	          class="flex justify-center items-center gap-1 px-6 py-2"
           >
             <div
-              v-for="index in barIndices"
-              :key="index"
-              class="flex-1 border-y border-[#A6CEFF]"
-              :style="barStyles(index)"
+	            v-for="index in barIndices"
+	            :key="index"
+	            class="flex-1 border-y border-[#A6CEFF]"
+	            :style="barStyles(index)"
             />
           </div>
         </template>
       </NuxtImg>
 
-      <!-- Название и цена - всегда показываем если данные загружены -->
       <h4 class="mt-1">{{ item.name }}</h4>
       <span
-        v-if="getPriceData()"
-        class="mt-0.5"
-        :class="{ 'mb-2': popup }"
+	      v-if="getPriceData()"
+	      class="mt-0.5"
+	      :class="{ 'mb-2': popup }"
       >
-        {{ priceFormatter(getPriceData()!.price) }}
+        {{ priceFormatter(getPriceData().price) }}
       </span>
       <span
-        v-else
-        class="mt-0.5 text-gray-500"
+	      v-else
+	      class="mt-0.5 text-gray-500"
       >
         Цена не указана
       </span>
 
-      <!-- Звезда избранного -->
       <NuxtImg
-        v-if="!isWideScreen || (!popup && isHovered) || isFavoriteLocal"
-        ref="starRef"
-        :src="isFavoriteLocal ? '/star-filled.svg' : '/star.svg'"
-        alt="star"
-        :class="[
+	      v-if="!isWideScreen || (!popup && isHovered) || isFavoriteLocal"
+	      ref="starRef"
+	      :src="isFavoriteLocal ? '/star-filled.svg' : '/star.svg'"
+	      alt="star"
+	      :class="[
           'star-button absolute z-10 cursor-pointer',
           'w-5 h-5 right-2.5 top-2.5 md:w-6 md:h-6 md:right-4 md:top-4',
           isStarPressed && 'star-pressed',
         ]"
-        @mousedown="handleStarMouseDown"
-        @touchstart="handleStarTouchStart"
-        @click.stop="handleStarClick"
+	      @mousedown="handleStarMouseDown"
+	      @touchstart="handleStarTouchStart"
+	      @click.stop="handleStarClick"
       />
     </template>
   </div>
@@ -388,54 +333,53 @@ watch(
 
 <style scoped>
 @keyframes card-appear {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+	from {
+		opacity: 0;
+		transform: translateX(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
 }
 
 .animate-card-appear:not(.popup) {
-  animation: card-appear 400ms ease-out forwards;
+	animation: card-appear 400ms ease-out forwards;
 }
 
 .star-button {
-  transform-origin: center;
+	transform-origin: center;
 }
 
 .star-button:hover {
-  transform: scale(1.1);
-  transition: transform 0.2s ease-in-out;
+	transform: scale(1.1);
+	transition: transform 0.2s ease-in-out;
 }
 
 .star-pressed {
-  animation: star-press 250ms ease-in-out;
+	animation: star-press 250ms ease-in-out;
 }
 
 @keyframes star-press {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(0.85);
-  }
-  100% {
-    transform: scale(1);
-  }
+	0% {
+		transform: scale(1);
+	}
+	50% {
+		transform: scale(0.85);
+	}
+	100% {
+		transform: scale(1);
+	}
 }
 
 @media (min-width: 475px) {
-  .star-button {
-    transition: filter 0.2s ease-out;
-  }
-
-  .star-button:hover {
-    transition:
-      transform 0.2s ease-in-out,
-      filter 0.2s ease-out;
-  }
+	.star-button {
+		transition: filter 0.2s ease-out;
+	}
+	
+	.star-button:hover {
+		transition: transform 0.2s ease-in-out,
+		filter 0.2s ease-out;
+	}
 }
 </style>

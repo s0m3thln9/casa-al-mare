@@ -164,33 +164,33 @@ const calculateSum = () => {
               <input
                 type="checkbox"
                 class="w-4 h-4"
-              />
+              >
               <span class="text-[13px] font-light">Ул. Заречная, дом 19, кв. 55</span>
             </div>
             <div class="flex gap-1 items-center">
               <input
                 type="checkbox"
                 class="w-4 h-4"
-              />
+              >
               <span class="text-[13px] font-light">Москва; Ленинский проспект 62; кв 13</span>
             </div>
             <div class="flex gap-1 items-center">
               <input
                 type="checkbox"
                 class="w-4 h-4"
-              />
+              >
               <span class="text-[13px] font-light">Новый адрес</span>
             </div>
             <input
               type="text"
               placeholder="Улица, дом, корпус, строение, квартира"
               class="w-full h-[44px] px-2 py-2.5 border-[#5E5B58] border-[0.7px] rounded-lg text-xs placeholder:text-[#5E5B58]"
-            />
+            >
             <input
               type="text"
               placeholder="Номер дома и домофон / офис"
               class="w-full h-[44px] px-2 py-2.5 border-[#5E5B58] border-[0.7px] rounded-lg text-xs placeholder:text-[#5E5B58]"
-            />
+            >
             <AppButton content="Сохранить" />
           </div>
         </div>

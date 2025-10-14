@@ -39,7 +39,7 @@ const handleClick = () => {
         :style="{ objectPosition: objectPosition || 'center' }"
         loading="lazy"
         alt="banner"
-      />
+      >
     </NuxtImg>
     <div
       v-if="text"

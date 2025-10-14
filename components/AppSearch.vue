@@ -89,7 +89,7 @@ onUnmounted(() => {
 <template>
   <div>
     <button
-      class="hover:text-[#F3A454] text-xs sm:text-sm font-[Manrope] text-[#211D1D] focus:outline-none"
+      class="hover:text-[#F3A454] cursor-pointer text-xs sm:text-sm font-[Manrope] text-[#211D1D] focus:outline-none"
       @click.stop="toggleSearch"
     >
       Поиск
@@ -110,7 +110,7 @@ onUnmounted(() => {
             placeholder="Введите запрос, например 'Лиф'..."
             class="w-full py-2 text-[#211D1D] font-[Manrope] text-sm focus:outline-none"
             @keydown.enter="handleSubmit"
-          />
+          >
           <button
             class="cursor-pointer"
             @click="handleSubmit"

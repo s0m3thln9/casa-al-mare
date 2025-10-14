@@ -585,7 +585,7 @@ onUnmounted(() => {
               v-if="remainingSeconds > 0"
               class="font-[Manrope] text-xs font-light text-[#211D1D] mt-8 self-center text-center"
             >
-              Запросить код повторно <br />
+              Запросить код повторно <br >
               можно через <span class="font-normal">{{ remainingSeconds }} секунд</span>
             </span>
             <span
@@ -795,7 +795,7 @@ onUnmounted(() => {
               v-if="remainingSeconds > 0"
               class="font-[Manrope] text-xs font-light text-[#211D1D] mt-8 self-center text-center"
             >
-              Запросить код повторно <br />
+              Запросить код повторно <br >
               можно через <span class="font-normal">{{ remainingSeconds }} секунд</span>
             </span>
             <span
