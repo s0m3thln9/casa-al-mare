@@ -48,13 +48,8 @@ onMounted(() => {
           >
             <CatalogCard
               :id="item.id"
-              :slider-images="item.sliderImages"
-              :color="item.color"
-              :name="item.name"
-              :price="item.price"
-              :old-price="item.oldPrice"
               variant="large"
-              :link="`/catalog/${item.id}`"
+              link
             />
           </template>
           <div class="col-span-2 w-full flex justify-center items-center mt-5 mb-3 sm:hidden">
@@ -74,14 +69,9 @@ onMounted(() => {
             :key="index"
           >
             <CatalogCard
-              :id="catalogStore.items[0].id"
-              :slider-images="catalogStore.items[0].sliderImages"
-              :color="catalogStore.items[0].color"
-              :name="catalogStore.items[0].name"
-              :price="catalogStore.items[0].price"
-              :old-price="catalogStore.items[0].oldPrice"
+              :id="37"
               variant="large"
-              :link="`/catalog/${catalogStore.items[0].id}`"
+              link
             />
           </template>
         </div>

@@ -4,6 +4,7 @@ const currentTab = ref("Профиль")
 const images = {
   card1: "/item-page-1.jpg",
 }
+
 export type EditUserResponse = {
   success: boolean
   error?: string
@@ -12,6 +13,11 @@ export type EditUserResponse = {
 
 const profileStore = useProfileStore()
 const userStore = useUserStore()
+const orderStore = useOrderStore()
+const favoritesStore = useFavoritesStore()
+const catalogStore = useCatalogStore()
+
+const favoriteItems = computed(() => catalogStore.items.filter((item) => favoritesStore.favorites.includes(item.id)))
 
 const nameRef = ref<{ validate: () => boolean; showError: boolean } | null>(null)
 const surnameRef = ref<{ validate: () => boolean; showError: boolean } | null>(null)
@@ -21,6 +27,12 @@ const yearRef = ref<{ validate: () => boolean; showError: boolean } | null>(null
 const adr1Ref = ref<{ validate: () => boolean; showError: boolean } | null>(null)
 const adr2Ref = ref<{ validate: () => boolean; showError: boolean } | null>(null)
 const adr3Ref = ref<{ validate: () => boolean; showError: boolean } | null>(null)
+
+const certificateCode = ref("")
+
+const certificateBalance = computed(() => {
+  return userStore.user?.certificates?.reduce((acc, cert) => acc + cert.value_now, 0) || 0
+})
 
 const handleLogout = async () => {
   await userStore.logout()
@@ -43,6 +55,25 @@ const handleSaveProfile = async (): Promise<void> => {
     profileStore.saveError = ""
   } else {
     console.error("Ошибка сохранения")
+  }
+}
+
+const handleAddCertificate = async (): Promise<void> => {
+  const code = certificateCode.value.trim()
+  if (!code) {
+    console.warn("Код сертификата не может быть пустым")
+    return
+  }
+
+  orderStore.newCertificateCode = code
+  await orderStore.addCertificate()
+
+  if (!orderStore.certificateError) {
+    certificateCode.value = ""
+    await userStore.fetchUser()
+    console.log("Сертификат добавлен!")
+  } else {
+    console.error("Ошибка добавления сертификата:", orderStore.certificateError)
   }
 }
 
@@ -277,7 +308,7 @@ onMounted(() => {
           <div class="grid grid-cols-2 gap-4 w-full items-center">
             <AppInput
               id="code"
-              v-model="code"
+              v-model="certificateCode"
               label="Введите код"
               type="text"
             />
@@ -285,23 +316,24 @@ onMounted(() => {
               content="Применить"
               variant="primary"
               custom-class="w-full"
+              @click="handleAddCertificate"
             />
           </div>
           <div class="flex flex-col gap-2 w-full">
-            <div class="flex w-full items-center rounded-lg gap-4 p-4 border-[0.7px] border-[#BFBFBF]">
-              <div class="px-4 py-2 bg-[#FFF4A4] rounded-lg font-light text-sm">065040В9340</div>
-              <span class="font-light text-sm text-[#181818]">на 1 000 ₽</span>
-            </div>
-            <div class="flex w-full items-center rounded-lg gap-4 p-4 border-[0.7px] border-[#BFBFBF]">
-              <div class="px-4 py-2 bg-[#FFF4A4] rounded-lg font-light text-sm">065040В9340</div>
-              <span class="font-light text-sm text-[#181818]">на 5 000 ₽</span>
-            </div>
-            <div class="flex w-full items-center rounded-lg gap-4 p-4 border-[0.7px] border-[#BFBFBF]">
-              <div class="px-4 py-2 bg-[#FFF4A4] rounded-lg font-light text-sm">065040В9340</div>
-              <span class="font-light text-sm text-[#181818]">на 500 ₽</span>
-            </div>
+            <template
+              v-for="cert in userStore.user?.certificates ?? []"
+              :key="cert.id"
+            >
+              <div
+                v-if="cert.value_now > 0"
+                class="flex w-full items-center rounded-lg gap-4 p-4 border-[0.7px] border-[#BFBFBF]"
+              >
+                <div class="px-4 py-2 bg-[#FFF4A4] rounded-lg font-light text-sm">{{ cert.code }}</div>
+                <span class="font-light text-sm text-[#181818]">на {{ cert.value_now }} ₽</span>
+              </div>
+            </template>
           </div>
-          <span class="font-light text-sm text-[#1A1A1A] self-start">Ваш баланс: 8 500 рублей</span>
+          <span class="font-light text-sm text-[#1A1A1A] self-start">Ваш баланс: {{ certificateBalance }} рублей</span>
         </div>
       </div>
       <div
@@ -309,30 +341,16 @@ onMounted(() => {
         class="w-full"
       >
         <div class="mt-8 grid grid-cols-1 px-2 gap-x-4 gap-y-6 sm:grid-cols-4 sm:px-4">
-          <CatalogCard
-            :image-urls="[images.card1, images.card1, images.card1]"
-            text="Printed bikini top"
-            :price="25500"
-            variant="large"
-          />
-          <CatalogCard
-            :image-urls="[images.card1, images.card1, images.card1]"
-            text="Printed bikini top"
-            :price="25500"
-            variant="large"
-          />
-          <CatalogCard
-            :image-urls="[images.card1, images.card1, images.card1]"
-            text="Printed bikini top"
-            :price="25500"
-            variant="large"
-          />
-          <CatalogCard
-            :image-urls="[images.card1, images.card1, images.card1]"
-            text="Printed bikini top"
-            :price="25500"
-            variant="large"
-          />
+          <template
+            v-for="item in favoriteItems"
+            :key="item.id"
+          >
+            <CatalogCard
+              :id="item.id"
+              variant="large"
+              link
+            />
+          </template>
         </div>
       </div>
     </div>

@@ -518,19 +518,19 @@ watch(
         <!-- ФИКС: Добавил v-if на CatalogCard для защиты от пустого store -->
         <CatalogCard
           v-if="catalogStore.items.length > 0"
-          :id="31"
+          :id="37"
           variant="large"
           link
         />
         <CatalogCard
           v-if="catalogStore.items.length > 0"
-          :id="31"
+          :id="37"
           variant="large"
           link
         />
         <CatalogCard
           v-if="catalogStore.items.length > 0"
-          :id="31"
+          :id="37"
           variant="large"
           link
         />
