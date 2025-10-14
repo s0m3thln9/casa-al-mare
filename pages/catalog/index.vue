@@ -21,6 +21,7 @@ const handleResize = () => {
 onMounted(() => {
   isMobile.value = window.innerWidth < 640
   window.addEventListener("resize", handleResize)
+  catalogStore.loadItems()
 })
 
 const route = useRoute()
@@ -38,11 +39,29 @@ watch(
     const validTypes = typesFromQuery.filter((t) => catalogStore.filters.types.includes(t))
     if (validTypes.length) {
       catalogStore.pendingFilters.types = validTypes
-      catalogStore.applyFilters()
     } else {
       catalogStore.pendingFilters.types = []
-      catalogStore.applyFilters()
     }
+
+    // Обработка keystrings
+    let keystringsFromQuery: string[] = []
+    if (typeof q.keystrings === "string" && q.keystrings.trim() !== "") {
+      const parts = q.keystrings
+        .replace(/^\/+|\/+$/g, "")
+        .split("/")
+        .filter((p) => p.trim() !== "")
+      keystringsFromQuery = parts
+    }
+    catalogStore.pendingFilters.keystrings = keystringsFromQuery
+
+    // Новое: обработка query для поиска
+    if (typeof q.query === "string") {
+      catalogStore.pendingFilters.searchQuery = q.query.trim()
+    } else {
+      catalogStore.pendingFilters.searchQuery = ""
+    }
+
+    catalogStore.applyFilters()
   },
   { immediate: true },
 )
@@ -123,6 +142,12 @@ const load = () => {
           />
         </button>
       </div>
+    </div>
+    <div
+      v-if="catalogStore.filteredItems.length === 0"
+      class="flex justify-center items-center py-10 text-[#211D1D]/60"
+    >
+      <p>Ничего не найдено по запросу "{{ route.query.query }}". Попробуйте другой поиск.</p>
     </div>
     <div
       v-if="currentCardCount === '4' || currentCardCount === '2'"
