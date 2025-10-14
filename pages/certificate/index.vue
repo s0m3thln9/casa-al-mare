@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useCertificateStore } from "~/stores/certificate"
-import { ref, computed } from "vue"
+import {computed, ref} from "vue"
+import {useCertificateStore} from "~/stores/certificate"
 
 const certificateStore = useCertificateStore()
 
@@ -33,15 +33,30 @@ const barStyles = computed(() => (index: number) => ({
   transition: "opacity 400ms ease-in-out",
 }))
 
-const certificateImages = [
-  "/certificate-1.png",
-  "/certificate-2.png",
-  "/certificate-1.png",
-  "/certificate-2.png",
-  "/certificate-1.png",
-  "/certificate-2.png",
+const certificateImages = ref<string[]>([])
+
+const fallbackImages = [
+	"/certificate-1.png",
+	"/certificate-2.png",
+	"/certificate-1.png",
+	"/certificate-2.png",
+	"/certificate-1.png",
+	"/certificate-2.png",
 ]
 
+onMounted(async () => {
+	try {
+		const response = await $fetch<{ success: boolean; images: string[] }>('https://back.casaalmare.com/api/getCertImages')
+		if (response.success && response.images.length > 0) {
+			certificateImages.value = response.images
+		} else {
+			certificateImages.value = fallbackImages
+		}
+	} catch (error) {
+		console.error('Ошибка загрузки изображений сертификата:', error)
+		certificateImages.value = fallbackImages
+	}
+})
 const handleTouchStart = (e: TouchEvent) => {
   touchStartX.value = e.touches[0].clientX
 }
@@ -51,9 +66,9 @@ const handleTouchEnd = (e: TouchEvent) => {
   const deltaX = touchEndX - touchStartX.value
   const threshold = 50
   if (deltaX > threshold) {
-    currentImageIndex.value = (currentImageIndex.value - 1 + certificateImages.length) % certificateImages.length
+    currentImageIndex.value = (currentImageIndex.value - 1 + certificateImages.value.length) % certificateImages.value.length
   } else if (deltaX < -threshold) {
-    currentImageIndex.value = (currentImageIndex.value + 1) % certificateImages.length
+    currentImageIndex.value = (currentImageIndex.value + 1) % certificateImages.value.length
   }
 }
 </script>
@@ -64,72 +79,42 @@ const handleTouchEnd = (e: TouchEvent) => {
       <AppBreadcrumbs :items="breadcrumbsItems" />
     </div>
     <div class="px-0 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-8 sm:px-4">
-      <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+	    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
         <div
-          class="block sm:hidden relative w-full aspect-[460/680] overflow-hidden"
-          @touchstart="handleTouchStart"
-          @touchend="handleTouchEnd"
+	        v-if="certificateImages.length > 0"
+	        class="block sm:hidden relative w-full aspect-[460/680] overflow-hidden"
+	        @touchstart="handleTouchStart"
+	        @touchend="handleTouchEnd"
         >
           <NuxtImg
-            v-for="(img, index) in certificateImages"
-            :key="index"
-            :src="img"
-            alt="certificate"
-            width="460"
-            height="680"
-            class="absolute top-0 left-0 w-full h-full sm:rounded-lg"
-            :style="imageStyles(index)"
+	          v-for="(img, index) in certificateImages"
+	          :key="index"
+	          :src="img"
+	          alt="certificate"
+	          width="460"
+	          height="680"
+	          loading="lazy"
+	          class="absolute top-0 left-0 w-full h-full sm:rounded-lg"
+	          :style="imageStyles(index)"
           />
         </div>
-        <div class="flex sm:hidden justify-center items-center gap-1 px-4 mt-2">
+        <div v-if="certificateImages.length > 0" class="flex sm:hidden justify-center items-center gap-1 px-4 mt-2">
           <div
-            v-for="(_, index) in certificateImages"
-            :key="index"
-            class="flex-1 border-y border-[#A6CEFF]"
-            :style="barStyles(index)"
+	          v-for="(_, index) in certificateImages"
+	          :key="index"
+	          class="flex-1 border-y border-[#A6CEFF]"
+	          :style="barStyles(index)"
           />
         </div>
         <NuxtImg
-          src="/certificate-1.png"
-          alt="certificate"
-          width="726"
-          height="1080"
-          class="sm:rounded-lg hidden sm:block"
-        />
-        <NuxtImg
-          src="/certificate-2.png"
-          alt="certificate"
-          width="726"
-          height="1080"
-          class="sm:rounded-lg hidden sm:block"
-        />
-        <NuxtImg
-          src="/certificate-1.png"
-          alt="certificate"
-          width="726"
-          height="1080"
-          class="sm:rounded-lg hidden sm:block"
-        />
-        <NuxtImg
-          src="/certificate-2.png"
-          alt="certificate"
-          width="726"
-          height="1080"
-          class="sm:rounded-lg hidden sm:block"
-        />
-        <NuxtImg
-          src="/certificate-1.png"
-          alt="certificate"
-          width="726"
-          height="1080"
-          class="sm:rounded-lg hidden sm:block"
-        />
-        <NuxtImg
-          src="/certificate-2.png"
-          alt="certificate"
-          width="726"
-          height="1080"
-          class="sm:rounded-lg hidden sm:block"
+	        v-for="(img, index) in certificateImages"
+	        :key="index"
+	        :src="img"
+	        alt="certificate"
+	        width="726"
+	        height="1080"
+	        loading="lazy"
+	        class="sm:rounded-lg hidden sm:block"
         />
       </div>
       <div class="px-2 flex flex-col sm:px-0">
