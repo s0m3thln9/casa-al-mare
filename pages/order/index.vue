@@ -110,9 +110,16 @@ async function handlePay(): Promise<void> {
 
   if (orderStore.isPaymentSuccessful === null) {
     if (!authStore.isAuth) {
-      const inputs = [nameRef.value, surnameRef.value, phoneRef.value, emailRef.value]
-      const isValid = inputs.every((input): input is NonNullable<typeof input> => input?.validate?.() ?? false)
-      if (!isValid) return
+      if (orderStore.isGuestAuthStep) {
+        if (!orderStore.guestSmsCode) {
+          orderStore.guestAuthError = "Введите код из SMS"
+          orderStore.showGuestAuthError = true
+          return
+        }
+      } else {
+        orderStore.showErrorAuth = true
+        return
+      }
     }
 
     if (!cityRef.value?.validate()) return
@@ -151,13 +158,175 @@ async function handleSave(): Promise<void> {
   await orderStore.saveNewAddress()
 }
 
-const hasItemsInCart = computed(() => orderStore.cartItems.length > 0)
+async function handleGuestAuth(): Promise<void> {
+  const inputs = [nameRef.value, surnameRef.value, phoneRef.value, emailRef.value]
+  const isValid = inputs.every((input): input is NonNullable<typeof input> => input?.validate?.() ?? false)
+  if (!isValid) return
 
-onMounted(() => {
-  if (!authStore.isAuth) {
-    authModalStore.open()
+  orderStore.showErrorAuth = false
+  orderStore.showGuestAuthError = false
+  orderStore.guestAuthError = ""
+  orderStore.isGuestAuthLoading = true
+  orderStore.guestAuthButtonContent = "Отправка..."
+  orderStore.guestAuthButtonDisabled = true
+
+  const body = {
+    email: orderStore.email,
+    phone: orderStore.phone,
+    name: orderStore.name,
+    surname: orderStore.surname,
   }
+
+  let testData: any = null
+  try {
+    const response = await $fetch("https://back.casaalmare.com/api/testContacts", {
+      method: "POST",
+      body,
+    })
+    testData = response
+    if (!testData.success) {
+      orderStore.guestAuthError = testData.error || "Ошибка проверки данных (пользователь не найден)"
+      orderStore.showGuestAuthError = true
+      orderStore.guestAuthButtonContent = "Попробовать снова"
+      orderStore.guestAuthButtonDisabled = false
+      orderStore.isGuestAuthLoading = false
+      return
+    }
+  } catch (error) {
+    orderStore.guestAuthError = `Ошибка проверки данных: ${error instanceof Error ? error.message : "Неизвестная ошибка"}`
+    orderStore.showGuestAuthError = true
+    orderStore.guestAuthButtonContent = "Попробовать снова"
+    orderStore.guestAuthButtonDisabled = false
+    orderStore.isGuestAuthLoading = false
+    return
+  }
+
+  const loginType = testData.res === 1 ? 1 : 2
+  orderStore.guestLoginType = loginType
+
+  if (!orderStore.phone || !orderStore.phone.code || !orderStore.phone.phone) {
+    orderStore.guestAuthError = "Неверный формат телефона"
+    orderStore.showGuestAuthError = true
+    orderStore.guestAuthButtonContent = "Попробовать снова"
+    orderStore.guestAuthButtonDisabled = false
+    orderStore.isGuestAuthLoading = false
+    return
+  }
+
+  let smsData: any = null
+  try {
+    const smsBody = { phone: orderStore.phone }
+    smsData = await $fetch("https://back.casaalmare.com/api/createSmsCode", {
+      method: "POST",
+      body: smsBody,
+    })
+    if (!smsData.success) {
+      const errorMsg = typeof smsData.error === "string" ? smsData.error : "Код не отправлен (проверьте номер)"
+      orderStore.guestAuthError = `Ошибка отправки SMS: ${errorMsg}`
+      orderStore.showGuestAuthError = true
+      orderStore.guestAuthButtonContent = "Попробовать снова"
+      orderStore.guestAuthButtonDisabled = false
+      orderStore.isGuestAuthLoading = false
+      return
+    }
+  } catch (error) {
+    let errorMsg = "Ошибка сети при отправке SMS"
+    if (error instanceof Error) {
+      if (error.message.includes("404")) errorMsg = "SMS-сервис недоступен (проверьте endpoint)"
+      else if (error.message.includes("CORS")) errorMsg = "Ошибка CORS (настройте backend)"
+      else if (error.message.includes("fetch")) errorMsg = `Сетевая ошибка: ${error.message}`
+      else errorMsg = `Ошибка отправки SMS: ${error.message}`
+    }
+    orderStore.guestAuthError = errorMsg
+    orderStore.showGuestAuthError = true
+    orderStore.guestAuthButtonContent = "Попробовать снова"
+    orderStore.guestAuthButtonDisabled = false
+    orderStore.isGuestAuthLoading = false
+    return
+  }
+
+  orderStore.isGuestAuthStep = true
+  orderStore.guestNextCode = smsData.nextCode || 45
+  orderStore.startGuestCountdown()
+  orderStore.guestAuthButtonContent = "Код отправлен"
+  orderStore.guestAuthButtonDisabled = false
+  orderStore.isGuestAuthLoading = false
+}
+
+async function handleGuestSmsConfirm(): Promise<void> {
+  if (!orderStore.guestSmsCode) return
+
+  orderStore.showGuestSmsError = false
+  orderStore.guestSmsError = ""
+  orderStore.isGuestAuthLoading = true
+  orderStore.guestSmsButtonContent = "Проверка..."
+  orderStore.guestSmsButtonDisabled = true
+
+  const body: any = {
+    phone: orderStore.phone,
+    code: orderStore.guestSmsCode,
+    loginType: orderStore.guestLoginType,
+    token: await userStore.loadToken(),
+  }
+  if (orderStore.guestLoginType === 2) {
+    body.email = orderStore.email
+    body.firstname = orderStore.name
+    body.lastname = orderStore.surname
+  }
+
+  let loginData: any = null
+  try {
+    const response = await $fetch("https://back.casaalmare.com/api/login", {
+      method: "POST",
+      body,
+    })
+    loginData = response
+
+    if (loginData.success) {
+      orderStore.guestSmsButtonContent = "Успешно"
+      orderStore.guestSmsButtonDisabled = false
+      if (loginData.token) {
+        await userStore.saveToken(loginData.token)
+        await userStore.loadToken()
+        await userStore.fetchUser()
+      }
+      orderStore.resetGuestAuth()
+      window.location.reload()
+      return
+    } else {
+      const errorCode = loginData.error?.code || loginData.error || "Неверный код"
+      orderStore.guestSmsError = `Ошибка: ${errorCode}`
+      orderStore.showGuestSmsError = true
+
+      orderStore.guestSmsButtonContent = "Попробовать снова"
+      orderStore.guestSmsButtonDisabled = false
+    }
+  } catch (error) {
+    let errorMsg = "Ошибка подтверждения SMS"
+    if (error instanceof Error) {
+      if (error.message.includes("404")) errorMsg = "Сервис авторизации недоступен (проверьте endpoint)"
+      else if (error.message.includes("CORS")) errorMsg = "Ошибка CORS (настройте backend)"
+      else if (error.message.includes("fetch") || error.message.includes("network"))
+        errorMsg = `Сетевая ошибка: ${error.message}`
+      else if (error.message.includes("JSON")) errorMsg = "Неверный формат ответа сервера (HTML вместо JSON)"
+      else errorMsg = `Ошибка: ${error.message}`
+    }
+    orderStore.guestSmsError = errorMsg
+    orderStore.showGuestSmsError = true
+
+    orderStore.guestSmsButtonContent = "Попробовать снова"
+    orderStore.guestSmsButtonDisabled = false
+  } finally {
+    orderStore.isGuestAuthLoading = false
+  }
+}
+
+const isGuestAuthEnabled = computed(() => {
+  if (orderStore.isGuestAuthStep) return false
+  return orderStore.name && orderStore.surname && orderStore.phone && orderStore.email && !orderStore.isGuestAuthLoading
 })
+
+const hasItemsInCart = computed(() => orderStore.cartItems.length > 0)
 </script>
 
 <template>
@@ -276,155 +445,322 @@ onMounted(() => {
           class="sm:hidden p-4 flex flex-col gap-6 w-full max-w-[652px] rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
         >
           <template v-if="orderStore.isPaymentSuccessful === null">
-            <div class="flex flex-col gap-4">
-              <span class="text-xs">
-                Есть аккаунт?
-                <span
-                  class="cursor-pointer underline"
-                  @click="authModalStore.open"
-                  >Войти</span
+            <AppTooltip
+              text="Необходимо авторизоваться"
+              type="error"
+              :show="orderStore.showErrorAuth"
+              class="w-full"
+              @update:show="(value) => (orderStore.showErrorAuth = value)"
+            >
+              <div class="flex flex-col gap-4">
+                <span class="text-xs">
+                  Есть аккаунт?
+                  <span
+                    class="cursor-pointer underline"
+                    @click="authModalStore.open"
+                    >Войти</span
+                  >
+                </span>
+                <AppTooltip
+                  text="Это поле обязательно для заполнения"
+                  type="error"
+                  :show="nameRef?.showError"
+                  class="w-full"
                 >
-              </span>
-              <AppTooltip
-                text="Это поле обязательно для заполнения"
-                type="error"
-                :show="nameRef?.showError"
-              >
-                <AppInput
-                  id="name"
-                  ref="nameRef"
-                  v-model="orderStore.name"
-                  type="text"
-                  label="Имя"
-                  custom-class="w-full"
-                  required
-                />
-              </AppTooltip>
-              <AppTooltip
-                text="Это поле обязательно для заполнения"
-                type="error"
-                :show="surnameRef?.showError"
-              >
-                <AppInput
-                  id="surname"
-                  ref="surnameRef"
-                  v-model="orderStore.surname"
-                  type="text"
-                  label="Фамилия"
-                  custom-class="w-full"
-                  required
-                />
-              </AppTooltip>
-              <AppTooltip
-                text="Это поле обязательно для заполнения"
-                type="error"
-                :show="phoneRef?.showError"
-              >
-                <SelectInput
-                  id="phone"
-                  ref="phoneRef"
-                  v-model="orderStore.phone"
-                  custom-class="w-full"
-                  :options="phoneOptions"
-                  label="Номер телефона"
-                  required
-                />
-              </AppTooltip>
-              <AppTooltip
-                text="Это поле обязательно для заполнения"
-                type="error"
-                :show="emailRef?.showError"
-              >
-                <AppInput
-                  id="email"
-                  ref="emailRef"
-                  v-model="orderStore.email"
-                  type="text"
-                  label="E-mail"
-                  custom-class="w-full"
-                  required
-                />
-              </AppTooltip>
-            </div>
+                  <AppInput
+                    id="name"
+                    ref="nameRef"
+                    v-model="orderStore.name"
+                    type="text"
+                    label="Имя"
+                    custom-class="w-full"
+                    required
+                  />
+                </AppTooltip>
+                <AppTooltip
+                  text="Это поле обязательно для заполнения"
+                  type="error"
+                  :show="surnameRef?.showError"
+                  class="w-full"
+                >
+                  <AppInput
+                    id="surname"
+                    ref="surnameRef"
+                    v-model="orderStore.surname"
+                    type="text"
+                    label="Фамилия"
+                    custom-class="w-full"
+                    required
+                  />
+                </AppTooltip>
+                <AppTooltip
+                  text="Это поле обязательно для заполнения"
+                  type="error"
+                  :show="phoneRef?.showError"
+                  class="w-full"
+                >
+                  <SelectInput
+                    id="phone"
+                    ref="phoneRef"
+                    v-model="orderStore.phone"
+                    custom-class="w-full"
+                    :options="phoneOptions"
+                    label="Номер телефона"
+                    required
+                  />
+                </AppTooltip>
+                <AppTooltip
+                  text="Это поле обязательно для заполнения"
+                  type="error"
+                  :show="emailRef?.showError"
+                  class="w-full"
+                >
+                  <AppInput
+                    id="email"
+                    ref="emailRef"
+                    v-model="orderStore.email"
+                    type="text"
+                    label="E-mail"
+                    custom-class="w-full"
+                    required
+                  />
+                </AppTooltip>
+                <AppTooltip
+                  :text="orderStore.guestAuthError || 'Заполните все поля'"
+                  type="error"
+                  :show="orderStore.showGuestAuthError"
+                  class="w-full"
+                  @update:show="
+                    (value) => {
+                      if (!value) orderStore.guestAuthError = ''
+                    }
+                  "
+                >
+                  <AppButton
+                    variant="primary"
+                    :content="orderStore.guestAuthButtonContent"
+                    :disabled="orderStore.guestAuthButtonDisabled || !isGuestAuthEnabled"
+                    custom-class="w-full mt-4"
+                    @click="handleGuestAuth"
+                  />
+                </AppTooltip>
+
+                <div
+                  v-if="orderStore.isGuestAuthStep"
+                  class="flex flex-col gap-4 mt-4"
+                >
+                  <AppInput
+                    id="guestSms"
+                    v-model="orderStore.guestSmsCode"
+                    type="text"
+                    label="Код из SMS"
+                    required
+                    custom-class="w-full"
+                  />
+                  <AppTooltip
+                    :text="orderStore.guestSmsError || 'Введите код из SMS'"
+                    type="error"
+                    :show="orderStore.showGuestSmsError"
+                    class="w-full"
+                    @update:show="
+                      (value) => {
+                        if (!value) orderStore.guestSmsError = ''
+                      }
+                    "
+                  >
+                    <AppButton
+                      variant="primary"
+                      :content="orderStore.guestSmsButtonContent"
+                      :disabled="orderStore.guestSmsButtonDisabled || !orderStore.guestSmsCode"
+                      custom-class="w-full"
+                      @click="handleGuestSmsConfirm"
+                    />
+                  </AppTooltip>
+                  <span class="text-xs text-center">
+                    Нажимая "Подтвердить", вы соглашаетесь с обработкой персональных данных.
+                  </span>
+                  <span
+                    v-if="orderStore.guestRemainingSeconds > 0"
+                    class="text-xs text-center"
+                  >
+                    Запросить код повторно через {{ orderStore.guestRemainingSeconds }} сек.
+                  </span>
+                  <span
+                    v-else
+                    class="text-xs text-center cursor-pointer underline"
+                    @click="
+                      () => {
+                        orderStore.isGuestAuthStep = false
+                        handleGuestAuth()
+                      }
+                    "
+                  >
+                    Отправить ещё раз
+                  </span>
+                </div>
+              </div>
+            </AppTooltip>
           </template>
         </div>
         <div
           class="sm:p-10 p-4 flex flex-col sm:gap-12 gap-6 w-full max-w-[652px] sm:rounded-4xl rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
         >
           <template v-if="orderStore.isPaymentSuccessful === null">
-            <div
+            <AppTooltip
               v-if="!authStore.isAuth"
-              class="hidden sm:flex flex-col gap-4"
+              text="Необходимо авторизоваться"
+              type="error"
+              :show="orderStore.showErrorAuth"
+              class="w-full"
+              @update:show="(value) => (orderStore.showErrorAuth = value)"
             >
-              <span class="text-xs">
-                Есть аккаунт?
-                <span
-                  class="cursor-pointer underline"
-                  @click="authModalStore.open"
-                  >Войти</span
+              <div class="hidden sm:flex flex-col gap-4 w-full">
+                <span class="text-xs">
+                  Есть аккаунт?
+                  <span
+                    class="cursor-pointer underline"
+                    @click="authModalStore.open"
+                    >Войти</span
+                  >
+                </span>
+                <AppTooltip
+                  text="Это поле обязательно для заполнения"
+                  type="error"
+                  :show="nameRef?.showError"
+                  class="w-full"
                 >
-              </span>
-              <AppTooltip
-                text="Это поле обязательно для заполнения"
-                type="error"
-                :show="nameRef?.showError"
-              >
-                <AppInput
-                  id="name"
-                  ref="nameRef"
-                  v-model="orderStore.name"
-                  type="text"
-                  label="Имя"
-                  custom-class="w-full"
-                  required
-                />
-              </AppTooltip>
-              <AppTooltip
-                text="Это поле обязательно для заполнения"
-                type="error"
-                :show="surnameRef?.showError"
-              >
-                <AppInput
-                  id="surname"
-                  ref="surnameRef"
-                  v-model="orderStore.surname"
-                  type="text"
-                  label="Фамилия"
-                  custom-class="w-full"
-                  required
-                />
-              </AppTooltip>
-              <AppTooltip
-                text="Это поле обязательно для заполнения"
-                type="error"
-                :show="phoneRef?.showError"
-              >
-                <SelectInput
-                  id="phone"
-                  ref="phoneRef"
-                  v-model="orderStore.phone"
-                  custom-class="w-full"
-                  :options="phoneOptions"
-                  label="Номер телефона"
-                  required
-                />
-              </AppTooltip>
-              <AppTooltip
-                text="Это поле обязательно для заполнения"
-                type="error"
-                :show="emailRef?.showError"
-              >
-                <AppInput
-                  id="email"
-                  ref="emailRef"
-                  v-model="orderStore.email"
-                  type="text"
-                  label="E-mail"
-                  custom-class="w-full"
-                  required
-                />
-              </AppTooltip>
-            </div>
+                  <AppInput
+                    id="name"
+                    ref="nameRef"
+                    v-model="orderStore.name"
+                    type="text"
+                    label="Имя"
+                    custom-class="w-full"
+                    required
+                  />
+                </AppTooltip>
+                <AppTooltip
+                  text="Это поле обязательно для заполнения"
+                  type="error"
+                  :show="surnameRef?.showError"
+                  class="w-full"
+                >
+                  <AppInput
+                    id="surname"
+                    ref="surnameRef"
+                    v-model="orderStore.surname"
+                    type="text"
+                    label="Фамилия"
+                    custom-class="w-full"
+                    required
+                  />
+                </AppTooltip>
+                <AppTooltip
+                  text="Это поле обязательно для заполнения"
+                  type="error"
+                  :show="phoneRef?.showError"
+                  class="w-full"
+                >
+                  <SelectInput
+                    id="phone"
+                    ref="phoneRef"
+                    v-model="orderStore.phone"
+                    custom-class="w-full"
+                    :options="phoneOptions"
+                    label="Номер телефона"
+                    required
+                  />
+                </AppTooltip>
+                <AppTooltip
+                  text="Это поле обязательно для заполнения"
+                  type="error"
+                  :show="emailRef?.showError"
+                  class="w-full"
+                >
+                  <AppInput
+                    id="email"
+                    ref="emailRef"
+                    v-model="orderStore.email"
+                    type="text"
+                    label="E-mail"
+                    custom-class="w-full"
+                    required
+                  />
+                </AppTooltip>
+                <AppTooltip
+                  :text="orderStore.guestAuthError || 'Заполните все поля'"
+                  type="error"
+                  :show="orderStore.showGuestAuthError"
+                  class="w-full"
+                  @update:show="
+                    (value) => {
+                      if (!value) orderStore.guestAuthError = ''
+                    }
+                  "
+                >
+                  <AppButton
+                    variant="primary"
+                    :content="orderStore.guestAuthButtonContent"
+                    :disabled="orderStore.guestAuthButtonDisabled || !isGuestAuthEnabled"
+                    custom-class="w-full mt-4"
+                    @click="handleGuestAuth"
+                  />
+                </AppTooltip>
+                <div
+                  v-if="orderStore.isGuestAuthStep"
+                  class="flex flex-col gap-4 mt-4"
+                >
+                  <AppInput
+                    id="guestSms"
+                    v-model="orderStore.guestSmsCode"
+                    type="text"
+                    label="Код из SMS"
+                    required
+                    custom-class="w-full"
+                  />
+                  <AppTooltip
+                    :text="orderStore.guestSmsError || 'Введите код из SMS'"
+                    type="error"
+                    :show="orderStore.showGuestSmsError"
+                    class="w-full"
+                    @update:show="
+                      (value) => {
+                        if (!value) orderStore.guestSmsError = ''
+                      }
+                    "
+                  >
+                    <AppButton
+                      variant="primary"
+                      :content="orderStore.guestSmsButtonContent"
+                      :disabled="orderStore.guestSmsButtonDisabled || !orderStore.guestSmsCode"
+                      custom-class="w-full"
+                      @click="handleGuestSmsConfirm"
+                    />
+                  </AppTooltip>
+                  <span class="text-xs text-center">
+                    Нажимая "Подтвердить", вы соглашаетесь с обработкой персональных данных.
+                  </span>
+                  <span
+                    v-if="orderStore.guestRemainingSeconds > 0"
+                    class="text-xs text-center"
+                  >
+                    Запросить код повторно через {{ orderStore.guestRemainingSeconds }} сек.
+                  </span>
+                  <span
+                    v-else
+                    class="text-xs text-center cursor-pointer underline"
+                    @click="
+                      () => {
+                        orderStore.isGuestAuthStep = false
+                        handleGuestAuth()
+                      }
+                    "
+                  >
+                    Отправить ещё раз
+                  </span>
+                </div>
+              </div>
+            </AppTooltip>
             <AppTooltip
               text="Выберите способ доставки"
               type="error"
@@ -1043,7 +1379,7 @@ onMounted(() => {
                   <AppButton
                     class="w-full"
                     content="Оплатить заказ"
-                    :disabled="orderStore.isLoadingPayment || orderStore.cartItems.length === 0"
+                    :disabled="orderStore.isLoadingPayment || orderStore.cartItems.length === 0 || !authStore.isAuth"
                     @click="handlePay"
                   />
                   <p class="text-xs text-[#8C8785]">

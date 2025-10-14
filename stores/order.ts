@@ -115,6 +115,24 @@ export const useOrderStore = defineStore("order", () => {
   const showErrorPaymentMethod = ref<boolean>(false)
   const isLoadingPayment = ref<boolean>(false)
 
+  const isGuestAuthStep = ref(false)
+  const guestLoginType = ref<number>(1)
+  const guestSmsCode = ref("")
+  const guestAuthError = ref("")
+  const showGuestAuthError = ref(false)
+  const showErrorAuth = ref(false)
+  const isGuestAuthLoading = ref(false)
+  const guestNextCode = ref(45)
+  const guestRemainingSeconds = ref(0)
+  const guestIntervalId = ref<number | null>(null)
+  const guestSmsError = ref("")
+  const showGuestSmsError = ref(false)
+
+  const guestAuthButtonContent = ref("Авторизоваться / Зарегистрироваться")
+  const guestAuthButtonDisabled = ref(false)
+  const guestSmsButtonContent = ref("Подтвердить")
+  const guestSmsButtonDisabled = ref(false)
+
   // ЗАКОММЕНТИРОВАНО: промокоды
   // const addPromoCodeError = ref<string>("")
   // const currentPromoCodes = ref<PromoCode[]>([])
@@ -200,6 +218,37 @@ export const useOrderStore = defineStore("order", () => {
       addresses.value = allAddresses
     } catch (error) {
       console.error("Ошибка загрузки user data:", error)
+    }
+  }
+
+  function startGuestCountdown() {
+    guestRemainingSeconds.value = guestNextCode.value
+    if (guestIntervalId.value) clearInterval(guestIntervalId.value)
+    guestIntervalId.value = window.setInterval(() => {
+      guestRemainingSeconds.value--
+      if (guestRemainingSeconds.value <= 0) {
+        clearInterval(guestIntervalId.value!)
+        guestIntervalId.value = null
+      }
+    }, 1000)
+  }
+
+  function resetGuestAuth() {
+    isGuestAuthStep.value = false
+    guestSmsCode.value = ""
+    guestAuthError.value = ""
+    showErrorAuth.value = false
+    showGuestAuthError.value = false
+    isGuestAuthLoading.value = false
+    guestSmsError.value = ""
+    showGuestSmsError.value = false
+    guestAuthButtonContent.value = "Авторизоваться / Зарегистрироваться"
+    guestAuthButtonDisabled.value = false
+    guestSmsButtonContent.value = "Подтвердить"
+    guestSmsButtonDisabled.value = false
+    if (guestIntervalId.value) {
+      clearInterval(guestIntervalId.value)
+      guestIntervalId.value = null
     }
   }
 
@@ -951,6 +1000,13 @@ export const useOrderStore = defineStore("order", () => {
   })
 
   watch(
+    () => authStore.isAuth,
+    (newVal) => {
+      if (newVal) resetGuestAuth()
+    },
+  )
+
+  watch(
     [
       deliveryMethod,
       city,
@@ -1019,6 +1075,23 @@ export const useOrderStore = defineStore("order", () => {
     totalSum,
     finalPrice,
     orderId,
+    isGuestAuthStep,
+    guestLoginType,
+    guestSmsCode,
+    guestAuthError,
+    showErrorAuth,
+    isGuestAuthLoading,
+    guestRemainingSeconds,
+    showGuestAuthError,
+    guestNextCode,
+    guestSmsError,
+    showGuestSmsError,
+    guestAuthButtonContent,
+    guestAuthButtonDisabled,
+    guestSmsButtonContent,
+    guestSmsButtonDisabled,
+    startGuestCountdown,
+    resetGuestAuth,
     loadUserData,
     loadOrderState,
     decrementQuantity,

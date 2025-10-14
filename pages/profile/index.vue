@@ -34,6 +34,15 @@ const certificateBalance = computed(() => {
   return userStore.user?.certificates?.reduce((acc, cert) => acc + cert.value_now, 0) || 0
 })
 
+const handleResetPassword = async (): Promise<void> => {
+  const success = await profileStore.resetPassword()
+  if (success) {
+    console.log("Запрос на сброс пароля отправлен!")
+  } else {
+    console.error("Ошибка сброса пароля")
+  }
+}
+
 const handleLogout = async () => {
   await userStore.logout()
 }
@@ -121,7 +130,25 @@ onMounted(() => {
             type="email"
             disabled
           />
-          <AppButton content="Сменить пароль" />
+          <AppTooltip
+            :text="profileStore.resetMessage"
+            :type="profileStore.resetMessageType"
+            :show="!!profileStore.resetMessage"
+            @update:show="
+              (value) => {
+                if (!value) profileStore.resetMessage = ''
+              }
+            "
+          >
+            <AppButton
+              variant="primary"
+              :content="profileStore.resetButtonContent"
+              :disabled="profileStore.resetButtonDisabled"
+              custom-class="w-full"
+              :loading="profileStore.isResetLoading"
+              @click="handleResetPassword"
+            />
+          </AppTooltip>
           <AppTooltip
             text="Это поле обязательно для заполнения"
             type="error"

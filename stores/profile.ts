@@ -17,6 +17,12 @@ interface ProfileData {
 export const useProfileStore = defineStore("profile", () => {
   const userStore = useUserStore()
 
+  const resetButtonContent = ref("Сменить пароль")
+  const resetButtonDisabled = ref(false)
+  const resetMessage = ref("")
+  const resetMessageType = ref<"error" | "info">("error")
+  const isResetLoading = ref(false)
+
   const profileData = ref<ProfileData>({
     email: "",
     name: "",
@@ -58,6 +64,75 @@ export const useProfileStore = defineStore("profile", () => {
     const daysInMonth = new Date(yearNum, monthIndex + 1, 0).getDate()
     return Array.from({ length: daysInMonth }, (_, i) => String(i + 1))
   })
+
+  async function resetPassword(): Promise<boolean> {
+    const email = profileData.value.email.trim()
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      resetMessage.value = "Неверный email"
+      resetMessageType.value = "error"
+      resetButtonContent.value = "Попробовать снова"
+      resetButtonDisabled.value = false
+      isResetLoading.value = false
+      return false
+    }
+
+    isResetLoading.value = true
+    resetButtonContent.value = "Отправка..."
+    resetButtonDisabled.value = true
+    resetMessage.value = ""
+
+    try {
+      const { data: responseData, error: fetchError } = await useFetch(
+        "https://back.casaalmare.com/api/resetPassword",
+        {
+          method: "POST",
+          body: { email },
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      )
+
+      isResetLoading.value = false
+
+      if (fetchError.value) {
+        console.error("Fetch error details:", fetchError.value)
+        resetMessage.value = fetchError.value.data?.message || fetchError.value.message || "Ошибка сети или сервера"
+        resetMessageType.value = "error"
+        resetButtonContent.value = "Попробовать снова"
+        resetButtonDisabled.value = false
+        return false
+      }
+
+      const data = responseData.value
+      if (data?.success) {
+        resetMessage.value = `Письмо отправлено на ${email}`
+        resetMessageType.value = "info"
+        resetButtonContent.value = "Письмо отправлено"
+        resetButtonDisabled.value = false
+
+        setTimeout(() => {
+          resetButtonContent.value = "Сменить пароль"
+          resetMessage.value = ""
+        }, 3000)
+        return true
+      } else {
+        resetMessage.value = data?.error ?? "Неизвестная ошибка"
+        resetMessageType.value = "error"
+        resetButtonContent.value = "Попробовать снова"
+        resetButtonDisabled.value = false
+        return false
+      }
+    } catch (err) {
+      console.error("Unexpected error in resetPassword:", err)
+      resetMessage.value = "Ошибка сети или сервера"
+      resetMessageType.value = "error"
+      resetButtonContent.value = "Попробовать снова"
+      resetButtonDisabled.value = false
+      isResetLoading.value = false
+      return false
+    }
+  }
 
   const loadProfile = async () => {
     await userStore.fetchUser()
@@ -156,6 +231,12 @@ export const useProfileStore = defineStore("profile", () => {
     months,
     years,
     days,
+    resetButtonContent,
+    resetButtonDisabled,
+    resetMessage,
+    resetMessageType,
+    isResetLoading,
+    resetPassword,
     loadProfile,
     saveProfile,
     isSaving,
