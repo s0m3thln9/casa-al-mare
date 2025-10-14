@@ -6,7 +6,7 @@ interface PhoneNumber {
 
 export const useAuthStore = defineStore("auth", () => {
   const email = ref<string>("")
-  const emailButtonContent = ref<string>("Отправить СМС-код")
+  const emailButtonContent = ref<string>("Войти")
   const emailButtonDisabled = ref<boolean>(true)
   const emailReg = ref<string>("")
   const method = ref<string>("По телефону")
