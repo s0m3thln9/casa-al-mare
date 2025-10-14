@@ -8,11 +8,13 @@ const props = withDefaults(
     required?: boolean
     customClass?: string
     errorHideDelay?: number
+    disabled?: boolean
   }>(),
   {
     required: false,
     customClass: "",
     errorHideDelay: 3000,
+    disabled: false,
   },
 )
 
@@ -108,6 +110,7 @@ defineExpose({ validate, showError })
         'border-[#B8B8B6]': !isActive && !showError,
         'pr-12': type === 'password',
       }"
+      :readonly="disabled"
       @focus="isActive = true"
       @blur="
         () => {

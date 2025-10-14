@@ -186,11 +186,18 @@ export const useOrderStore = defineStore("order", () => {
         }
       }
 
-      if (userStore.user?.addresses) {
-        addresses.value = userStore.user.addresses
-      } else {
-        addresses.value = []
+      let allAddresses: string[] = []
+      if (userStore.user?.profile?.address && userStore.user.profile.address.trim()) {
+        const mainAddress = userStore.user.profile.address.trim()
+        allAddresses = [mainAddress]
       }
+      if (userStore.user?.addresses && Array.isArray(userStore.user.addresses)) {
+        const extendedAddresses = userStore.user.addresses.filter(
+          (addr) => addr.trim() && addr !== userStore.user?.profile?.address?.trim(),
+        )
+        allAddresses = [...allAddresses, ...extendedAddresses]
+      }
+      addresses.value = allAddresses
     } catch (error) {
       console.error("Ошибка загрузки user data:", error)
     }
@@ -928,11 +935,19 @@ export const useOrderStore = defineStore("order", () => {
   }
 
   watchEffect(() => {
-    const newAddresses = userStore?.user?.addresses
-    if (newAddresses && Array.isArray(newAddresses)) {
-      addresses.value = newAddresses
-      console.log("WatchEffect: Addresses updated:", addresses.value) // Для дебага
+    let newAddresses: string[] = []
+    if (userStore?.user?.profile?.address && userStore.user.profile.address.trim()) {
+      const mainAddress = userStore.user.profile.address.trim()
+      newAddresses = [mainAddress]
     }
+    if (userStore?.user?.addresses && Array.isArray(userStore.user.addresses)) {
+      const extendedAddresses = userStore.user.addresses.filter(
+        (addr) => addr.trim() && addr !== userStore?.user?.profile?.address?.trim(),
+      )
+      newAddresses = [...newAddresses, ...extendedAddresses]
+    }
+    addresses.value = newAddresses
+    console.log("WatchEffect: Addresses updated:", addresses.value)
   })
 
   watch(

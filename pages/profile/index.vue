@@ -4,47 +4,51 @@ const currentTab = ref("Профиль")
 const images = {
   card1: "/item-page-1.jpg",
 }
-const email = ref("")
-const name = ref("")
-const surname = ref("")
-const phone = ref("")
-const day = ref("1")
-const month = ref("Январь")
-const year = ref("1980")
-const adr1 = ref("")
-const adr2 = ref("")
-const adr3 = ref("")
-const code = ref("")
+export type EditUserResponse = {
+  success: boolean
+  error?: string
+  changes?: Record<string, string>
+}
 
-const months = [
-  "Январь",
-  "Февраль",
-  "Март",
-  "Апрель",
-  "Май",
-  "Июнь",
-  "Июль",
-  "Август",
-  "Сентябрь",
-  "Октябрь",
-  "Ноябрь",
-  "Декабрь",
-]
-const currentYear = new Date().getFullYear()
-const years = Array.from({ length: currentYear - 1980 + 1 }, (_, i) => String(1980 + i))
-const days = computed(() => {
-  const monthIndex = months.indexOf(month.value)
-  const yearNum = parseInt(year.value)
-  if (isNaN(monthIndex) || isNaN(yearNum)) return []
-  const daysInMonth = new Date(yearNum, monthIndex + 1, 0).getDate()
-  return Array.from({ length: daysInMonth }, (_, i) => String(i + 1))
-})
-
+const profileStore = useProfileStore()
 const userStore = useUserStore()
+
+const nameRef = ref<{ validate: () => boolean; showError: boolean } | null>(null)
+const surnameRef = ref<{ validate: () => boolean; showError: boolean } | null>(null)
+const dayRef = ref<{ validate: () => boolean; showError: boolean } | null>(null)
+const monthRef = ref<{ validate: () => boolean; showError: boolean } | null>(null)
+const yearRef = ref<{ validate: () => boolean; showError: boolean } | null>(null)
+const adr1Ref = ref<{ validate: () => boolean; showError: boolean } | null>(null)
+const adr2Ref = ref<{ validate: () => boolean; showError: boolean } | null>(null)
+const adr3Ref = ref<{ validate: () => boolean; showError: boolean } | null>(null)
 
 const handleLogout = async () => {
   await userStore.logout()
 }
+
+const handleSaveProfile = async (): Promise<void> => {
+  const requiredRefs = [nameRef, surnameRef, dayRef, monthRef, yearRef, adr1Ref, adr2Ref]
+  const isValid = requiredRefs.every((ref) => ref?.value?.validate() ?? false)
+  if (!isValid) return
+
+  if (adr3Ref.value && !adr3Ref.value.validate()) return
+
+  const success = await profileStore.saveProfile()
+  if (success) {
+    profileStore.buttonContent = "Сохранено!"
+    setTimeout(() => {
+      profileStore.buttonContent = "Сохранить"
+    }, 2000)
+    console.log("Профиль сохранен!")
+    profileStore.saveError = ""
+  } else {
+    console.error("Ошибка сохранения")
+  }
+}
+
+onMounted(() => {
+  profileStore.loadProfile()
+})
 </script>
 
 <template>
@@ -81,94 +85,158 @@ const handleLogout = async () => {
         <div class="flex w-full flex-col mt-8 gap-4">
           <AppInput
             id="email"
-            v-model="email"
+            v-model="profileStore.profileData.email"
             label="E-mail"
             type="email"
+            disabled
           />
           <AppButton content="Сменить пароль" />
+          <AppTooltip
+            text="Это поле обязательно для заполнения"
+            type="error"
+            :show="nameRef?.showError"
+          >
+            <AppInput
+              id="name"
+              ref="nameRef"
+              v-model="profileStore.profileData.name"
+              label="Имя"
+              type="text"
+              required
+              custom-class="w-full"
+            />
+          </AppTooltip>
+          <AppTooltip
+            text="Это поле обязательно для заполнения"
+            type="error"
+            :show="surnameRef?.showError"
+          >
+            <AppInput
+              id="surname"
+              ref="surnameRef"
+              v-model="profileStore.profileData.surname"
+              label="Фамилия"
+              type="text"
+              required
+              custom-class="w-full"
+            />
+          </AppTooltip>
           <AppInput
-            id="name"
-            v-model="name"
-            label="Имя"
-            type="text"
-          />
-          <AppInput
-            id="surname"
-            v-model="surname"
-            label="Фамилия"
-            type="text"
-          />
-          <SelectInput
             id="phone"
-            v-model="phone"
-            :options="[
-              { code: '+7', country: 'Россия' },
-              { code: '+375', country: 'Беларусь' },
-              { code: '+380', country: 'Украина' },
-              { code: '+77', country: 'Казахстан' },
-              { code: '+998', country: 'Узбекистан' },
-              { code: '+992', country: 'Таджикистан' },
-              { code: '+993', country: 'Туркменистан' },
-              { code: '+996', country: 'Кыргызстан' },
-              { code: '+374', country: 'Армения' },
-              { code: '+994', country: 'Азербайджан' },
-              { code: '+373', country: 'Молдова' },
-              { code: '+7', country: 'Абхазия' },
-              { code: '+995', country: 'Грузия' },
-            ]"
-            type="text"
+            v-model="profileStore.profileData.phone"
             label="Номер телефона"
+            type="text"
+            disabled
           />
           <div class="w-full flex gap-4">
-            <AppSelect
-              v-model="day"
-              label="День"
-              :options="days"
-              custom-class="w-full"
-            />
-            <AppSelect
-              v-model="month"
-              label="Месяц"
-              :options="months"
-              custom-class="w-full"
-            />
-            <AppSelect
-              v-model="year"
-              label="Год"
-              :options="years"
-              custom-class="w-full"
-            />
+            <AppTooltip
+              text="Это поле обязательно для заполнения"
+              type="error"
+              :show="dayRef?.showError"
+              class="w-full"
+            >
+              <AppSelect
+                ref="dayRef"
+                v-model="profileStore.profileData.day"
+                label="День"
+                :options="profileStore.days"
+                custom-class="w-full"
+                required
+              />
+            </AppTooltip>
+            <AppTooltip
+              text="Это поле обязательно для заполнения"
+              type="error"
+              :show="monthRef?.showError"
+              class="w-full"
+            >
+              <AppSelect
+                ref="monthRef"
+                v-model="profileStore.profileData.month"
+                label="Месяц"
+                :options="profileStore.months"
+                custom-class="w-full"
+                required
+              />
+            </AppTooltip>
+            <AppTooltip
+              text="Это поле обязательно для заполнения"
+              type="error"
+              :show="yearRef?.showError"
+              class="w-full"
+            >
+              <AppSelect
+                ref="yearRef"
+                v-model="profileStore.profileData.year"
+                label="Год"
+                :options="profileStore.years"
+                custom-class="w-full"
+                required
+              />
+            </AppTooltip>
           </div>
         </div>
-        <span class="w-full font-light text-xs text-[#F3A454] mt-2"
-          >Получайте поздравления и дополнительные скидки</span
-        >
+        <span class="w-full font-light text-xs text-[#F3A454] mt-2">
+          Получайте поздравления и дополнительные скидки
+        </span>
         <div class="w-full flex flex-col mt-8 gap-4">
           <span class="font-light text-xs">Адрес доставки</span>
-          <AppInput
-            id="adr1"
-            v-model="adr1"
-            label="Город"
-            type="text"
-          />
-          <AppInput
-            id="adr2"
-            v-model="adr2"
-            label="Улица, дом"
-            type="text"
-          />
+          <AppTooltip
+            text="Это поле обязательно для заполнения"
+            type="error"
+            :show="adr1Ref?.showError"
+          >
+            <AppInput
+              id="adr1"
+              ref="adr1Ref"
+              v-model="profileStore.profileData.adr1"
+              label="Город"
+              type="text"
+              required
+              custom-class="w-full"
+            />
+          </AppTooltip>
+          <AppTooltip
+            text="Это поле обязательно для заполнения"
+            type="error"
+            :show="adr2Ref?.showError"
+          >
+            <AppInput
+              id="adr2"
+              ref="adr2Ref"
+              v-model="profileStore.profileData.adr2"
+              label="Улица, дом"
+              type="text"
+              required
+              custom-class="w-full"
+            />
+          </AppTooltip>
           <AppInput
             id="adr3"
-            v-model="adr3"
+            ref="adr3Ref"
+            v-model="profileStore.profileData.adr3"
             label="Подъезд, этаж, квартира"
             type="text"
           />
         </div>
-        <AppButton
-          variant="primary"
-          content="Сохранить"
-          custom-class="w-full mt-8"
-        />
+        <AppTooltip
+          :text="profileStore.saveError"
+          type="error"
+          :show="!!profileStore.saveError"
+          @update:show="
+            (value) => {
+              if (!value) profileStore.saveError = ''
+            }
+          "
+        >
+          <AppButton
+            variant="primary"
+            :content="profileStore.buttonContent"
+            :disabled="profileStore.isSaving"
+            custom-class="w-full mt-8"
+            @click="handleSaveProfile"
+          />
+        </AppTooltip>
       </div>
       <div
         v-if="currentTab === 'Заказы'"
@@ -270,5 +338,3 @@ const handleLogout = async () => {
     </div>
   </main>
 </template>
-
-<style scoped></style>
