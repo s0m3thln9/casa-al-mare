@@ -84,8 +84,6 @@ onUnmounted(() => {
   document.removeEventListener("keydown", handleKeydown)
   if (debounceTimer) clearTimeout(debounceTimer)
 })
-
-const resultsCount = computed(() => searchResults.value.length)
 </script>
 
 <template>
@@ -113,7 +111,10 @@ const resultsCount = computed(() => searchResults.value.length)
             class="w-full py-2 text-[#211D1D] font-[Manrope] text-sm focus:outline-none"
             @keydown.enter="handleSubmit"
           />
-          <button @click="handleSubmit">
+          <button
+            class="cursor-pointer"
+            @click="handleSubmit"
+          >
             <NuxtImg
               src="/search.svg"
               width="24"
