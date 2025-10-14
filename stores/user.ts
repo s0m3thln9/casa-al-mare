@@ -28,6 +28,11 @@ export interface User {
     deliveryDate: string
   }[]
   profile: {
+    fullname: string
+    phone: string
+    email: string
+    address: string
+    birthdate: string
     [key: string]: string
   }
   addresses: string[]
