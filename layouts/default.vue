@@ -8,7 +8,7 @@ interface CartResponseData {
   cart: Record<string, import("~/stores/order").CartItem>
 }
 
-const isCookieAccepted = ref(false)
+const isCookieAccepted = ref(true)
 // const isCitySelected = ref(false)
 const email = ref("")
 const emailReverse = ref("")
@@ -26,10 +26,6 @@ const phoneRef = ref()
 const textRef = ref()
 const catalogStore = useCatalogStore()
 const orderStore = useOrderStore()
-
-const acceptCookie = () => {
-  isCookieAccepted.value = true
-}
 
 // const selectCity = () => {
 //   isCitySelected.value = true
@@ -177,10 +173,7 @@ const phoneOptions: PhoneOption[] = [
     <!--      v-show="!isCitySelected"-->
     <!--      @select-city="selectCity"-->
     <!--    />-->
-    <CookieConsent
-      v-show="!isCookieAccepted"
-      @accept-cookie="acceptCookie"
-    />
+    <CookieConsent v-model="isCookieAccepted" />
     <AppPopup
       title="Подпишитесь на рассылку"
       popup-id="subscription"
