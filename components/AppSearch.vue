@@ -47,9 +47,6 @@ const performSearch = async (text: string) => {
 const toggleSearch = () => {
   isOpen.value = !isOpen.value
 	emit('searchToggle', isOpen.value)
-  if (isOpen.value) {
-    nextTick(() => inputRef.value?.focus())
-  }
 }
 
 const handleClickOutside = (event: MouseEvent) => {
