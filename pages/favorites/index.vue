@@ -25,7 +25,6 @@ onMounted(() => {
 
 <template>
   <div>
-    <AuthModal v-if="authModalStore.isOpen" />
     <main
       class="relative py-5 font-[Manrope] bg-[#FFFFFA] text-[#211D1D] sm:py-10 flex-1 flex flex-col justify-between"
       :class="authModalStore.isOpen && 'opacity-22'"

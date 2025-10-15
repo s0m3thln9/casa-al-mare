@@ -335,13 +335,18 @@ const isGuestAuthEnabled = computed(() => {
 })
 
 const hasItemsInCart = computed(() => orderStore.cartItems.length > 0)
+const isGuestSmsSubmitting = computed(() => orderStore.isGuestAuthLoading || orderStore.guestSmsButtonDisabled)
+useSmsAutoSubmit(
+	computed(() => orderStore.guestSmsCode || ''),
+	handleGuestSmsConfirm,
+	isGuestSmsSubmitting
+)
 </script>
 
 <template>
   <main
     class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D] flex justify-start items-center pt-8 pb-8 flex-col max-sm:px-2"
   >
-    <AuthModal v-if="authModalStore.isOpen" />
     <template v-if="hasItemsInCart">
       <h2 class="uppercase max-sm:font-[Inter] max-sm:text-[17px] msx-sm:self-start max-sm:w-full">Оформление</h2>
       <div class="mt-8 flex max-w-[1264px] flex-col sm:flex-row h-fit w-full gap-6 sm:gap-12">

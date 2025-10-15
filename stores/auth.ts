@@ -34,6 +34,7 @@ export const useAuthStore = defineStore("auth", () => {
   const resetButtonContent = ref<string>("Отправить письмо")
   const resetButtonDisabled = ref<boolean>(true)
   const resetError = ref<string>("")
+  const resendLoading = ref<boolean>(false)
   
   const userStore = useUserStore()
   
@@ -111,5 +112,6 @@ export const useAuthStore = defineStore("auth", () => {
     resetButtonContent,
     resetButtonDisabled,
     resetError,
+    resendLoading,
   }
 })
