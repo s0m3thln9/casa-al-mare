@@ -121,7 +121,7 @@ const load = () => {
     </div>
     <div
       v-else
-      class="flex justify-between items-center p-2 sticky top-0 bg-[#FFFFFA] z-10"
+      class="flex justify-between items-center p-2 sticky top-[32px] bg-[#FFFFFA] z-[8]"
     >
       <SelectButton
         v-model="catalogStore.mobileStrokeCardCount"
