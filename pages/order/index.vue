@@ -23,6 +23,14 @@ const userStore = useUserStore()
 
 const isExpanded = ref(false)
 
+const handleProfileClick = () => {
+	if (authStore.isAuth) {
+		navigateTo("/profile")
+	} else {
+		authModalStore.open()
+	}
+}
+
 const toggleExpanded = () => {
   isExpanded.value = !isExpanded.value
 }
@@ -1422,7 +1430,7 @@ const hasItemsInCart = computed(() => orderStore.cartItems.length > 0)
         </div>
         <div
           class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter max-sm:uppercase"
-          @click="navigateTo('/profile')"
+          @click="handleProfileClick"
         >
           В личный кабинет
         </div>
