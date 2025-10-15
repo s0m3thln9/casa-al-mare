@@ -450,7 +450,7 @@ const hasItemsInCart = computed(() => orderStore.cartItems.length > 0)
         </div>
         <div
           v-if="!authStore.isAuth"
-          class="sm:hidden p-4 flex flex-col gap-6 w-full max-w-[652px] rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
+          class="sm:hidden p-4 pb-6 flex flex-col gap-6 w-full max-w-[652px] rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
         >
           <template v-if="orderStore.isPaymentSuccessful === null">
             <AppTooltip
@@ -611,7 +611,7 @@ const hasItemsInCart = computed(() => orderStore.cartItems.length > 0)
           </template>
         </div>
         <div
-          class="sm:p-10 p-4 flex flex-col sm:gap-12 gap-6 w-full max-w-[652px] sm:rounded-4xl rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
+          class="p-4 pb-6 sm:p-10 flex flex-col sm:gap-12 gap-6 w-full max-w-[652px] sm:rounded-4xl rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
         >
           <template v-if="orderStore.isPaymentSuccessful === null">
             <AppTooltip
@@ -619,10 +619,10 @@ const hasItemsInCart = computed(() => orderStore.cartItems.length > 0)
               text="Необходимо авторизоваться"
               type="error"
               :show="orderStore.showErrorAuth"
-              class="w-full"
+              class="w-full hidden sm:block"
               @update:show="(value) => (orderStore.showErrorAuth = value)"
             >
-              <div class="hidden sm:flex flex-col gap-4 w-full">
+              <div class="flex flex-col gap-4 w-full">
                 <span class="text-xs">
                   Есть аккаунт?
                   <span
@@ -902,7 +902,7 @@ const hasItemsInCart = computed(() => orderStore.cartItems.length > 0)
           </template>
         </div>
         <div
-          class="sm:hidden p-4 flex flex-col gap-6 w-full max-w-[652px] rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
+          class="sm:hidden p-4 pb-6 flex flex-col gap-6 w-full max-w-[652px] rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
         >
           <template v-if="orderStore.isPaymentSuccessful === null">
             <AppTooltip
@@ -933,7 +933,7 @@ const hasItemsInCart = computed(() => orderStore.cartItems.length > 0)
         </div>
         <div
           v-if="authStore.isAuth"
-          class="sm:hidden p-4 flex flex-col gap-6 w-full max-w-[652px] rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
+          class="sm:hidden p-4 pb-6 flex flex-col gap-6 w-full max-w-[652px] rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
         >
           <template v-if="orderStore.isPaymentSuccessful === null">
             <div class="flex flex-col gap-4">
@@ -985,7 +985,7 @@ const hasItemsInCart = computed(() => orderStore.cartItems.length > 0)
         </div>
         <div
           v-if="authStore.isAuth"
-          class="sm:hidden p-4 flex flex-col gap-6 w-full max-w-[652px] rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
+          class="sm:hidden p-4 pb-6 flex flex-col gap-6 w-full max-w-[652px] rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
         >
           <template v-if="orderStore.isPaymentSuccessful === null">
             <div class="flex flex-col gap-4">
@@ -1046,7 +1046,7 @@ const hasItemsInCart = computed(() => orderStore.cartItems.length > 0)
             </div>
           </template>
         </div>
-        <div class="sm:hidden flex flex-col gap-6 w-full max-w-[652px] h-fit">
+        <div class="sm:hidden mt-4 flex flex-col gap-6 w-full max-w-[652px] h-fit">
           <template v-if="orderStore.isPaymentSuccessful === null">
             <div class="flex flex-col gap-1 text-sm font-light">
               <div class="flex items-center justify-between">
