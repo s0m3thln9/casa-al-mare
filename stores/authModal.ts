@@ -11,6 +11,11 @@ export const useAuthModalStore = defineStore("authModal", () => {
   const close = () => {
     isOpen.value = false
   }
+  watch(() => isOpen, (isOpen) => {
+    if (!isOpen) {
+      authStore.resetForm()
+    }
+  })
 
   return { isOpen, open, close }
 })

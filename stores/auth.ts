@@ -38,6 +38,40 @@ export const useAuthStore = defineStore("auth", () => {
   
   const userStore = useUserStore()
   
+  const resetForm = () => {
+    email.value = ''
+    password.value = ''
+    phone.value = null
+    phoneReg.value = null
+    sms.value = ''
+    name.value = ''
+    surname.value = ''
+    emailReg.value = ''
+    resetEmail.value = ''
+
+    smsError.value = ''
+    smsError2.value = ''
+    regError.value = ''
+    resetError.value = ''
+    
+    smsStep.value = false
+    regStep.value = false
+    smsButtonContent.value = 'Подтвердить'
+    smsButtonDisabled.value = true
+    phoneButtonContent.value = 'Отправить СМС-код'
+    phoneButtonDisabled.value = true
+    emailButtonContent.value = 'Войти'
+    emailButtonDisabled.value = true
+    regButtonContent.value = 'Зарегистрироваться'
+    regButtonDisabled.value = true
+    resetButtonContent.value = 'Отправить письмо'
+    resetButtonDisabled.value = true
+
+    method.value = 'По телефону'
+    type.value = 'Авторизация'
+    resendLoading.value = false
+  }
+  
   watch(
     phone,
     () => {
@@ -113,5 +147,6 @@ export const useAuthStore = defineStore("auth", () => {
     resetButtonDisabled,
     resetError,
     resendLoading,
+    resetForm,
   }
 })

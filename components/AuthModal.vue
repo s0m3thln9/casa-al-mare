@@ -6,14 +6,18 @@ const userStore = useUserStore()
 interface SmsResponse {
 	success?: string
 	error?: string
+	errorCode?: string
 	tel?: string
+	phone?: string
 }
 
 interface LoginResponse {
 	success: boolean
 	error?: {
 		code?: string
-	}
+	} | string
+	errorCode?: string
+	email?: string
 	token?: string
 }
 
@@ -66,7 +70,12 @@ const sendSmsCode = async (phoneData: {
 	phone: string
 }, isReg: boolean = false, isResend: boolean = false): Promise<void> => {
 	try {
-		const {data} = await useFetch<SmsResponse>("https://back.casaalmare.com/api/createSmsCode", {
+		// Используем разные endpoint'ы для авторизации и регистрации
+		const endpoint = isReg
+			? "https://back.casaalmare.com/api/createSmsCodeReg"
+			: "https://back.casaalmare.com/api/createSmsCode"
+		
+		const {data} = await useFetch<SmsResponse>(endpoint, {
 			method: "POST",
 			body: {
 				phone: phoneData,
@@ -76,25 +85,53 @@ const sendSmsCode = async (phoneData: {
 		if (data.value?.success) {
 			console.log(data.value.success)
 			if (!isReg) {
-				authStore.smsError = ""  // Сброс для начальной отправки
-				if (isResend) authStore.smsError2 = ""  // Дополнительный сброс для resend
+				authStore.smsError = ""
+				if (isResend) authStore.smsError2 = ""
 			} else {
 				authStore.regError = ""
-				if (isResend) authStore.regError = ""  // Для reg resend
+				if (isResend) authStore.regError = ""
 			}
-			// Не трогаем кнопки phone/reg, т.к. они не видны на шаге SMS
-			// Не устанавливаем smsStep/regStep = true, т.к. уже true
+		} else if (data.value?.errorCode === 'USER_NOT_FOUND' && !isReg) {
+			// Пользователь не найден при авторизации - переключаемся на регистрацию
+			authStore.type = 'Регистрация'
+			authStore.phoneReg = {
+				code: phoneData.code,
+				phone: phoneData.phone,
+				country: authStore.phone?.country || null
+			}
+			authStore.smsError = ""
+			authStore.smsError2 = ""
+			authStore.phoneButtonContent = "Отправить СМС-код"
+			authStore.phoneButtonDisabled = false
+			authStore.smsStep = false
+			return
+		} else if (data.value?.errorCode === 'USER_ALREADY_EXISTS' && isReg) {
+			// Пользователь уже существует при регистрации - переключаемся на авторизацию
+			authStore.type = 'Авторизация'
+			authStore.method = 'По телефону'
+			authStore.phone = {
+				code: phoneData.code,
+				phone: phoneData.phone,
+				country: authStore.phoneReg?.country || null
+			}
+			authStore.regError = ""
+			authStore.regButtonContent = "Зарегистрироваться"
+			authStore.regButtonDisabled = false
+			authStore.regStep = false
+			// Показываем сообщение пользователю
+			authStore.smsError = "Пользователь уже зарегистрирован. Войдите в систему."
+			return
 		} else {
 			const errorMsg = data.value?.error ?? "Неизвестная ошибка"
 			if (!isReg) {
 				if (isResend) {
-					authStore.smsError2 = errorMsg  // Ошибка resend в tooltip подтверждения
+					authStore.smsError2 = errorMsg
 				} else {
-					authStore.smsError = errorMsg  // Для начальной отправки
+					authStore.smsError = errorMsg
 				}
 			} else {
 				if (isResend) {
-					authStore.regError = errorMsg  // Ошибка reg resend в tooltip
+					authStore.regError = errorMsg
 				} else {
 					authStore.regError = errorMsg
 				}
@@ -117,7 +154,6 @@ const sendSmsCode = async (phoneData: {
 			}
 		}
 	}
-	// Всегда сбрасываем таймер после отправки (успех/ошибка)
 	startCountdown()
 }
 
@@ -133,7 +169,7 @@ const startCountdown = () => {
 	if (intervalId.value) clearInterval(intervalId.value)
 	
 	intervalId.value = window.setInterval(() => {
-		if (!resendAvailableAt.value) return  // ИЗМЕНЕНИЕ: Защита от null
+		if (!resendAvailableAt.value) return
 		const diff = Math.floor((resendAvailableAt.value - Date.now()) / 1000)
 		remainingSeconds.value = diff > 0 ? diff : 0
 		if (diff <= 0 && intervalId.value) {
@@ -170,19 +206,25 @@ const handleClick = async (login: "phone" | "email"): Promise<void> => {
 	}
 	
 	if (login === "phone") {
-		// ИЗМЕНЕНИЕ: Заменён весь useFetch на вызов sendSmsCode. Удалён блок if(success) с smsStep=true.
-		// Оставлены: сброс ошибок (в sendSmsCode), обновление кнопки, startCountdown() (теперь внутри sendSmsCode)
-		await sendSmsCode({code, phone}, false, false)  // false для isResend
+		await sendSmsCode({ code, phone }, false, false)
 		
-		// Обновление кнопки после отправки (независимо от успеха/ошибки)
-		authStore.phoneButtonContent = "Код отправлен"  // Или "Ошибка" — но для простоты оставляем как успех, ошибки в tooltip
-		authStore.phoneButtonDisabled = false
-		authStore.smsStep = true  // Активируем шаг SMS только при начальной отправке (не при resend)
+		// Проверяем, не переключились ли мы на регистрацию (USER_NOT_FOUND)
+		if (authStore.type === 'Регистрация') return
 		
-		// Удалён старый timeoutId.setTimeout — теперь таймер в startCountdown()
+		// ИЗМЕНЕНИЕ: Активируем шаг SMS только при успехе (нет ошибки)
+		if (!authStore.smsError) {
+			authStore.phoneButtonContent = "Код отправлен"
+			authStore.phoneButtonDisabled = false
+			authStore.smsStep = true
+		} else {
+			// При ошибке: Остаёмся на шаге ввода phone, с тултипом smsError
+			authStore.phoneButtonContent = "Попробовать снова"
+			authStore.phoneButtonDisabled = false
+			// smsStep остаётся false — пользователь видит ошибку и может исправить
+		}
 	} else {
 		try {
-			const {data} = await useFetch<LoginResponse>("https://back.casaalmare.com/api/login", {
+			const { data } = await useFetch<LoginResponse>("https://back.casaalmare.com/api/login", {
 				method: "POST",
 				body: {
 					email,
@@ -202,9 +244,20 @@ const handleClick = async (login: "phone" | "email"): Promise<void> => {
 					await userStore.fetchUser()
 				}
 				authModalStore.close()
+			} else if (data.value?.errorCode === 'USER_NOT_FOUND') {
+				// Пользователь не найден - переключаемся на регистрацию
+				authStore.type = 'Регистрация'
+				authStore.emailReg = email
+				authStore.smsError = ""
+				authStore.emailButtonContent = "Войти"
+				authStore.emailButtonDisabled = false
+				return
 			} else {
 				console.error(data.value?.error)
-				authStore.smsError = data.value?.error ?? "Неизвестная ошибка"
+				// ИЗМЕНЕНИЕ: Для email ошибки — всегда остаёмся на шаге ввода (нет smsStep для email)
+				authStore.smsError = typeof data.value?.error === 'string'
+					? data.value.error
+					: data.value?.error ?? "Неизвестная ошибка"
 				authStore.emailButtonContent = "Попробовать снова"
 				authStore.emailButtonDisabled = false
 			}
@@ -258,7 +311,10 @@ const handleSmsClick = async (): Promise<void> => {
 			}
 			authModalStore.close()
 		} else {
-			authStore.smsError2 = response?.error?.code || "Неверный код или ошибка сервера"
+			const errorMsg = typeof response?.error === 'object' && response.error?.code
+				? response.error.code
+				: "Неверный код или ошибка сервера"
+			authStore.smsError2 = errorMsg
 			authStore.smsButtonContent = "Попробовать снова"
 			authStore.smsButtonDisabled = false
 		}
@@ -271,27 +327,21 @@ const handleSmsClick = async (): Promise<void> => {
 	}
 }
 
-// ИЗМЕНЕНИЕ: handleResend обновлён (как в предыдущем ответе) — без смены smsStep
 const handleResend = async () => {
-	if (authStore.resendLoading) return  // Блокировка повторных кликов
+	if (authStore.resendLoading) return
 	authStore.resendLoading = true
-	authStore.sms = ""  // Очистить поле SMS
-	authStore.smsError = ""  // Полный сброс ошибок
-	authStore.smsError2 = ""  // Сброс ошибки
+	authStore.smsError = ""
+	authStore.smsError2 = ""
 	const code = authStore.phone?.code
 	const phone = authStore.phone?.phone
 	if (!code || !phone) {
 		authStore.resendLoading = false
 		return
 	}
-	await sendSmsCode({ code, phone }, false, true)  // true для isResend
-	// ИЗМЕНЕНИЕ: Сброс состояния кнопки "Проверка..." к исходному
+	await sendSmsCode({ code, phone }, false, true)
 	authStore.smsButtonContent = "Подтвердить"
 	authStore.smsButtonDisabled = false
-	// Фокус на поле SMS после resend (опционально, для UX)
-	if (smsRef.value) smsRef.value.$el.querySelector("input")?.focus()
 	authStore.resendLoading = false
-	// Не сбрасываем smsStep — остаёмся на шаге SMS
 }
 
 const handleRegClick = async (): Promise<void> => {
@@ -309,19 +359,28 @@ const handleRegClick = async (): Promise<void> => {
 	authStore.regButtonDisabled = true
 	authStore.regButtonContent = "Отправка..."
 	
-	// ИЗМЕНЕНИЕ: Заменён useFetch на sendSmsCode. Удалён regStep=true.
-	// Оставлены: сброс ошибок (в sendSmsCode), обновление кнопки, startCountdown() (в sendSmsCode)
-	await sendSmsCode({code, phone}, true, false)  // true для isReg, false для isResend
+	await sendSmsCode({ code, phone }, true, false)
 	
-	// Обновление кнопки после отправки
-	authStore.regButtonContent = "Код отправлен"
-	authStore.regButtonDisabled = false
-	authStore.regStep = true  // Активируем шаг reg SMS только при начальной отправке
+	// Проверяем, не переключились ли мы на авторизацию (USER_ALREADY_EXISTS)
+	if (authStore.type === 'Авторизация') {
+		authStore.regButtonContent = "Зарегистрироваться"
+		authStore.regButtonDisabled = false
+		return
+	}
 	
-	// Удалён старый timeoutId.setTimeout — теперь в startCountdown()
+	// ИЗМЕНЕНИЕ: Активируем шаг reg SMS только при успехе (нет ошибки)
+	if (!authStore.regError) {
+		authStore.regButtonContent = "Код отправлен"
+		authStore.regButtonDisabled = false
+		authStore.regStep = true
+	} else {
+		// При ошибке: Остаёмся на шаге ввода reg, с тултипом regError
+		authStore.regButtonContent = "Попробовать снова"
+		authStore.regButtonDisabled = false
+		// regStep остаётся false — пользователь видит ошибку и может исправить
+	}
 }
 
-// handleRegSmsClick остаётся без изменений
 const handleRegSmsClick = async (): Promise<void> => {
 	if (!smsRef.value?.validate()) return
 	
@@ -369,7 +428,10 @@ const handleRegSmsClick = async (): Promise<void> => {
 			authStore.type = "Авторизация"
 			authModalStore.close()
 		} else {
-			authStore.regError = response?.error?.code || "Неверный код или ошибка сервера"
+			const errorMsg = typeof response?.error === 'object' && response.error?.code
+				? response.error.code
+				: "Неверный код или ошибка сервера"
+			authStore.regError = errorMsg
 			authStore.smsButtonContent = "Попробовать снова"
 		}
 	} catch (err) {
@@ -381,25 +443,20 @@ const handleRegSmsClick = async (): Promise<void> => {
 	}
 }
 
-// ИЗМЕНЕНИЕ: handleRegResend обновлён (как в предыдущем ответе) — без смены regStep
 const handleRegResend = async () => {
 	if (authStore.resendLoading) return
 	authStore.resendLoading = true
-	authStore.sms = ""  // Очистить поле SMS
-	authStore.regError = ""  // Полный сброс ошибок
+	authStore.regError = ""
 	const code = authStore.phoneReg?.code
 	const phone = authStore.phoneReg?.phone
 	if (!code || !phone) {
 		authStore.resendLoading = false
 		return
 	}
-	await sendSmsCode({ code, phone }, true, true)  // true для isReg и isResend
-	// ИЗМЕНЕНИЕ: Сброс состояния кнопки "Регистрация..." к исходному
+	await sendSmsCode({ code, phone }, true, true)
 	authStore.smsButtonContent = "Регистрация..."
 	authStore.smsButtonDisabled = false
-	if (smsRef.value) smsRef.value.$el.querySelector("input")?.focus()
 	authStore.resendLoading = false
-	// Не сбрасываем regStep — остаёмся на шаге SMS
 }
 
 const handleResetPassword = async (): Promise<void> => {
@@ -454,6 +511,8 @@ onUnmounted(() => {
 	toggleBodyScroll(false)
 	if (timeoutId.value) clearTimeout(timeoutId.value)
 	if (intervalId.value) clearInterval(intervalId.value)
+	// ИЗМЕНЕНИЕ: Полный сброс формы при закрытии модалки
+	authStore.resetForm()
 })
 
 const isAuthSmsSubmitting = computed(() => authStore.smsButtonDisabled)
