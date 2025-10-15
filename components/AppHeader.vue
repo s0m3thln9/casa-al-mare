@@ -7,7 +7,7 @@ const orderStore = useOrderStore()
 const favoritesCount = computed(() => favoritesStore.favorites.length)
 const headerZIndex = ref(10)
 const handleSearchToggle = (isOpen: boolean) => {
-	headerZIndex.value = isOpen ? 20 : 10
+	headerZIndex.value = isOpen ? 50 : 30
 }
 
 
