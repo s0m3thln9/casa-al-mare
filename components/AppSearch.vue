@@ -50,9 +50,7 @@ const toggleSearch = () => {
 	emit('searchToggle', isOpen.value)
 	
 	if (isOpen.value) {
-		// Сохраняем текущую позицию скролла
 		scrollPosition = window.pageYOffset || document.documentElement.scrollTop
-		// Блокируем скролл
 		document.body.style.position = 'fixed'
 		document.body.style.top = `-${scrollPosition}px`
 		document.body.style.width = '100%'
@@ -71,7 +69,6 @@ const closeSearch = () => {
 	searchText.value = ""
 	searchResults.value = []
 	
-	// Разблокируем скролл и возвращаем на прежнюю позицию
 	document.body.style.position = ''
 	document.body.style.top = ''
 	document.body.style.width = ''
