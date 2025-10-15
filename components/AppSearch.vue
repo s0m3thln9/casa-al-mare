@@ -97,7 +97,7 @@ onUnmounted(() => {
 
     <div
       v-if="isOpen"
-      class="fixed inset-0 z-20"
+      class="fixed inset-0 z-40"
     >
       <div
         class="max-w-[590px] w-full fixed top-[32px] sm:top-[62px] right-0 bg-[#FFFFFA] p-2 border-[0.7px] border-[#211D1D] rounded-bl-lg rounded-br-2xl"
