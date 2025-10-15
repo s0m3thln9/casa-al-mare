@@ -5,6 +5,11 @@ const menuStore = useMenuStore()
 const favoritesStore = useFavoritesStore()
 const orderStore = useOrderStore()
 const favoritesCount = computed(() => favoritesStore.favorites.length)
+const headerZIndex = ref(10)
+const handleSearchToggle = (isOpen: boolean) => {
+	headerZIndex.value = isOpen ? 20 : 10
+}
+
 
 const cartCount = computed(() => {
   return orderStore.cartItems.reduce((total, item) => total + item.count, 0)
@@ -15,7 +20,10 @@ const badgeText = (count: number) => (count > 99 ? "99+" : count.toString())
 
 <template>
   <header
-    class="sticky top-0 left-0 z-10 font-[Manrope] text-xs flex justify-between items-center p-2 bg-[#FFFFFA] text-[#211D1D] sm:text-sm sm:p-4"
+	  :class="[
+      'sticky top-0 left-0 font-[Manrope] text-xs flex justify-between items-center p-2 bg-[#FFFFFA] text-[#211D1D] sm:text-sm sm:p-4',
+      `z-${headerZIndex}`
+    ]"
   >
     <div>
       <NuxtLink to="/">
@@ -54,7 +62,7 @@ const badgeText = (count: number) => (count > 99 ? "99+" : count.toString())
     </nav>
     <nav>
       <ul class="flex gap-3 sm:gap-4">
-        <li class="hover:text-[#F3A454] cursor-pointer"><AppSearch /></li>
+        <li class="hover:text-[#F3A454] cursor-pointer"><AppSearch @search-toggle="handleSearchToggle" /></li>
         <li class="hidden hover:text-[#F3A454] cursor-pointer lg:block relative">
           <NuxtLink to="/favorites"
             >Избранное

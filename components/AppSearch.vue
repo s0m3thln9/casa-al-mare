@@ -13,6 +13,10 @@ const loading = ref(false)
 const inputRef = ref<HTMLInputElement | null>(null)
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
+const emit = defineEmits<{
+	searchToggle: [isOpen: boolean]
+}>()
+
 const debounceSearch = (text: string) => {
   if (debounceTimer) clearTimeout(debounceTimer)
   debounceTimer = setTimeout(async () => {
@@ -42,6 +46,7 @@ const performSearch = async (text: string) => {
 
 const toggleSearch = () => {
   isOpen.value = !isOpen.value
+	emit('searchToggle', isOpen.value)
   if (isOpen.value) {
     nextTick(() => inputRef.value?.focus())
   }
@@ -55,6 +60,7 @@ const handleClickOutside = (event: MouseEvent) => {
 
 const closeSearch = () => {
   isOpen.value = false
+	emit('searchToggle', false)
   searchText.value = ""
   searchResults.value = []
 }
@@ -97,10 +103,10 @@ onUnmounted(() => {
 
     <div
       v-if="isOpen"
-      class="fixed inset-0 z-40"
+      class="fixed inset-0 z-50"
     >
       <div
-        class="max-w-[590px] w-full fixed top-[32px] sm:top-[62px] right-0 bg-[#FFFFFA] p-2 border-[0.7px] border-[#211D1D] rounded-bl-lg rounded-br-2xl"
+        class="max-w-[590px] w-full z-50 fixed top-[32px] sm:top-[62px] right-0 bg-[#FFFFFA] p-2 border-[0.7px] border-[#211D1D] rounded-bl-lg rounded-br-2xl"
       >
         <div class="relative mb-2.5 flex border-b-[0.7px] border-[#211D1D]">
           <input
