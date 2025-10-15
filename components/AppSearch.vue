@@ -108,7 +108,7 @@ onUnmounted(() => {
             v-model="searchText"
             type="text"
             placeholder="Введите запрос, например 'Лиф'..."
-            class="w-full py-2 text-[#211D1D] font-[Manrope] text-sm focus:outline-none"
+            class="w-full py-2 text-[#211D1D] font-[Manrope] text-base focus:outline-none"
             @keydown.enter="handleSubmit"
           >
           <button
