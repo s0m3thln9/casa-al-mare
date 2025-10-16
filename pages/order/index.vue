@@ -24,11 +24,11 @@ const userStore = useUserStore()
 const isExpanded = ref(false)
 
 const handleProfileClick = () => {
-	if (authStore.isAuth) {
-		navigateTo("/profile")
-	} else {
-		authModalStore.open()
-	}
+  if (authStore.isAuth) {
+    navigateTo("/profile")
+  } else {
+    authModalStore.open()
+  }
 }
 
 const toggleExpanded = () => {
@@ -148,6 +148,7 @@ async function handlePay(): Promise<void> {
           return
         }
         orderStore.showErrorDeliveryMethod = true
+        orderStore.errorDeliveryMethod = "Выберите адрес доставки"
         return
       }
     }
@@ -337,9 +338,9 @@ const isGuestAuthEnabled = computed(() => {
 const hasItemsInCart = computed(() => orderStore.cartItems.length > 0)
 const isGuestSmsSubmitting = computed(() => orderStore.isGuestAuthLoading || orderStore.guestSmsButtonDisabled)
 useSmsAutoSubmit(
-	computed(() => orderStore.guestSmsCode || ''),
-	handleGuestSmsConfirm,
-	isGuestSmsSubmitting
+  computed(() => orderStore.guestSmsCode || ""),
+  handleGuestSmsConfirm,
+  isGuestSmsSubmitting,
 )
 </script>
 
@@ -775,7 +776,7 @@ useSmsAutoSubmit(
               </div>
             </AppTooltip>
             <AppTooltip
-              text="Выберите способ доставки"
+              :text="orderStore.errorDeliveryMethod ? orderStore.errorDeliveryMethod : 'Выберите способ доставки'"
               type="error"
               :show="orderStore.showErrorDeliveryMethod"
               @update:show="(value) => (orderStore.showErrorDeliveryMethod = value)"
@@ -1409,32 +1410,35 @@ useSmsAutoSubmit(
     <template v-else>
       <h2 class="uppercase max-sm:text-left max-sm:text-[17px] max-sm:font-[Inter] max-sm:self-start">Корзина пуста</h2>
       <div class="grid sm:grid-cols-4 mt-[10%] gap-8 sm:justify-items-center max-sm:self-start">
-        <div class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter max-sm:uppercase">
+        <div
+          class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
+          @click="navigateTo('/catalog')"
+        >
           Смотреть все
         </div>
-        <div class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter max-sm:uppercase">
+        <div class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase">
           Нижняя часть купальника
         </div>
-        <div class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter max-sm:uppercase">
+        <div class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase">
           Головные уборы
         </div>
         <div
-          class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter max-sm:uppercase"
+          class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
           @click="navigateTo('/certificate')"
         >
           Cертификаты
         </div>
-        <div class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter max-sm:uppercase">
+        <div class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase">
           Купальники
         </div>
-        <div class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter max-sm:uppercase">
+        <div class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase">
           Верхняя часть купальника
         </div>
-        <div class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter max-sm:uppercase">
+        <div class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase">
           Аксессуары
         </div>
         <div
-          class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter max-sm:uppercase"
+          class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
           @click="handleProfileClick"
         >
           В личный кабинет
