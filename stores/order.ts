@@ -126,6 +126,7 @@ export const useOrderStore = defineStore("order", () => {
   const guestRemainingSeconds = ref(0)
   const guestIntervalId = ref<number | null>(null)
   const guestSmsError = ref("")
+  const errorDeliveryMethod = ref("")
   const showGuestSmsError = ref(false)
 
   const guestAuthButtonContent = ref("Авторизоваться / Зарегистрироваться")
@@ -1043,6 +1044,7 @@ export const useOrderStore = defineStore("order", () => {
     newAddressFirstLine,
     newAddressSecondLine,
     showErrorDeliveryMethod,
+    errorDeliveryMethod,
     isPaymentSuccessful,
     paymentMethod,
     showErrorPaymentMethod,
