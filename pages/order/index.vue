@@ -160,7 +160,58 @@ async function handlePay(): Promise<void> {
     return
   }
 
-  await orderStore.createOrder()
+  orderStore.isLoadingPayment = true
+
+  try {
+    const paymentData = await orderStore.getPaymentData()
+    if (!paymentData || !paymentData.success) {
+      console.error("Ошибка получения данных для оплаты")
+      orderStore.isLoadingPayment = false
+      return
+    }
+
+    if (paymentData.type === "widget") {
+      // Подключаем скрипт виджета, если не подключен
+      if (!(window as any).cp) {
+        const script = document.createElement("script")
+        script.src = "https://widget.cloudpayments.ru/bundles/cloudpayments.js"
+        script.async = true
+        document.head.appendChild(script)
+        // Ждем загрузки скрипта
+        await new Promise((resolve) => {
+          script.onload = resolve
+        })
+      }
+
+      const widget = new (window as any).cp.CloudPayments()
+      widget.pay("charge", paymentData.data, {
+        onSuccess: (options: any) => {
+          // Успешная оплата - заказ создастся на сервере после webhook или аналогично
+          console.log("Оплата успешна")
+        },
+        onFail: (reason: any, options: any) => {
+          console.log("Оплата неуспешна по причине " + reason)
+          // Возврат в корзину
+          navigateTo("/order")
+        },
+        onComplete: (paymentResult: any, options: any) => {
+          // Проверяем результат и редиректим соответственно
+          if (paymentResult.success && paymentResult.code === 0) {
+            navigateTo(paymentData.link)
+          } else {
+            navigateTo("/order")
+          }
+          orderStore.isLoadingPayment = false
+        },
+      })
+    } else {
+      // Редирект на внешнюю страницу оплаты
+      await navigateTo(paymentData.link, { external: paymentData.external })
+    }
+  } catch (error) {
+    console.error("Ошибка при оплате:", error)
+    orderStore.isLoadingPayment = false
+  }
 }
 
 async function handleSave(): Promise<void> {

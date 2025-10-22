@@ -15,6 +15,15 @@ interface PointsResponse {
   points: number
 }
 
+interface PaymentDataResponse {
+  success: boolean
+  type?: "widget" | string
+  data?: any
+  link?: string
+  external?: boolean
+  error?: string
+}
+
 interface PromoCode {
   code: string
   value: number
@@ -209,6 +218,36 @@ export const useOrderStore = defineStore("order", () => {
         func.apply(this, args)
       }, wait)
     } as (...args: Parameters<T>) => ReturnType<T>
+  }
+
+  async function getPaymentData(): Promise<PaymentDataResponse | null> {
+    const token = await userStore.loadToken()
+    if (!token) {
+      console.error("Нет токена для получения данных оплаты")
+      return null
+    }
+
+    try {
+      const { data, error } = await $fetch<PaymentDataResponse>("https://back.casaalmare.com/api/getPayData", {
+        method: "POST",
+        body: { token },
+      })
+
+      if (error.value) {
+        console.error("Network error getting payment data:", error.value)
+        return null
+      }
+
+      if (!data.value?.success) {
+        console.error("Server error getting payment data:", data.value?.error)
+        return null
+      }
+
+      return data.value
+    } catch (error) {
+      console.error("Ошибка получения данных для оплаты:", error)
+      return null
+    }
   }
 
   async function loadUserData() {
@@ -675,55 +714,6 @@ export const useOrderStore = defineStore("order", () => {
     orderId.value = null
   }
 
-  async function createOrder() {
-    if (isLoadingPayment.value) return
-
-    if (cartItems.value.length === 0) {
-      return
-    }
-
-    if (!orderId.value) {
-      console.error("Нет ID заказа для оплаты")
-      return
-    }
-
-    isLoadingPayment.value = true
-    const token = await userStore.loadToken()
-
-    if (!token) {
-      isLoadingPayment.value = false
-      return
-    }
-
-    usedPointsBackup.value = pointsToUse.value
-
-    try {
-      const { data, error } = await useFetch<ApiResponse>("https://back.casaalmare.com/api/createOrder", {
-        method: "POST",
-        body: {
-          token,
-          orderId: orderId.value,
-        },
-      })
-
-      if (error.value) {
-        console.error("Network error during payment:", error.value)
-        return
-      }
-
-      if (data.value?.success) {
-        await navigateTo(`/order-result/${orderId.value}`)
-        resetOrder()
-      } else {
-        console.error("Ошибка создания заказа:", data.value?.error)
-      }
-    } catch (error) {
-      console.error("Ошибка оплаты:", error)
-    } finally {
-      isLoadingPayment.value = false
-    }
-  }
-
   async function checkOrderStatus(id: number) {
     const token = await userStore.loadToken()
     if (!token) return null
@@ -1130,7 +1120,7 @@ export const useOrderStore = defineStore("order", () => {
     removeItemFromCart,
     setCartItems,
     saveNewAddress,
-    createOrder,
+    getPaymentData,
     checkOrderStatus,
     // ЗАКОММЕНТИРОВАНО: промокоды
     // addPromoCode,
