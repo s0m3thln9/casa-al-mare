@@ -166,7 +166,7 @@ export const useOrderStore = defineStore("order", () => {
   const pointsToUse = ref<number>(0)
   const usedPointsBackup = ref<number>(0)
   const isLoadingPoints = ref<boolean>(false)
-
+  const isWidgetOpen = ref<boolean>(false)
   const certificateError = ref<string>("")
   const isExpandedCert = ref<boolean>(false)
   const newCertificateCode = ref<string>("")
@@ -228,7 +228,7 @@ export const useOrderStore = defineStore("order", () => {
     }
 
     try {
-      const { data, error } = await $fetch<PaymentDataResponse>("https://back.casaalmare.com/api/getPayData", {
+      const { data, error } = await useFetch<PaymentDataResponse>("https://back.casaalmare.com/api/getPayData", {
         method: "POST",
         body: { token },
       })
@@ -712,6 +712,7 @@ export const useOrderStore = defineStore("order", () => {
 
     orderState.value = {}
     orderId.value = null
+    isWidgetOpen.value = false
   }
 
   async function checkOrderStatus(id: number) {
@@ -787,6 +788,9 @@ export const useOrderStore = defineStore("order", () => {
               useType: item.useType,
             }))
             setCartItems(parsedCart)
+          }
+          if (!data.value.success) {
+            isWidgetOpen.value = false
           }
         }
         return data.value
@@ -1122,6 +1126,7 @@ export const useOrderStore = defineStore("order", () => {
     saveNewAddress,
     getPaymentData,
     checkOrderStatus,
+    isWidgetOpen,
     // ЗАКОММЕНТИРОВАНО: промокоды
     // addPromoCode,
     // applyPromoCode,

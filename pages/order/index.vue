@@ -171,13 +171,19 @@ async function handlePay(): Promise<void> {
     }
 
     if (paymentData.type === "widget") {
-      // Подключаем скрипт виджета, если не подключен
+      if (orderStore.isWidgetOpen) {
+        console.warn("Виджет уже открыт, игнорируем повторный вызов")
+        orderStore.isLoadingPayment = false
+        return
+      }
+
+      orderStore.isWidgetOpen = true
+
       if (!(window as any).cp) {
         const script = document.createElement("script")
         script.src = "https://widget.cloudpayments.ru/bundles/cloudpayments.js"
         script.async = true
         document.head.appendChild(script)
-        // Ждем загрузки скрипта
         await new Promise((resolve) => {
           script.onload = resolve
         })
@@ -186,31 +192,32 @@ async function handlePay(): Promise<void> {
       const widget = new (window as any).cp.CloudPayments()
       widget.pay("charge", paymentData.data, {
         onSuccess: (options: any) => {
-          // Успешная оплата - заказ создастся на сервере после webhook или аналогично
           console.log("Оплата успешна")
         },
         onFail: (reason: any, options: any) => {
           console.log("Оплата неуспешна по причине " + reason)
-          // Возврат в корзину
-          navigateTo("/order")
+          orderStore.isLoadingPayment = false
+          orderStore.isWidgetOpen = false
         },
         onComplete: (paymentResult: any, options: any) => {
-          // Проверяем результат и редиректим соответственно
+          orderStore.isLoadingPayment = false
+          orderStore.isWidgetOpen = false
+
           if (paymentResult.success && paymentResult.code === 0) {
             navigateTo(paymentData.link)
           } else {
-            navigateTo("/order")
+            console.log("Оплата отменена или неуспешна")
           }
-          orderStore.isLoadingPayment = false
         },
       })
     } else {
-      // Редирект на внешнюю страницу оплаты
       await navigateTo(paymentData.link, { external: paymentData.external })
+      orderStore.isLoadingPayment = false
     }
   } catch (error) {
     console.error("Ошибка при оплате:", error)
     orderStore.isLoadingPayment = false
+    orderStore.isWidgetOpen = false
   }
 }
 
