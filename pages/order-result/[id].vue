@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { AppCheckbox, AppButton } from "#components"
+import { AppCheckbox, AppButton, AppInput } from "#components"
 import type { CartItem, OrderState } from "~/stores/order"
-import { useUserStore } from "~/stores/user"
 
 interface CheckOrderStatusResponse {
   success: boolean
@@ -11,122 +10,22 @@ interface CheckOrderStatusResponse {
   cart?: Record<string, CartItem>
 }
 
-interface ApiResponse {
-  success: boolean
-  error?: string
-}
-
-interface PaymentMethodsResponse {
-  success: boolean
-  data: Record<string, string>
-}
-
-export interface PaymentMethod {
-  id: string
-  name: string
-}
-
 const route = useRoute()
 const orderId = parseInt(route.params.id as string)
 
 const userStore = useUserStore()
+const orderStore = useOrderStore()
+const authStore = useAuthStore()
 
-const localCartItems = ref<CartItem[]>([])
 const localIsPaymentSuccessful = ref<boolean | null>(null)
-const localPaymentMethod = ref<string | null>(null)
 const localShowErrorPaymentMethod = ref<boolean>(false)
 const localIsLoadingPayment = ref<boolean>(false)
 const loadedOrder = ref<OrderState | null>(null)
-const localPaymentMethods = ref<PaymentMethod[]>([])
 
-const localCartDetailed = computed(() => {
-  return localCartItems.value.map((cartItem) => {
-    const [colorKey, size] = cartItem.variant.split("_")
-    const vectorData = cartItem.vector[cartItem.variant] ?? {
-      price: 0,
-      oldPrice: 0,
-    }
-    const colorData = cartItem.colors[colorKey] ?? { name: "", images: [] }
+const localCartDetailed = computed(() => orderStore.cartDetailed)
 
-    return {
-      id: cartItem.id,
-      vector: cartItem.variant,
-      count: cartItem.count,
-      name: cartItem.name,
-      color: colorData.name,
-      images: (colorData.images ?? []).map((id) => cartItem.images[id] ?? "") ?? [],
-      size,
-      price: vectorData.price,
-      oldPrice: vectorData.oldPrice,
-    }
-  })
-})
-
-const localTotalSum = computed(() => {
-  return localCartItems.value.reduce((sum, cartItem) => {
-    const vectorData = cartItem.vector[cartItem.variant]
-    if (!vectorData) return sum
-    return sum + vectorData.price * cartItem.count
-  }, 0)
-})
-
-const localTotalOldSum = computed(() => {
-  return localCartItems.value.reduce((sum, cartItem) => {
-    const vectorData = cartItem.vector[cartItem.variant]
-    if (!vectorData) return sum
-    return sum + (vectorData.oldPrice > 0 ? vectorData.oldPrice : vectorData.price) * cartItem.count
-  }, 0)
-})
-
-const localFinalPrice = computed(() => {
-  let price = localTotalSum.value
-
-  if (loadedOrder.value) {
-    // Баллы
-    const points = loadedOrder.value.points ?? 0
-    if (points > 0) {
-      price -= Math.min(points, price)
-    }
-
-    // Сертификаты
-    const certs = loadedOrder.value.certificates ?? []
-    if (certs.length > 0 && userStore.user?.certificates) {
-      const certSum = certs.reduce((sum, code) => {
-        const cert = userStore.user.certificates.find((c: any) => c.code === code)
-        return cert ? sum + (cert.value_now || 0) : sum
-      }, 0)
-      price -= Math.min(certSum, price)
-    }
-
-    // Промокоды закомментированы, как в сторе
-  }
-
-  return Math.max(price, 0.01)
-})
-
-const priceFormatter = (value: number): string => {
-  const formattedValue = new Intl.NumberFormat("ru-RU").format(Math.round(value))
-  return `${formattedValue} ₽`
-}
-
-async function loadLocalPaymentMethods() {
-  try {
-    const { data, error } = await useFetch<PaymentMethodsResponse>("https://back.casaalmare.com/api/getPayments", {
-      method: "GET",
-    })
-
-    if (error.value) {
-      console.error("Network error loading payment methods:", error.value)
-      return
-    }
-
-    if (data.value?.success && data.value.data) {
-      localPaymentMethods.value = Object.entries(data.value.data).map(([id, name]) => ({ id, name }))
-    }
-  } catch (error) {
-    console.error("Ошибка загрузки методов оплаты:", error)
-  }
-}
+const localTotalOldSum = computed(() => orderStore.totalOldSum)
+const localFinalPrice = computed(() => orderStore.finalPrice)
 
 onMounted(async () => {
   if (!orderId) {
@@ -134,7 +33,10 @@ onMounted(async () => {
     return
   }
 
-  await loadLocalPaymentMethods()
+  await orderStore.loadPaymentMethods()
+  await orderStore.loadUserData()
+  await orderStore.loadOrderState()
+  await userStore.fetchUser()
 
   const token = await userStore.loadToken()
   if (!token) {
@@ -160,7 +62,7 @@ onMounted(async () => {
     if (data.value) {
       localIsPaymentSuccessful.value = data.value.success ?? false
 
-      if (data.value.cart) {
+      if (data.value.cart && orderStore.cartItems.length === 0) {
         const parsedCart: CartItem[] = Object.entries(data.value.cart).map(([_, item]) => ({
           id: item.id,
           variant: item.variant,
@@ -175,13 +77,13 @@ onMounted(async () => {
           material: item.material,
           useType: item.useType,
         }))
-        localCartItems.value = parsedCart
+        orderStore.setCartItems(parsedCart)
       }
 
       if (data.value.order) {
         loadedOrder.value = data.value.order
         if (data.value.order.paymentMethod) {
-          localPaymentMethod.value = data.value.order.paymentMethod
+          orderStore.paymentMethod = data.value.order.paymentMethod
         }
       } else {
         localIsPaymentSuccessful.value = false
@@ -191,10 +93,14 @@ onMounted(async () => {
     console.error("Ошибка проверки статуса заказа:", error)
     localIsPaymentSuccessful.value = false
   }
+
+  if (orderStore.cartItems.length === 0) {
+    await navigateTo("/order")
+  }
 })
 
 watch(
-  () => localPaymentMethod.value,
+  () => orderStore.paymentMethod,
   (newVal) => {
     if (newVal) {
       localShowErrorPaymentMethod.value = false
@@ -203,42 +109,121 @@ watch(
 )
 
 async function handleRetryPay(): Promise<void> {
-  if (!localPaymentMethod.value) {
+  if (orderStore.isLoadingPayment) return
+
+  if (orderStore.cartItems.length === 0) {
+    return
+  }
+
+  if (localIsPaymentSuccessful.value === null) {
+    if (!authStore.isAuth) {
+      if (orderStore.isGuestAuthStep) {
+        if (!orderStore.guestSmsCode) {
+          orderStore.guestAuthError = "Введите код из SMS"
+          orderStore.showGuestAuthError = true
+          return
+        }
+      } else {
+        orderStore.showErrorAuth = true
+        return
+      }
+    }
+
+    if (!orderStore.city) {
+      orderStore.showErrorDeliveryMethod = true
+      return
+    }
+
+    if (!orderStore.deliveryMethod) {
+      orderStore.showErrorDeliveryMethod = true
+      return
+    }
+
+    if (orderStore.deliveryMethod === "Курьер") {
+      if (!orderStore.currentAddress) {
+        orderStore.showErrorDeliveryMethod = true
+        return
+      }
+
+      if (orderStore.currentAddress === "Новый адрес") {
+        orderStore.showErrorDeliveryMethod = true
+        orderStore.errorDeliveryMethod = "Выберите адрес доставки"
+        return
+      }
+    }
+  }
+
+  if (orderStore.paymentMethod === null) {
     localShowErrorPaymentMethod.value = true
     return
   }
 
   localIsLoadingPayment.value = true
-
-  const token = await userStore.loadToken()
-  if (!token) {
-    localIsLoadingPayment.value = false
-    return
-  }
+  orderStore.isLoadingPayment = true
 
   try {
-    const { data, error } = await useFetch<ApiResponse>("https://back.casaalmare.com/api/createOrder", {
-      method: "POST",
-      body: {
-        token,
-        orderId,
-      },
-    })
-
-    if (error.value) {
-      console.error("Network error during payment:", error.value)
+    const paymentData = await orderStore.getPaymentData()
+    if (!paymentData || !paymentData.success) {
+      console.error("Ошибка получения данных для оплаты")
+      localIsLoadingPayment.value = false
+      orderStore.isLoadingPayment = false
       return
     }
 
-    if (data.value?.success) {
-      await navigateTo(`/order-result/${orderId}`)
+    if (paymentData.type === "widget") {
+      if (orderStore.isWidgetOpen) {
+        console.warn("Виджет уже открыт, игнорируем повторный вызов")
+        localIsLoadingPayment.value = false
+        orderStore.isLoadingPayment = false
+        return
+      }
+
+      orderStore.isWidgetOpen = true
+
+      if (!(window as any).cp) {
+        const script = document.createElement("script")
+        script.src = "https://widget.cloudpayments.ru/bundles/cloudpayments.js"
+        script.async = true
+        document.head.appendChild(script)
+        await new Promise((resolve) => {
+          script.onload = resolve
+        })
+      }
+
+      const widget = new (window as any).cp.CloudPayments()
+      widget.pay("charge", paymentData.data, {
+        onSuccess: (options: any) => {
+          console.log("Оплата успешна")
+        },
+        onFail: (reason: any, options: any) => {
+          console.log("Оплата неуспешна по причине " + reason)
+          localIsLoadingPayment.value = false
+          orderStore.isLoadingPayment = false
+          orderStore.isWidgetOpen = false
+        },
+        onComplete: async (paymentResult: any, options: any) => {
+          localIsLoadingPayment.value = false
+          orderStore.isLoadingPayment = false
+          orderStore.isWidgetOpen = false
+
+          if (paymentResult.success && paymentResult.code === 0) {
+            await navigateTo(paymentData.link)
+          } else {
+            console.log("Оплата отменена или неуспешна")
+            localIsPaymentSuccessful.value = false
+          }
+        },
+      })
     } else {
-      console.error("Ошибка создания заказа:", data.value?.error)
+      await navigateTo(paymentData.link, { external: paymentData.external })
+      localIsLoadingPayment.value = false
+      orderStore.isLoadingPayment = false
     }
   } catch (error) {
-    console.error("Ошибка оплаты:", error)
-  } finally {
+    console.error("Ошибка при оплате:", error)
     localIsLoadingPayment.value = false
+    orderStore.isLoadingPayment = false
+    orderStore.isWidgetOpen = false
   }
 }
 </script>
@@ -287,6 +272,72 @@ async function handleRetryPay(): Promise<void> {
               :key="index"
               class="flex items-center justify-between w-full"
             >
+              <div
+                v-if="item"
+                class="flex items-center gap-2"
+              >
+                <NuxtImg
+                  :src="item.images[0] || ''"
+                  alt="order-img"
+                  width="57"
+                  height="72"
+                  class="rounded-2xl border-[0.5px] border-[#211D1D]"
+                />
+                <div class="flex flex-col gap-1">
+                  <span
+                    class="font-light text-sm text-[#414141] cursor-pointer"
+                    @click="navigateTo(`/catalog/${item.id}`)"
+                  >
+                    {{ item.name }}
+                  </span>
+                  <span class="font-light text-[13px]">
+                    Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
+                  </span>
+                  <span class="text-xs text-[#414141]">
+                    {{ orderStore.priceFormatter(item.price) }}
+                    <span class="font-light text-[#606060] ml-1">за шт.</span>
+                  </span>
+                </div>
+              </div>
+              <div
+                v-if="item"
+                class="flex flex-col items-end gap-4"
+              >
+                <div class="flex items-center gap-2">
+                  <div class="py-1 px-3 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light">
+                    {{ item.count }}
+                  </div>
+                </div>
+                <span class="text-xs font-light">
+                  {{ orderStore.priceFormatter(item.price * item.count) }}
+                  <span
+                    v-if="item.oldPrice > 0"
+                    class="line-through ml-1"
+                    >{{ orderStore.priceFormatter(item.oldPrice * item.count) }}</span
+                  >
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center justify-between mt-8 sm:pt-4 sm:border-t sm:border-[#F9F6EC]">
+            <span>Стоимость товаров:</span>
+            <span class="flex items-center gap-2">
+              {{ orderStore.priceFormatter(localFinalPrice) }}
+              <span
+                v-if="localFinalPrice < localTotalOldSum"
+                class="font-extralight line-through"
+                >{{ orderStore.priceFormatter(localTotalOldSum) }}</span
+              >
+            </span>
+          </div>
+        </div>
+        <div v-else>
+          <div class="flex flex-col gap-6 mt-8">
+            <div
+              v-for="(item, index) in localCartDetailed"
+              :key="index"
+              class="flex items-center justify-between w-full"
+            >
               <div class="flex items-center gap-2">
                 <NuxtImg
                   :src="item.images[0] || ''"
@@ -306,52 +357,74 @@ async function handleRetryPay(): Promise<void> {
                     Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
                   </span>
                   <span class="text-xs text-[#414141]">
-                    {{ priceFormatter(item.price) }}
+                    {{ orderStore.priceFormatter(item.price) }}
                     <span class="font-light text-[#606060] ml-1">за шт.</span>
                   </span>
                 </div>
               </div>
               <div class="flex flex-col items-end gap-4">
                 <div class="flex items-center gap-2">
-                  <div class="py-1 px-3 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light">
+                  <div class="py-1 px-2 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light">
+                    <button
+                      class="w-4 h-4 flex items-center justify-center cursor-pointer"
+                      :disabled="orderStore.isLoadingPayment"
+                      @click="orderStore.decrementQuantity(item.id, item.vector)"
+                    >
+                      <NuxtImg
+                        src="/minus.svg"
+                        alt="minus"
+                        class="w-full"
+                      />
+                    </button>
                     {{ item.count }}
+                    <button
+                      class="w-4 h-4 flex items-center justify-center cursor-pointer"
+                      :disabled="orderStore.isLoadingPayment"
+                      @click="orderStore.incrementQuantity(item.id, item.vector)"
+                    >
+                      <NuxtImg
+                        src="/plus.svg"
+                        alt="plus"
+                        class="w-full"
+                      />
+                    </button>
                   </div>
+                  <button
+                    class="w-6 h-6 flex items-center justify-center cursor-pointer"
+                    :disabled="orderStore.isLoadingPayment"
+                    @click="orderStore.removeItemFromCart(item.id, item.vector)"
+                  >
+                    <NuxtImg
+                      src="/x.svg"
+                      alt="x"
+                      class="w-full"
+                    />
+                  </button>
                 </div>
                 <span class="text-xs font-light">
-                  {{ priceFormatter(item.price * item.count) }}
+                  {{ orderStore.priceFormatter(item.price * item.count) }}
                   <span
                     v-if="item.oldPrice > 0"
                     class="line-through ml-1"
-                    >{{ priceFormatter(item.oldPrice * item.count) }}</span
+                    >{{ orderStore.priceFormatter(item.oldPrice * item.count) }}</span
                   >
                 </span>
               </div>
             </div>
           </div>
+
           <div class="flex items-center justify-between mt-8 sm:pt-4 sm:border-t sm:border-[#F9F6EC]">
             <span>Стоимость товаров:</span>
             <span class="flex items-center gap-2">
-              {{ priceFormatter(localFinalPrice) }}
+              {{ orderStore.priceFormatter(localFinalPrice) }}
               <span
                 v-if="localFinalPrice < localTotalOldSum"
                 class="font-extralight line-through"
-                >{{ priceFormatter(localTotalOldSum) }}</span
+                >{{ orderStore.priceFormatter(localTotalOldSum) }}</span
               >
             </span>
           </div>
-        </div>
-        <div v-else>
-          <div class="flex items-center justify-between mt-8 sm:pt-4 sm:border-t sm:border-[#F9F6EC]">
-            <span>Стоимость товаров:</span>
-            <span class="flex items-center gap-2">
-              {{ priceFormatter(localFinalPrice) }}
-              <span
-                v-if="localFinalPrice < localTotalOldSum"
-                class="font-extralight line-through"
-                >{{ priceFormatter(localTotalOldSum) }}</span
-              >
-            </span>
-          </div>
+
           <AppTooltip
             text="Выберите способ оплаты"
             type="error"
@@ -362,9 +435,9 @@ async function handleRetryPay(): Promise<void> {
               <span class="font-light text-sm">Способ оплаты</span>
               <div class="flex flex-col gap-4">
                 <AppCheckbox
-                  v-for="method in localPaymentMethods"
+                  v-for="method in orderStore.paymentMethods"
                   :key="method.id"
-                  v-model="localPaymentMethod"
+                  v-model="orderStore.paymentMethod"
                   size="S"
                   :label="method.name"
                   :value="method.id"
@@ -375,7 +448,7 @@ async function handleRetryPay(): Promise<void> {
           <AppButton
             class="w-full mt-8"
             content="Оплатить заказ"
-            :disabled="localIsLoadingPayment || localCartItems.length === 0"
+            :disabled="localIsLoadingPayment || orderStore.cartItems.length === 0"
             @click="handleRetryPay"
           />
         </div>
@@ -383,3 +456,9 @@ async function handleRetryPay(): Promise<void> {
     </div>
   </main>
 </template>
+
+<style scoped>
+.collapsible-div {
+  transition-property: max-height, opacity;
+}
+</style>
