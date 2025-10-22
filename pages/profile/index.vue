@@ -88,15 +88,16 @@ const handleAddCertificate = async (): Promise<void> => {
 
 const authStore = useAuthStore()
 
-onMounted(() => {
+onMounted(async () => {
   profileStore.loadProfile()
+  await orderStore.loadPaymentMethods()
 })
 </script>
 
 <template>
   <main class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D] flex justify-center items-center pt-16 pb-8 flex-col">
     <div
-	    v-if="authStore.isAuth"
+      v-if="authStore.isAuth"
       class="px-2 flex flex-col justify-center items-center w-full sm:px-0"
       :class="currentTab === 'Избранное' ? '' : 'max-w-[600px]'"
     >
@@ -314,7 +315,8 @@ onMounted(() => {
               deliveryDate: order.deliveryDate,
               address: order.order.currentAddress,
               deliveryMethod: order.order.deliveryMethod,
-              paymentMethod: order.order.paymentMethod,
+              paymentMethod:
+                orderStore.paymentMethods.find((m) => m.id === order.order.paymentMethod)?.name || 'Неизвестный метод',
               receiver: userStore.user!.profile.fullname,
               items: Object.values(order.cart).map((item) => ({
                 id: item.id,
@@ -384,8 +386,10 @@ onMounted(() => {
         </div>
       </div>
     </div>
-	  <div v-else>
-		  <h2 class="uppercase text-center max-sm:text-[17px] max-sm:font-[Inter]">Авторизируйтесь для просмотра личного кабинета</h2>
-	  </div>
+    <div v-else>
+      <h2 class="uppercase text-center max-sm:text-[17px] max-sm:font-[Inter]">
+        Авторизируйтесь для просмотра личного кабинета
+      </h2>
+    </div>
   </main>
 </template>

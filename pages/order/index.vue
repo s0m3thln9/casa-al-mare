@@ -105,6 +105,7 @@ onMounted(async () => {
   }
 
   await getCart()
+  await orderStore.loadPaymentMethods()
   await orderStore.loadUserData()
   await orderStore.loadOrderState()
 })
@@ -879,32 +880,26 @@ useSmsAutoSubmit(
                 />
               </div>
             </AppTooltip>
-            <div class="max-sm:hidden">
-              <AppTooltip
-                text="Выберите способ оплаты"
-                type="error"
-                :show="orderStore.showErrorPaymentMethod"
-                @update:show="(value) => (orderStore.showErrorPaymentMethod = value)"
-              >
-                <div class="relative flex flex-col gap-6">
-                  <span class="font-light text-sm">Способ оплаты</span>
-                  <div class="flex flex-col gap-4">
-                    <AppCheckbox
-                      v-model="orderStore.paymentMethod"
-                      size="S"
-                      label="Картой на сайте"
-                      value="Картой на сайте"
-                    />
-                    <AppCheckbox
-                      v-model="orderStore.paymentMethod"
-                      size="S"
-                      label="Оплата при получении"
-                      value="Оплата при получении"
-                    />
-                  </div>
+            <AppTooltip
+              text="Выберите способ оплаты"
+              type="error"
+              :show="orderStore.showErrorPaymentMethod"
+              @update:show="(value) => (orderStore.showErrorPaymentMethod = value)"
+            >
+              <div class="relative flex flex-col gap-6">
+                <span class="font-light text-sm">Способ оплаты</span>
+                <div class="flex flex-col gap-4">
+                  <AppCheckbox
+                    v-for="method in orderStore.paymentMethods"
+                    :key="method.id"
+                    v-model="orderStore.paymentMethod"
+                    size="S"
+                    :label="method.name"
+                    :value="method.id"
+                  />
                 </div>
-              </AppTooltip>
-            </div>
+              </div>
+            </AppTooltip>
           </template>
         </div>
         <div
@@ -921,16 +916,12 @@ useSmsAutoSubmit(
                 <span class="text-[17px]">Способ оплаты</span>
                 <div class="flex flex-col gap-4">
                   <AppCheckbox
+                    v-for="method in orderStore.paymentMethods"
+                    :key="method.id"
                     v-model="orderStore.paymentMethod"
                     size="S"
-                    label="Картой на сайте"
-                    value="Картой на сайте"
-                  />
-                  <AppCheckbox
-                    v-model="orderStore.paymentMethod"
-                    size="S"
-                    label="Оплата при получении"
-                    value="Оплата при получении"
+                    :label="method.name"
+                    :value="method.id"
                   />
                 </div>
               </div>

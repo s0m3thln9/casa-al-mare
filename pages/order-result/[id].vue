@@ -16,6 +16,16 @@ interface ApiResponse {
   error?: string
 }
 
+interface PaymentMethodsResponse {
+  success: boolean
+  data: Record<string, string>
+}
+
+export interface PaymentMethod {
+  id: string
+  name: string
+}
+
 const route = useRoute()
 const orderId = parseInt(route.params.id as string)
 
@@ -27,6 +37,7 @@ const localPaymentMethod = ref<string | null>(null)
 const localShowErrorPaymentMethod = ref<boolean>(false)
 const localIsLoadingPayment = ref<boolean>(false)
 const loadedOrder = ref<OrderState | null>(null)
+const localPaymentMethods = ref<PaymentMethod[]>([])
 
 const localCartDetailed = computed(() => {
   return localCartItems.value.map((cartItem) => {
@@ -98,11 +109,32 @@ const priceFormatter = (value: number): string => {
   return `${formattedValue} ₽`
 }
 
+async function loadLocalPaymentMethods() {
+  try {
+    const { data, error } = await useFetch<PaymentMethodsResponse>("https://back.casaalmare.com/api/getPayments", {
+      method: "GET",
+    })
+
+    if (error.value) {
+      console.error("Network error loading payment methods:", error.value)
+      return
+    }
+
+    if (data.value?.success && data.value.data) {
+      localPaymentMethods.value = Object.entries(data.value.data).map(([id, name]) => ({ id, name }))
+    }
+  } catch (error) {
+    console.error("Ошибка загрузки методов оплаты:", error)
+  }
+}
+
 onMounted(async () => {
   if (!orderId) {
     await navigateTo("/order")
     return
   }
+
+  await loadLocalPaymentMethods()
 
   const token = await userStore.loadToken()
   if (!token) {
@@ -320,29 +352,26 @@ async function handleRetryPay(): Promise<void> {
               >
             </span>
           </div>
-          <div class="relative flex flex-col gap-6 mt-8">
-            <span class="font-light text-sm">Способ оплаты</span>
-            <div class="flex flex-col gap-4">
-              <AppCheckbox
-                v-model="localPaymentMethod"
-                size="S"
-                label="Картой на сайте"
-                value="Картой на сайте"
-              />
-              <AppCheckbox
-                v-model="localPaymentMethod"
-                size="S"
-                label="Оплата при получении"
-                value="Оплата при получении"
-              />
+          <AppTooltip
+            text="Выберите способ оплаты"
+            type="error"
+            :show="localShowErrorPaymentMethod"
+            @update:show="(value) => (localShowErrorPaymentMethod = value)"
+          >
+            <div class="relative flex flex-col gap-6 mt-8">
+              <span class="font-light text-sm">Способ оплаты</span>
+              <div class="flex flex-col gap-4">
+                <AppCheckbox
+                  v-for="method in localPaymentMethods"
+                  :key="method.id"
+                  v-model="localPaymentMethod"
+                  size="S"
+                  :label="method.name"
+                  :value="method.id"
+                />
+              </div>
             </div>
-            <div
-              class="absolute -top-[40px] left-3 bg-[#FFFFFA] transition-opacity duration-300 border border-[#A6CEFF] text-[#211D1D] text-[13px] font-light font-[Manrope] p-4 shadow-md z-10 rounded-t-3xl rounded-r-3xl"
-              :class="localShowErrorPaymentMethod ? 'opacity-100' : 'opacity-0'"
-            >
-              Выберите способ оплаты
-            </div>
-          </div>
+          </AppTooltip>
           <AppButton
             class="w-full mt-8"
             content="Оплатить заказ"

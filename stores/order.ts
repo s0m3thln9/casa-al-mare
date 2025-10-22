@@ -21,6 +21,8 @@ interface PromoCode {
   percent: boolean
 }
 
+// interface PromoResponse { //   success: boolean //   promo: PromoCode // }
+
 interface CheckOrderStatusResponse {
   success: boolean
   order?: OrderState
@@ -28,11 +30,6 @@ interface CheckOrderStatusResponse {
   orderId?: number
   cart?: Record<string, CartItem>
 }
-
-// interface PromoResponse {
-//   success: boolean
-//   promo: PromoCode
-// }
 
 interface UserInfo {
   name: string
@@ -80,6 +77,11 @@ interface UpdateCartResponse {
   cart: Record<string, CartItem>
 }
 
+interface PaymentMethodsResponse {
+  success: boolean
+  data: Record<string, string>
+}
+
 export type CartItem = {
   id: number
   variant: string
@@ -93,6 +95,11 @@ export type CartItem = {
   type: string
   material: string[]
   useType: string[]
+}
+
+export interface PaymentMethod {
+  id: string
+  name: string
 }
 
 export const useOrderStore = defineStore("order", () => {
@@ -114,6 +121,7 @@ export const useOrderStore = defineStore("order", () => {
   const paymentMethod = ref<string | null>(null)
   const showErrorPaymentMethod = ref<boolean>(false)
   const isLoadingPayment = ref<boolean>(false)
+  const paymentMethods = ref<PaymentMethod[]>([])
 
   const isGuestAuthStep = ref(false)
   const guestLoginType = ref<number>(1)
@@ -167,6 +175,25 @@ export const useOrderStore = defineStore("order", () => {
   const orderState = ref<OrderState>(<OrderState>{})
   const isLoaded = ref(false)
   const orderId = ref<number | null>(null)
+
+  async function loadPaymentMethods() {
+    try {
+      const { data, error } = await useFetch<PaymentMethodsResponse>("https://back.casaalmare.com/api/getPayments", {
+        method: "GET",
+      })
+
+      if (error.value) {
+        console.error("Network error loading payment methods:", error.value)
+        return
+      }
+
+      if (data.value?.success && data.value.data) {
+        paymentMethods.value = Object.entries(data.value.data).map(([id, name]) => ({ id, name }))
+      }
+    } catch (error) {
+      console.error("Ошибка загрузки методов оплаты:", error)
+    }
+  }
 
   function debounce<T extends (...args: unknown[]) => unknown>(
     func: T,
@@ -1049,6 +1076,7 @@ export const useOrderStore = defineStore("order", () => {
     paymentMethod,
     showErrorPaymentMethod,
     isLoadingPayment,
+    paymentMethods,
     // ЗАКОММЕНТИРОВАНО: промокоды
     // addPromoCodeError,
     // currentPromoCodes,
@@ -1092,6 +1120,7 @@ export const useOrderStore = defineStore("order", () => {
     guestAuthButtonDisabled,
     guestSmsButtonContent,
     guestSmsButtonDisabled,
+    loadPaymentMethods,
     startGuestCountdown,
     resetGuestAuth,
     loadUserData,
