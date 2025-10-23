@@ -1,32 +1,58 @@
 <script setup lang="ts">
+interface CityData {
+  label: string
+  name: string
+  kladr: string
+  fias: string
+  region?: string
+}
+
 const props = withDefaults(
   defineProps<{
     label: string
-    options: string[]
+    options?: string[]
     customClass?: string
-    modelValue: string | null
+    modelValue: CityData | string | null
     required?: boolean
     errorHideDelay?: number
     searchable?: boolean
+    asyncSearch?: boolean
+    asyncSearchUrl?: string
+    cityMode?: boolean
   }>(),
   {
+    options: () => [],
     customClass: "",
     required: false,
     errorHideDelay: 3000,
     searchable: false,
+    asyncSearch: false,
+    asyncSearchUrl: "",
+    cityMode: false,
   },
 )
 
 const emit = defineEmits<{
-  (e: "update:modelValue", value: string): void
+  (e: "update:modelValue", value: CityData | string): void
 }>()
 
 const isDropdownOpen = ref(false)
-const selected = ref<string | null>(props.modelValue)
+const selected = ref<CityData | string | null>(props.modelValue)
 const searchQuery = ref("")
 const dropdownRef = ref<HTMLElement | null>(null)
 const showError = ref(false)
 const inputRef = ref<HTMLInputElement | null>(null)
+const isLoading = ref(false)
+const asyncOptions = ref<CityData[]>([])
+const searchTimeout = ref<NodeJS.Timeout | null>(null)
+
+const displayValue = computed(() => {
+  if (!selected.value) return ""
+  if (props.cityMode && typeof selected.value === "object") {
+    return selected.value.label
+  }
+  return typeof selected.value === "string" ? selected.value : ""
+})
 
 const isActive = computed(() => !!selected.value)
 
@@ -38,28 +64,58 @@ watch(
       clearError()
     }
     if (!isDropdownOpen.value && props.searchable) {
-      searchQuery.value = newValue || ""
+      searchQuery.value = displayValue.value
     }
   },
 )
 
 watch(selected, (newValue) => {
   if (!isDropdownOpen.value && props.searchable) {
-    searchQuery.value = newValue || ""
+    searchQuery.value = displayValue.value
   }
 })
 
 const filteredOptions = computed(() => {
+  if (props.asyncSearch && props.cityMode) {
+    return asyncOptions.value
+  }
+
   if (!props.searchable || !searchQuery.value) {
     return props.options
   }
   return props.options.filter((option) => option.toLowerCase().includes(searchQuery.value.toLowerCase()))
 })
 
+const searchCities = async () => {
+  if (!props.asyncSearch || !props.asyncSearchUrl || !searchQuery.value || searchQuery.value.length < 2) {
+    asyncOptions.value = []
+    return
+  }
+
+  isLoading.value = true
+
+  try {
+    const response = await $fetch<{ success: boolean; data?: CityData[] }>(
+      `${props.asyncSearchUrl}?query=${encodeURIComponent(searchQuery.value)}`,
+    )
+
+    if (response.success && response.data) {
+      asyncOptions.value = response.data
+    } else {
+      asyncOptions.value = []
+    }
+  } catch (error) {
+    console.error("Ошибка поиска городов:", error)
+    asyncOptions.value = []
+  } finally {
+    isLoading.value = false
+  }
+}
+
 const toggleSelect = () => {
   isDropdownOpen.value = !isDropdownOpen.value
   if (props.searchable && isDropdownOpen.value) {
-    searchQuery.value = selected.value || ""
+    searchQuery.value = displayValue.value
     nextTick(() => inputRef.value?.focus())
   }
 }
@@ -97,11 +153,16 @@ watch(isDropdownOpen, (newValue) => {
   }
 })
 
-const select = (item: string) => {
+const select = (item: CityData | string) => {
   selected.value = item
-  searchQuery.value = item
+  if (props.cityMode && typeof item === "object") {
+    searchQuery.value = item.label
+    emit("update:modelValue", item)
+  } else {
+    searchQuery.value = typeof item === "string" ? item : ""
+    emit("update:modelValue", item)
+  }
   isDropdownOpen.value = false
-  emit("update:modelValue", selected.value!)
   if (props.required) {
     clearError()
   }
@@ -110,8 +171,6 @@ const select = (item: string) => {
 const handleSearchInput = (event: Event) => {
   const target = event.target as HTMLInputElement
   searchQuery.value = target.value
-  selected.value = target.value || null
-  emit("update:modelValue", selected.value)
 
   if (props.searchable && !isDropdownOpen.value && searchQuery.value.trim().length > 0) {
     isDropdownOpen.value = true
@@ -120,6 +179,20 @@ const handleSearchInput = (event: Event) => {
 
   if (props.searchable && isDropdownOpen.value && searchQuery.value.trim() === "") {
     isDropdownOpen.value = false
+    asyncOptions.value = []
+  }
+
+  // Debounced async search
+  if (props.asyncSearch && searchQuery.value.length >= 2) {
+    if (searchTimeout.value) {
+      clearTimeout(searchTimeout.value)
+    }
+
+    searchTimeout.value = setTimeout(() => {
+      searchCities()
+    }, 300)
+  } else if (props.asyncSearch && searchQuery.value.length < 2) {
+    asyncOptions.value = []
   }
 }
 
@@ -129,6 +202,9 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener("click", handleClickOutside)
+  if (searchTimeout.value) {
+    clearTimeout(searchTimeout.value)
+  }
 })
 
 const handleClickOutside = (event: MouseEvent) => {
@@ -178,7 +254,7 @@ defineExpose({ validate, showError })
           v-if="selected !== null && !isDropdownOpen"
           class="text-sm font-light text-[#211D1D] font-[Manrope] sm:text-xs"
         >
-          {{ selected }}
+          {{ displayValue }}
         </span>
         <button class="w-4 h-4 flex justify-center items-center cursor-pointer focus:outline-none">
           <NuxtImg
@@ -200,12 +276,17 @@ defineExpose({ validate, showError })
           :class="{ 'text-[#8C8785]': !selected }"
           type="text"
           @input="handleSearchInput"
-        >
+        />
         <button class="w-4 h-4 flex justify-center items-center cursor-pointer focus:outline-none">
           <NuxtImg
+            v-if="!isLoading"
             src="/chevron-down.svg"
             class="w-full"
             :class="isDropdownOpen ? 'rotate-180' : 'rotate-0'"
+          />
+          <div
+            v-else
+            class="w-3 h-3 border-2 border-[#211D1D] border-t-transparent rounded-full animate-spin"
           />
         </button>
       </div>
@@ -214,20 +295,46 @@ defineExpose({ validate, showError })
         :class="[isDropdownOpen ? 'max-h-500 opacity-100 mt-2' : 'max-h-0 opacity-0']"
       >
         <div
-          v-for="(item, index) in searchable ? filteredOptions : options"
-          :key="index"
-          class="w-full rounded-lg border border-[#BBB8B6] py-2 flex items-center justify-center font-[Manrope] text-[15px] font-light hover:bg-[#F3A454] hover:border-[#F3A454] hover:text-[#FFFFFA]"
-          :class="[item === selected ? 'bg-[#211D1D] text-[#FFFFFA]' : 'bg-[#FFFFFA] text-[#211D1D]']"
-          @click.stop="select(item)"
+          v-if="asyncSearch && searchQuery.length < 2 && !isLoading"
+          class="w-full py-2 text-center text-xs text-[#8C8785] font-light"
         >
-          {{ item }}
+          Введите минимум 2 символа
         </div>
         <div
-          v-if="searchable && filteredOptions.length === 0 && searchQuery"
+          v-else-if="isLoading"
+          class="w-full py-2 text-center text-xs text-[#8C8785] font-light"
+        >
+          Поиск...
+        </div>
+        <div
+          v-else-if="searchable && filteredOptions.length === 0 && searchQuery && !isLoading"
           class="w-full py-2 text-center text-xs text-[#8C8785] font-light"
         >
           Город не найден
         </div>
+        <template v-else>
+          <div
+            v-for="(item, index) in filteredOptions"
+            :key="cityMode && typeof item === 'object' ? item.kladr : index"
+            class="w-full rounded-lg border border-[#BBB8B6] py-2 px-3 flex flex-col font-[Manrope] text-[15px] font-light hover:bg-[#F3A454] hover:border-[#F3A454] hover:text-[#FFFFFA] cursor-pointer"
+            :class="[
+              cityMode && typeof item === 'object' && typeof selected === 'object' && item.kladr === selected?.kladr
+                ? 'bg-[#211D1D] text-[#FFFFFA]'
+                : item === selected
+                  ? 'bg-[#211D1D] text-[#FFFFFA]'
+                  : 'bg-[#FFFFFA] text-[#211D1D]',
+            ]"
+            @click.stop="select(item)"
+          >
+            <span>{{ cityMode && typeof item === "object" ? item.label : item }}</span>
+            <span
+              v-if="cityMode && typeof item === 'object' && item.region"
+              class="text-xs opacity-70 mt-0.5"
+            >
+              {{ item.region }}
+            </span>
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -236,5 +343,15 @@ defineExpose({ validate, showError })
 <style scoped>
 .collapsible-div {
   transition-property: max-height, opacity;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
 }
 </style>

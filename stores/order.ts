@@ -20,6 +20,14 @@ interface PointsResponse {
   points: number
 }
 
+interface CityData {
+  label: string
+  name: string
+  kladr: string
+  fias: string
+  region?: string
+}
+
 interface PaymentDataResponse {
   success: boolean
   type?: "widget" | string
@@ -59,7 +67,7 @@ interface UserInfo {
 
 export interface OrderState {
   deliveryMethod?: string | null
-  city?: string | null
+  city?: CityData | null
   currentAddress?: string | null
   commentForCourier?: string
   paymentMethod?: string | null
@@ -124,7 +132,7 @@ export const useOrderStore = defineStore("order", () => {
   const cartItems = ref<CartItem[]>([])
 
   const addresses = ref<string[]>([])
-  const city = ref<string | null>(null)
+  const city = ref<CityData | null>(null)
   const commentForCourier = ref("")
   const currentAddress = ref<string | null>(null)
   const deliveryMethod = ref<string | null>(null)
@@ -271,6 +279,21 @@ export const useOrderStore = defineStore("order", () => {
         return
       }
 
+      if (userStore.user?.profile?.extended.city?.label && !city.value) {
+        city.value = userStore.user.profile.extended.city
+      }
+
+      if (!city.value) {
+        try {
+          const response = await $fetch<CityData>("https://back.casaalmare.com/api/getCityByIP")
+          if (response && response.name) {
+            city.value = response
+          }
+        } catch (error) {
+          console.error("Ошибка определения города по IP:", error)
+        }
+      }
+
       if (pointsData.value?.success && pointsData.value.points !== undefined) {
         if (userStore.user) {
           userStore.user.points = pointsData.value.points
@@ -353,7 +376,13 @@ export const useOrderStore = defineStore("order", () => {
         if (loadedOrder.pvz) {
           selectedPvz.value = loadedOrder.pvz
         }
-        if (loadedOrder.city) city.value = loadedOrder.city
+        if (loadedOrder.city) {
+          city.value = loadedOrder.city
+        } else if (userStore.user?.profile?.extended.city) {
+          city.value = userStore.user.profile.extended.city
+        } else if (!city.value) {
+          // Город будет определен в loadUserData
+        }
         if (loadedOrder.currentAddress) currentAddress.value = loadedOrder.currentAddress
         if (loadedOrder.commentForCourier) commentForCourier.value = loadedOrder.commentForCourier
         if (loadedOrder.paymentMethod) paymentMethod.value = loadedOrder.paymentMethod
@@ -1031,6 +1060,16 @@ export const useOrderStore = defineStore("order", () => {
     addresses.value = newAddresses
     console.log("WatchEffect: Addresses updated:", addresses.value)
   })
+
+  watch(
+    () => userStore.city,
+    (newCity) => {
+      if (newCity && !city.value) {
+        city.value = newCity
+      }
+    },
+    { immediate: true },
+  )
 
   watch(
     () => authStore.isAuth,

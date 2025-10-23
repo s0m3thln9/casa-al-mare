@@ -11,6 +11,14 @@ interface UserExtended {
   addresses: string[]
 }
 
+interface CityData {
+  label: string
+  name: string
+  kladr: string
+  fias: string
+  region?: string
+}
+
 export interface User {
   uid: number
   points: number
@@ -33,7 +41,10 @@ export interface User {
     email: string
     address: string
     birthdate: string
-    [key: string]: string
+    extended: {
+      city?: CityData
+    }
+    [key: string]: any
   }
   addresses: string[]
   extended?: UserExtended
@@ -92,16 +103,16 @@ export const useUserStore = defineStore("user", () => {
     }
 
     if (userToken) await saveToken(userToken)
+
     await favoritesStore.syncFavorites()
   }
 
   const logout = async (): Promise<void> => {
     await removeToken()
     user.value = null
-    // Переход на главную страницу
+
     await navigateTo("/")
 
-    // Обновление страницы
     if (import.meta.client) {
       window.location.reload()
     }

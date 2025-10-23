@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { AppInput, AppSelect, SelectInput } from "#components"
-import cities from "public/cities.json"
 
 interface CartResponseData {
   success: boolean
@@ -34,13 +33,6 @@ const handleProfileClick = () => {
 const toggleExpanded = () => {
   isExpanded.value = !isExpanded.value
 }
-
-const russianCities = computed(() => {
-  return cities
-    .map((city) => city.name)
-    .filter((name, index, self) => self.indexOf(name) === index)
-    .sort((a, b) => a.localeCompare(b, "ru"))
-})
 
 interface PhoneOption {
   code: string
@@ -857,11 +849,13 @@ useSmsAutoSubmit(
                   <AppSelect
                     ref="cityRef"
                     v-model="orderStore.city"
-                    :options="russianCities"
                     label="Город"
                     custom-class="w-full"
                     required
                     searchable
+                    async-search
+                    city-mode
+                    async-search-url="https://back.casaalmare.com/api/getCityByQuery"
                   />
                 </AppTooltip>
                 <div class="flex flex-col gap-6">
