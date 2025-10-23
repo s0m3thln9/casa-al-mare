@@ -10,6 +10,11 @@ interface Certificate {
   value_now: number
 }
 
+interface PvzData {
+  address: string
+  [key: string]: any // Для других полей от CDEK (код, координаты и т.д.)
+}
+
 interface PointsResponse {
   success: boolean
   points: number
@@ -65,6 +70,7 @@ export interface OrderState {
   pendingPromoCode?: string | null
   userInfo?: UserInfo | null
   cart?: Record<string, CartItem>
+  pvz?: PvzData | null
 }
 
 interface UpdateOrderResponse {
@@ -125,7 +131,7 @@ export const useOrderStore = defineStore("order", () => {
   const newAddressFirstLine = ref("")
   const newAddressSecondLine = ref("")
   const showErrorDeliveryMethod = ref<boolean>(false)
-
+  const selectedPvz = ref<PvzData | null>(null)
   const isPaymentSuccessful = ref<boolean | null>(null)
   const paymentMethod = ref<string | null>(null)
   const showErrorPaymentMethod = ref<boolean>(false)
@@ -344,6 +350,9 @@ export const useOrderStore = defineStore("order", () => {
         if (data.value.orderId) orderId.value = data.value.orderId
 
         if (loadedOrder.deliveryMethod) deliveryMethod.value = loadedOrder.deliveryMethod
+        if (loadedOrder.pvz) {
+          selectedPvz.value = loadedOrder.pvz
+        }
         if (loadedOrder.city) city.value = loadedOrder.city
         if (loadedOrder.currentAddress) currentAddress.value = loadedOrder.currentAddress
         if (loadedOrder.commentForCourier) commentForCourier.value = loadedOrder.commentForCourier
@@ -392,6 +401,7 @@ export const useOrderStore = defineStore("order", () => {
 
     const orderStateObj: Partial<OrderState> = {
       deliveryMethod: deliveryMethod.value,
+      pvz: selectedPvz.value,
       city: city.value,
       currentAddress: currentAddress.value,
       commentForCourier: commentForCourier.value,
@@ -684,6 +694,7 @@ export const useOrderStore = defineStore("order", () => {
     isPaymentSuccessful.value = null
     paymentMethod.value = null
     showErrorPaymentMethod.value = false
+    selectedPvz.value = null
 
     // ЗАКОММЕНТИРОВАНО: промокоды
     // addPromoCodeError.value = ""
@@ -1042,6 +1053,7 @@ export const useOrderStore = defineStore("order", () => {
       // ЗАКОММЕНТИРОВАНО: промокоды
       // currentPromoCodes,
       // pendingPromoCode,
+      selectedPvz,
       name,
       surname,
       phone,
@@ -1132,6 +1144,7 @@ export const useOrderStore = defineStore("order", () => {
     // applyPromoCode,
     // savedMoney,
     // togglePromoCode,
+    selectedPvz,
     applyPoints,
     togglePoints,
     addCertificate,

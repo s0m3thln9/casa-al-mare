@@ -153,6 +153,13 @@ async function handlePay(): Promise<void> {
         return
       }
     }
+    if (orderStore.deliveryMethod === "СДЭК (ПВЗ)") {
+      if (!orderStore.selectedPvz) {
+        orderStore.showErrorDeliveryMethod = true
+        orderStore.errorDeliveryMethod = "Выберите пункт выдачи СДЭК"
+        return
+      }
+    }
   }
 
   if (orderStore.paymentMethod === null) {
@@ -926,10 +933,18 @@ useSmsAutoSubmit(
                 <AppCheckbox
                   v-model="orderStore.deliveryMethod"
                   size="M"
-                  disabled
                   label="СДЭК (ПВЗ)"
                   value="СДЭК (ПВЗ)"
                 />
+                <div
+                  v-if="orderStore.deliveryMethod === 'СДЭК (ПВЗ)'"
+                  class="-mt-4"
+                >
+                  <PvzSelector
+                    v-model="orderStore.selectedPvz"
+                    :city="{ name: orderStore.city }"
+                  />
+                </div>
                 <AppInput
                   id="forCourier"
                   v-model="orderStore.commentForCourier"

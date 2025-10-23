@@ -151,6 +151,13 @@ async function handleRetryPay(): Promise<void> {
         return
       }
     }
+    if (orderStore.deliveryMethod === "СДЭК (ПВЗ)") {
+      if (!orderStore.selectedPvz) {
+        orderStore.showErrorDeliveryMethod = true
+        orderStore.errorDeliveryMethod = "Выберите пункт выдачи СДЭК"
+        return
+      }
+    }
   }
 
   if (orderStore.paymentMethod === null) {
