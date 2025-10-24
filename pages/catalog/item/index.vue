@@ -2,7 +2,6 @@
 import type { Item } from "~/stores/catalog"
 
 const route = useRoute()
-const segment = route.params.id
 const catalogStore = useCatalogStore()
 const popupStore = usePopupStore()
 const itemStore = useItemStore()
@@ -21,15 +20,49 @@ onMounted(async () => {
       await catalogStore.loadItems()
     }
 
-    const id = Number(segment)
-    if (isNaN(id)) {
-      throw new Error("Неверный ID товара")
+    let foundItem: Item | null = null
+    const aliasFromQuery = route.query.alias as string
+    if (typeof aliasFromQuery === "string" && aliasFromQuery.trim() !== "") {
+      foundItem = catalogStore.items.find((i) => i.alias === aliasFromQuery) || null
+      if (foundItem && foundItem.colors && Object.keys(foundItem.colors).length > 0) {
+        const colorCode = Object.keys(foundItem.colors)[0]
+        const colorData = foundItem.colors[colorCode]
+        if (colorData) {
+          itemStore.color = {
+            code: colorCode,
+            name: colorData.name,
+            value: colorData.value,
+          }
+        }
+      }
+      if (!foundItem) {
+        console.log(
+          "Доступные alias в данных:",
+          catalogStore.items.map((i) => i.alias),
+        )
+        error.value = "Товар не найден по указанному alias. Проверьте ссылку."
+        return
+      }
+    } else {
+      const idFromParams = route.params.id
+      if (typeof idFromParams === "string" && !isNaN(Number(idFromParams))) {
+        const id = Number(idFromParams)
+        foundItem = catalogStore.getItemById(id) || null
+        if (!foundItem) {
+          console.log(
+            "Доступные ID в данных:",
+            catalogStore.items.map((i) => i.id),
+          )
+          error.value = "Товар не найден по ID."
+          return
+        }
+      } else {
+        error.value = "Неверный идентификатор товара."
+        return
+      }
     }
 
-    item.value = catalogStore.items.find((i) => i.id === id) || null
-    if (!item.value) {
-      throw new Error("Товар не найден")
-    }
+    item.value = foundItem
   } catch (err) {
     console.error("Ошибка загрузки страницы товара:", err)
     error.value = err instanceof Error ? err.message : "Неизвестная ошибка"
@@ -45,7 +78,7 @@ const breadcrumsItems = computed(() => {
   return [
     { name: "Главная", path: "/" },
     { name: "Смотреть все", path: "/catalog" },
-    { name: item.value?.name || "Товар не найден" },
+    { name: item.value?.name || `Товар (alias: ${route.query.alias})` },
   ]
 })
 
@@ -91,7 +124,7 @@ const setItems = computed(() => {
     const topId = setStore.topId || complexItemsIds.value[0] || 31
     const topItem = catalogStore.getItemById(topId)
     if (topItem) {
-      const availableColors = Object.keys(topItem.colors)
+      const availableColors = Object.keys(topItem.colors || {})
       const colorCode = availableColors.includes(currentColor) ? currentColor : availableColors[0] || ""
       items.push({
         id: topItem.id,
@@ -104,7 +137,7 @@ const setItems = computed(() => {
     const bottomId = setStore.bottomId || complexItemsIds.value[1] || 32
     const bottomItem = catalogStore.getItemById(bottomId)
     if (bottomItem) {
-      const availableColors = Object.keys(bottomItem.colors)
+      const availableColors = Object.keys(bottomItem.colors || {})
       const colorCode = availableColors.includes(currentColor) ? currentColor : availableColors[0] || ""
       items.push({
         id: bottomItem.id,
@@ -117,7 +150,7 @@ const setItems = computed(() => {
     const accessoryId = setStore.accessoryId || complexItemsIds.value[2] || 33
     const accessoryItem = catalogStore.getItemById(accessoryId)
     if (accessoryItem) {
-      const availableColors = Object.keys(accessoryItem.colors)
+      const availableColors = Object.keys(accessoryItem.colors || {})
       const colorCode = availableColors.includes(currentColor) ? currentColor : availableColors[0] || ""
       items.push({
         id: accessoryItem.id,
@@ -136,25 +169,27 @@ const setMissingParams = computed<"top" | "bottom" | "accessory" | "all" | null>
   if (!setStore.bottom || setStore.bottom.trim() === "") missing.push("bottom")
   if (!setStore.accessory || setStore.accessory.trim() === "") missing.push("accessory")
   if (missing.length === 3) return "all"
-  return missing[0] as "top" | "bottom" | "accessory"
+  return missing.length > 0 ? (missing[0] as "top" | "bottom" | "accessory") : null
 })
 
-const currentColorCode = computed(() => itemStore.color?.code || (item.value ? Object.keys(item.value.colors)[0] : ""))
+const currentColorCode = computed(
+  () => itemStore.color?.code || (item.value?.colors ? Object.keys(item.value.colors)[0] : ""),
+)
 const currentColorName = computed(() => itemStore.color?.name || "")
-const currentSize = computed(() => itemStore.size || item.value?.sizes[0] || "")
+const currentSize = computed(() => itemStore.size || item.value?.sizes?.[0] || "")
 const currentColorImages = computed(() => {
   if (!item.value || !currentColorCode.value) return []
-  const colorData = item.value.colors[currentColorCode.value]
-  if (!colorData) return []
+  const colorData = item.value.colors?.[currentColorCode.value]
+  if (!colorData) return Object.values(item.value.images || {})
   return colorData.images.map((id) => item.value.images[id]).filter(Boolean) || []
 })
 const currentVectorData = computed(() => {
   if (!item.value || !currentColorCode.value || !currentSize.value) return null
   const vectorKey = `${currentColorCode.value}_${currentSize.value}`
-  return item.value.vector[vectorKey] || null
+  return item.value.vector?.[vectorKey] || null
 })
-const currentPrice = computed(() => currentVectorData.value?.price || 0)
-const currentOldPrice = computed(() => currentVectorData.value?.oldPrice || 0)
+const currentPrice = computed(() => currentVectorData.value?.price || parseInt(item.value?.price || "0"))
+const currentOldPrice = computed(() => currentVectorData.value?.oldPrice || parseInt(item.value?.oldPrice || "0"))
 const canAddToCart = computed(() => !!(itemStore.color && itemStore.size))
 
 const missingParams = computed<"color" | "size" | "both" | null>(() => {
@@ -241,13 +276,13 @@ const priceFormatter = (value: number): string => {
 watch(
   item,
   (newItem) => {
-    if (newItem && !itemStore.color) {
+    if (newItem && !itemStore.color && newItem.colors) {
       const firstColorCode = Object.keys(newItem.colors)[0]
       if (firstColorCode) {
         const firstColor = newItem.colors[firstColorCode]
         itemStore.color = { code: firstColorCode, name: firstColor.name, value: firstColor.value }
       }
-      if (newItem.sizes[0]) {
+      if (newItem.sizes?.[0]) {
         itemStore.size = newItem.sizes[0]
       }
     }
@@ -481,7 +516,7 @@ watch(
             <ColorButton
               v-model="itemStore.color"
               :colors="
-                Object.entries(item.colors).map(([code, colorData]) => ({
+                Object.entries(item.colors || {}).map(([code, colorData]) => ({
                   code,
                   name: colorData.name,
                   value: colorData.value,
@@ -495,7 +530,7 @@ watch(
           <div class="flex justify-center items-center gap-3 font-light sm:gap-4 sm:font-normal">
             <SingleSelectButton
               v-model="itemStore.size"
-              :content="item.sizes"
+              :content="item.sizes || []"
             />
           </div>
           <span class="text-xs">Размер</span>

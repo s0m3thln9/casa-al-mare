@@ -43,7 +43,7 @@ watch(
       catalogStore.pendingFilters.types = []
     }
 
-    // Обработка keystrings
+    // Обработка keystrings (остается как было)
     let keystringsFromQuery: string[] = []
     if (typeof q.keystrings === "string" && q.keystrings.trim() !== "") {
       const parts = q.keystrings
@@ -54,7 +54,33 @@ watch(
     }
     catalogStore.pendingFilters.keystrings = keystringsFromQuery
 
-    // Новое: обработка query для поиска
+    // Новое: обработка path (для parentsAliases)
+    let parentsAliasesFromQuery: string[] = []
+    if (typeof q.path === "string" && q.path.trim() !== "") {
+      parentsAliasesFromQuery = q.path
+        .replace(/^\/+|\/+$/g, "")
+        .split("/")
+        .filter((p) => p.trim() !== "")
+    }
+    catalogStore.pendingFilters.parentsAliases = parentsAliasesFromQuery
+
+    // Новое: обработка color
+    if (typeof q.color === "string" && q.color.trim() !== "") {
+      const colorCode = q.color.trim()
+      const colorName = catalogStore.items.find((item) => item.colorVal === colorCode)?.colorName || ""
+      catalogStore.pendingFilters.colors = [{ code: colorCode, name: colorName, value: colorCode }]
+    } else {
+      catalogStore.pendingFilters.colors = []
+    }
+
+    // Новое: обработка material
+    if (typeof q.material === "string" && q.material.trim() !== "") {
+      catalogStore.pendingFilters.materials = [q.material.trim()]
+    } else {
+      catalogStore.pendingFilters.materials = []
+    }
+
+    // Обработка query для поиска (остается как было)
     if (typeof q.query === "string") {
       catalogStore.pendingFilters.searchQuery = q.query.trim()
     } else {
