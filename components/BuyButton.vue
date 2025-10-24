@@ -3,10 +3,10 @@ const props = defineProps<{
   isParametersSelected?: boolean
   inStock?: boolean
   availableQuantity?: boolean
-  items?: Array<{ id: number; vector: string }>
+  items?: Array<{ id: number; size: string }>
   id?: number
-  vector?: string
-  missingParams?: "color" | "size" | "both" | null
+  size?: string
+  missingParams?: "size" | "top" | "bottom" | "accessory" | "all" | null
 }>()
 
 const isLoading = ref(false)
@@ -59,12 +59,16 @@ const currentState = computed(() => {
       disabled = false
     }
   } else {
-    if (props.missingParams === "both") {
-      content = "Выберите цвет и размер"
-    } else if (props.missingParams === "color") {
-      content = "Выберите цвет"
-    } else if (props.missingParams === "size") {
+    if (props.missingParams === "size") {
       content = "Выберите размер"
+    } else if (props.missingParams === "all") {
+      content = "Выберите все параметры"
+    } else if (props.missingParams === "top") {
+      content = "Выберите верх"
+    } else if (props.missingParams === "bottom") {
+      content = "Выберите низ"
+    } else if (props.missingParams === "accessory") {
+      content = "Выберите аксессуар"
     } else {
       content = "Выберите все параметры"
     }
@@ -76,7 +80,7 @@ const currentState = computed(() => {
 })
 
 watch(
-  [() => props.vector, () => props.items],
+  [() => props.size, () => props.items],
   () => {
     showSuccess.value = false
     isInCart.value = false
@@ -116,7 +120,7 @@ const handleClick = async () => {
               method: "POST",
               body: {
                 id: item.id,
-                vector: item.vector,
+                size: item.size,
                 count: 1,
                 token: token,
               },
@@ -128,10 +132,8 @@ const handleClick = async () => {
           const r = results[i]
           if (r.status === "fulfilled" && r.value?.success) {
             const item = props.items![i]
-            const newItem: CartItem = { id: item.id, vector: item.vector, count: 1 }
-            const existing = orderStore.cartItems.find(
-              (e: CartItem) => e.id === newItem.id && e.vector === newItem.vector,
-            )
+            const newItem: CartItem = { id: item.id, size: item.size, count: 1 }
+            const existing = orderStore.cartItems.find((e: CartItem) => e.id === newItem.id && e.size === newItem.size)
             if (existing) {
               existing.count += 1
             } else {
@@ -157,16 +159,14 @@ const handleClick = async () => {
           method: "POST",
           body: {
             id: props.id,
-            vector: props.vector,
+            size: props.size,
             count: 1,
             token: token,
           },
         })
         if (response.success) {
-          const newItem: CartItem = { id: props.id!, vector: props.vector!, count: 1 }
-          const existing = orderStore.cartItems.find(
-            (e: CartItem) => e.id === newItem.id && e.vector === newItem.vector,
-          )
+          const newItem: CartItem = { id: props.id!, size: props.size!, count: 1 }
+          const existing = orderStore.cartItems.find((e: CartItem) => e.id === newItem.id && e.size === newItem.size)
           if (existing) {
             existing.count += 1
           } else {

@@ -28,15 +28,11 @@ const loadItem = async () => {
       console.log("Sizes:", foundItem?.sizes)
       console.log("Images:", foundItem?.images)
       console.log("Colors:", foundItem?.colors)
-      if (foundItem && foundItem.colors && Object.keys(foundItem.colors).length > 0) {
-        const colorCode = Object.keys(foundItem.colors)[0]
-        const colorData = foundItem.colors[colorCode]
-        if (colorData) {
-          itemStore.color = {
-            code: colorCode,
-            name: colorData.name,
-            value: colorData.value,
-          }
+      if (foundItem && foundItem.colorVal && foundItem.colorName) {
+        itemStore.color = {
+          code: foundItem.colorVal,
+          name: foundItem.colorName,
+          value: foundItem.colorVal,
         }
       }
       if (!foundItem) {
@@ -210,22 +206,12 @@ const setMissingParams = computed<"top" | "bottom" | "accessory" | "all" | null>
   return missing.length > 0 ? (missing[0] as "top" | "bottom" | "accessory") : null
 })
 
-const currentColorCode = computed(
-  () => itemStore.color?.code || (item.value?.colors ? Object.keys(item.value.colors)[0] : ""),
-)
-const currentColorName = computed(() => itemStore.color?.name || "")
+const currentColorCode = computed(() => item.value?.colorVal || "")
+const currentColorName = computed(() => item.value?.colorName || "")
 const currentSize = computed(() => itemStore.size || item.value?.sizes?.[0] || "")
 const currentColorImages = computed(() => {
   if (!item.value?.images) return []
-  const hasColors = !!item.value.colors && Object.keys(item.value.colors).length > 0
-  if (!hasColors || !currentColorCode.value) {
-    return Object.values(item.value.images || {})
-  }
-  const colorData = item.value.colors?.[currentColorCode.value]
-  if (!colorData?.images) {
-    return Object.values(item.value.images || {})
-  }
-  return colorData.images.map((id) => item.value.images[id]).filter(Boolean)
+  return Object.values(item.value.images || {})
 })
 const currentVectorData = computed(() => {
   if (!item.value || !currentColorCode.value || !currentSize.value) return null
@@ -234,14 +220,10 @@ const currentVectorData = computed(() => {
 })
 const currentPrice = computed(() => currentVectorData.value?.price || parseInt(item.value?.price || "0"))
 const currentOldPrice = computed(() => currentVectorData.value?.oldPrice || parseInt(item.value?.oldPrice || "0"))
-const canAddToCart = computed(() => !!(itemStore.color && itemStore.size))
+const canAddToCart = computed(() => !!itemStore.size)
 
-const missingParams = computed<"color" | "size" | "both" | null>(() => {
+const missingParams = computed<"size" | null>(() => {
   if (canAddToCart.value) return null
-  const hasColor = !!itemStore.color
-  const hasSize = !!itemStore.size
-  if (!hasColor && !hasSize) return "both"
-  if (!hasColor) return "color"
   return "size"
 })
 
@@ -322,12 +304,16 @@ const isWhite = (colorVal: string) => colorVal.toLowerCase() === "#ffffff"
 watch(
   item,
   (newItem) => {
-    if (newItem && !itemStore.color && newItem.colors) {
-      const firstColorCode = Object.keys(newItem.colors)[0]
-      if (firstColorCode) {
-        const firstColor = newItem.colors[firstColorCode]
-        itemStore.color = { code: firstColorCode, name: firstColor.name, value: firstColor.value }
+    if (newItem) {
+      // Устанавливаем цвет товара (каждый товар имеет один цвет)
+      if (newItem.colorVal && newItem.colorName) {
+        itemStore.color = {
+          code: newItem.colorVal,
+          name: newItem.colorName,
+          value: newItem.colorVal,
+        }
       }
+      // Устанавливаем первый доступный размер
       if (newItem.sizes?.[0]) {
         itemStore.size = newItem.sizes[0]
       }
@@ -577,7 +563,6 @@ watch(
                 <span class="text-xs font-[Manrope] text-center hidden sm:block">{{ colorItem.colorName }}</span>
               </NuxtLink>
             </div>
-            <span class="text-xs">{{ currentColorName || "" }}</span>
           </div>
         </div>
         <div class="flex flex-col justify-center items-center gap-4 mt-12 sm:mt-10">
@@ -602,7 +587,7 @@ watch(
         <div class="flex flex-col justify-center items-stretch gap-4 mt-6">
           <BuyButton
             :id="item.id"
-            :vector="`${currentColorCode}_${currentSize}`"
+            :size="currentSize"
             in-stock
             available-quantity
             :is-parameters-selected="canAddToCart"
