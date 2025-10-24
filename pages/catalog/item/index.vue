@@ -317,6 +317,8 @@ const priceFormatter = (value: number): string => {
   return `${formattedValue} ₽`
 }
 
+const isWhite = (colorVal: string) => colorVal.toLowerCase() === "#ffffff"
+
 watch(
   item,
   (newItem) => {
@@ -564,8 +566,11 @@ watch(
               >
                 <div
                   :class="[
-                    'w-6 h-6 rounded-lg border-2',
-                    colorItem.colorVal === currentColorCode ? 'border-[#211D1D]' : 'border-transparent',
+                    'w-6 h-6 rounded-lg',
+                    colorItem.colorVal === currentColorCode && 'border-2 border-[#211D1D]',
+                    colorItem.colorVal !== currentColorCode &&
+                      isWhite(colorItem.colorVal) &&
+                      'border-1 border-[#211D1D] hover:border-1 hover:border-[#211D1D]',
                   ]"
                   :style="{ backgroundColor: colorItem.colorVal }"
                 />
