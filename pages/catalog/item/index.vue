@@ -11,7 +11,7 @@ const isLoading = ref(true)
 const error = ref<string | null>(null)
 const item = ref<Item | null>(null)
 
-onMounted(async () => {
+const loadItem = async () => {
   try {
     isLoading.value = true
     error.value = null
@@ -24,6 +24,10 @@ onMounted(async () => {
     const aliasFromQuery = route.query.alias as string
     if (typeof aliasFromQuery === "string" && aliasFromQuery.trim() !== "") {
       foundItem = catalogStore.items.find((i) => i.alias === aliasFromQuery) || null
+      console.log("Загруженный item по alias:", foundItem)
+      console.log("Sizes:", foundItem?.sizes)
+      console.log("Images:", foundItem?.images)
+      console.log("Colors:", foundItem?.colors)
       if (foundItem && foundItem.colors && Object.keys(foundItem.colors).length > 0) {
         const colorCode = Object.keys(foundItem.colors)[0]
         const colorData = foundItem.colors[colorCode]
@@ -41,6 +45,7 @@ onMounted(async () => {
           catalogStore.items.map((i) => i.alias),
         )
         error.value = "Товар не найден по указанному alias. Проверьте ссылку."
+        item.value = null
         return
       }
     } else {
@@ -54,10 +59,12 @@ onMounted(async () => {
             catalogStore.items.map((i) => i.id),
           )
           error.value = "Товар не найден по ID."
+          item.value = null
           return
         }
       } else {
         error.value = "Неверный идентификатор товара."
+        item.value = null
         return
       }
     }
@@ -66,9 +73,40 @@ onMounted(async () => {
   } catch (err) {
     console.error("Ошибка загрузки страницы товара:", err)
     error.value = err instanceof Error ? err.message : "Неизвестная ошибка"
+    item.value = null
   } finally {
     isLoading.value = false
   }
+}
+
+onMounted(async () => {
+  await loadItem()
+})
+
+watch(
+  () => route.query.alias,
+  async () => {
+    itemStore.color = null
+    itemStore.size = null
+    setStore.top = ""
+    setStore.bottom = ""
+    setStore.accessory = ""
+    await loadItem()
+  },
+)
+
+const availableColors = computed(() => {
+  if (!item.value || !item.value.parent) return []
+  const parentId = item.value.parent
+  const allColorItems = catalogStore.items.filter((otherItem) => otherItem.parent === parentId)
+  const uniqueColors = allColorItems
+    .map((colorItem) => ({
+      alias: colorItem.alias,
+      colorVal: colorItem.colorVal,
+      colorName: colorItem.colorName,
+    }))
+    .filter((c1, idx, arr) => arr.findIndex((c2) => c2.colorVal === c1.colorVal) === idx)
+  return uniqueColors.sort((a, b) => a.colorName.localeCompare(b.colorName))
 })
 
 const breadcrumsItems = computed(() => {
@@ -178,10 +216,16 @@ const currentColorCode = computed(
 const currentColorName = computed(() => itemStore.color?.name || "")
 const currentSize = computed(() => itemStore.size || item.value?.sizes?.[0] || "")
 const currentColorImages = computed(() => {
-  if (!item.value || !currentColorCode.value) return []
+  if (!item.value?.images) return []
+  const hasColors = !!item.value.colors && Object.keys(item.value.colors).length > 0
+  if (!hasColors || !currentColorCode.value) {
+    return Object.values(item.value.images || {})
+  }
   const colorData = item.value.colors?.[currentColorCode.value]
-  if (!colorData) return Object.values(item.value.images || {})
-  return colorData.images.map((id) => item.value.images[id]).filter(Boolean) || []
+  if (!colorData?.images) {
+    return Object.values(item.value.images || {})
+  }
+  return colorData.images.map((id) => item.value.images[id]).filter(Boolean)
 })
 const currentVectorData = computed(() => {
   if (!item.value || !currentColorCode.value || !currentSize.value) return null
@@ -328,14 +372,12 @@ watch(
           <div class="flex justify-center items-center gap-2 mt-4 sm:mt-6">
             <span
               class="font-[Inter] font-light text-[17px] text-[#8C8785] sm:font-[Manrope] sm:font-normal sm:text-base sm:text-[#211D1D]"
+              >Цена</span
             >
-              Цена
-            </span>
             <span
               class="font-[Inter] line-through font-light text-[17px] text-[#8C8785] sm:font-[Manrope] sm:font-normal sm:text-base sm:text-[#211D1D]"
+              >Старая цена</span
             >
-              Старая цена
-            </span>
           </div>
           <div class="flex justify-center items-center mt-1 sm:mt-2">
             <span class="font-light text-xs">Скидка 0%</span>
@@ -513,25 +555,38 @@ watch(
         </div>
         <div class="flex flex-col justify-center items-center gap-6 mt-14">
           <div class="flex justify-center items-center gap-4">
-            <ColorButton
-              v-model="itemStore.color"
-              :colors="
-                Object.entries(item.colors || {}).map(([code, colorData]) => ({
-                  code,
-                  name: colorData.name,
-                  value: colorData.value,
-                }))
-              "
-            />
+            <div class="flex gap-4">
+              <NuxtLink
+                v-for="colorItem in availableColors"
+                :key="colorItem.alias"
+                :to="`/catalog/item/?alias=${colorItem.alias}`"
+                class="flex flex-col justify-center gap-2 items-center cursor-pointer hover:opacity-80 transition-opacity"
+              >
+                <div
+                  :class="[
+                    'w-6 h-6 rounded-lg border-2',
+                    colorItem.colorVal === currentColorCode ? 'border-[#211D1D]' : 'border-transparent',
+                  ]"
+                  :style="{ backgroundColor: colorItem.colorVal }"
+                />
+                <span class="text-xs font-[Manrope] text-center hidden sm:block">{{ colorItem.colorName }}</span>
+              </NuxtLink>
+            </div>
+            <span class="text-xs">{{ currentColorName || "" }}</span>
           </div>
-          <span class="text-xs">{{ currentColorName || "" }}</span>
         </div>
         <div class="flex flex-col justify-center items-center gap-4 mt-12 sm:mt-10">
           <div class="flex justify-center items-center gap-3 font-light sm:gap-4 sm:font-normal">
             <SingleSelectButton
+              v-if="(item.sizes || []).length > 0"
               v-model="itemStore.size"
               :content="item.sizes || []"
             />
+            <span
+              v-else
+              class="text-xs text-gray-500"
+              >Размеры не указаны</span
+            >
           </div>
           <span class="text-xs">Размер</span>
         </div>
@@ -604,7 +659,7 @@ watch(
       class="px-2 flex flex-col justify-center items-start gap-4 mt-18 sm:items-center sm:gap-12 sm:mt-24"
     >
       <h2 class="font-[Manrope] text-[15px] font-light sm:font-[Inter] sm:text-4xl sm:font-normal">
-        Вам может понравится
+        Вам может понравиться
       </h2>
       <div
         v-if="catalogStore.items.length > 0"
