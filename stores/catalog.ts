@@ -1,4 +1,9 @@
-import type { Item } from "~/stores/catalog"
+export type KeyItem = {
+  type: string
+  name: string
+  alias: string
+  value?: string
+}
 
 export type Item = {
   id: number
@@ -26,7 +31,7 @@ export type Item = {
     header: string
     content: string
   }[]
-  keys: string[]
+  keys: KeyItem[]
   parents: {
     id: number
     name: string
@@ -36,7 +41,6 @@ export type Item = {
   colorVal: string
   colorName: string
   colors?: {
-    // Добавлено для совместимости с page/item (если multiple colors)
     [code: string]: {
       name: string
       value: string
@@ -46,18 +50,17 @@ export type Item = {
 }
 
 type SortAndFilter = {
-  types: string[]
+  parentsAliases: string[]
   colors: { code: string; name: string; value: string }[]
-  sizes: string[]
   maxPrice: number | null
   sortType: string | null
   withDiscount: string | null
   inStock: string | null
-  materials: string[]
+  materials: string
   useTypes: string[]
   keystrings: string[]
-  parentsAliases: string[] // Новое: для фильтра по path (aliases из parents)
   searchQuery: string
+  extra: Record<string, string[]>
 }
 
 export const useCatalogStore = defineStore("catalog", () => {
@@ -67,21 +70,27 @@ export const useCatalogStore = defineStore("catalog", () => {
   const items = ref<Item[]>([])
   const isLoading = ref(true)
   const pendingFilters = ref<SortAndFilter>({
-    types: [],
+    parentsAliases: [],
     colors: [],
-    sizes: [],
     maxPrice: null,
     sortType: null,
     withDiscount: null,
     inStock: null,
-    materials: [],
+    materials: "",
     useTypes: [],
     keystrings: [],
-    parentsAliases: [], // Новое
     searchQuery: "",
+    extra: {},
   })
 
-  const activeFilters = ref<SortAndFilter>({ ...pendingFilters.value })
+  const currentFilters = ref<SortAndFilter>({ ...pendingFilters.value })
+
+  const maxParentsLength = computed(() => Math.max(...items.value.map((i) => i.parents.length), 0))
+
+  const padParentsAliases = (arr: string[]): string[] => {
+    const len = maxParentsLength.value
+    return arr.length > len ? arr.slice(0, len) : [...arr, ...Array(len - arr.length).fill("")]
+  }
 
   const loadItems = async (): Promise<void> => {
     try {
@@ -103,55 +112,164 @@ export const useCatalogStore = defineStore("catalog", () => {
   const getLinkFromFilters = (filters: Partial<SortAndFilter>): string => {
     const params = new URLSearchParams()
     if (filters.parentsAliases && filters.parentsAliases.length > 0) {
-      params.set("path", filters.parentsAliases.join("/"))
+      params.set("path", filters.parentsAliases.filter(Boolean).join("/"))
     }
     if (filters.colors && filters.colors.length > 0) {
-      params.set("color", filters.colors[0].code) // Берем первый цвет
+      params.set("color", filters.colors[0].code)
     }
-    if (filters.materials && filters.materials.length > 0) {
-      params.set("material", filters.materials[0]) // Берем первый материал
+    if (filters.materials && filters.materials.trim() !== "") {
+      params.set("material", filters.materials)
     }
-    if (filters.types && filters.types.length > 0) {
-      params.set("types", filters.types.join(","))
-    }
-    if (filters.keystrings && filters.keystrings.length > 0) {
-      params.set("keystrings", "/" + filters.keystrings.join("/") + "/")
-    }
-    if (filters.searchQuery) {
+    if (filters.searchQuery && filters.searchQuery.trim() !== "") {
       params.set("query", filters.searchQuery)
+    }
+    if (filters.maxPrice !== null && filters.maxPrice !== undefined) {
+      params.set("maxPrice", filters.maxPrice.toString())
+    }
+    if (filters.sortType) {
+      params.set("sortType", filters.sortType)
+    }
+    if (filters.inStock) {
+      params.set("inStock", filters.inStock)
+    }
+    if (filters.withDiscount) {
+      params.set("withDiscount", filters.withDiscount)
     }
     const queryString = params.toString()
     return queryString ? `/catalog?${queryString}` : "/catalog"
   }
 
-  const generateKeystringPath = (keys?: string[]): string => {
-    const currentKeys = keys || activeFilters.value.keystrings
-    if (currentKeys.length === 0) return "/catalog"
-    const path = currentKeys.join("/")
-    return `/catalog?keystrings=/${path}/`
+  const syncPending = (): void => {
+    pendingFilters.value = JSON.parse(JSON.stringify(currentFilters.value))
+    pendingFilters.value.parentsAliases = padParentsAliases(pendingFilters.value.parentsAliases)
   }
 
-  const filters = computed(() => ({
-    types: [...new Set(items.value.map((item) => item.type).filter((t) => t))],
-    colors: (): { code: string; name: string; value: string }[] => {
-      const colorsSet = new Set()
-      const colorsArray: { code: string; name: string; value: string }[] = []
-      items.value.forEach((item) => {
-        if (item.colorVal && item.colorName) {
-          const colorKey = `${item.colorVal}-${item.colorName}`
+  const getFilteredItemsForLevel = (level: number) => {
+    let filtered = [...items.value]
+    const prevAliases = pendingFilters.value.parentsAliases.slice(0, level).filter(Boolean)
+    if (prevAliases.length > 0) {
+      filtered = filtered.filter((item) =>
+        prevAliases.every((alias, idx) => {
+          if (idx >= item.parents.length) return false
+          return item.parents[idx]?.alias === alias
+        }),
+      )
+    }
+    return filtered
+  }
+
+  const popupDynamicFilters = computed(() => {
+    const pathLevels: { name: string; alias: string }[][] = []
+    const maxLevels = maxParentsLength.value
+    for (let level = 0; level < maxLevels; level++) {
+      const levelItems = getFilteredItemsForLevel(level)
+      const uniqueParents = new Map(
+        levelItems
+          .map((item) => item.parents[level])
+          .filter(Boolean)
+          .map((p) => [p.alias, { name: p.name, alias: p.alias }]),
+      )
+      const levelOptions = Array.from(uniqueParents.values())
+      pathLevels.push(levelOptions)
+    }
+
+    const pathFilteredItems = getFilteredItemsForLevel(pendingFilters.value.parentsAliases.filter(Boolean).length)
+
+    const colors: { code: string; name: string; value: string }[] = []
+    const colorsSet = new Set()
+    pathFilteredItems.forEach((item) => {
+      item.keys
+        ?.filter((k) => k.type === "color")
+        .forEach((k) => {
+          const colorKey = `${k.alias}-${k.name}`
           if (!colorsSet.has(colorKey)) {
             colorsSet.add(colorKey)
-            colorsArray.push({
-              code: item.colorVal,
-              name: item.colorName,
-              value: item.colorVal,
+            colors.push({
+              code: k.alias,
+              name: k.name,
+              value: k.value || k.alias,
             })
           }
+        })
+    })
+
+    const materials: { name: string; alias: string }[] = []
+    const matSet = new Set()
+    pathFilteredItems.forEach((item) => {
+      item.keys
+        ?.filter((k) => k.type === "material")
+        .forEach((k) => {
+          if (!matSet.has(k.alias)) {
+            matSet.add(k.alias)
+            materials.push({ name: k.name, alias: k.alias })
+          }
+        })
+    })
+
+    const extraFilters: Record<string, { name: string; alias: string }[]> = {}
+    const extraSet = new Map()
+    pathFilteredItems.forEach((item) => {
+      item.keys
+        ?.filter((k) => k.type !== "material" && k.type !== "color")
+        .forEach((k) => {
+          if (!extraSet.has(k.type)) {
+            extraSet.set(k.type, new Set())
+          }
+          const typeSet = extraSet.get(k.type)
+          if (typeSet && !typeSet.has(k.alias)) {
+            typeSet.add(k.alias)
+            if (!extraFilters[k.type]) {
+              extraFilters[k.type] = []
+            }
+            extraFilters[k.type].push({ name: k.name, alias: k.alias })
+          }
+        })
+    })
+
+    return { pathLevels, colors, materials, extraFilters }
+  })
+
+  watch(
+    () => [...pendingFilters.value.parentsAliases], // Создаем копию массива для реактивности
+    (newVal, oldVal) => {
+      if (!oldVal) return
+
+      // Находим индекс первого изменения
+      let changedIndex = -1
+      for (let i = 0; i < Math.max(newVal.length, oldVal.length); i++) {
+        const newAlias = newVal[i] || ""
+        const oldAlias = oldVal[i] || ""
+        if (newAlias !== oldAlias) {
+          changedIndex = i
+          break
         }
-      })
-      return colorsArray
+      }
+
+      // Если нашли изменение, сбрасываем все нижестоящие подкатегории и связанные фильтры
+      if (changedIndex > -1) {
+        // Сбрасываем нижестоящие подкатегории
+        const resetParentsAliases = [...newVal]
+        for (let i = changedIndex + 1; i < resetParentsAliases.length; i++) {
+          resetParentsAliases[i] = ""
+        }
+        pendingFilters.value.parentsAliases = resetParentsAliases
+
+        // Сбрасываем фильтры, которые зависят от категории
+        pendingFilters.value.colors = []
+        pendingFilters.value.materials = ""
+        pendingFilters.value.extra = {}
+
+        // Опционально: можно также сбросить другие фильтры
+        // pendingFilters.value.maxPrice = null
+        // pendingFilters.value.sortType = null
+        // pendingFilters.value.withDiscount = null
+        // pendingFilters.value.inStock = null
+      }
     },
-    sizes: [...new Set(items.value.flatMap((item) => Object.keys(item.vector || {})))],
+    { deep: true },
+  )
+
+  const filters = computed(() => ({
     maxPrices: (): { label: string; value: number }[] => {
       const allPrices: number[] = items.value.map((item) => parseInt(item.price || "0")).filter((p) => p > 0)
       const uniquePrices = [...new Set(allPrices)].sort((a, b) => a - b)
@@ -169,23 +287,28 @@ export const useCatalogStore = defineStore("catalog", () => {
     },
     inStock: ["В наличии"],
     withDiscount: ["Со скидкой"],
-    sortTypes: ["По умолчанию", "По убыванию цены", "По возрастанию цены"],
-    materials: [...new Set(items.value.flatMap((item) => item.material).filter((m) => m.trim() !== ""))],
-    useTypes: [...new Set(items.value.flatMap((item) => item.useType).filter((u) => u.trim() !== ""))],
+    sortTypes: ["По убыванию цены", "По возрастанию цены"],
   }))
 
   const filteredItems = computed(() => {
+    if (items.value.length === 0) return []
     let filtered = [...items.value]
-    const f = activeFilters.value
-    if (f.types.length > 0) {
-      filtered = filtered.filter((item) => f.types.includes(item.type || ""))
+    const f = currentFilters.value
+    const filledAliases = f.parentsAliases.filter(Boolean)
+    if (filledAliases.length > 0) {
+      if (filledAliases.length > maxParentsLength.value) return []
+      filtered = filtered.filter((item) =>
+        filledAliases.every((alias, idx) => {
+          if (idx >= item.parents.length) return false
+          return item.parents[idx]?.alias === alias
+        }),
+      )
     }
     if (f.colors.length > 0) {
       const colorCodes = f.colors.map((c) => c.code)
-      filtered = filtered.filter((item) => colorCodes.includes(item.colorVal || ""))
-    }
-    if (f.sizes.length > 0) {
-      filtered = filtered.filter((item) => Object.keys(item.vector || {}).some((size) => f.sizes.includes(size)))
+      filtered = filtered.filter(
+        (item) => item.keys?.some((k) => k.type === "color" && colorCodes.includes(k.alias)) || false,
+      )
     }
     if (f.maxPrice !== null) {
       filtered = filtered.filter((item) => parseInt(item.price || "0") <= f.maxPrice!)
@@ -202,22 +325,27 @@ export const useCatalogStore = defineStore("catalog", () => {
         Object.values(item.vector || {}).some((variant: any) => (variant.quantity ?? 0) > 0),
       )
     }
-    if (f.materials.length > 0) {
-      filtered = filtered.filter((item) => f.materials.some((m) => item.material.includes(m)))
+    if (f.materials && f.materials.trim() !== "") {
+      filtered = filtered.filter(
+        (item) => item.keys?.some((k) => k.type === "material" && k.alias === f.materials) || false,
+      )
     }
     if (f.useTypes.length > 0) {
       filtered = filtered.filter((item) => f.useTypes.some((u) => item.useType.includes(u)))
     }
     if (f.keystrings.length > 0) {
-      filtered = filtered.filter((item) => f.keystrings.every((key) => item.keys?.includes(key) || false))
-    }
-    // Новое: фильтр по parentsAliases (из path)
-    if (f.parentsAliases.length > 0) {
       filtered = filtered.filter((item) =>
-        f.parentsAliases.every((alias) => item.parents.some((p) => p.alias === alias)),
+        f.keystrings.every((key) => item.keys?.some((k) => k.alias === key) || false),
       )
     }
-    if (f.sortType && f.sortType !== "По умолчанию") {
+    if (f.extra && Object.keys(f.extra).length > 0) {
+      filtered = filtered.filter((item) => {
+        return Object.entries(f.extra).every(([type, aliases]) => {
+          return aliases.length === 0 || item.keys?.some((k) => k.type === type && aliases.includes(k.alias)) || false
+        })
+      })
+    }
+    if (f.sortType) {
       filtered.sort((a, b) => {
         const priceA = parseInt(a.price || "0")
         const priceB = parseInt(b.price || "0")
@@ -232,26 +360,29 @@ export const useCatalogStore = defineStore("catalog", () => {
   })
 
   const reset = (): void => {
-    activeFilters.value = {
-      types: [],
+    pendingFilters.value = {
+      parentsAliases: padParentsAliases([]),
       colors: [],
-      sizes: [],
       maxPrice: null,
       sortType: null,
       withDiscount: null,
       inStock: null,
-      materials: [],
+      materials: "",
       useTypes: [],
       keystrings: [],
-      parentsAliases: [],
       searchQuery: "",
+      extra: {},
     }
-    pendingFilters.value = { ...activeFilters.value }
+    currentFilters.value = { ...pendingFilters.value }
+    navigateTo("/catalog")
     currentVisibleCardCount.value = 12
   }
 
   const applyFilters = (): void => {
-    activeFilters.value = JSON.parse(JSON.stringify(pendingFilters.value))
+    currentFilters.value = JSON.parse(JSON.stringify(pendingFilters.value))
+    currentFilters.value.parentsAliases = padParentsAliases(currentFilters.value.parentsAliases)
+    const url = getLinkFromFilters(pendingFilters.value)
+    navigateTo(url)
     currentVisibleCardCount.value = 12
   }
 
@@ -265,20 +396,29 @@ export const useCatalogStore = defineStore("catalog", () => {
     }
   })
 
+  watch(items, () => {
+    pendingFilters.value.parentsAliases = padParentsAliases(pendingFilters.value.parentsAliases)
+    currentFilters.value.parentsAliases = padParentsAliases(currentFilters.value.parentsAliases)
+  })
+
   return {
     desktopStrokeCardCount,
     mobileStrokeCardCount,
     currentVisibleCardCount,
     pendingFilters,
+    currentFilters,
     items,
     isLoading,
     filters,
+    popupDynamicFilters,
     filteredItems,
     getItemById,
     reset,
     applyFilters,
     loadItems,
-    generateKeystringPath,
-    getLinkFromFilters, // Новая функция
+    syncPending,
+    getLinkFromFilters,
+    maxParentsLength,
+    padParentsAliases,
   }
 })

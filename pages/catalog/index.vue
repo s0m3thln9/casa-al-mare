@@ -29,32 +29,6 @@ const route = useRoute()
 watch(
   () => route.query,
   (q) => {
-    let typesFromQuery: string[] = []
-
-    if (Array.isArray(q.types)) {
-      typesFromQuery = q.types as string[]
-    } else if (typeof q.types === "string") {
-      typesFromQuery = [q.types]
-    }
-    const validTypes = typesFromQuery.filter((t) => catalogStore.filters.types.includes(t))
-    if (validTypes.length) {
-      catalogStore.pendingFilters.types = validTypes
-    } else {
-      catalogStore.pendingFilters.types = []
-    }
-
-    // Обработка keystrings (остается как было)
-    let keystringsFromQuery: string[] = []
-    if (typeof q.keystrings === "string" && q.keystrings.trim() !== "") {
-      const parts = q.keystrings
-        .replace(/^\/+|\/+$/g, "")
-        .split("/")
-        .filter((p) => p.trim() !== "")
-      keystringsFromQuery = parts
-    }
-    catalogStore.pendingFilters.keystrings = keystringsFromQuery
-
-    // Новое: обработка path (для parentsAliases)
     let parentsAliasesFromQuery: string[] = []
     if (typeof q.path === "string" && q.path.trim() !== "") {
       parentsAliasesFromQuery = q.path
@@ -62,32 +36,60 @@ watch(
         .split("/")
         .filter((p) => p.trim() !== "")
     }
-    catalogStore.pendingFilters.parentsAliases = parentsAliasesFromQuery
+    catalogStore.currentFilters.parentsAliases = catalogStore.padParentsAliases(parentsAliasesFromQuery)
 
-    // Новое: обработка color
     if (typeof q.color === "string" && q.color.trim() !== "") {
       const colorCode = q.color.trim()
-      const colorName = catalogStore.items.find((item) => item.colorVal === colorCode)?.colorName || ""
-      catalogStore.pendingFilters.colors = [{ code: colorCode, name: colorName, value: colorCode }]
+      const colorKey = catalogStore.items.find((item) =>
+        item.keys?.some((k) => k.type === "color" && k.alias === colorCode),
+      )
+      const colorName =
+        colorKey?.keys?.find((k) => k.type === "color" && k.alias === colorCode)?.name ||
+        catalogStore.items.find((item) => item.colorVal === colorCode)?.colorName ||
+        ""
+      const colorValue = colorKey?.keys?.find((k) => k.type === "color" && k.alias === colorCode)?.value || colorCode
+      catalogStore.currentFilters.colors = [{ code: colorCode, name: colorName, value: colorValue }]
     } else {
-      catalogStore.pendingFilters.colors = []
+      catalogStore.currentFilters.colors = []
     }
 
-    // Новое: обработка material
     if (typeof q.material === "string" && q.material.trim() !== "") {
-      catalogStore.pendingFilters.materials = [q.material.trim()]
+      catalogStore.currentFilters.materials = q.material.trim()
     } else {
-      catalogStore.pendingFilters.materials = []
+      catalogStore.currentFilters.materials = ""
     }
 
-    // Обработка query для поиска (остается как было)
     if (typeof q.query === "string") {
-      catalogStore.pendingFilters.searchQuery = q.query.trim()
+      catalogStore.currentFilters.searchQuery = q.query.trim()
     } else {
-      catalogStore.pendingFilters.searchQuery = ""
+      catalogStore.currentFilters.searchQuery = ""
     }
 
-    catalogStore.applyFilters()
+    if (typeof q.maxPrice === "string" && q.maxPrice.trim() !== "") {
+      catalogStore.currentFilters.maxPrice = parseInt(q.maxPrice.trim()) || null
+    } else {
+      catalogStore.currentFilters.maxPrice = null
+    }
+
+    if (typeof q.sortType === "string" && q.sortType.trim() !== "") {
+      catalogStore.currentFilters.sortType = q.sortType.trim()
+    } else {
+      catalogStore.currentFilters.sortType = null
+    }
+
+    if (typeof q.inStock === "string" && q.inStock.trim() !== "") {
+      catalogStore.currentFilters.inStock = q.inStock.trim()
+    } else {
+      catalogStore.currentFilters.inStock = null
+    }
+
+    if (typeof q.withDiscount === "string" && q.withDiscount.trim() !== "") {
+      catalogStore.currentFilters.withDiscount = q.withDiscount.trim()
+    } else {
+      catalogStore.currentFilters.withDiscount = null
+    }
+
+    catalogStore.currentFilters.extra = {}
   },
   { immediate: true },
 )
@@ -130,7 +132,12 @@ const load = () => {
       <div class="flex gap-4">
         <button
           class="cursor-pointer"
-          @click="popupStore.open('filter')"
+          @click="
+            () => {
+              catalogStore.syncPending()
+              popupStore.open('filter')
+            }
+          "
         >
           <NuxtImg
             src="/sliders.svg"
@@ -158,7 +165,12 @@ const load = () => {
         <span class="text-[11px] font-[Manrope]">(12)</span>
         <button
           class="cursor-pointer"
-          @click="popupStore.open('filter')"
+          @click="
+            () => {
+              catalogStore.syncPending()
+              popupStore.open('filter')
+            }
+          "
         >
           <NuxtImg
             src="/sliders.svg"
@@ -246,80 +258,117 @@ const load = () => {
       popup-id="filter"
     >
       <div class="mt-6 flex flex-col gap-10 sm:mt-10">
-        <div class="flex flex-col items-center gap-4 sm:gap-6">
-          <h3 class="font-[Inter] text-[17px] font-light sm:font-[Manrope] sm:font-light sm:text-base sm:uppercase">
-            Категория
-          </h3>
-          <div class="flex flex-wrap gap-4 items-center justify-center">
-            <MultiSelectButton
-              v-model="catalogStore.pendingFilters.types"
-              :content="catalogStore.filters.types"
-            />
-          </div>
-        </div>
-        <div class="grid grid-cols-4 gap-4 sm:gap-y-8">
-          <ColorButton
-            v-model="catalogStore.pendingFilters.colors"
-            :colors="catalogStore.filters.colors()"
-            text
-          />
-        </div>
-        <div class="flex flex-col items-center gap-4 sm:gap-6">
-          <h3 class="font-[Inter] text-[17px] font-light sm:font-[Manrope] sm:font-light sm:text-base sm:uppercase">
-            Размер
-          </h3>
-          <div class="flex gap-4 items-center justify-center">
-            <MultiSelectButton
-              v-model="catalogStore.pendingFilters.sizes"
-              :content="catalogStore.filters.sizes"
-            />
-          </div>
+        <div class="flex flex-col gap-4 sm:gap-6">
+          <template
+            v-for="(levelOptions, levelIndex) in catalogStore.popupDynamicFilters.pathLevels"
+            :key="`level-${levelIndex}`"
+          >
+            <div
+              v-if="
+                levelOptions.length > 0 &&
+                catalogStore.pendingFilters.parentsAliases.slice(0, levelIndex).filter(Boolean).length === levelIndex
+              "
+              class="flex flex-col items-center gap-4 sm:gap-6"
+            >
+              <h3 class="font-[Inter] text-[17px] font-light sm:font-[Manrope] sm:font-light sm:text-base sm:uppercase">
+                {{ levelIndex === 0 ? "Категория" : `Подкатегория ${levelIndex}` }}
+              </h3>
+              <div class="flex flex-wrap gap-4 items-center justify-center">
+                <SingleSelectButton
+                  v-model="catalogStore.pendingFilters.parentsAliases[levelIndex]"
+                  :content="levelOptions.map((opt) => ({ value: opt.alias, label: opt.name }))"
+                />
+              </div>
+            </div>
+          </template>
         </div>
         <div class="flex flex-col items-center gap-4 sm:gap-6">
           <h3 class="font-[Inter] text-[17px] font-light sm:font-[Manrope] sm:font-light sm:text-base sm:uppercase">
-            Цена
+            Цвет
           </h3>
-          <div class="flex flex-wrap gap-4 items-center justify-center">
-            <SingleSelectButton
-              v-model="catalogStore.pendingFilters.maxPrice"
-              :content="catalogStore.filters.maxPrices()"
+          <div
+            v-if="catalogStore.popupDynamicFilters.colors.length > 0"
+            class="grid grid-cols-4 gap-4 items-center justify-center"
+          >
+            <ColorButton
+              v-model="catalogStore.pendingFilters.colors"
+              :colors="catalogStore.popupDynamicFilters.colors"
+              text
             />
           </div>
-        </div>
-        <div class="flex flex-wrap gap-4 items-center justify-center">
-          <SingleSelectButton
-            v-model="catalogStore.pendingFilters.sortType"
-            :content="catalogStore.filters.sortTypes"
-          />
-          <SingleSelectButton
-            v-model="catalogStore.pendingFilters.inStock"
-            :content="catalogStore.filters.inStock"
-          />
-          <SingleSelectButton
-            v-model="catalogStore.pendingFilters.withDiscount"
-            :content="catalogStore.filters.withDiscount"
-          />
+          <p
+            v-else
+            class="text-[#211D1D]/60 text-sm"
+          >
+            Нет доступных вариантов в этой категории
+          </p>
         </div>
         <div class="flex flex-col items-center gap-4 sm:gap-6">
           <h3 class="font-[Inter] text-[17px] font-light sm:font-[Manrope] sm:font-light sm:text-base sm:uppercase">
             Материал
           </h3>
-          <div class="flex flex-wrap gap-4 items-center justify-center">
-            <MultiSelectButton
+          <div
+            v-if="catalogStore.popupDynamicFilters.materials.length > 0"
+            class="flex flex-wrap gap-4 items-center justify-center"
+          >
+            <SingleSelectButton
               v-model="catalogStore.pendingFilters.materials"
-              :content="catalogStore.filters.materials"
+              :content="catalogStore.popupDynamicFilters.materials.map((m) => ({ value: m.alias, label: m.name }))"
             />
           </div>
+          <p
+            v-else
+            class="text-[#211D1D]/60 text-sm"
+          >
+            Нет доступных вариантов в этой категории
+          </p>
+        </div>
+        <div
+          v-if="Object.keys(catalogStore.popupDynamicFilters.extraFilters).length > 0"
+          class="flex flex-col gap-4 sm:gap-6"
+        >
+          <template
+            v-for="(extraGroup, groupKey) in catalogStore.popupDynamicFilters.extraFilters"
+            :key="groupKey"
+          >
+            <div class="flex flex-col items-center gap-4 sm:gap-6">
+              <h3 class="font-[Inter] text-[17px] font-light sm:font-[Manrope] sm:font-light sm:text-base sm:uppercase">
+                {{ groupKey }}
+              </h3>
+              <div class="flex flex-wrap gap-4 items-center justify-center">
+                <MultiSelectButton
+                  v-model="catalogStore.pendingFilters.extra[groupKey]"
+                  :content="extraGroup.map((opt) => ({ value: opt.alias, label: opt.name }))"
+                />
+              </div>
+            </div>
+          </template>
         </div>
         <div class="flex flex-col items-center gap-4 sm:gap-6">
           <h3 class="font-[Inter] text-[17px] font-light sm:font-[Manrope] sm:font-light sm:text-base sm:uppercase">
-            Назначение
+            Цена
           </h3>
-          <div class="flex flex-wrap gap-4 items-center justify-center">
-            <MultiSelectButton
-              v-model="catalogStore.pendingFilters.useTypes"
-              :content="catalogStore.filters.useTypes"
-            />
+          <div class="flex flex-col items-center gap-4">
+            <div class="flex flex-wrap gap-4 items-center justify-center">
+              <SingleSelectButton
+                v-model="catalogStore.pendingFilters.maxPrice"
+                :content="catalogStore.filters.maxPrices()"
+              />
+            </div>
+            <div class="flex flex-wrap gap-4 items-center justify-center">
+              <SingleSelectButton
+                v-model="catalogStore.pendingFilters.sortType"
+                :content="catalogStore.filters.sortTypes"
+              />
+              <SingleSelectButton
+                v-model="catalogStore.pendingFilters.inStock"
+                :content="catalogStore.filters.inStock"
+              />
+              <SingleSelectButton
+                v-model="catalogStore.pendingFilters.withDiscount"
+                :content="catalogStore.filters.withDiscount"
+              />
+            </div>
           </div>
         </div>
         <div class="flex items-center gap-4 sm:pt-6">
@@ -328,7 +377,7 @@ const load = () => {
             content="Сбросить"
             @click="
               () => {
-                catalogStore.reset
+                catalogStore.reset()
                 popupStore.close()
               }
             "
