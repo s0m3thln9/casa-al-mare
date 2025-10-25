@@ -112,7 +112,10 @@ export const useCatalogStore = defineStore("catalog", () => {
   const getLinkFromFilters = (filters: Partial<SortAndFilter>): string => {
     const params = new URLSearchParams()
     if (filters.parentsAliases && filters.parentsAliases.length > 0) {
-      params.set("path", filters.parentsAliases.filter(Boolean).join("/"))
+      const filteredAliases = filters.parentsAliases.filter(Boolean)
+      if (filteredAliases.length > 0) {
+        params.set("path", filteredAliases.join("/"))
+      }
     }
     if (filters.colors && filters.colors.length > 0) {
       params.set("color", filters.colors[0].code)
@@ -139,9 +142,14 @@ export const useCatalogStore = defineStore("catalog", () => {
     return queryString ? `/catalog?${queryString}` : "/catalog"
   }
 
+  const isSyncing = ref(false)
+
   const syncPending = (): void => {
+    isSyncing.value = true
     pendingFilters.value = JSON.parse(JSON.stringify(currentFilters.value))
-    pendingFilters.value.parentsAliases = padParentsAliases(pendingFilters.value.parentsAliases)
+    nextTick(() => {
+      isSyncing.value = false
+    })
   }
 
   const getFilteredItemsForLevel = (level: number) => {
@@ -230,11 +238,10 @@ export const useCatalogStore = defineStore("catalog", () => {
   })
 
   watch(
-    () => [...pendingFilters.value.parentsAliases], // Создаем копию массива для реактивности
+    () => [...pendingFilters.value.parentsAliases],
     (newVal, oldVal) => {
-      if (!oldVal) return
+      if (!oldVal || isSyncing.value) return
 
-      // Находим индекс первого изменения
       let changedIndex = -1
       for (let i = 0; i < Math.max(newVal.length, oldVal.length); i++) {
         const newAlias = newVal[i] || ""
@@ -245,25 +252,16 @@ export const useCatalogStore = defineStore("catalog", () => {
         }
       }
 
-      // Если нашли изменение, сбрасываем все нижестоящие подкатегории и связанные фильтры
       if (changedIndex > -1) {
-        // Сбрасываем нижестоящие подкатегории
         const resetParentsAliases = [...newVal]
         for (let i = changedIndex + 1; i < resetParentsAliases.length; i++) {
           resetParentsAliases[i] = ""
         }
         pendingFilters.value.parentsAliases = resetParentsAliases
 
-        // Сбрасываем фильтры, которые зависят от категории
         pendingFilters.value.colors = []
         pendingFilters.value.materials = ""
         pendingFilters.value.extra = {}
-
-        // Опционально: можно также сбросить другие фильтры
-        // pendingFilters.value.maxPrice = null
-        // pendingFilters.value.sortType = null
-        // pendingFilters.value.withDiscount = null
-        // pendingFilters.value.inStock = null
       }
     },
     { deep: true },
@@ -373,15 +371,16 @@ export const useCatalogStore = defineStore("catalog", () => {
       searchQuery: "",
       extra: {},
     }
-    currentFilters.value = { ...pendingFilters.value }
+    currentFilters.value = JSON.parse(JSON.stringify(pendingFilters.value))
     navigateTo("/catalog")
     currentVisibleCardCount.value = 12
   }
 
   const applyFilters = (): void => {
     currentFilters.value = JSON.parse(JSON.stringify(pendingFilters.value))
-    currentFilters.value.parentsAliases = padParentsAliases(currentFilters.value.parentsAliases)
-    const url = getLinkFromFilters(pendingFilters.value)
+    // Убираем пустые строки из parentsAliases перед сохранением в currentFilters
+    currentFilters.value.parentsAliases = currentFilters.value.parentsAliases.filter(Boolean)
+    const url = getLinkFromFilters(currentFilters.value)
     navigateTo(url)
     currentVisibleCardCount.value = 12
   }

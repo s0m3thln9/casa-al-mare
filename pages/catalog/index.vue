@@ -18,80 +18,103 @@ const handleResize = () => {
   isMobile.value = window.innerWidth < 640
 }
 
-onMounted(() => {
-  isMobile.value = window.innerWidth < 640
-  window.addEventListener("resize", handleResize)
-  catalogStore.loadItems()
-})
-
 const route = useRoute()
 
+// Функция для применения фильтров из query параметров
+const applyFiltersFromQuery = (q: any) => {
+  // Обработка пути (категорий)
+  let parentsAliasesFromQuery: string[] = []
+  if (typeof q.path === "string" && q.path.trim() !== "") {
+    parentsAliasesFromQuery = q.path
+      .replace(/^\/+|\/+$/g, "")
+      .split("/")
+      .filter((p) => p.trim() !== "")
+  }
+  // ИСПРАВЛЕНИЕ: Не дополняем пустыми строками при применении из URL
+  catalogStore.currentFilters.parentsAliases = parentsAliasesFromQuery
+
+  // Обработка цвета
+  if (typeof q.color === "string" && q.color.trim() !== "") {
+    const colorCode = q.color.trim()
+    const colorKey = catalogStore.items.find((item) =>
+      item.keys?.some((k) => k.type === "color" && k.alias === colorCode),
+    )
+    const colorName =
+      colorKey?.keys?.find((k) => k.type === "color" && k.alias === colorCode)?.name ||
+      catalogStore.items.find((item) => item.colorVal === colorCode)?.colorName ||
+      ""
+    const colorValue = colorKey?.keys?.find((k) => k.type === "color" && k.alias === colorCode)?.value || colorCode
+    catalogStore.currentFilters.colors = [{ code: colorCode, name: colorName, value: colorValue }]
+  } else {
+    catalogStore.currentFilters.colors = []
+  }
+
+  // Обработка материала
+  if (typeof q.material === "string" && q.material.trim() !== "") {
+    catalogStore.currentFilters.materials = q.material.trim()
+  } else {
+    catalogStore.currentFilters.materials = ""
+  }
+
+  // Обработка поискового запроса
+  if (typeof q.query === "string") {
+    catalogStore.currentFilters.searchQuery = q.query.trim()
+  } else {
+    catalogStore.currentFilters.searchQuery = ""
+  }
+
+  // Обработка максимальной цены
+  if (typeof q.maxPrice === "string" && q.maxPrice.trim() !== "") {
+    catalogStore.currentFilters.maxPrice = parseInt(q.maxPrice.trim()) || null
+  } else {
+    catalogStore.currentFilters.maxPrice = null
+  }
+
+  // Обработка сортировки
+  if (typeof q.sortType === "string" && q.sortType.trim() !== "") {
+    catalogStore.currentFilters.sortType = q.sortType.trim()
+  } else {
+    catalogStore.currentFilters.sortType = null
+  }
+
+  // Обработка фильтра "в наличии"
+  if (typeof q.inStock === "string" && q.inStock.trim() !== "") {
+    catalogStore.currentFilters.inStock = q.inStock.trim()
+  } else {
+    catalogStore.currentFilters.inStock = null
+  }
+
+  // Обработка фильтра "со скидкой"
+  if (typeof q.withDiscount === "string" && q.withDiscount.trim() !== "") {
+    catalogStore.currentFilters.withDiscount = q.withDiscount.trim()
+  } else {
+    catalogStore.currentFilters.withDiscount = null
+  }
+
+  // Инициализация extra
+  catalogStore.currentFilters.extra = {}
+}
+
+onMounted(async () => {
+  isMobile.value = window.innerWidth < 640
+  window.addEventListener("resize", handleResize)
+
+  // Загружаем товары и применяем фильтры после загрузки
+  await catalogStore.loadItems()
+  applyFiltersFromQuery(route.query)
+  // Синхронизируем pendingFilters с currentFilters после применения
+})
+
+// Следим за изменениями query параметров
 watch(
   () => route.query,
   (q) => {
-    let parentsAliasesFromQuery: string[] = []
-    if (typeof q.path === "string" && q.path.trim() !== "") {
-      parentsAliasesFromQuery = q.path
-        .replace(/^\/+|\/+$/g, "")
-        .split("/")
-        .filter((p) => p.trim() !== "")
+    // Применяем фильтры только если товары уже загружены
+    if (catalogStore.items.length > 0) {
+      applyFiltersFromQuery(q)
     }
-    catalogStore.currentFilters.parentsAliases = catalogStore.padParentsAliases(parentsAliasesFromQuery)
-
-    if (typeof q.color === "string" && q.color.trim() !== "") {
-      const colorCode = q.color.trim()
-      const colorKey = catalogStore.items.find((item) =>
-        item.keys?.some((k) => k.type === "color" && k.alias === colorCode),
-      )
-      const colorName =
-        colorKey?.keys?.find((k) => k.type === "color" && k.alias === colorCode)?.name ||
-        catalogStore.items.find((item) => item.colorVal === colorCode)?.colorName ||
-        ""
-      const colorValue = colorKey?.keys?.find((k) => k.type === "color" && k.alias === colorCode)?.value || colorCode
-      catalogStore.currentFilters.colors = [{ code: colorCode, name: colorName, value: colorValue }]
-    } else {
-      catalogStore.currentFilters.colors = []
-    }
-
-    if (typeof q.material === "string" && q.material.trim() !== "") {
-      catalogStore.currentFilters.materials = q.material.trim()
-    } else {
-      catalogStore.currentFilters.materials = ""
-    }
-
-    if (typeof q.query === "string") {
-      catalogStore.currentFilters.searchQuery = q.query.trim()
-    } else {
-      catalogStore.currentFilters.searchQuery = ""
-    }
-
-    if (typeof q.maxPrice === "string" && q.maxPrice.trim() !== "") {
-      catalogStore.currentFilters.maxPrice = parseInt(q.maxPrice.trim()) || null
-    } else {
-      catalogStore.currentFilters.maxPrice = null
-    }
-
-    if (typeof q.sortType === "string" && q.sortType.trim() !== "") {
-      catalogStore.currentFilters.sortType = q.sortType.trim()
-    } else {
-      catalogStore.currentFilters.sortType = null
-    }
-
-    if (typeof q.inStock === "string" && q.inStock.trim() !== "") {
-      catalogStore.currentFilters.inStock = q.inStock.trim()
-    } else {
-      catalogStore.currentFilters.inStock = null
-    }
-
-    if (typeof q.withDiscount === "string" && q.withDiscount.trim() !== "") {
-      catalogStore.currentFilters.withDiscount = q.withDiscount.trim()
-    } else {
-      catalogStore.currentFilters.withDiscount = null
-    }
-
-    catalogStore.currentFilters.extra = {}
   },
-  { immediate: true },
+  { immediate: false }, // Изменено на false, так как применяем в onMounted
 )
 
 onUnmounted(() => {
@@ -133,7 +156,7 @@ const load = () => {
         <button
           class="cursor-pointer"
           @click="
-            () => {
+            async () => {
               catalogStore.syncPending()
               popupStore.open('filter')
             }
@@ -146,6 +169,7 @@ const load = () => {
             height="24"
           />
         </button>
+        <!--        <div class="text-xs text-[#211D1D]/60">{{ catalogStore.filteredItems.length }} товаров</div>-->
         <SelectButton
           v-model="catalogStore.desktopStrokeCardCount"
           :variants="['4', '6']"
@@ -162,11 +186,11 @@ const load = () => {
       />
       <span class="text-[10px] font-light font-[Commissioner]">Смотреть все / Купальники</span>
       <div class="flex items-center gap-1">
-        <span class="text-[11px] font-[Manrope]">(12)</span>
+        <span class="text-[11px] font-[Manrope]">({{ catalogStore.filteredItems.length }})</span>
         <button
           class="cursor-pointer"
           @click="
-            () => {
+            async () => {
               catalogStore.syncPending()
               popupStore.open('filter')
             }
@@ -182,10 +206,18 @@ const load = () => {
       </div>
     </div>
     <div
-      v-if="catalogStore.filteredItems.length === 0"
+      v-if="catalogStore.filteredItems.length === 0 && !catalogStore.isLoading"
       class="flex justify-center items-center py-10 text-[#211D1D]/60"
     >
-      <p>Ничего не найдено по запросу "{{ route.query.query }}". Попробуйте другой поиск.</p>
+      <p>
+        Ничего не найдено{{ route.query.query ? ` по запросу "${route.query.query}"` : "" }}. Попробуйте другой поиск.
+      </p>
+    </div>
+    <div
+      v-if="catalogStore.isLoading"
+      class="flex justify-center items-center py-10 text-[#211D1D]/60"
+    >
+      <p>Загрузка товаров...</p>
     </div>
     <div
       v-if="currentCardCount === '4' || currentCardCount === '2'"
