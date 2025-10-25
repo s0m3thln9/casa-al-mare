@@ -873,49 +873,17 @@ watch(
   margin-bottom: 0;
 }
 
-.html-content-wrapper :deep(table) td {
+.html-content-wrapper :deep(table) td,
+.html-content-wrapper :deep(table) th {
   box-sizing: border-box;
 }
 
-.html-content-wrapper :deep(tr):not(:first-child) {
+.html-content-wrapper :deep(thead tr) {
   position: relative;
   background: transparent;
 }
 
-.html-content-wrapper :deep(tr):not(:first-child)::before {
-  content: "";
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  top: 0;
-  bottom: 0;
-  background: #f9f6ec;
-  border-radius: 8px;
-  z-index: -1;
-}
-
-.html-content-wrapper :deep(tr):not(:first-child) td {
-  padding: 2px 8px;
-  border: 1px solid transparent;
-  vertical-align: top;
-  text-align: center;
-}
-
-.html-content-wrapper :deep(tr):not(:first-child) > td:first-child {
-  padding-left: 24px;
-  text-align: left;
-}
-
-.html-content-wrapper :deep(tr):not(:first-child) > td:last-child {
-  padding-right: 24px;
-}
-
-.html-content-wrapper :deep(tr):first-child {
-  position: relative;
-  background: transparent;
-}
-
-.html-content-wrapper :deep(tr):first-child::before {
+.html-content-wrapper :deep(thead tr)::before {
   content: "";
   position: absolute;
   left: 0;
@@ -928,38 +896,75 @@ watch(
   z-index: -1;
 }
 
-.html-content-wrapper :deep(tr):first-child td {
-  padding: 2px 8px;
+.html-content-wrapper :deep(thead tr th) {
+  padding: 2px 6px;
   vertical-align: top;
   text-align: center;
-  border-bottom: 0.7px solid #8c8785;
+  font-weight: 400;
 }
 
-.html-content-wrapper :deep(tr):first-child > td:first-child {
+.html-content-wrapper :deep(thead tr th:first-child) {
   padding-left: 8px;
   text-align: left;
 }
 
-.html-content-wrapper :deep(tr):first-child > td:last-child {
+.html-content-wrapper :deep(thead tr th:last-child) {
   padding-right: 24px;
 }
 
-.html-content-wrapper :deep(tr):nth-child(2) {
+.html-content-wrapper :deep(thead tr th) {
+  border-bottom: 0.7px solid #8c8785;
+}
+
+.html-content-wrapper :deep(tbody tr) {
+  position: relative;
+  background: transparent;
+}
+
+.html-content-wrapper :deep(tbody tr)::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 0;
+  bottom: 0;
+  background: #f9f6ec;
+  border-radius: 8px;
+  z-index: -1;
+}
+
+.html-content-wrapper :deep(tbody tr td) {
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  vertical-align: top;
+  text-align: center;
+}
+
+.html-content-wrapper :deep(tbody tr td:first-child) {
+  padding-left: 24px;
+  text-align: left;
+}
+
+.html-content-wrapper :deep(tbody tr td:last-child) {
+  padding-right: 24px;
+}
+
+.html-content-wrapper :deep(tbody tr:first-child) {
   overflow: hidden;
 }
 
-.html-content-wrapper :deep(tr):nth-child(2)::before {
+.html-content-wrapper :deep(tbody tr:first-child)::before {
   top: 16px;
 }
 
-.html-content-wrapper :deep(tr):nth-child(2) td {
+.html-content-wrapper :deep(tbody tr:first-child td) {
   border-top: 16px solid transparent;
 }
 
 .html-content-wrapper :deep(ol),
 .html-content-wrapper :deep(ul) {
-  font-size: 12px;
-  color: #363636;
+  font-size: 14px;
+  color: #211d1d;
   margin-bottom: 8px;
   line-height: 134%;
 }
@@ -970,13 +975,11 @@ watch(
 }
 
 .html-content-wrapper :deep(ol) {
-  padding-left: 24px;
   list-style: none;
   counter-reset: item;
 }
 
 .html-content-wrapper :deep(ul) {
-  padding-left: 20px;
   list-style-type: disc;
   list-style-position: inside;
 }
@@ -984,7 +987,7 @@ watch(
 .html-content-wrapper :deep(ol li),
 .html-content-wrapper :deep(ul li) {
   margin-bottom: 4px;
-  color: #363636;
+  color: #211d1d;
   display: flex;
   align-items: flex-start;
 }
@@ -995,20 +998,20 @@ watch(
 
 .html-content-wrapper :deep(ol li::before) {
   content: counter(item) ". ";
-  color: #bbb8b6;
-  font-weight: 500;
+  color: #211d1d;
+  font-weight: 300;
   flex-shrink: 0;
   margin-right: 4px;
   line-height: 134%;
 }
 
 .html-content-wrapper :deep(ul > li > ul) {
-  padding-left: 36px;
+  padding-left: 16px;
   list-style-type: circle;
 }
 
 .html-content-wrapper :deep(ul > li > ul > li > ul) {
-  padding-left: 52px;
+  padding-left: 32px;
   list-style-type: square;
 }
 
@@ -1040,38 +1043,12 @@ watch(
     margin-bottom: 4px;
   }
 
-  .html-content-wrapper :deep(tr):nth-child(2)::before {
+  .html-content-wrapper :deep(tbody tr:first-child)::before {
     top: 8px;
   }
 
-  .html-content-wrapper :deep(tr):nth-child(2) td {
+  .html-content-wrapper :deep(tbody tr:first-child td) {
     border-top: 8px solid transparent;
-  }
-
-  .html-content-wrapper :deep(ol) {
-    padding-left: 20px;
-  }
-
-  .html-content-wrapper :deep(ul) {
-    padding-left: 16px;
-  }
-
-  .html-content-wrapper :deep(ol),
-  .html-content-wrapper :deep(ul) {
-    margin-bottom: 4px;
-  }
-
-  .html-content-wrapper :deep(ol li),
-  .html-content-wrapper :deep(ul li) {
-    margin-bottom: 2px;
-  }
-
-  .html-content-wrapper :deep(ul > li > ul) {
-    padding-left: 28px;
-  }
-
-  .html-content-wrapper :deep(ul > li > ul > li > ul) {
-    padding-left: 40px;
   }
 }
 </style>
