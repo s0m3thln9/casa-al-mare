@@ -29,9 +29,9 @@ const breadcrumbsItems = computed(() => [
       v-else-if="doc"
       class="flex flex-col items-center"
     >
-      <h2 class="uppercase mb-6 text-2xl font-bold">{{ doc.pagetitle }}</h2>
+      <h2 class="uppercase mb-6 font-[Inter] text-[17px]">{{ doc.pagetitle }}</h2>
       <div
-        class="prose prose-lg max-w-4xl w-full px-4"
+        class="prose prose-lg max-w-4xl w-full px-4 content"
         v-html="doc.content"
       />
     </div>
@@ -62,4 +62,91 @@ const breadcrumbsItems = computed(() => [
   </main>
 </template>
 
-<style scoped></style>
+<style scoped>
+.content {
+  font-family: "Manrope", sans-serif;
+  color: #211d1d;
+}
+
+.content :deep(p) {
+  font-size: 14px;
+  font-weight: 300;
+}
+
+.content :deep(h1),
+.content :deep(h2),
+.content :deep(h3),
+.content :deep(h4),
+.content :deep(h5),
+.content :deep(h6) {
+  font-size: 20px;
+  color: #0a0e11;
+  margin: 32px 0 8px;
+}
+
+.content :deep(ol),
+.content :deep(ul) {
+  font-size: 14px;
+  color: #211d1d;
+  line-height: 134%;
+}
+
+.content :deep(ol):last-child,
+.content :deep(ul):last-child {
+  margin-bottom: 0;
+}
+
+.content :deep(ol) {
+  list-style: none;
+  counter-reset: item;
+}
+
+.content :deep(ul) {
+  list-style-type: disc;
+  list-style-position: inside;
+}
+
+.content :deep(ol li),
+.content :deep(ul li) {
+  margin-bottom: 4px;
+  color: #211d1d;
+  display: flex;
+  align-items: flex-start;
+}
+
+.content :deep(ol li) {
+  counter-increment: item;
+}
+
+.content :deep(ol li::before) {
+  content: counter(item) ". ";
+  color: #211d1d;
+  flex-shrink: 0;
+  font-weight: 300;
+  margin-right: 4px;
+  line-height: 134%;
+}
+
+.content :deep(ul > li > ul) {
+  padding-left: 16px;
+  list-style-type: circle;
+}
+
+.content :deep(ul > li > ul > li > ul) {
+  padding-left: 32px;
+  list-style-type: square;
+}
+
+@media screen and (max-width: 640px) {
+  .content :deep(h1),
+  .content :deep(h2),
+  .content :deep(h3),
+  .content :deep(h4),
+  .content :deep(h5),
+  .content :deep(h6) {
+    font-size: 15px;
+    font-weight: 300;
+    margin: 24px 0 8px;
+  }
+}
+</style>
