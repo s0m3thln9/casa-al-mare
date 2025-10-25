@@ -11,6 +11,10 @@ const isLoading = ref(true)
 const error = ref<string | null>(null)
 const item = ref<Item | null>(null)
 
+const isHtml = (str: string) => {
+  return /<\/?[a-z][\s\S]*>/i.test(str)
+}
+
 const loadItem = async () => {
   try {
     isLoading.value = true
@@ -117,18 +121,15 @@ const breadcrumsItems = computed(() => {
 })
 
 const tabSections = computed(() => {
-  return (
-    item.value?.content?.filter((c: { header: string }) =>
-      ["Описание", "Состав и уход", "Определить размер", "Доставка и возврат"].includes(c.header),
-    ) || []
-  )
+  return item.value?.content || []
 })
 
 const getPopupId = (header: string): string => {
   const mapping: Record<string, string> = {
-    "Состав и уход": "composition",
+    Состав: "composition",
     "Определить размер": "size",
-    "Доставка и возврат": "delivery",
+    "Доставка и оплата": "delivery",
+    "Возврат и обмен": "trans",
     Описание: "description",
   }
   return (
@@ -744,14 +745,21 @@ watch(
       >
         <div class="mt-6 flex flex-col gap-6">
           <div
-            v-for="(contentItem, cIndex) in section.content"
+            v-for="(contentItem, cIndex) in [section.content]"
             :key="cIndex"
             class="prose prose-sm max-w-none"
-            v-html="contentItem"
-          />
+          >
+            <template v-if="isHtml(contentItem)">
+              <div v-html="contentItem" />
+            </template>
+            <template v-else>
+              <p>{{ contentItem }}</p>
+            </template>
+          </div>
         </div>
       </AppPopup>
     </template>
+
     <AppPopup
       title="Подписаться на рассылку"
       popup-id="subscription"
