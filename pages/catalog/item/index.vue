@@ -747,13 +747,17 @@ watch(
           <div
             v-for="(contentItem, cIndex) in [section.content]"
             :key="cIndex"
-            class="prose prose-sm max-w-none"
+            class="prose prose-sm max-w-none custom-section-content"
           >
             <template v-if="isHtml(contentItem)">
-              <div v-html="contentItem" />
+              <div class="html-content-wrapper">
+                <div v-html="contentItem" />
+              </div>
             </template>
             <template v-else>
-              <p>{{ contentItem }}</p>
+              <div class="p-4 border-[0.5px] sm:border-1 border-[#BBB8B6] rounded-2xl custom-text-content">
+                {{ contentItem }}
+              </div>
             </template>
           </div>
         </div>
@@ -787,4 +791,287 @@ watch(
   </main>
 </template>
 
-<style scoped></style>
+<style scoped>
+.custom-section-content {
+  font-family: "Manrope", sans-serif;
+  line-height: 134%;
+}
+
+.custom-text-content {
+  font-size: 12px;
+  color: #363636;
+  line-height: 134%;
+  white-space: pre-wrap;
+}
+
+.html-content-wrapper :deep(p),
+.html-content-wrapper :deep(h1),
+.html-content-wrapper :deep(h2),
+.html-content-wrapper :deep(h3),
+.html-content-wrapper :deep(h4),
+.html-content-wrapper :deep(h5),
+.html-content-wrapper :deep(h6) {
+  margin-bottom: 8px;
+}
+
+.html-content-wrapper :deep(p) {
+  font-size: 12px;
+  color: #363636;
+}
+
+.html-content-wrapper :deep(h1),
+.html-content-wrapper :deep(h2),
+.html-content-wrapper :deep(h3),
+.html-content-wrapper :deep(h4),
+.html-content-wrapper :deep(h5),
+.html-content-wrapper :deep(h6) {
+  font-size: 14px;
+  color: #211d1d;
+  font-weight: 500;
+}
+
+.html-content-wrapper :deep(p):last-child,
+.html-content-wrapper :deep(h1):last-child,
+.html-content-wrapper :deep(h2):last-child,
+.html-content-wrapper :deep(h3):last-child,
+.html-content-wrapper :deep(h4):last-child,
+.html-content-wrapper :deep(h5):last-child,
+.html-content-wrapper :deep(h6):last-child {
+  margin-bottom: 0;
+}
+
+.html-content-wrapper :deep(div.block) {
+  padding: 16px;
+  border: 1px solid #bbb8b6;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 24px;
+}
+
+.html-content-wrapper :deep(div.block):not(:last-child) {
+  margin-bottom: 0;
+}
+
+.html-content-wrapper :deep(div.block):last-child {
+  margin-bottom: 0;
+}
+
+.html-content-wrapper :deep(table) {
+  font-size: 12px;
+  border-collapse: separate;
+  border-spacing: 0 4px;
+  width: 100%;
+  border: 1px solid #bbb8b6;
+  border-radius: 8px;
+  overflow: hidden;
+  padding-bottom: 16px;
+  margin-bottom: 8px;
+}
+
+.html-content-wrapper :deep(table):last-child {
+  margin-bottom: 0;
+}
+
+.html-content-wrapper :deep(table) td {
+  box-sizing: border-box;
+}
+
+.html-content-wrapper :deep(tr):not(:first-child) {
+  position: relative;
+  background: transparent;
+}
+
+.html-content-wrapper :deep(tr):not(:first-child)::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 0;
+  bottom: 0;
+  background: #f9f6ec;
+  border-radius: 8px;
+  z-index: -1;
+}
+
+.html-content-wrapper :deep(tr):not(:first-child) td {
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  vertical-align: top;
+  text-align: center;
+}
+
+.html-content-wrapper :deep(tr):not(:first-child) > td:first-child {
+  padding-left: 24px;
+  text-align: left;
+}
+
+.html-content-wrapper :deep(tr):not(:first-child) > td:last-child {
+  padding-right: 24px;
+}
+
+.html-content-wrapper :deep(tr):first-child {
+  position: relative;
+  background: transparent;
+}
+
+.html-content-wrapper :deep(tr):first-child::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: transparent;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  z-index: -1;
+}
+
+.html-content-wrapper :deep(tr):first-child td {
+  padding: 2px 8px;
+  vertical-align: top;
+  text-align: center;
+  border-bottom: 0.7px solid #8c8785;
+}
+
+.html-content-wrapper :deep(tr):first-child > td:first-child {
+  padding-left: 8px;
+  text-align: left;
+}
+
+.html-content-wrapper :deep(tr):first-child > td:last-child {
+  padding-right: 24px;
+}
+
+.html-content-wrapper :deep(tr):nth-child(2) {
+  overflow: hidden;
+}
+
+.html-content-wrapper :deep(tr):nth-child(2)::before {
+  top: 16px;
+}
+
+.html-content-wrapper :deep(tr):nth-child(2) td {
+  border-top: 16px solid transparent;
+}
+
+.html-content-wrapper :deep(ol),
+.html-content-wrapper :deep(ul) {
+  font-size: 12px;
+  color: #363636;
+  margin-bottom: 8px;
+  line-height: 134%;
+}
+
+.html-content-wrapper :deep(ol):last-child,
+.html-content-wrapper :deep(ul):last-child {
+  margin-bottom: 0;
+}
+
+.html-content-wrapper :deep(ol) {
+  padding-left: 24px;
+  list-style: none;
+  counter-reset: item;
+}
+
+.html-content-wrapper :deep(ul) {
+  padding-left: 20px;
+  list-style-type: disc;
+  list-style-position: inside;
+}
+
+.html-content-wrapper :deep(ol li),
+.html-content-wrapper :deep(ul li) {
+  margin-bottom: 4px;
+  color: #363636;
+  display: flex;
+  align-items: flex-start;
+}
+
+.html-content-wrapper :deep(ol li) {
+  counter-increment: item;
+}
+
+.html-content-wrapper :deep(ol li::before) {
+  content: counter(item) ". ";
+  color: #bbb8b6;
+  font-weight: 500;
+  flex-shrink: 0;
+  margin-right: 4px;
+  line-height: 134%;
+}
+
+.html-content-wrapper :deep(ul > li > ul) {
+  padding-left: 36px;
+  list-style-type: circle;
+}
+
+.html-content-wrapper :deep(ul > li > ul > li > ul) {
+  padding-left: 52px;
+  list-style-type: square;
+}
+
+@media screen and (max-width: 640px) {
+  .html-content-wrapper :deep(div.block) {
+    border: 0.5px solid #bbb8b6;
+    margin-bottom: 8px;
+  }
+
+  .custom-text-content {
+    border: 0.5px solid #bbb8b6;
+  }
+
+  .html-content-wrapper :deep(table) {
+    padding: 8px 0;
+    padding-bottom: 10px;
+  }
+
+  .html-content-wrapper :deep(h1),
+  .html-content-wrapper :deep(h2),
+  .html-content-wrapper :deep(h3),
+  .html-content-wrapper :deep(h4),
+  .html-content-wrapper :deep(h5),
+  .html-content-wrapper :deep(h6) {
+    margin-bottom: 4px;
+  }
+
+  .html-content-wrapper :deep(p) {
+    margin-bottom: 4px;
+  }
+
+  .html-content-wrapper :deep(tr):nth-child(2)::before {
+    top: 8px;
+  }
+
+  .html-content-wrapper :deep(tr):nth-child(2) td {
+    border-top: 8px solid transparent;
+  }
+
+  .html-content-wrapper :deep(ol) {
+    padding-left: 20px;
+  }
+
+  .html-content-wrapper :deep(ul) {
+    padding-left: 16px;
+  }
+
+  .html-content-wrapper :deep(ol),
+  .html-content-wrapper :deep(ul) {
+    margin-bottom: 4px;
+  }
+
+  .html-content-wrapper :deep(ol li),
+  .html-content-wrapper :deep(ul li) {
+    margin-bottom: 2px;
+  }
+
+  .html-content-wrapper :deep(ul > li > ul) {
+    padding-left: 28px;
+  }
+
+  .html-content-wrapper :deep(ul > li > ul > li > ul) {
+    padding-left: 40px;
+  }
+}
+</style>

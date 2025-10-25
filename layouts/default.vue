@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { SelectInput } from "#components"
+import { useDocsStore } from "~/stores/docs"
 
 interface CartResponseData {
   success: boolean
@@ -26,6 +27,7 @@ const phoneRef = ref()
 const textRef = ref()
 const catalogStore = useCatalogStore()
 const orderStore = useOrderStore()
+const docsStore = useDocsStore()
 
 // const selectCity = () => {
 //   isCitySelected.value = true
@@ -35,6 +37,7 @@ const userStore = useUserStore()
 onMounted(async () => {
   await userStore.loadToken()
   await userStore.fetchUser()
+  await docsStore.fetchTree()
 })
 
 const buttonState = ref({
