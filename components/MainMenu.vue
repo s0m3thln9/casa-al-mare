@@ -1,56 +1,87 @@
 <script setup lang="ts">
-type MenuItem = {
+interface DocNode {
+  id: number
+  type: string
+  pagetitle: string
+  alias: string
+  template: number
+  subitems?: Record<string, DocNode>
+  [key: string]: any
+}
+
+interface MenuItem {
   label: string
   link?: string
+  path?: string
   submenu?: MenuItem[]
   customClass?: string
   func?: () => void
-  types?: string[]
 }
 
 const menuStore = useMenuStore()
 const popupStore = usePopupStore()
 const authStore = useAuthStore()
 const authModalStore = useAuthModalStore()
+const docsStore = useDocsStore()
+const catalogStore = useCatalogStore()
 
 const selectedSubmenu = ref<MenuItem[] | null>(null)
 const selectedSubmenuLabel = ref<string | null>(null)
 const isMobile = ref(false)
 
-const menuItems: MenuItem[] = [
-  { label: "Смотреть все", link: "/catalog" },
-  {
-    label: "Купальники",
-    submenu: [
-      { label: "Слитные", link: "/catalog", types: ["Комплект бикини"] },
-      { label: "Верх купальника", link: "/catalog", types: ["Топ"] },
-      { label: "Низ купальника", link: "/catalog", types: ["Трусы"] },
-    ],
-  },
-  {
-    label: "Одежда для пляжа",
-    submenu: [
-      { label: "Шорты", link: "/catalog", types: ["Шорты"] },
-      { label: "Рубашки", link: "/catalog", types: ["Рубашки"] },
-      { label: "Поло", link: "/catalog", types: ["Поло"] },
-      { label: "Туники", link: "/catalog", types: ["Туника"] },
-      { label: "Брюки", link: "/catalog", types: ["Брюки"] },
-    ],
-  },
-  {
-    label: "Аксессуары",
-    submenu: [
-      { label: "Панамки", link: "/catalog", types: ["Панамка"] },
-      { label: "Сумки пляжные", link: "/catalog", types: ["Сумка пляжная"] },
-      { label: "Косметички", link: "/catalog", types: ["Косметичка"] },
-      { label: "Полотенца", link: "/catalog", types: ["Полотенце"] },
-    ],
-  },
-  {
+// Рекурсивная функция для построения меню из дерева
+const buildMenuFromTree = (node: DocNode, parentPath = ""): MenuItem[] => {
+  const items: MenuItem[] = []
+
+  if (!node.subitems) return items
+
+  for (const key in node.subitems) {
+    const item = node.subitems[key]
+
+    // Только элементы с template = 2 (категории)
+    if (item.template === 2) {
+      const currentPath = parentPath ? `${parentPath}/${item.alias}` : item.alias
+
+      const menuItem: MenuItem = {
+        label: item.pagetitle,
+        link: "/catalog",
+        path: currentPath,
+      }
+
+      // Рекурсивно обрабатываем подкатегории
+      if (item.subitems) {
+        const submenu = buildMenuFromTree(item, currentPath)
+        if (submenu.length > 0) {
+          menuItem.submenu = submenu
+        }
+      }
+
+      items.push(menuItem)
+    }
+  }
+
+  return items
+}
+
+// Генерируем меню из дерева
+const menuItems = computed<MenuItem[]>(() => {
+  const tree = docsStore.tree?.data
+  if (!tree?.catalog) return []
+
+  const items: MenuItem[] = [{ label: "Смотреть все", link: "/catalog" }]
+
+  // Добавляем динамически сгенерированные пункты из дерева
+  const dynamicItems = buildMenuFromTree(tree.catalog)
+  items.push(...dynamicItems)
+
+  // Добавляем статичный пункт "Сертификаты"
+  items.push({
     label: "Сертификаты",
     link: "/certificate",
-  },
-]
+  })
+
+  return items
+})
 
 const secondMenuItems: MenuItem[] = [
   {
@@ -84,71 +115,70 @@ const secondMenuItems: MenuItem[] = [
   },
 ]
 
-const catalogStore = useCatalogStore()
-
 const handleMenuClick = (item: MenuItem) => {
   if (item.submenu) {
-    // Изменение: Добавлена логика toggle для того же пункта
+    // Toggle логика для подменю
     if (selectedSubmenu.value !== null) {
       if (selectedSubmenuLabel.value === item.label) {
-        // Если подменю уже открыто от этого пункта — закрываем его
         selectedSubmenu.value = null
         selectedSubmenuLabel.value = null
       } else {
-        // Если открыто от другого — закрываем с анимацией, потом открываем новое
         selectedSubmenu.value = null
         selectedSubmenuLabel.value = null
         setTimeout(() => {
-          selectedSubmenu.value = item.submenu
+          selectedSubmenu.value = item.submenu!
           selectedSubmenuLabel.value = item.label
-        }, 200) // Задержка для анимации закрытия
+        }, 200)
       }
     } else {
-      // Если подменю закрыто — просто открываем
       selectedSubmenu.value = item.submenu
       selectedSubmenuLabel.value = item.label
     }
     return
   }
 
-  // Логика для клика на пункте без submenu (включая подменю): сначала закрываем подменю, потом навигируем
+  // Логика для клика на пункте без submenu
   if (selectedSubmenu.value !== null) {
     selectedSubmenu.value = null
     selectedSubmenuLabel.value = null
     setTimeout(() => {
       proceedWithNavigationAndClose(item)
-    }, 300) // Задержка для анимации закрытия подменю
+    }, 300)
   } else {
     proceedWithNavigationAndClose(item)
   }
 }
 
-// Вспомогательная функция для навигации и закрытия (без изменений)
 const proceedWithNavigationAndClose = (item: MenuItem) => {
   menuStore.close()
+
+  if (item.func) {
+    item.func()
+    return
+  }
+
   if (item.link) {
     if (item.label === "Смотреть все") {
       catalogStore.reset()
       navigateTo({ path: item.link })
       return
     }
+
     if (item.label === "Сертификаты") {
       navigateTo({ path: item.link })
       return
     }
-    if (item.types) {
-      const validTypes = item.types.filter((t) => catalogStore.filters.types.includes(t))
+
+    // Навигация с path для категорий
+    if (item.path) {
       navigateTo({
         path: item.link,
-        query: validTypes.length ? { label: item.label, types: validTypes } : { label: item.label },
+        query: { path: item.path },
       })
       return
     }
+
     navigateTo({ path: item.link, query: { label: item.label } })
-    return
-  }
-  if (item.func) {
-    item.func()
     return
   }
 }
@@ -165,6 +195,11 @@ const updateIsMobile = () => {
 onMounted(() => {
   isMobile.value = window.innerWidth < 768
   window.addEventListener("resize", updateIsMobile)
+
+  // Загружаем дерево если его еще нет
+  if (!docsStore.tree) {
+    docsStore.fetchTree()
+  }
 })
 
 onUnmounted(() => {
