@@ -8,15 +8,12 @@ const images = {
 
 const popupStore = usePopupStore()
 const catalogStore = useCatalogStore()
-const isMobile = ref(false)
+const viewport = useViewport()
+const isMobile = computed(() => viewport.isLessThan("sm"))
 
 const currentCardCount = computed(() =>
   isMobile.value ? catalogStore.mobileStrokeCardCount : catalogStore.desktopStrokeCardCount,
 )
-
-const handleResize = () => {
-  isMobile.value = window.innerWidth < 640
-}
 
 const route = useRoute()
 
@@ -96,9 +93,6 @@ const applyFiltersFromQuery = (q: any) => {
 }
 
 onMounted(async () => {
-  isMobile.value = window.innerWidth < 640
-  window.addEventListener("resize", handleResize)
-
   // Загружаем товары и применяем фильтры после загрузки
   await catalogStore.loadItems()
   applyFiltersFromQuery(route.query)
@@ -117,19 +111,45 @@ watch(
   { immediate: false }, // Изменено на false, так как применяем в onMounted
 )
 
-onUnmounted(() => {
-  window.removeEventListener("resize", handleResize)
-})
-
 const breadcrumsItems = computed(() => {
   const items: { name: string; path?: string }[] = [
     { name: "Главная", path: "/" },
     { name: "Смотреть все", path: "/catalog" },
   ]
 
-  const labelFromQuery = route.query.label
-  if (typeof labelFromQuery === "string" && labelFromQuery.trim() !== "") {
-    items.push({ name: labelFromQuery })
+  // Получаем массив алиасов из пути
+  const pathFromQuery = route.query.path
+  if (typeof pathFromQuery === "string" && pathFromQuery.trim() !== "") {
+    const aliases = pathFromQuery
+      .replace(/^\/+|\/+$/g, "")
+      .split("/")
+      .filter((p) => p.trim() !== "")
+
+    // Для каждого алиаса создаем элемент breadcrumb
+    aliases.forEach((alias, index) => {
+      // Находим категорию по алиасу
+      const category = catalogStore.items.flatMap((item) => item.parents || []).find((parent) => parent.alias === alias)
+
+      if (category) {
+        // Формируем путь из всех предыдущих алиасов + текущий
+        const pathSegments = aliases.slice(0, index + 1)
+        const categoryPath = `/catalog?path=${pathSegments.join("/")}`
+
+        items.push({
+          name: category.name,
+          path: categoryPath,
+        })
+      } else {
+        // Если категория не найдена, используем алиас с капитализацией
+        const pathSegments = aliases.slice(0, index + 1)
+        const categoryPath = `/catalog?path=${pathSegments.join("/")}`
+
+        items.push({
+          name: alias.charAt(0).toUpperCase() + alias.slice(1).replace(/-/g, " "),
+          path: categoryPath,
+        })
+      }
+    })
   }
 
   return items
@@ -169,7 +189,6 @@ const load = () => {
             height="24"
           />
         </button>
-        <!--        <div class="text-xs text-[#211D1D]/60">{{ catalogStore.filteredItems.length }} товаров</div>-->
         <SelectButton
           v-model="catalogStore.desktopStrokeCardCount"
           :variants="['4', '6']"
@@ -184,9 +203,9 @@ const load = () => {
         v-model="catalogStore.mobileStrokeCardCount"
         :variants="['2', '3']"
       />
-      <span class="text-[10px] font-light font-[Commissioner]">Смотреть все / Купальники</span>
+      <span class="text-[10px] font-light font-[Commissioner]"><AppBreadcrumbs :items="breadcrumsItems" /></span>
       <div class="flex items-center gap-1">
-        <span class="text-[11px] font-[Manrope]">({{ catalogStore.filteredItems.length }})</span>
+        <span class="text-[11px] font-[Manrope]" />
         <button
           class="cursor-pointer"
           @click="

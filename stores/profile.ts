@@ -1,5 +1,5 @@
 import { defineStore } from "pinia"
-import type { EditUserResponse } from "~/pages/profile/index.vue"
+import type { EditUserResponse } from "~/pages/profile/[slug].vue"
 
 interface ProfileData {
   email: string

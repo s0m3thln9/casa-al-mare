@@ -47,9 +47,9 @@ const handleProfileClick = () => {
       <div class="flex flex-col gap-4">
         <h3 class="font-normal text-base uppercase">Каталог</h3>
         <ul class="flex flex-col gap-4">
-          <li><NuxtLink to="/catalog">Купальники</NuxtLink></li>
-          <li><NuxtLink to="/catalog">Нижняя часть купальника</NuxtLink></li>
-          <li><NuxtLink to="/catalog">Верхняя часть купальника</NuxtLink></li>
+          <li><NuxtLink to="/catalog?path=kupalniki">Купальники</NuxtLink></li>
+          <li><NuxtLink to="/catalog?path=kupalniki%2Fniz">Нижняя часть купальника</NuxtLink></li>
+          <li><NuxtLink to="/catalog?path=kupalniki%2Fverx">Верхняя часть купальника</NuxtLink></li>
           <li><NuxtLink to="/catalog">Головные уборы</NuxtLink></li>
           <li><NuxtLink to="/catalog">Аксессуары</NuxtLink></li>
         </ul>
@@ -57,8 +57,8 @@ const handleProfileClick = () => {
       <div class="flex flex-col gap-4">
         <h3 class="font-normal text-base uppercase">Покупателям</h3>
         <ul class="flex flex-col gap-4">
-          <li><NuxtLink to="/">Доставка и оплата</NuxtLink></li>
-          <li><NuxtLink to="/">Возврат</NuxtLink></li>
+          <li><NuxtLink to="/info/dostavka-i-oplata">Доставка и оплата</NuxtLink></li>
+          <li><NuxtLink to="/info/vozvrat-i-obmen">Возврат</NuxtLink></li>
           <li><NuxtLink to="/">Реквизиты</NuxtLink></li>
           <li
             class="cursor-pointer"
@@ -98,7 +98,7 @@ const handleProfileClick = () => {
             </button>
           </li>
           <li><NuxtLink to="/favorites">Избранное</NuxtLink></li>
-          <li><NuxtLink to="/">Заказы</NuxtLink></li>
+          <li><NuxtLink to="/profile/orders">Заказы</NuxtLink></li>
           <li><NuxtLink to="/certificate">Сертификат</NuxtLink></li>
         </ul>
       </div>

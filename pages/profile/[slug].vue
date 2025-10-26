@@ -1,9 +1,28 @@
 <script setup lang="ts">
+const route = useRoute()
+const router = useRouter()
+
 const tabs = ["Профиль", "Заказы", "Сертификаты", "Избранное"]
-const currentTab = ref("Профиль")
-const images = {
-  card1: "/item-page-1.jpg",
+
+// Маппинг slug -> название вкладки
+const slugToTab: Record<string, string> = {
+  profile: "Профиль",
+  orders: "Заказы",
+  certificates: "Сертификаты",
+  favorites: "Избранное",
 }
+
+// Маппинг название вкладки -> slug
+const tabToSlug: Record<string, string> = {
+  Профиль: "profile",
+  Заказы: "orders",
+  Сертификаты: "certificates",
+  Избранное: "favorites",
+}
+
+// Инициализация текущей вкладки на основе slug из URL
+const slug = route.params.slug as string
+const currentTab = ref(slugToTab[slug] || "Профиль")
 
 export type EditUserResponse = {
   success: boolean
@@ -86,12 +105,31 @@ const handleAddCertificate = async (): Promise<void> => {
   }
 }
 
+// Обработчик изменения вкладки
+const handleTabChange = (tab: string) => {
+  currentTab.value = tab
+  const newSlug = tabToSlug[tab]
+  router.push(`/profile/${newSlug}`)
+}
+
 const authStore = useAuthStore()
+const authModalStore = useAuthModalStore()
 
 onMounted(async () => {
-  profileStore.loadProfile()
+  if (!authStore.isAuth) authModalStore.open()
+  await profileStore.loadProfile()
   await orderStore.loadPaymentMethods()
 })
+
+// Отслеживание изменений route для обновления активной вкладки
+watch(
+  () => route.params.slug,
+  (newSlug) => {
+    if (typeof newSlug === "string" && slugToTab[newSlug]) {
+      currentTab.value = slugToTab[newSlug]
+    }
+  },
+)
 </script>
 
 <template>
@@ -120,7 +158,7 @@ onMounted(async () => {
           currentTab === 'Избранное' ? 'max-w-[600px] w-full mt-5 !rounded-2xl' : 'w-full mt-5 !rounded-2xl'
         "
         custom-button-class="flex-1 py-2 !text-[13px]"
-        @update:model-value="(value) => (currentTab = value)"
+        @update:model-value="handleTabChange"
       />
       <div
         v-if="currentTab === 'Профиль'"

@@ -27,7 +27,8 @@ const catalogStore = useCatalogStore()
 
 const selectedSubmenu = ref<MenuItem[] | null>(null)
 const selectedSubmenuLabel = ref<string | null>(null)
-const isMobile = ref(false)
+const viewport = useViewport()
+const isMobile = computed(() => viewport.isLessThan("sm"))
 
 // Рекурсивная функция для построения меню из дерева
 const buildMenuFromTree = (node: DocNode, parentPath = ""): MenuItem[] => {
@@ -188,22 +189,10 @@ const goBack = () => {
   selectedSubmenuLabel.value = null
 }
 
-const updateIsMobile = () => {
-  isMobile.value = window.innerWidth < 768
-}
-
 onMounted(() => {
-  isMobile.value = window.innerWidth < 768
-  window.addEventListener("resize", updateIsMobile)
-
-  // Загружаем дерево если его еще нет
   if (!docsStore.tree) {
     docsStore.fetchTree()
   }
-})
-
-onUnmounted(() => {
-  window.removeEventListener("resize", updateIsMobile)
 })
 
 watch(
