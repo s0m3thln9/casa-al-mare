@@ -100,29 +100,26 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.pvz-selector {
-  margin-top: 1rem;
-}
-
 .button_green {
-  background-color: #4caf50;
-  color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 0.25rem;
-  cursor: pointer;
+  background-color: #fff4a4;
+  color: #211d1d;
 }
 
 .activnaya {
-  background-color: #f0f0f0;
-  color: #333;
-  padding: 0.5rem 1rem;
-  border: 1px solid #ccc;
-  border-radius: 0.25rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+  background-color: #211d1d;
+  color: #fffffa;
+  padding: 8px 20px;
+  border: 1px solid #211d1d;
+  border-radius: 1rem;
   cursor: pointer;
 }
 
 .activnaya:hover {
-  background-color: #e0e0e0;
+  background-color: #fffffa;
+  color: #211d1d;
 }
 </style>
