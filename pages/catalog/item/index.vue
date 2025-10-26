@@ -675,7 +675,7 @@ watch(
             <span class="font-[Manrope] text-sm">Верх</span>
             <CatalogCard
               v-if="catalogStore.items.length > 0"
-              :id="complexItemsIds[0] || 37"
+              :id="complexItemsIds[0] || 0"
               :key="currentColorCode"
               v-model="setStore.top"
               :current-color-code="currentColorCode"

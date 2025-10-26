@@ -66,7 +66,7 @@ const handleProfileClick = () => {
           >
             Обратная связь
           </li>
-          <li><NuxtLink to="/">Уход за изделиями</NuxtLink></li>
+          <li><NuxtLink to="/care">Уход за изделиями</NuxtLink></li>
         </ul>
       </div>
       <div class="flex flex-col gap-4">

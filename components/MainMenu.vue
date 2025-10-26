@@ -90,7 +90,7 @@ const secondMenuItems: MenuItem[] = [
     func: () => {
       menuStore.close()
       if (authStore.isAuth) {
-        navigateTo("/profile")
+        navigateTo("/profile/profile")
       } else {
         authModalStore.open()
       }
@@ -100,9 +100,9 @@ const secondMenuItems: MenuItem[] = [
     label: "Покупателям",
     submenu: [
       { label: "О нас", link: "/about-us" },
-      { label: "Доставка и оплата", link: "/about-us" },
-      { label: "Возврат", link: "/about-us" },
-      { label: "Уход за изделиями", link: "/about-us" },
+      { label: "Доставка и оплата", link: "/info/dostavka-i-oplata" },
+      { label: "Возврат", link: "/info/vozvrat-i-obmen" },
+      { label: "Уход за изделиями", link: "/care" },
     ],
   },
   {
@@ -179,7 +179,7 @@ const proceedWithNavigationAndClose = (item: MenuItem) => {
       return
     }
 
-    navigateTo({ path: item.link, query: { label: item.label } })
+    navigateTo({ path: item.link })
     return
   }
 }
