@@ -79,6 +79,8 @@ export interface OrderState {
   userInfo?: UserInfo | null
   cart?: Record<string, CartItem>
   pvz?: PvzData | null
+  deliveryTime?: number
+  deliveryCost?: number
 }
 
 interface UpdateOrderResponse {
@@ -198,6 +200,22 @@ export const useOrderStore = defineStore("order", () => {
   const orderState = ref<OrderState>(<OrderState>{})
   const isLoaded = ref(false)
   const orderId = ref<number | null>(null)
+  const cdekData = ref<{
+    courier: { price: number; term: { min: number; max: number } }
+    courier_prim: { price: number; term: { min: number; max: number } }
+    pvz: { price: number; term: { min: number; max: number } }
+  } | null>(null)
+  const deliveryTypes = ref<
+    Array<{ id: number; name: string; term?: { min: number; max: number }; cost?: number; isExpress?: boolean }>
+  >([
+    { id: 1, name: "Курьер СДЭК", term: { min: 0, max: 0 }, cost: 0 },
+    { id: 2, name: "Курьер СДЭК с примеркой", term: { min: 0, max: 0 }, cost: 0 },
+    { id: 3, name: "Экспресс-доставка", isExpress: true },
+    { id: 4, name: "СДЭК (ПВЗ)", term: { min: 0, max: 0 }, cost: 0 },
+  ])
+  const deliveryTime = ref<number>(0)
+  const deliveryCost = ref<number>(0)
+  const isMoscow = ref<boolean>(false)
 
   async function loadPaymentMethods() {
     try {
@@ -316,6 +334,47 @@ export const useOrderStore = defineStore("order", () => {
       console.error("Ошибка загрузки user data:", error)
     }
   }
+  function updateDeliveryType(id: number, term: { min: number; max: number }, cost: number) {
+    const type = deliveryTypes.value.find((t) => t.id === id)
+    if (type) {
+      type.term = term
+      type.cost = cost
+    }
+  }
+
+  async function loadCdekData() {
+    if (!city.value?.fias) return
+
+    try {
+      const data = await $fetch(`https://back.casaalmare.com/api/getCdekByFias?fias=${city.value.fias}`)
+
+      if (data) {
+        cdekData.value = data
+
+        // Обновляем типы доставки только если данные валидны
+        if (data.courier && data.courier.term && typeof data.courier.price === "number") {
+          updateDeliveryType(1, data.courier.term, data.courier.price)
+        }
+        if (data.courier_prim && data.courier_prim.term && typeof data.courier_prim.price === "number") {
+          updateDeliveryType(2, data.courier_prim.term, data.courier_prim.price)
+        }
+        if (data.pvz && data.pvz.term && typeof data.pvz.price === "number") {
+          updateDeliveryType(4, data.pvz.term, data.pvz.price)
+        }
+
+        isMoscow.value = city.value.name.toLowerCase().includes("москва")
+        if (!isMoscow.value) {
+          deliveryTypes.value = deliveryTypes.value.filter((type) => type.id !== 3)
+        }
+
+        // Принудительно обновляем детали после загрузки данных
+        await nextTick() // Ждём следующего тика для реактивности
+        updateDeliveryDetails()
+      }
+    } catch (error) {
+      console.error("Ошибка API getCdekByFias:", error)
+    }
+  }
 
   function startGuestCountdown() {
     guestRemainingSeconds.value = guestNextCode.value
@@ -369,10 +428,11 @@ export const useOrderStore = defineStore("order", () => {
       if (data.value?.success && data.value?.order) {
         const loadedOrder: OrderState = data.value.order
 
-        // ИСПРАВЛЕНО: Сохраняем ID заказа
         if (data.value.orderId) orderId.value = data.value.orderId
 
         if (loadedOrder.deliveryMethod) deliveryMethod.value = loadedOrder.deliveryMethod
+        if (loadedOrder.deliveryTime !== undefined) deliveryTime.value = loadedOrder.deliveryTime
+        if (loadedOrder.deliveryCost !== undefined) deliveryCost.value = loadedOrder.deliveryCost
         if (loadedOrder.pvz) {
           selectedPvz.value = loadedOrder.pvz
         }
@@ -381,26 +441,15 @@ export const useOrderStore = defineStore("order", () => {
         } else if (userStore.user?.profile?.extended.city) {
           city.value = userStore.user.profile.extended.city
         } else if (!city.value) {
-          // Город будет определен в loadUserData
         }
         if (loadedOrder.currentAddress) currentAddress.value = loadedOrder.currentAddress
         if (loadedOrder.commentForCourier) commentForCourier.value = loadedOrder.commentForCourier
         if (loadedOrder.paymentMethod) paymentMethod.value = loadedOrder.paymentMethod
-        // ЗАКОММЕНТИРОВАНО: промокоды
-        // if (loadedOrder.promoCode) selectedPromoCode.value = loadedOrder.promoCode
         if (loadedOrder.points !== undefined) {
           pointsToUse.value = loadedOrder.points
           if (userStore.user) userStore.user.points += usedPointsBackup.value - loadedOrder.points
         }
         if (loadedOrder.certificates) selectedCertificates.value = loadedOrder.certificates
-
-        // ЗАКОММЕНТИРОВАНО: промокоды
-        // if (loadedOrder.promoCodes && Array.isArray(loadedOrder.promoCodes)) {
-        //   currentPromoCodes.value = loadedOrder.promoCodes
-        // }
-        // if (loadedOrder.pendingPromoCode) {
-        //   pendingPromoCode.value = loadedOrder.pendingPromoCode
-        // }
 
         if (!authStore.isAuth && loadedOrder.userInfo) {
           if (loadedOrder.userInfo.name) name.value = loadedOrder.userInfo.name
@@ -419,6 +468,10 @@ export const useOrderStore = defineStore("order", () => {
       console.error("Ошибка загрузки состояния заказа:", error)
     } finally {
       isLoaded.value = true
+      if (city.value) {
+        await loadCdekData()
+        updateDeliveryDetails()
+      }
     }
   }
 
@@ -430,18 +483,15 @@ export const useOrderStore = defineStore("order", () => {
 
     const orderStateObj: Partial<OrderState> = {
       deliveryMethod: deliveryMethod.value,
+      deliveryTime: deliveryTime.value,
+      deliveryCost: deliveryCost.value,
       pvz: selectedPvz.value,
       city: city.value,
       currentAddress: currentAddress.value,
       commentForCourier: commentForCourier.value,
       paymentMethod: paymentMethod.value,
-      // ЗАКОММЕНТИРОВАНО: промокоды
-      // promoCode: selectedPromoCode.value,
       points: pointsToUse.value,
       certificates: selectedCertificates.value,
-      // ЗАКОММЕНТИРОВАНО: промокоды
-      // promoCodes: currentPromoCodes.value,
-      // pendingPromoCode: pendingPromoCode.value,
       userInfo: !authStore.isAuth
         ? {
             name: name.value,
@@ -538,23 +588,6 @@ export const useOrderStore = defineStore("order", () => {
   const finalPrice = computed(() => {
     let price = totalSum.value
 
-    // ЗАКОММЕНТИРОВАНО: промокоды
-    // if (selectedPromoCode.value) {
-    //   const promo = currentPromoCodes.value.find((p) => p.code === selectedPromoCode.value)
-    //   if (promo) {
-    //     const sumWithoutDiscount = cartDetailed.value.reduce((sum, item) => {
-    //       const isNonDiscounted = item.oldPrice === 0 || item.oldPrice === item.price
-    //       return isNonDiscounted ? sum + item.price * item.count : sum
-    //     }, 0)
-    //
-    //     if (promo.percent) {
-    //       price -= sumWithoutDiscount * promo.value
-    //     } else {
-    //       price -= Math.min(promo.value, sumWithoutDiscount)
-    //     }
-    //   }
-    // }
-
     if (pointsToUse.value > 0 && userStore.user) {
       price -= Math.min(pointsToUse.value, price)
     }
@@ -566,6 +599,12 @@ export const useOrderStore = defineStore("order", () => {
       }, 0)
       price -= Math.min(certSum, price)
     }
+
+    let deliveryFee = deliveryCost.value
+    if (totalSum.value >= 30000) {
+      deliveryFee = 0
+    }
+    price += deliveryFee
 
     return Math.max(price, 0.01)
   })
@@ -610,7 +649,6 @@ export const useOrderStore = defineStore("order", () => {
           useType: item.useType,
         }))
         setCartItems(parsedCart) // Синхронизируем клиент с сервером
-        console.log("Cart synced from server:", parsedCart) // Для дебага
       } else {
         console.error("Server error syncing cart:", data.value?.error)
       }
@@ -1058,7 +1096,6 @@ export const useOrderStore = defineStore("order", () => {
       newAddresses = [...newAddresses, ...extendedAddresses]
     }
     addresses.value = newAddresses
-    console.log("WatchEffect: Addresses updated:", addresses.value)
   })
 
   watch(
@@ -1070,6 +1107,48 @@ export const useOrderStore = defineStore("order", () => {
     },
     { immediate: true },
   )
+
+  watch(
+    () => city.value,
+    async (newCity) => {
+      if (newCity) {
+        await loadCdekData()
+        // Принудительно обновляем метод доставки, если он был выбран ранее
+        if (deliveryMethod.value) {
+          updateDeliveryDetails()
+        }
+      }
+    },
+    { immediate: true, deep: true },
+  )
+
+  function updateDeliveryDetails() {
+    const methodId = Number(deliveryMethod.value) // Приводим к number для надёжности
+    const type = deliveryTypes.value.find((t) => t.id === methodId)
+
+    if (type) {
+      deliveryTime.value = type.term?.min || 0
+      deliveryCost.value = type.cost || 0
+
+      // Специально для ПВЗ (id=4): если selectedPvz есть, можно скорректировать цену (если API PvzSelector возвращает цену)
+      if (methodId === 4 && selectedPvz.value && selectedPvz.value.price) {
+        deliveryCost.value = selectedPvz.value.price
+      }
+    } else {
+      deliveryTime.value = 0
+      deliveryCost.value = 0
+    }
+
+    // Применяем логику бесплатной доставки только если сумма >= 30000
+    if (totalSum.value >= 30000) {
+      deliveryCost.value = 0
+    }
+  }
+
+  watch(deliveryMethod, () => {
+    updateDeliveryDetails()
+    debouncedUpdateOrderState()
+  })
 
   watch(
     () => authStore.isAuth,
@@ -1085,19 +1164,16 @@ export const useOrderStore = defineStore("order", () => {
       currentAddress,
       commentForCourier,
       paymentMethod,
-      // ЗАКОММЕНТИРОВАНО: промокоды
-      // selectedPromoCode,
       pointsToUse,
       selectedCertificates,
-      // ЗАКОММЕНТИРОВАНО: промокоды
-      // currentPromoCodes,
-      // pendingPromoCode,
       selectedPvz,
       name,
       surname,
       phone,
       email,
       () => authStore.isAuth,
+      deliveryTime,
+      deliveryCost,
     ],
     () => {
       if (!isLoaded.value) return
@@ -1177,6 +1253,13 @@ export const useOrderStore = defineStore("order", () => {
     saveNewAddress,
     getPaymentData,
     checkOrderStatus,
+    cdekData,
+    deliveryTypes,
+    deliveryTime,
+    deliveryCost,
+    isMoscow,
+    loadCdekData,
+    updateDeliveryDetails,
     isWidgetOpen,
     // ЗАКОММЕНТИРОВАНО: промокоды
     // addPromoCode,

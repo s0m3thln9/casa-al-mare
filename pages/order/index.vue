@@ -130,7 +130,8 @@ async function handlePay(): Promise<void> {
       return
     }
 
-    if (orderStore.deliveryMethod === "Курьер") {
+    const methodId = Number(orderStore.deliveryMethod)
+    if ([1, 2, 3].includes(methodId)) {
       if (!orderStore.currentAddress) {
         orderStore.showErrorDeliveryMethod = true
         return
@@ -145,7 +146,7 @@ async function handlePay(): Promise<void> {
         return
       }
     }
-    if (orderStore.deliveryMethod === "СДЭК (ПВЗ)") {
+    if (methodId === 4) {
       if (!orderStore.selectedPvz) {
         orderStore.showErrorDeliveryMethod = true
         orderStore.errorDeliveryMethod = "Выберите пункт выдачи СДЭК"
@@ -318,6 +319,24 @@ async function handleGuestAuth(): Promise<void> {
   orderStore.guestAuthButtonContent = "Код отправлен"
   orderStore.guestAuthButtonDisabled = false
   orderStore.isGuestAuthLoading = false
+}
+
+function getDayLabel(days: number): string {
+  if (days % 10 === 1 && days % 100 !== 11) return "день"
+  if (days % 10 >= 2 && days % 10 <= 4 && (days % 100 < 10 || days % 100 >= 20)) return "дня"
+  return "дней"
+}
+
+// Измените getTimeLabel — добавьте проверку на нулевые значения и используйте getDayLabel
+function getTimeLabel(type: { term?: { min: number; max: number }; isExpress?: boolean }): string {
+  if (type.isExpress) return ""
+  const min = type.term?.min || 0
+  const max = type.term?.max || 0
+  if (min === 0 && max === 0) return "" // Не показывать пустые скобки
+  if (min === max) {
+    return `(${min} ${getDayLabel(min)})`
+  }
+  return `(${min}-${max} ${getDayLabel(max)})`
 }
 
 async function handleGuestSmsConfirm(): Promise<void> {
@@ -860,20 +879,16 @@ useSmsAutoSubmit(
                 </AppTooltip>
                 <div class="flex flex-col gap-6">
                   <AppCheckbox
+                    v-for="type in orderStore.deliveryTypes"
+                    :key="type.id"
                     v-model="orderStore.deliveryMethod"
                     size="M"
-                    label="Самовывоз"
-                    value="Самовывоз"
-                  />
-                  <AppCheckbox
-                    v-model="orderStore.deliveryMethod"
-                    size="M"
-                    label="Курьер (# дней)"
-                    value="Курьер"
+                    :label="`${type.name} ${!type.isExpress ? `${getTimeLabel(type)}` : ''}`"
+                    :value="type.id"
                   />
                 </div>
                 <div
-                  v-if="orderStore.deliveryMethod === 'Курьер'"
+                  v-if="[1, 2, 3].includes(Number(orderStore.deliveryMethod))"
                   class="flex flex-col gap-4"
                 >
                   <AppCheckbox
@@ -924,18 +939,10 @@ useSmsAutoSubmit(
                     />
                   </div>
                 </div>
-                <AppCheckbox
-                  v-model="orderStore.deliveryMethod"
-                  size="M"
-                  label="СДЭК (ПВЗ)"
-                  value="СДЭК (ПВЗ)"
-                />
-                <div
-                  v-if="orderStore.deliveryMethod === 'СДЭК (ПВЗ)'"
-                  class="-mt-4"
-                >
+                <div v-if="orderStore.deliveryMethod === 4">
                   <PvzSelector
                     v-model="orderStore.selectedPvz"
+                    class="-mt-5"
                     :city="{ name: orderStore.city }"
                   />
                 </div>
@@ -1115,7 +1122,15 @@ useSmsAutoSubmit(
             <div class="flex flex-col gap-1 text-sm font-light">
               <div class="flex items-center justify-between">
                 <span>Доставка:</span>
-                <span>0 ₽ при сумме заказа от 30 000 ₽</span>
+                <span>
+                  {{
+                    Number(orderStore.deliveryMethod) === 3
+                      ? "по согласованию с менеджером"
+                      : orderStore.totalSum >= 30000
+                        ? "бесплатно"
+                        : orderStore.priceFormatter(orderStore.deliveryCost)
+                  }}</span
+                >
               </div>
               <div class="flex items-center justify-between">
                 <span>Стоимость товаров:</span>
@@ -1133,9 +1148,9 @@ useSmsAutoSubmit(
                 <span class="flex items-center gap-2">
                   {{ orderStore.priceFormatter(orderStore.finalPrice) }}
                   <span
-                    v-if="orderStore.totalSum > orderStore.finalPrice"
+                    v-if="orderStore.totalSum + orderStore.deliveryCost > orderStore.finalPrice"
                     class="font-extralight line-through"
-                    >{{ orderStore.priceFormatter(orderStore.totalSum) }}</span
+                    >{{ orderStore.priceFormatter(orderStore.totalSum + orderStore.deliveryCost) }}</span
                   >
                 </span>
               </div>
@@ -1422,7 +1437,15 @@ useSmsAutoSubmit(
                 <div class="flex flex-col gap-1 text-sm font-light">
                   <div class="flex items-center justify-between">
                     <span>Доставка:</span>
-                    <span>0 ₽ при сумме заказа от 30 000 ₽</span>
+                    <span>
+                      {{
+                        Number(orderStore.deliveryMethod) === 3
+                          ? "по согласованию с менеджером"
+                          : orderStore.totalSum >= 30000
+                            ? "бесплатно"
+                            : orderStore.priceFormatter(orderStore.deliveryCost)
+                      }}</span
+                    >
                   </div>
                   <div class="flex items-center justify-between">
                     <span>Стоимость товаров:</span>
@@ -1440,9 +1463,9 @@ useSmsAutoSubmit(
                     <span class="flex items-center gap-2">
                       {{ orderStore.priceFormatter(orderStore.finalPrice) }}
                       <span
-                        v-if="orderStore.totalSum > orderStore.finalPrice"
+                        v-if="orderStore.totalSum + orderStore.deliveryCost > orderStore.finalPrice"
                         class="font-extralight line-through"
-                        >{{ orderStore.priceFormatter(orderStore.totalSum) }}</span
+                        >{{ orderStore.priceFormatter(orderStore.totalSum + orderStore.deliveryCost) }}</span
                       >
                     </span>
                   </div>
