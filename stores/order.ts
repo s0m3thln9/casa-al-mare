@@ -99,9 +99,27 @@ interface UpdateCartResponse {
   message?: string
   cart_items_count?: number
   total_quantity?: number
-  cart: Record<string, CartItem>
+  cart: Record<
+    string,
+    {
+      id: number
+      variant: string // Только размер
+      count: number
+      updated_at: number | null
+      name: string
+      colorName: string // Название цвета
+      sizes: string[]
+      images: Record<number, string>
+      vector: Record<string, { quantity: number; comingSoon: number }>
+      type: string
+      material: string[]
+      useType: string[]
+      colors: any[] // Пустой массив
+      price: string // На верхнем уровне
+      oldPrice: string // На верхнем уровне
+    }
+  >
 }
-
 interface PaymentMethodsResponse {
   success: boolean
   data: Record<string, string>
@@ -109,17 +127,19 @@ interface PaymentMethodsResponse {
 
 export type CartItem = {
   id: number
-  variant: string
+  variant: string // Только размер (XS/S, S/M и т.д.)
   count: number
   updated_at?: number
   name: string
-  colors: Record<string, { name: string; value: string; images: number[] }>
+  colorName: string // Название цвета из API
   sizes: string[]
   images: Record<number, string>
-  vector: Record<string, { oldPrice: number; price: number; quantity: number; comingSoon: boolean }>
+  vector: Record<string, { quantity: number; comingSoon: boolean }>
   type: string
   material: string[]
   useType: string[]
+  price: number // На верхнем уровне
+  oldPrice: number // На верхнем уровне
 }
 
 export interface PaymentMethod {
@@ -564,40 +584,37 @@ export const useOrderStore = defineStore("order", () => {
   const cartDetailed = computed(() => {
     return cartItems.value.map((cartItem) => {
       if (!cartItem.variant) return
-      const [colorKey, size] = cartItem.variant.split("_")
-      const vectorData = cartItem.vector[cartItem.variant] ?? {
-        price: 0,
-        oldPrice: 0,
-      }
-      const colorData = cartItem.colors[colorKey] ?? { name: "", images: [] }
+
+      const size = cartItem.variant // Теперь variant - это размер
+      const colorName = cartItem.colorName || "Цвет не указан" // Значение по умолчанию
+
+      // Получаем массив изображений из объекта images
+      const imagesArray = Object.values(cartItem.images).filter((img) => img) // Фильтруем пустые
 
       return {
         id: cartItem.id,
         vector: cartItem.variant,
         count: cartItem.count,
         name: cartItem.name,
-        color: colorData.name,
-        images: (colorData.images ?? []).map((id) => cartItem.images[id] ?? "") ?? [],
+        color: colorName,
+        images: imagesArray,
         size,
-        price: vectorData.price,
-        oldPrice: vectorData.oldPrice,
+        price: cartItem.price,
+        oldPrice: cartItem.oldPrice,
       }
     })
   })
 
   const totalOldSum = computed(() => {
     return cartItems.value.reduce((sum, cartItem) => {
-      const vectorData = cartItem.vector[cartItem.variant]
-      if (!vectorData) return sum
-      return sum + (vectorData.oldPrice > 0 ? vectorData.oldPrice : vectorData.price) * cartItem.count
+      const oldPrice = cartItem.oldPrice > 0 ? cartItem.oldPrice : cartItem.price
+      return sum + oldPrice * cartItem.count
     }, 0)
   })
 
   const totalSum = computed(() => {
     return cartItems.value.reduce((sum, cartItem) => {
-      const vectorData = cartItem.vector[cartItem.variant]
-      if (!vectorData) return sum
-      return sum + vectorData.price * cartItem.count
+      return sum + cartItem.price * cartItem.count
     }, 0)
   })
 
@@ -652,19 +669,21 @@ export const useOrderStore = defineStore("order", () => {
         const rawCart = data.value.cart
         const parsedCart: CartItem[] = Object.entries(rawCart).map(([_, item]) => ({
           id: item.id,
-          variant: item.variant,
+          variant: item.variant, // Только размер
           count: item.count,
           updated_at: item.updated_at,
           name: item.name,
-          colors: item.colors,
+          colorName: item.colorName || "", // Добавляем значение по умолчанию
           sizes: item.sizes,
           images: item.images,
           vector: item.vector,
           type: item.type,
           material: item.material,
           useType: item.useType,
+          price: parseInt(item.price) || 0,
+          oldPrice: parseInt(item.oldPrice) || 0,
         }))
-        setCartItems(parsedCart) // Синхронизируем клиент с сервером
+        setCartItems(parsedCart)
       } else {
         console.error("Server error syncing cart:", data.value?.error)
       }
@@ -871,17 +890,19 @@ export const useOrderStore = defineStore("order", () => {
           if (data.value.cart) {
             const parsedCart: CartItem[] = Object.entries(data.value.cart).map(([_, item]) => ({
               id: item.id,
-              variant: item.variant,
+              variant: item.variant, // Только размер
               count: item.count,
               updated_at: item.updated_at,
               name: item.name,
-              colors: item.colors,
+              colorName: item.colorName || "", // Добавляем значение по умолчанию
               sizes: item.sizes,
               images: item.images,
               vector: item.vector,
               type: item.type,
               material: item.material,
               useType: item.useType,
+              price: parseInt(item.price) || 0,
+              oldPrice: parseInt(item.oldPrice) || 0,
             }))
             setCartItems(parsedCart)
           }

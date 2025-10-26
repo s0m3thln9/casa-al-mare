@@ -5,7 +5,27 @@ interface CartResponseData {
   success: boolean
   cart_items_count?: number
   total_quantity?: number
-  cart: Record<string, import("~/stores/order").CartItem>
+  cart: Record<
+    string,
+    {
+      added_at: number
+      colorName: string
+      count: number
+      id: number
+      images: Record<number, string>
+      variant: string // Теперь только размер (XS/S, S/M, M/L)
+      updated_at: null | number
+      material: string[]
+      name: string
+      oldPrice: string // На верхнем уровне
+      price: string // На верхнем уровне
+      sizes: string[]
+      type: string
+      useType: string[]
+      colors: any[] // Пустой массив (не используется)
+      vector: Record<string, { quantity: number; comingSoon: number }>
+    }
+  >
 }
 
 const cityRef = ref<InstanceType<typeof AppSelect> | null>(null)
@@ -75,20 +95,31 @@ onMounted(async () => {
 
       if (data.value?.success && data.value?.cart) {
         const rawCart = data.value.cart
-        const parsedCart: import("~/stores/order").CartItem[] = Object.entries(rawCart).map(([_, item]) => ({
-          id: item.id,
-          variant: item.variant,
-          count: item.count,
-          updated_at: item.updated_at,
-          name: item.name,
-          colors: item.colors,
-          sizes: item.sizes,
-          images: item.images,
-          vector: item.vector,
-          type: item.type,
-          material: item.material,
-          useType: item.useType,
-        }))
+        const parsedCart: import("~/stores/order").CartItem[] = Object.entries(rawCart).map(([_, item]) => {
+          const vector: Record<string, { quantity: number; comingSoon: boolean }> = {}
+          for (const [size, vecData] of Object.entries(item.vector || {})) {
+            vector[size] = {
+              quantity: vecData.quantity || 0,
+              comingSoon: !!vecData.comingSoon,
+            }
+          }
+          return {
+            id: item.id,
+            variant: item.variant, // Только размер
+            count: item.count,
+            updated_at: item.updated_at || undefined,
+            name: item.name,
+            colorName: item.colorName || "", // Добавляем значение по умолчанию
+            sizes: item.sizes,
+            images: item.images,
+            vector,
+            type: item.type,
+            material: item.material,
+            useType: item.useType,
+            price: parseInt(item.price) || 0,
+            oldPrice: parseInt(item.oldPrice) || 0,
+          }
+        })
         orderStore.setCartItems(parsedCart)
       }
     } catch (error) {
@@ -327,12 +358,11 @@ function getDayLabel(days: number): string {
   return "дней"
 }
 
-// Измените getTimeLabel — добавьте проверку на нулевые значения и используйте getDayLabel
 function getTimeLabel(type: { term?: { min: number; max: number }; isExpress?: boolean }): string {
   if (type.isExpress) return ""
   const min = type.term?.min || 0
   const max = type.term?.max || 0
-  if (min === 0 && max === 0) return "" // Не показывать пустые скобки
+  if (min === 0 && max === 0) return ""
   if (min === max) {
     return `(${min} ${getDayLabel(min)})`
   }
@@ -1260,72 +1290,6 @@ useSmsAutoSubmit(
                     </span>
                   </div>
                 </div>
-                <!-- ЗАКОММЕНТИРОВАНО: Блок промокодов -->
-                <!--
-							<div class="flex flex-col gap-4">
-								<div
-									class="flex items-center justify-between cursor-pointer"
-									@click="orderStore.togglePromoCode"
-								>
-									<span class="font-light text-sm">Промокод</span>
-									<button
-										class="w-4 h-4 flex items-center justify-center cursor-pointer transition-transform duration-300"
-										:class="orderStore.isExpandedPromoCode ? 'rotate-0' : 'rotate-180'"
-									>
-										<NuxtImg
-											src="/order-arrow.svg"
-											class="w-full"
-										/>
-									</button>
-								</div>
-								<div
-									class="collapsible-div flex flex-col gap-4 transition-max-height duration-300 ease-in-out overflow-hidden"
-									:class="{
-										'max-h-500 opacity-100': orderStore.isExpandedPromoCode,
-										'max-h-0 opacity-0': !orderStore.isExpandedPromoCode,
-									}"
-								>
-									<AppInput
-										id="promoCode"
-										v-model="orderStore.promoCode"
-										label="Введите код"
-										type="text"
-										:disabled="orderStore.isLoadingPromo"
-									/>
-									<AppButton
-										v-if="orderStore.promoCode"
-										variant="primary"
-										custom-class="w-full"
-										content="Использовать"
-										:disabled="orderStore.isLoadingPromo"
-										@click="orderStore.addPromoCode"
-									/>
-									<span
-										v-if="orderStore.addPromoCodeError"
-										class="font-light text-[13px] text-[#E57979]"
-										>{{ orderStore.addPromoCodeError }}</span
-									>
-									<template
-										v-for="promoCode in orderStore.currentPromoCodes"
-										:key="promoCode.code"
-									>
-										<AppCheckbox
-											v-model="orderStore.pendingPromoCode"
-											size="S"
-											:label="`Промокод «${promoCode.code}» -${promoCode.percent ? promoCode.value * 100 : promoCode.value}${promoCode.percent ? '%' : ' ₽'} Выгода ${orderStore.savedMoney(promoCode.value)} ₽`"
-											:value="promoCode.code"
-										/>
-									</template>
-									<AppButton
-										variant="primary"
-										custom-class="w-full"
-										content="Применить промокод"
-										:disabled="!orderStore.pendingPromoCode || orderStore.isLoadingPromo"
-										@click="orderStore.applyPromoCode"
-									/>
-								</div>
-							</div>
-							-->
                 <div
                   v-if="authStore.isAuth"
                   class="flex flex-col gap-4"
@@ -1496,10 +1460,16 @@ useSmsAutoSubmit(
         >
           Смотреть все
         </div>
-        <div class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase">
+        <div
+          class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
+          @click="navigateTo('/catalog?path=kupalniki/niz')"
+        >
           Нижняя часть купальника
         </div>
-        <div class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase">
+        <div
+          class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
+          @click="navigateTo('/catalog')"
+        >
           Головные уборы
         </div>
         <div
@@ -1508,13 +1478,22 @@ useSmsAutoSubmit(
         >
           Cертификаты
         </div>
-        <div class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase">
+        <div
+          class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
+          @click="navigateTo('/catalog?path=kupalniki')"
+        >
           Купальники
         </div>
-        <div class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase">
+        <div
+          class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
+          @click="navigateTo('/catalog?path=kupalniki/verx')"
+        >
           Верхняя часть купальника
         </div>
-        <div class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase">
+        <div
+          class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
+          @click="navigateTo('/catalog')"
+        >
           Аксессуары
         </div>
         <div
