@@ -942,8 +942,7 @@ useSmsAutoSubmit(
                 <div v-if="orderStore.deliveryMethod === 4">
                   <PvzSelector
                     v-model="orderStore.selectedPvz"
-                    class="-mt-5"
-                    :city="{ name: orderStore.city }"
+                    :city="{ name: orderStore.city?.name || 'Москва' }"
                   />
                 </div>
                 <AppInput
