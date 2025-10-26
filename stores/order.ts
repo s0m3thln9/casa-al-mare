@@ -79,7 +79,7 @@ export interface OrderState {
   userInfo?: UserInfo | null
   cart?: Record<string, CartItem>
   pvz?: PvzData | null
-  deliveryTime?: number
+  deliveryTime?: string | null
   deliveryCost?: number
 }
 
@@ -213,7 +213,7 @@ export const useOrderStore = defineStore("order", () => {
     { id: 3, name: "Экспресс-доставка", isExpress: true },
     { id: 4, name: "СДЭК (ПВЗ)", term: { min: 0, max: 0 }, cost: 0 },
   ])
-  const deliveryTime = ref<number>(0)
+  const deliveryTime = ref<string | null>(null)
   const deliveryCost = ref<number>(0)
   const isMoscow = ref<boolean>(false)
 
@@ -334,6 +334,7 @@ export const useOrderStore = defineStore("order", () => {
       console.error("Ошибка загрузки user data:", error)
     }
   }
+
   function updateDeliveryType(id: number, term: { min: number; max: number }, cost: number) {
     const type = deliveryTypes.value.find((t) => t.id === id)
     if (type) {
@@ -351,6 +352,14 @@ export const useOrderStore = defineStore("order", () => {
       if (data) {
         cdekData.value = data
 
+        // Новое: всегда переинициализируем полный массив перед обновлением
+        deliveryTypes.value = [
+          { id: 1, name: "Курьер СДЭК", term: { min: 0, max: 0 }, cost: 0 },
+          { id: 2, name: "Курьер СДЭК с примеркой", term: { min: 0, max: 0 }, cost: 0 },
+          { id: 3, name: "Экспресс-доставка", isExpress: true },
+          { id: 4, name: "СДЭК (ПВЗ)", term: { min: 0, max: 0 }, cost: 0 },
+        ]
+
         // Обновляем типы доставки только если данные валидны
         if (data.courier && data.courier.term && typeof data.courier.price === "number") {
           updateDeliveryType(1, data.courier.term, data.courier.price)
@@ -367,8 +376,15 @@ export const useOrderStore = defineStore("order", () => {
           deliveryTypes.value = deliveryTypes.value.filter((type) => type.id !== 3)
         }
 
+        // Новое: если выбранный метод больше недоступен (например, экспресс в не-Москве), сбрасываем выбор
+        if (deliveryMethod.value && !deliveryTypes.value.some((t) => t.id === Number(deliveryMethod.value))) {
+          deliveryMethod.value = null
+          deliveryTime.value = null
+          deliveryCost.value = 0
+        }
+
         // Принудительно обновляем детали после загрузки данных
-        await nextTick() // Ждём следующего тика для реактивности
+        await nextTick()
         updateDeliveryDetails()
       }
     } catch (error) {
@@ -483,7 +499,7 @@ export const useOrderStore = defineStore("order", () => {
 
     const orderStateObj: Partial<OrderState> = {
       deliveryMethod: deliveryMethod.value,
-      deliveryTime: deliveryTime.value,
+      deliveryTime: deliveryTime.value, // Теперь строка или null
       deliveryCost: deliveryCost.value,
       pvz: selectedPvz.value,
       city: city.value,
@@ -754,6 +770,8 @@ export const useOrderStore = defineStore("order", () => {
     commentForCourier.value = ""
     currentAddress.value = null
     deliveryMethod.value = null
+    deliveryTime.value = null
+    deliveryCost.value = 0
     newAddressFirstLine.value = ""
     newAddressSecondLine.value = ""
     showErrorDeliveryMethod.value = false
@@ -1112,7 +1130,7 @@ export const useOrderStore = defineStore("order", () => {
     () => city.value,
     async (newCity) => {
       if (newCity) {
-        await loadCdekData()
+        await loadCdekData() // Уже было, но теперь с улучшенной логикой внутри
         // Принудительно обновляем метод доставки, если он был выбран ранее
         if (deliveryMethod.value) {
           updateDeliveryDetails()
@@ -1123,23 +1141,29 @@ export const useOrderStore = defineStore("order", () => {
   )
 
   function updateDeliveryDetails() {
-    const methodId = Number(deliveryMethod.value) // Приводим к number для надёжности
+    const methodId = Number(deliveryMethod.value)
     const type = deliveryTypes.value.find((t) => t.id === methodId)
 
     if (type) {
-      deliveryTime.value = type.term?.min || 0
+      if (type.term && type.term.min !== undefined && type.term.max !== undefined) {
+        deliveryTime.value = `${type.term.min}-${type.term.max}` // Новое: формируем строку периода
+      } else if (type.isExpress) {
+        deliveryTime.value = null // Для экспресса — null
+      } else {
+        deliveryTime.value = null // По умолчанию null, если term отсутствует
+      }
       deliveryCost.value = type.cost || 0
 
-      // Специально для ПВЗ (id=4): если selectedPvz есть, можно скорректировать цену (если API PvzSelector возвращает цену)
+      // Специально для ПВЗ (id=4): если selectedPvz есть, можно скорректировать цену
       if (methodId === 4 && selectedPvz.value && selectedPvz.value.price) {
         deliveryCost.value = selectedPvz.value.price
       }
     } else {
-      deliveryTime.value = 0
+      deliveryTime.value = null
       deliveryCost.value = 0
     }
 
-    // Применяем логику бесплатной доставки только если сумма >= 30000
+    // Применяем логику бесплатной доставки
     if (totalSum.value >= 30000) {
       deliveryCost.value = 0
     }
