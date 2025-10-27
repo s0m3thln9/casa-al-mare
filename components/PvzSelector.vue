@@ -38,7 +38,7 @@ const loadWidget = () => {
     country: "Россия",
     root: false,
     popup: true,
-    servicePath: "/lib/pvzwidget/service.php",
+    servicePath: "https://back.casaalmare.com/lib/pvzwidget/service.php",
     hideFilters: {
       have_cashless: true,
       have_cash: true,
