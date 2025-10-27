@@ -4,6 +4,7 @@ const props = defineProps<{
     code: string
     name: string
     value: string
+    art?: string
   }[]
   modelValue: { code: string; name: string; value: string } | { code: string; name: string; value: string }[] | null
   text?: boolean
@@ -44,7 +45,10 @@ const isSelected = (color: { code: string; name: string; value: string }) => {
   return (props.modelValue as { code: string; name: string } | null)?.code === color.code
 }
 
-const isWhite = (color: { value: string }) => color.value.toLowerCase() === "#ffffff"
+const needsBorder = (color: { art?: string }) => {
+  const art = color.art?.toUpperCase()
+  return art === "WH" || art === "BW" || art === "RW"
+}
 </script>
 
 <template>
@@ -61,9 +65,9 @@ const isWhite = (color: { value: string }) => color.value.toLowerCase() === "#ff
         :class="[
           'w-6 h-6 rounded-lg',
           isSelected(color) && 'border-2 border-[#211D1D]',
-          !isSelected(color) && isWhite(color) && 'border-1 border-[#211D1D]',
+          !isSelected(color) && needsBorder(color) && 'border-1 border-[#211D1D]',
         ]"
-        :style="{ backgroundColor: color.value }"
+        :style="{ background: color.value }"
       />
     </button>
     <span

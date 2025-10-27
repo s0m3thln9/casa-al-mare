@@ -36,10 +36,14 @@ export type Item = {
     id: number
     name: string
     alias: string
+    catName?: string
+    image?: string
+    activeImage?: string
   }[]
   parent: string
   colorVal: string
   colorName: string
+  colorArt?: string
   colors?: {
     [code: string]: {
       name: string
@@ -167,23 +171,41 @@ export const useCatalogStore = defineStore("catalog", () => {
   }
 
   const popupDynamicFilters = computed(() => {
-    const pathLevels: { name: string; alias: string }[][] = []
+    const pathLevels: { name: string; alias: string; image?: string; activeImage?: string }[][] = []
+    const pathLevelNames: string[] = []
     const maxLevels = maxParentsLength.value
+
     for (let level = 0; level < maxLevels; level++) {
       const levelItems = getFilteredItemsForLevel(level)
       const uniqueParents = new Map(
         levelItems
           .map((item) => item.parents[level])
           .filter(Boolean)
-          .map((p) => [p.alias, { name: p.name, alias: p.alias }]),
+          .map((p) => [
+            p.alias,
+            {
+              name: p.name,
+              alias: p.alias,
+              image: p.image,
+              activeImage: p.activeImage,
+            },
+          ]),
       )
       const levelOptions = Array.from(uniqueParents.values())
       pathLevels.push(levelOptions)
+
+      if (level === 0) {
+        pathLevelNames.push("Категория")
+      } else {
+        const prevLevelItems = getFilteredItemsForLevel(level - 1)
+        const firstItemWithCatName = prevLevelItems.find((item) => item.parents[level - 1]?.catName)
+        pathLevelNames.push(firstItemWithCatName?.parents[level - 1]?.catName || "")
+      }
     }
 
     const pathFilteredItems = getFilteredItemsForLevel(pendingFilters.value.parentsAliases.filter(Boolean).length)
 
-    const colors: { code: string; name: string; value: string }[] = []
+    const colors: { code: string; name: string; value: string; art?: string }[] = []
     const colorsSet = new Set()
     pathFilteredItems.forEach((item) => {
       item.keys
@@ -196,6 +218,7 @@ export const useCatalogStore = defineStore("catalog", () => {
               code: k.alias,
               name: k.name,
               value: k.value || k.alias,
+              art: item.colorArt,
             })
           }
         })
@@ -234,7 +257,7 @@ export const useCatalogStore = defineStore("catalog", () => {
         })
     })
 
-    return { pathLevels, colors, materials, extraFilters }
+    return { pathLevels, pathLevelNames, colors, materials, extraFilters }
   })
 
   watch(

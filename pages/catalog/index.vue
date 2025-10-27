@@ -321,10 +321,32 @@ const load = () => {
               "
               class="flex flex-col items-center gap-4 sm:gap-6"
             >
-              <h3 class="font-[Inter] text-[17px] font-light sm:font-[Manrope] sm:font-light sm:text-base sm:uppercase">
-                {{ levelIndex === 0 ? "Категория" : `Подкатегория ${levelIndex}` }}
+              <h3
+                v-if="catalogStore.popupDynamicFilters.pathLevelNames[levelIndex]"
+                class="font-[Inter] text-[17px] font-light sm:font-[Manrope] sm:font-light sm:text-base sm:uppercase"
+              >
+                {{ catalogStore.popupDynamicFilters.pathLevelNames[levelIndex] }}
               </h3>
-              <div class="flex flex-wrap gap-4 items-center justify-center">
+              <div
+                v-if="levelOptions.some((opt) => opt.image && opt.image.trim() !== '')"
+                class="flex gap-6 items-center justify-center"
+              >
+                <ImageButton
+                  v-model="catalogStore.pendingFilters.parentsAliases[levelIndex]"
+                  :items="
+                    levelOptions.map((opt) => ({
+                      alias: opt.alias,
+                      name: opt.name,
+                      image: opt.image || '',
+                      activeImage: opt.activeImage || opt.image || '',
+                    }))
+                  "
+                />
+              </div>
+              <div
+                v-else
+                class="flex flex-wrap gap-4 items-center justify-center"
+              >
                 <SingleSelectButton
                   v-model="catalogStore.pendingFilters.parentsAliases[levelIndex]"
                   :content="levelOptions.map((opt) => ({ value: opt.alias, label: opt.name }))"
