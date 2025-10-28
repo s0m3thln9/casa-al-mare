@@ -104,6 +104,7 @@ const availableColors = computed(() => {
       alias: colorItem.alias,
       colorVal: colorItem.colorVal,
       colorName: colorItem.colorName,
+      art: colorItem.colorArt,
     }))
     .filter((c1, idx, arr) => arr.findIndex((c2) => c2.colorVal === c1.colorVal) === idx)
   return uniqueColors.sort((a, b) => a.colorName.localeCompare(b.colorName))
@@ -300,7 +301,10 @@ const priceFormatter = (value: number): string => {
   return `${formattedValue} ₽`
 }
 
-const isWhite = (colorVal: string) => colorVal.toLowerCase() === "#ffffff"
+const needsBorder = (color: { art?: string }) => {
+  const art = color.art?.toUpperCase()
+  return art === "WH" || art === "BW" || art === "RW"
+}
 
 watch(
   item,
@@ -312,6 +316,7 @@ watch(
           code: newItem.colorVal,
           name: newItem.colorName,
           value: newItem.colorVal,
+          art: newItem.colorArt,
         }
       }
       // Устанавливаем первый доступный размер
@@ -544,7 +549,7 @@ watch(
         </div>
         <div class="flex flex-col justify-center items-center gap-6 mt-14">
           <div class="flex justify-center items-center gap-4">
-            <div class="flex gap-4">
+            <div class="flex gap-4 flex-wrap">
               <NuxtLink
                 v-for="colorItem in availableColors"
                 :key="colorItem.alias"
@@ -556,10 +561,10 @@ watch(
                     'w-6 h-6 rounded-lg',
                     colorItem.colorVal === currentColorCode && 'border-2 border-[#211D1D]',
                     colorItem.colorVal !== currentColorCode &&
-                      isWhite(colorItem.colorVal) &&
+                      needsBorder(colorItem) &&
                       'border-1 border-[#211D1D] hover:border-1 hover:border-[#211D1D]',
                   ]"
-                  :style="{ backgroundColor: colorItem.colorVal }"
+                  :style="{ background: colorItem.colorVal }"
                 />
                 <span class="text-xs font-[Manrope] text-center hidden sm:block">{{ colorItem.colorName }}</span>
               </NuxtLink>

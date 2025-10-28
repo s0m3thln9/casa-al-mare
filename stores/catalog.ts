@@ -49,6 +49,7 @@ export type Item = {
       name: string
       value: string
       images: string[]
+      art?: string
     }
   }
 }
