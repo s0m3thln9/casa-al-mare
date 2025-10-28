@@ -30,7 +30,7 @@ const selectedSubmenuLabel = ref<string | null>(null)
 const viewport = useViewport()
 const isMobile = computed(() => viewport.isLessThan("sm"))
 
-// Рекурсивная функция для построения меню из дерева
+// Рекурсивная функция для построения меню из дерева (только 1 уровень)
 const buildMenuFromTree = (node: DocNode, parentPath = ""): MenuItem[] => {
   const items: MenuItem[] = []
 
@@ -49,9 +49,22 @@ const buildMenuFromTree = (node: DocNode, parentPath = ""): MenuItem[] => {
         path: currentPath,
       }
 
-      // Рекурсивно обрабатываем подкатегории
-      if (item.subitems) {
-        const submenu = buildMenuFromTree(item, currentPath)
+      // Добавляем подменю только для элементов первого уровня (без parentPath)
+      if (!parentPath && item.subitems) {
+        const submenu: MenuItem[] = []
+
+        for (const subKey in item.subitems) {
+          const subItem = item.subitems[subKey]
+
+          if (subItem.template === 2) {
+            submenu.push({
+              label: subItem.pagetitle,
+              link: "/catalog",
+              path: `${currentPath}/${subItem.alias}`,
+            })
+          }
+        }
+
         if (submenu.length > 0) {
           menuItem.submenu = submenu
         }
