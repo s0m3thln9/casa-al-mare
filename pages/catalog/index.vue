@@ -17,19 +17,47 @@ const currentCardCount = computed(() =>
 
 const route = useRoute()
 
-// Функция для применения фильтров из query параметров
 const applyFiltersFromQuery = (q: any) => {
   let parentsAliasesFromQuery: string[][] = []
+  const thirdLevelByParent: Record<string, string[]> = {}
+
   if (typeof q.path === "string" && q.path.trim() !== "") {
-    parentsAliasesFromQuery = q.path
+    const segments = q.path
       .replace(/^\/+|\/+$/g, "")
       .split("/")
       .filter((p) => p.trim() !== "")
       .map((segment) => segment.split(",").filter((alias) => alias.trim() !== ""))
-  }
-  catalogStore.currentFilters.parentsAliases = parentsAliasesFromQuery
 
-  // Обработка цвета
+    parentsAliasesFromQuery = segments.slice(0, 2)
+
+    if (segments.length > 2 && parentsAliasesFromQuery.length === 2) {
+      const thirdLevelAliases = segments[2]
+      const secondLevelParents = parentsAliasesFromQuery[1]
+
+      thirdLevelAliases.forEach((thirdAlias) => {
+        const itemWithThisChild = catalogStore.items.find(
+          (item) =>
+            item.parents.length > 2 &&
+            item.parents[2]?.alias === thirdAlias &&
+            secondLevelParents.some((parentAlias) => item.parents[1]?.alias === parentAlias),
+        )
+
+        if (itemWithThisChild && itemWithThisChild.parents[1]) {
+          const parentAlias = itemWithThisChild.parents[1].alias
+          if (!thirdLevelByParent[parentAlias]) {
+            thirdLevelByParent[parentAlias] = []
+          }
+          if (!thirdLevelByParent[parentAlias].includes(thirdAlias)) {
+            thirdLevelByParent[parentAlias].push(thirdAlias)
+          }
+        }
+      })
+    }
+  }
+
+  catalogStore.currentFilters.parentsAliases = parentsAliasesFromQuery
+  catalogStore.currentFilters.thirdLevelByParent = thirdLevelByParent
+
   if (typeof q.color === "string" && q.color.trim() !== "") {
     const colorCode = q.color.trim()
     const colorKey = catalogStore.items.find((item) =>
@@ -45,49 +73,42 @@ const applyFiltersFromQuery = (q: any) => {
     catalogStore.currentFilters.colors = []
   }
 
-  // Обработка материала
   if (typeof q.material === "string" && q.material.trim() !== "") {
     catalogStore.currentFilters.materials = q.material.trim()
   } else {
     catalogStore.currentFilters.materials = ""
   }
 
-  // Обработка поискового запроса
   if (typeof q.query === "string") {
     catalogStore.currentFilters.searchQuery = q.query.trim()
   } else {
     catalogStore.currentFilters.searchQuery = ""
   }
 
-  // Обработка максимальной цены
   if (typeof q.maxPrice === "string" && q.maxPrice.trim() !== "") {
     catalogStore.currentFilters.maxPrice = parseInt(q.maxPrice.trim()) || null
   } else {
     catalogStore.currentFilters.maxPrice = null
   }
 
-  // Обработка сортировки
   if (typeof q.sortType === "string" && q.sortType.trim() !== "") {
     catalogStore.currentFilters.sortType = q.sortType.trim()
   } else {
     catalogStore.currentFilters.sortType = null
   }
 
-  // Обработка фильтра "в наличии"
   if (typeof q.inStock === "string" && q.inStock.trim() !== "") {
     catalogStore.currentFilters.inStock = q.inStock.trim()
   } else {
     catalogStore.currentFilters.inStock = null
   }
 
-  // Обработка фильтра "со скидкой"
   if (typeof q.withDiscount === "string" && q.withDiscount.trim() !== "") {
     catalogStore.currentFilters.withDiscount = q.withDiscount.trim()
   } else {
     catalogStore.currentFilters.withDiscount = null
   }
 
-  // Инициализация extra
   catalogStore.currentFilters.extra = {}
 }
 
@@ -376,7 +397,7 @@ const load = () => {
                 class="flex gap-6 items-center justify-center"
               >
                 <ImageButton
-                  :model-value="catalogStore.pendingFilters.parentsAliases[2] || []"
+                  :model-value="catalogStore.pendingFilters.thirdLevelByParent[group.parentAlias] || []"
                   :items="
                     group.options.map((opt) => ({
                       alias: opt.alias,
@@ -388,10 +409,10 @@ const load = () => {
                   multiple
                   @update:model-value="
                     (val) => {
-                      if (!catalogStore.pendingFilters.parentsAliases[2]) {
-                        catalogStore.pendingFilters.parentsAliases[2] = []
+                      if (!catalogStore.pendingFilters.thirdLevelByParent[group.parentAlias]) {
+                        catalogStore.pendingFilters.thirdLevelByParent[group.parentAlias] = []
                       }
-                      catalogStore.pendingFilters.parentsAliases[2] = val
+                      catalogStore.pendingFilters.thirdLevelByParent[group.parentAlias] = val
                     }
                   "
                 />
@@ -401,14 +422,14 @@ const load = () => {
                 class="flex flex-wrap gap-4 items-center justify-center"
               >
                 <MultiSelectButton
-                  :model-value="catalogStore.pendingFilters.parentsAliases[2] || []"
+                  :model-value="catalogStore.pendingFilters.thirdLevelByParent[group.parentAlias] || []"
                   :content="group.options.map((opt) => ({ value: opt.alias, label: opt.name }))"
                   @update:model-value="
                     (val) => {
-                      if (!catalogStore.pendingFilters.parentsAliases[2]) {
-                        catalogStore.pendingFilters.parentsAliases[2] = []
+                      if (!catalogStore.pendingFilters.thirdLevelByParent[group.parentAlias]) {
+                        catalogStore.pendingFilters.thirdLevelByParent[group.parentAlias] = []
                       }
-                      catalogStore.pendingFilters.parentsAliases[2] = val
+                      catalogStore.pendingFilters.thirdLevelByParent[group.parentAlias] = val
                     }
                   "
                 />
