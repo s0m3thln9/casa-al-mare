@@ -110,6 +110,38 @@ const availableColors = computed(() => {
   return uniqueColors.sort((a, b) => a.colorName.localeCompare(b.colorName))
 })
 
+const sortedShapes = computed(() => {
+  if (!item.value?.complex || item.value.complex.length === 0) return []
+
+  // Создаем массив всех форм
+  const allShapes = [...item.value.complex]
+
+  // Добавляем текущую форму если её нет в complex
+  if (item.value.parents[2]) {
+    const currentShapeInComplex = allShapes.find((s) => s.id === item.value.parents[2].id)
+    if (!currentShapeInComplex) {
+      allShapes.push({
+        id: item.value.parents[2].id,
+        name: item.value.parents[2].name,
+        link: item.value.link,
+        image: item.value.parents[2].image,
+        activeImage: item.value.parents[2].activeImage,
+      })
+    }
+  }
+
+  // Сортируем по id для стабильного порядка
+  return allShapes.sort((a, b) => a.id - b.id)
+})
+
+const decodeSvg = (dataUrl: string) => {
+  if (!dataUrl || !dataUrl.startsWith("data:image/svg+xml")) {
+    return dataUrl
+  }
+  const svgContent = dataUrl.replace(/^data:image\/svg\+xml;utf8,/, "")
+  return decodeURIComponent(svgContent)
+}
+
 const breadcrumsItems = computed(() => {
   if (isLoading.value) {
     return [{ name: "Главная", path: "/" }, { name: "Смотреть все", path: "/catalog" }, { name: "Название" }]
@@ -585,6 +617,29 @@ watch(
             >
           </div>
           <span class="text-xs">Размер</span>
+        </div>
+        <div
+          v-if="sortedShapes.length > 0"
+          class="flex flex-col justify-center items-center gap-6 mt-12 sm:mt-10"
+        >
+          <div class="flex justify-center items-center gap-4">
+            <div class="flex gap-4 flex-wrap">
+              <NuxtLink
+                v-for="shapeItem in sortedShapes"
+                :key="shapeItem.id"
+                :to="item?.parents[2]?.id !== shapeItem.id && shapeItem.link"
+                class="flex flex-col justify-center gap-2 items-center cursor-pointer"
+              >
+                <div class="w-[52px] h-[52px] flex items-center justify-center">
+                  <div
+                    class="w-full h-full flex items-center justify-center"
+                    v-html="decodeSvg(item?.parents[2]?.id === shapeItem.id ? shapeItem.activeImage : shapeItem.image)"
+                  />
+                </div>
+                <span class="text-xs font-[Manrope] text-center">{{ shapeItem.name }}</span>
+              </NuxtLink>
+            </div>
+          </div>
         </div>
         <div class="flex flex-col justify-center items-center gap-1 mt-12 sm:mt-10">
           <span class="font-light text-xs">На модели размер: S</span>
