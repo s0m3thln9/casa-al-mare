@@ -19,15 +19,14 @@ const route = useRoute()
 
 // Функция для применения фильтров из query параметров
 const applyFiltersFromQuery = (q: any) => {
-  // Обработка пути (категорий)
-  let parentsAliasesFromQuery: string[] = []
+  let parentsAliasesFromQuery: string[][] = []
   if (typeof q.path === "string" && q.path.trim() !== "") {
     parentsAliasesFromQuery = q.path
       .replace(/^\/+|\/+$/g, "")
       .split("/")
       .filter((p) => p.trim() !== "")
+      .map((segment) => segment.split(",").filter((alias) => alias.trim() !== ""))
   }
-  // ИСПРАВЛЕНИЕ: Не дополняем пустыми строками при применении из URL
   catalogStore.currentFilters.parentsAliases = parentsAliasesFromQuery
 
   // Обработка цвета
@@ -117,35 +116,42 @@ const breadcrumsItems = computed(() => {
     { name: "Смотреть все", path: "/catalog" },
   ]
 
-  // Получаем массив алиасов из пути
   const pathFromQuery = route.query.path
   if (typeof pathFromQuery === "string" && pathFromQuery.trim() !== "") {
-    const aliases = pathFromQuery
+    const segments = pathFromQuery
       .replace(/^\/+|\/+$/g, "")
       .split("/")
       .filter((p) => p.trim() !== "")
 
-    // Для каждого алиаса создаем элемент breadcrumb
-    aliases.forEach((alias, index) => {
-      // Находим категорию по алиасу
-      const category = catalogStore.items.flatMap((item) => item.parents || []).find((parent) => parent.alias === alias)
+    segments.forEach((segment, index) => {
+      const aliases = segment.split(",").filter((a) => a.trim() !== "")
 
-      if (category) {
-        // Формируем путь из всех предыдущих алиасов + текущий
-        const pathSegments = aliases.slice(0, index + 1)
+      if (aliases.length === 1) {
+        // Один алиас - обычное поведение
+        const category = catalogStore.items
+          .flatMap((item) => item.parents || [])
+          .find((parent) => parent.alias === aliases[0])
+        const pathSegments = segments.slice(0, index + 1)
         const categoryPath = `/catalog?path=${pathSegments.join("/")}`
 
         items.push({
-          name: category.name,
+          name: category?.name || aliases[0].charAt(0).toUpperCase() + aliases[0].slice(1).replace(/-/g, " "),
           path: categoryPath,
         })
       } else {
-        // Если категория не найдена, используем алиас с капитализацией
-        const pathSegments = aliases.slice(0, index + 1)
+        // Несколько алиасов - показываем через запятую
+        const names = aliases.map((alias) => {
+          const category = catalogStore.items
+            .flatMap((item) => item.parents || [])
+            .find((parent) => parent.alias === alias)
+          return category?.name || alias.charAt(0).toUpperCase() + alias.slice(1).replace(/-/g, " ")
+        })
+
+        const pathSegments = segments.slice(0, index + 1)
         const categoryPath = `/catalog?path=${pathSegments.join("/")}`
 
         items.push({
-          name: alias.charAt(0).toUpperCase() + alias.slice(1).replace(/-/g, " "),
+          name: names.join(", "),
           path: categoryPath,
         })
       }
@@ -311,13 +317,14 @@ const load = () => {
       <div class="mt-6 flex flex-col gap-10 sm:mt-10">
         <div class="flex flex-col gap-4 sm:gap-6">
           <template
-            v-for="(levelOptions, levelIndex) in catalogStore.popupDynamicFilters.pathLevels"
+            v-for="(levelOptions, levelIndex) in catalogStore.popupDynamicFilters.pathLevels.slice(0, 2)"
             :key="`level-${levelIndex}`"
           >
             <div
               v-if="
                 levelOptions.length > 0 &&
-                catalogStore.pendingFilters.parentsAliases.slice(0, levelIndex).filter(Boolean).length === levelIndex
+                catalogStore.pendingFilters.parentsAliases.slice(0, levelIndex).filter((seg) => seg.length > 0)
+                  .length === levelIndex
               "
               class="flex flex-col items-center gap-4 sm:gap-6"
             >
@@ -341,15 +348,69 @@ const load = () => {
                       activeImage: opt.activeImage || opt.image || '',
                     }))
                   "
+                  multiple
                 />
               </div>
               <div
                 v-else
                 class="flex flex-wrap gap-4 items-center justify-center"
               >
-                <SingleSelectButton
+                <MultiSelectButton
                   v-model="catalogStore.pendingFilters.parentsAliases[levelIndex]"
                   :content="levelOptions.map((opt) => ({ value: opt.alias, label: opt.name }))"
+                />
+              </div>
+            </div>
+          </template>
+
+          <template
+            v-for="(group, index) in catalogStore.popupDynamicFilters.thirdLevelGroups"
+            :key="`third-level-${index}`"
+          >
+            <div class="flex flex-col items-center gap-4 sm:gap-6">
+              <h3 class="font-[Inter] text-[17px] font-light sm:font-[Manrope] sm:font-light sm:text-base sm:uppercase">
+                {{ group.catName }}
+              </h3>
+              <div
+                v-if="group.options.some((opt) => opt.image && opt.image.trim() !== '')"
+                class="flex gap-6 items-center justify-center"
+              >
+                <ImageButton
+                  :model-value="catalogStore.pendingFilters.parentsAliases[2] || []"
+                  :items="
+                    group.options.map((opt) => ({
+                      alias: opt.alias,
+                      name: opt.name,
+                      image: opt.image || '',
+                      activeImage: opt.activeImage || opt.image || '',
+                    }))
+                  "
+                  multiple
+                  @update:model-value="
+                    (val) => {
+                      if (!catalogStore.pendingFilters.parentsAliases[2]) {
+                        catalogStore.pendingFilters.parentsAliases[2] = []
+                      }
+                      catalogStore.pendingFilters.parentsAliases[2] = val
+                    }
+                  "
+                />
+              </div>
+              <div
+                v-else
+                class="flex flex-wrap gap-4 items-center justify-center"
+              >
+                <MultiSelectButton
+                  :model-value="catalogStore.pendingFilters.parentsAliases[2] || []"
+                  :content="group.options.map((opt) => ({ value: opt.alias, label: opt.name }))"
+                  @update:model-value="
+                    (val) => {
+                      if (!catalogStore.pendingFilters.parentsAliases[2]) {
+                        catalogStore.pendingFilters.parentsAliases[2] = []
+                      }
+                      catalogStore.pendingFilters.parentsAliases[2] = val
+                    }
+                  "
                 />
               </div>
             </div>

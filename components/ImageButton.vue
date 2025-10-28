@@ -6,22 +6,39 @@ const props = defineProps<{
     image: string
     activeImage: string
   }[]
-  modelValue: string | null
+  modelValue: string | string[] | null
+  multiple?: boolean
 }>()
 
 const emit = defineEmits<{
-  (e: "update:modelValue", value: string | null): void
+  (e: "update:modelValue", value: string | string[] | null): void
 }>()
 
 const select = (alias: string) => {
-  if (props.modelValue === alias) {
-    emit("update:modelValue", null)
+  if (props.multiple) {
+    // Режим множественного выбора
+    const currentValues = Array.isArray(props.modelValue) ? [...props.modelValue] : []
+    const index = currentValues.indexOf(alias)
+    if (index > -1) {
+      currentValues.splice(index, 1)
+    } else {
+      currentValues.push(alias)
+    }
+    emit("update:modelValue", currentValues)
   } else {
-    emit("update:modelValue", alias)
+    // Режим одиночного выбора
+    if (props.modelValue === alias) {
+      emit("update:modelValue", null)
+    } else {
+      emit("update:modelValue", alias)
+    }
   }
 }
 
 const isSelected = (alias: string) => {
+  if (props.multiple) {
+    return Array.isArray(props.modelValue) && props.modelValue.includes(alias)
+  }
   return props.modelValue === alias
 }
 
