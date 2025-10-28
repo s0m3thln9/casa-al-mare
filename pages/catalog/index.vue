@@ -86,7 +86,7 @@ const applyFiltersFromQuery = (q: any) => {
   }
 
   if (typeof q.maxPrice === "string" && q.maxPrice.trim() !== "") {
-    catalogStore.currentFilters.maxPrice = parseInt(q.maxPrice.trim()) || null
+    catalogStore.currentFilters.maxPrice = q.maxPrice.trim()
   } else {
     catalogStore.currentFilters.maxPrice = null
   }
@@ -507,7 +507,7 @@ const load = () => {
             <div class="flex flex-wrap gap-4 items-center justify-center">
               <SingleSelectButton
                 v-model="catalogStore.pendingFilters.maxPrice"
-                :content="catalogStore.filters.maxPrices()"
+                :content="catalogStore.filters.maxPrices"
               />
             </div>
             <div class="flex flex-wrap gap-4 items-center justify-center">

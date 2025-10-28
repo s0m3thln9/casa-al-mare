@@ -57,7 +57,7 @@ type SortAndFilter = {
   parentsAliases: string[][]
   thirdLevelByParent: Record<string, string[]>
   colors: { code: string; name: string; value: string }[]
-  maxPrice: number | null
+  maxPrice: string | null // Изменено с number на string
   sortType: string | null
   withDiscount: string | null
   inStock: string | null
@@ -380,26 +380,30 @@ export const useCatalogStore = defineStore("catalog", () => {
     { deep: true },
   )
 
-  const filters = computed(() => ({
-    maxPrices: (): { label: string; value: number }[] => {
-      const allPrices: number[] = items.value.map((item) => parseInt(item.price || "0")).filter((p) => p > 0)
-      const uniquePrices = [...new Set(allPrices)].sort((a, b) => a - b)
-      const minPrice = uniquePrices[0] ?? 0
-      const maxPrice = uniquePrices[uniquePrices.length - 1] ?? 0
-      const ranges: { label: string; value: number }[] = []
-      if (minPrice < 15000) ranges.push({ label: "до 15000", value: 15000 })
-      if (maxPrice > 20000) ranges.push({ label: "до 20000", value: 20000 })
-      if (maxPrice > 25000) ranges.push({ label: "до 25000", value: 25000 })
-      if (maxPrice > 30000) ranges.push({ label: "до 30000", value: 30000 })
-      if (maxPrice > 35000) ranges.push({ label: "до 35000", value: 35000 })
-      if (maxPrice > 40000) ranges.push({ label: "до 40000", value: 40000 })
-      if (maxPrice > 45000) ranges.push({ label: "до 45000", value: 45000 })
-      return ranges.filter((range) => range.value <= maxPrice)
-    },
-    inStock: ["В наличии"],
-    withDiscount: ["Со скидкой"],
-    sortTypes: ["По убыванию цены", "По возрастанию цены"],
-  }))
+  const filters = computed(() => {
+    const allPrices = items.value.map((item) => parseInt(item.price || "0")).filter((p) => p > 0)
+    const uniquePrices = [...new Set(allPrices)].sort((a, b) => a - b)
+    const minPrice = uniquePrices[0] ?? 0
+    const maxPrice = uniquePrices[uniquePrices.length - 1] ?? 0
+    const ranges = []
+    if (maxPrice > 0) ranges.push({ label: "до 15000", value: "15000" })
+    if (maxPrice >= 20000) ranges.push({ label: "до 20000", value: "20000" })
+    if (maxPrice >= 25000) ranges.push({ label: "до 25000", value: "25000" })
+    if (maxPrice >= 30000) ranges.push({ label: "до 30000", value: "30000" })
+    if (maxPrice >= 35000) ranges.push({ label: "до 35000", value: "35000" })
+    if (maxPrice >= 40000) ranges.push({ label: "до 40000", value: "40000" })
+    if (maxPrice >= 45000) ranges.push({ label: "до 45000", value: "45000" })
+    const filteredRanges = ranges.filter((range) => parseInt(range.value) >= minPrice)
+    return {
+      maxPrices: filteredRanges,
+      inStock: [{ label: "В наличии", value: "В наличии" }],
+      withDiscount: [{ label: "Со скидкой", value: "Со скидкой" }],
+      sortTypes: [
+        { label: "По убыванию цены", value: "По убыванию цены" },
+        { label: "По возрастанию цены", value: "По возрастанию цены" },
+      ],
+    }
+  })
 
   const filteredItems = computed(() => {
     if (items.value.length === 0) return []
@@ -444,7 +448,7 @@ export const useCatalogStore = defineStore("catalog", () => {
       )
     }
     if (f.maxPrice !== null) {
-      filtered = filtered.filter((item) => parseInt(item.price || "0") <= f.maxPrice!)
+      filtered = filtered.filter((item) => parseInt(item.price || "0") <= parseInt(f.maxPrice!))
     }
     if (f.withDiscount === "Со скидкой") {
       filtered = filtered.filter((item) => {
