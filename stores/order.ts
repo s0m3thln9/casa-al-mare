@@ -222,7 +222,7 @@ export const useOrderStore = defineStore("order", () => {
   const orderId = ref<number | null>(null)
   const cdekData = ref<{
     courier: { price: number; term: { min: number; max: number } }
-    courier_prim: { price: number; term: { min: number; max: number } }
+    courierPrim: { price: number; term: { min: number; max: number } }
     pvz: { price: number; term: { min: number; max: number } }
   } | null>(null)
   const deliveryTypes = ref<
@@ -384,8 +384,8 @@ export const useOrderStore = defineStore("order", () => {
         if (data.courier && data.courier.term && typeof data.courier.price === "number") {
           updateDeliveryType(1, data.courier.term, data.courier.price)
         }
-        if (data.courier_prim && data.courier_prim.term && typeof data.courier_prim.price === "number") {
-          updateDeliveryType(2, data.courier_prim.term, data.courier_prim.price)
+        if (data.courierPrim && data.courierPrim.term && typeof data.courierPrim.price === "number") {
+          updateDeliveryType(2, data.courierPrim.term, data.courierPrim.price)
         }
         if (data.pvz && data.pvz.term && typeof data.pvz.price === "number") {
           updateDeliveryType(4, data.pvz.term, data.pvz.price)
