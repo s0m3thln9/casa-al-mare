@@ -118,7 +118,7 @@ const sortedShapes = computed(() => {
 
   // Добавляем текущую форму если её нет в complex
   if (item.value.parents[2]) {
-    const currentShapeInComplex = allShapes.find((s) => s.id === item.value.parents[2].id)
+    const currentShapeInComplex = allShapes.find((s) => s.id === item.value?.parents[2].id)
     if (!currentShapeInComplex) {
       allShapes.push({
         id: item.value.parents[2].id,
@@ -134,7 +134,7 @@ const sortedShapes = computed(() => {
   return allShapes.sort((a, b) => a.id - b.id)
 })
 
-const decodeSvg = (dataUrl: string) => {
+const decodeSvg = (dataUrl?: string) => {
   if (!dataUrl || !dataUrl.startsWith("data:image/svg+xml")) {
     return dataUrl
   }
@@ -175,8 +175,8 @@ const getPopupId = (header: string): string => {
   )
 }
 
-const relatedItemsIds = computed(() => item.value?.withItems?.map((id: string) => Number(id)) || [])
-const complexItemsIds = computed(() => item.value?.complex?.map((id: string) => Number(id)) || [])
+const relatedItemsIds = computed(() => item.value?.withItems?.map((item) => item.id).slice(0, 3) || [])
+const complexItemsIds = computed(() => item.value?.complex?.map((item) => item.id) || [])
 
 const currentImageIndex = ref(0)
 const touchStartX = ref(0)
@@ -241,19 +241,14 @@ const setMissingParams = computed<"top" | "bottom" | "accessory" | "all" | null>
 })
 
 const currentColorCode = computed(() => item.value?.colorVal || "")
-const currentColorName = computed(() => item.value?.colorName || "")
 const currentSize = computed(() => itemStore.size || item.value?.sizes?.[0] || "")
 const currentColorImages = computed(() => {
   if (!item.value?.images) return []
   return Object.values(item.value.images || {})
 })
-const currentVectorData = computed(() => {
-  if (!item.value || !currentColorCode.value || !currentSize.value) return null
-  const vectorKey = `${currentColorCode.value}_${currentSize.value}`
-  return item.value.vector?.[vectorKey] || null
-})
-const currentPrice = computed(() => currentVectorData.value?.price || parseInt(item.value?.price || "0"))
-const currentOldPrice = computed(() => currentVectorData.value?.oldPrice || parseInt(item.value?.oldPrice || "0"))
+
+const currentPrice = computed(() => parseInt(item.value?.price || "0"))
+const currentOldPrice = computed(() => parseInt(item.value?.oldPrice || "0"))
 const canAddToCart = computed(() => !!itemStore.size)
 
 const missingParams = computed<"size" | null>(() => {
@@ -627,7 +622,7 @@ watch(
               <NuxtLink
                 v-for="shapeItem in sortedShapes"
                 :key="shapeItem.id"
-                :to="item?.parents[2]?.id !== shapeItem.id && shapeItem.link"
+                :to="item?.parents[2]?.id !== shapeItem.id ? shapeItem.link : ''"
                 class="flex flex-col justify-center gap-2 items-center cursor-pointer"
               >
                 <div class="w-[52px] h-[52px] flex items-center justify-center">
@@ -706,16 +701,13 @@ watch(
       </div>
     </div>
     <div
-      v-if="!isLoading"
+      v-if="!isLoading && relatedItemsIds.length > 0"
       class="px-2 flex flex-col justify-center items-start gap-4 mt-18 sm:items-center sm:gap-12 sm:mt-24"
     >
       <h2 class="font-[Manrope] text-[15px] font-light sm:font-[Inter] sm:text-4xl sm:font-normal">
         Вам может понравиться
       </h2>
-      <div
-        v-if="catalogStore.items.length > 0"
-        class="w-full grid gap-2 grid-cols-3 sm:gap-4 sm:px-[15%]"
-      >
+      <div class="w-full grid gap-2 grid-cols-3 sm:gap-4 sm:px-[15%]">
         <CatalogCard
           v-for="id in relatedItemsIds"
           :id="id"

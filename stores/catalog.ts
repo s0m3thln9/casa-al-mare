@@ -25,8 +25,18 @@ export type Item = {
   type: string | null
   material: string[]
   useType: string[]
-  withItems: string[]
-  complex: string[]
+  withItems: {
+    id: number
+    name: string
+    link: string
+  }[]
+  complex: {
+    id: number
+    name: string
+    link: string
+    image?: string
+    activeImage?: string
+  }[]
   content: {
     header: string
     content: string
