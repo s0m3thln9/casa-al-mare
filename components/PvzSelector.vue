@@ -4,8 +4,16 @@
       :class="modelValue ? 'button_green' : 'activnaya'"
       :disabled="!loaded"
       @click="showPVZWidget"
-      v-html="modelValue ? modelValue.address : 'Выберите ПВЗ'"
-    />
+    >
+      <span
+        v-if="!loaded"
+        class="spinner"
+      />
+      <span
+        v-else
+        v-html="modelValue ? modelValue.address : 'Выберите ПВЗ'"
+      />
+    </button>
   </div>
 </template>
 
@@ -80,7 +88,6 @@ const showPVZWidget = () => {
   }
 }
 
-// Динамическая загрузка скрипта
 onMounted(() => {
   if (typeof window === "undefined") return
 
@@ -91,7 +98,6 @@ onMounted(() => {
   document.head.appendChild(script)
 })
 
-// Очистка при размонтировании
 onUnmounted(() => {
   if (widget.value) {
     widget.value.destroy?.()
@@ -101,8 +107,16 @@ onUnmounted(() => {
 
 <style scoped>
 .button_green {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
   background-color: #fff4a4;
   color: #211d1d;
+  padding: 8px 20px;
+  border: 1px solid #211d1d;
+  border-radius: 1rem;
+  cursor: pointer;
 }
 
 .activnaya {
@@ -121,5 +135,20 @@ onUnmounted(() => {
 .activnaya:hover {
   background-color: #fffffa;
   color: #211d1d;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0, 0, 0, 0.6);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
