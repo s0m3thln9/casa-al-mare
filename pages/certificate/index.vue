@@ -160,6 +160,7 @@ const getStepDescription = computed(() => {
             :class="[
               'flex justify-center items-center font-light sm:font-normal',
               certificateStore.step === 4 ||
+              certificateStore.step === 2 ||
               (certificateStore.step === 3 &&
                 (certificateStore.selectedWay === 'Электронной почтой' || certificateStore.selectedWay === 'По SMS'))
                 ? 'flex-col'
@@ -182,8 +183,12 @@ const getStepDescription = computed(() => {
               <div
                 v-for="(img, index) in certificateImages"
                 :key="index"
-                class="relative aspect-square cursor-pointer rounded-lg overflow-hidden transition-all duration-300 hover:shadow-lg"
-                :class="certificateStore.selectedDesign === index ? 'ring-4 ring-[#A6CEFF]' : 'ring-2 ring-gray-200'"
+                class="relative aspect-square cursor-pointer rounded-lg overflow-hidden"
+                :class="
+                  certificateStore.selectedDesign === index
+                    ? 'border-[2px] border-[#211D1D]'
+                    : 'border-[2px] border-transparent'
+                "
                 @click="certificateStore.selectedDesign = index"
               >
                 <NuxtImg
