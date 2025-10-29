@@ -59,6 +59,7 @@ onMounted(async () => {
     certificateImages.value = fallbackImages
   }
 })
+
 const handleTouchStart = (e: TouchEvent) => {
   touchStartX.value = e.touches[0].clientX
 }
@@ -74,6 +75,21 @@ const handleTouchEnd = (e: TouchEvent) => {
     currentImageIndex.value = (currentImageIndex.value + 1) % certificateImages.value.length
   }
 }
+
+const getStepDescription = computed(() => {
+  switch (certificateStore.step) {
+    case 1:
+      return "Выберите номинал:"
+    case 2:
+      return "Выберите дизайн сертификата:"
+    case 3:
+      return "Как отправить получателю?"
+    case 4:
+      return "Кому и когда отправить?"
+    default:
+      return ""
+  }
+})
 </script>
 
 <template>
@@ -135,22 +151,16 @@ const handleTouchEnd = (e: TouchEvent) => {
         />
         <div class="mt-14 flex flex-col justify-center items-center">
           <div class="flex flex-col justify-center items-center gap-2 mb-8">
-            <h3 class="font-[Inter] text-2xl">{{ certificateStore.step }}/3</h3>
+            <h3 class="font-[Inter] text-2xl">{{ certificateStore.step }}/4</h3>
             <span class="font-light text-sm">
-              {{
-                certificateStore.step === 1
-                  ? "Выберите номинал:"
-                  : certificateStore.step === 2
-                    ? "Как отправить получателю?"
-                    : "Кому и когда отправить?"
-              }}
+              {{ getStepDescription }}
             </span>
           </div>
           <div
             :class="[
               'flex justify-center items-center font-light sm:font-normal',
-              certificateStore.step === 3 ||
-              (certificateStore.step === 2 &&
+              certificateStore.step === 4 ||
+              (certificateStore.step === 3 &&
                 (certificateStore.selectedWay === 'Электронной почтой' || certificateStore.selectedWay === 'По SMS'))
                 ? 'flex-col'
                 : 'gap-3 sm:gap-4',
@@ -163,15 +173,39 @@ const handleTouchEnd = (e: TouchEvent) => {
                 :content="sums"
               />
             </div>
+
+            <!-- Выбор дизайна сертификата -->
+            <div
+              v-if="certificateStore.step === 2"
+              class="w-full grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4"
+            >
+              <div
+                v-for="(img, index) in certificateImages"
+                :key="index"
+                class="relative aspect-square cursor-pointer rounded-lg overflow-hidden transition-all duration-300 hover:shadow-lg"
+                :class="certificateStore.selectedDesign === index ? 'ring-4 ring-[#A6CEFF]' : 'ring-2 ring-gray-200'"
+                @click="certificateStore.selectedDesign = index"
+              >
+                <NuxtImg
+                  :src="img"
+                  alt="certificate design"
+                  width="200"
+                  height="200"
+                  loading="lazy"
+                  class="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+
             <div class="flex w-full justify-center items-center gap-3 sm:gap-4">
               <SingleSelectButton
-                v-if="certificateStore.step === 2"
+                v-if="certificateStore.step === 3"
                 v-model="certificateStore.selectedWay"
                 :content="ways"
               />
             </div>
             <div
-              v-if="certificateStore.step === 3"
+              v-if="certificateStore.step === 4"
               class="w-full flex flex-col gap-8"
             >
               <AppInput
@@ -190,19 +224,19 @@ const handleTouchEnd = (e: TouchEvent) => {
             <div
               class="flex justify-center items-center gap-3 font-light sm:gap-4 sm:font-normal mt-8"
               :class="
-                certificateStore.step === 2 &&
+                certificateStore.step === 3 &&
                 (certificateStore.selectedWay === 'Электронной почтой' || certificateStore.selectedWay === 'По SMS') &&
                 'w-full'
               "
             >
               <SingleSelectButton
-                v-if="certificateStore.step === 3"
+                v-if="certificateStore.step === 4"
                 v-model="certificateStore.selectedDetails"
                 :content="details"
               />
               <div
                 v-if="
-                  certificateStore.step === 2 &&
+                  certificateStore.step === 3 &&
                   (certificateStore.selectedWay === 'Электронной почтой' || certificateStore.selectedWay === 'По SMS')
                 "
                 class="w-full flex flex-col"
@@ -252,13 +286,15 @@ const handleTouchEnd = (e: TouchEvent) => {
               :content="
                 certificateStore.step === 1 && certificateStore.selectedSum === null
                   ? 'Сначала выберите номинал'
-                  : certificateStore.step === 2 && certificateStore.selectedWay === null
-                    ? 'Выберите способ отправки'
-                    : certificateStore.step === 3 && certificateStore.selectedDetails === null
-                      ? 'Укажите детали отправки'
-                      : certificateStore.step === 3 && certificateStore.selectedDetails !== null
-                        ? 'Отправить сертификат'
-                        : 'Далее'
+                  : certificateStore.step === 2 && certificateStore.selectedDesign === null
+                    ? 'Выберите дизайн'
+                    : certificateStore.step === 3 && certificateStore.selectedWay === null
+                      ? 'Выберите способ отправки'
+                      : certificateStore.step === 4 && certificateStore.selectedDetails === null
+                        ? 'Укажите детали отправки'
+                        : certificateStore.step === 4 && certificateStore.selectedDetails !== null
+                          ? 'Отправить сертификат'
+                          : 'Далее'
               "
               custom-class="w-full"
               @click="certificateStore.nextStep"

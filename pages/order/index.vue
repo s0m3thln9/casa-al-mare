@@ -75,7 +75,33 @@ const phoneOptions: PhoneOption[] = [
   { code: "+995", country: "Грузия", iso: "GE" },
 ]
 
+const loadCloudPaymentsScript = (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if ((window as any).cp) {
+      resolve()
+      return
+    }
+
+    const script = document.createElement("script")
+    script.src = "https://widget.cloudpayments.ru/bundles/cloudpayments.js"
+    script.onload = () => {
+      console.log("CloudPayments script loaded")
+      setTimeout(() => resolve(), 100) // Даем время на инициализацию
+    }
+    script.onerror = () => {
+      console.error("Failed to load CloudPayments script")
+      reject(new Error("Failed to load CloudPayments script"))
+    }
+    document.head.appendChild(script)
+  })
+}
+
 onMounted(async () => {
+  try {
+    await loadCloudPaymentsScript()
+  } catch (error) {
+    console.error("Error loading CloudPayments:", error)
+  }
   const getCart = async (): Promise<void> => {
     const token = await userStore.loadToken()
     if (!token) return
@@ -208,39 +234,88 @@ async function handlePay(): Promise<void> {
         return
       }
 
-      orderStore.isWidgetOpen = true
-
+      // Проверяем, что скрипт загружен
       if (!(window as any).cp) {
-        const script = document.createElement("script")
-        script.src = "https://widget.cloudpayments.ru/bundles/cloudpayments.js"
-        script.async = true
-        document.head.appendChild(script)
-        await new Promise((resolve) => {
-          script.onload = resolve
-        })
+        console.error("CloudPayments script not loaded")
+        alert("Ошибка загрузки платежной системы. Перезагрузите страницу.")
+        orderStore.isLoadingPayment = false
+        return
       }
 
-      const widget = new (window as any).cp.CloudPayments()
-      widget.pay("charge", paymentData.data, {
-        onSuccess: (options: any) => {
-          console.log("Оплата успешна")
-        },
-        onFail: (reason: any, options: any) => {
-          console.log("Оплата неуспешна по причине " + reason)
-          orderStore.isLoadingPayment = false
-          orderStore.isWidgetOpen = false
-        },
-        onComplete: (paymentResult: any, options: any) => {
-          orderStore.isLoadingPayment = false
-          orderStore.isWidgetOpen = false
+      // Проверяем обязательные поля
+      console.log("=== Payment Data Debug ===")
+      console.log("Full payment data:", JSON.stringify(paymentData, null, 2))
+      console.log("Widget data:", paymentData.data)
 
-          if (paymentResult.success && paymentResult.code === 0) {
-            navigateTo(paymentData.link)
-          } else {
-            console.log("Оплата отменена или неуспешна")
-          }
-        },
-      })
+      const requiredFields = ["publicId", "description", "amount", "currency", "accountId"]
+      const missingFields = requiredFields.filter((field) => !paymentData.data?.[field])
+
+      if (missingFields.length > 0) {
+        console.error("Missing required fields:", missingFields)
+        alert(`Ошибка: отсутствуют обязательные поля для оплаты: ${missingFields.join(", ")}`)
+        orderStore.isLoadingPayment = false
+        return
+      }
+
+      // Проверяем, что amount является числом
+      if (typeof paymentData.data.amount !== "number" || paymentData.data.amount <= 0) {
+        console.error("Invalid amount:", paymentData.data.amount)
+        alert("Ошибка: некорректная сумма платежа")
+        orderStore.isLoadingPayment = false
+        return
+      }
+
+      orderStore.isWidgetOpen = true
+
+      try {
+        const widget = new (window as any).cp.CloudPayments()
+
+        const widgetData = {
+          publicId: paymentData.data.publicId,
+          description: paymentData.data.description,
+          amount: paymentData.data.amount,
+          currency: paymentData.data.currency || "RUB",
+          accountId: paymentData.data.accountId,
+          email: paymentData.data.email || orderStore.email || "",
+          skin: "mini",
+          data: paymentData.data.data || {},
+        }
+
+        console.log("Opening widget with config:", widgetData)
+
+        widget.pay("charge", widgetData, {
+          onSuccess: (options: any) => {
+            console.log("✅ Оплата успешна", options)
+            orderStore.isLoadingPayment = false
+            orderStore.isWidgetOpen = false
+            if (paymentData.link) {
+              navigateTo(paymentData.link)
+            }
+          },
+          onFail: (reason: any, options: any) => {
+            console.error("❌ Оплата неуспешна:", reason, options)
+            alert(`Оплата не удалась: ${reason}`)
+            orderStore.isLoadingPayment = false
+            orderStore.isWidgetOpen = false
+          },
+          onComplete: (paymentResult: any, options: any) => {
+            console.log("🏁 Оплата завершена:", paymentResult, options)
+            orderStore.isLoadingPayment = false
+            orderStore.isWidgetOpen = false
+
+            if (paymentResult && paymentResult.success) {
+              if (paymentData.link) {
+                navigateTo(paymentData.link)
+              }
+            }
+          },
+        })
+      } catch (error) {
+        console.error("Exception while opening widget:", error)
+        alert(`Ошибка при открытии виджета: ${error instanceof Error ? error.message : "Неизвестная ошибка"}`)
+        orderStore.isLoadingPayment = false
+        orderStore.isWidgetOpen = false
+      }
     } else {
       await navigateTo(paymentData.link, { external: paymentData.external })
       orderStore.isLoadingPayment = false

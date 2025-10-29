@@ -2,6 +2,7 @@ export const useCertificateStore = defineStore("certificate", () => {
   const step = ref(1)
   const certificateType = ref("Электронный")
   const selectedSum = ref<string | null>(null)
+  const selectedDesign = ref<number | null>(null)
   const selectedWay = ref<string | null>(null)
   const recipientEmail = ref("")
   const recipientPhone = ref("")
@@ -13,6 +14,8 @@ export const useCertificateStore = defineStore("certificate", () => {
     if (step.value === 1) {
       return selectedSum.value !== null
     } else if (step.value === 2) {
+      return selectedDesign.value !== null
+    } else if (step.value === 3) {
       if (selectedWay.value === "Электронной почтой") {
         return recipientEmail.value.trim() !== ""
       } else if (selectedWay.value === "По SMS") {
@@ -20,14 +23,14 @@ export const useCertificateStore = defineStore("certificate", () => {
       } else {
         return selectedWay.value !== null
       }
-    } else if (step.value === 3) {
+    } else if (step.value === 4) {
       return selectedDetails.value !== null && recipientName.value.trim() !== ""
     }
     return false
   })
 
   const nextStep = () => {
-    if (step.value < 3) {
+    if (step.value < 4) {
       step.value++
     } else {
       alert("Отправлено")
@@ -44,6 +47,7 @@ export const useCertificateStore = defineStore("certificate", () => {
     step,
     certificateType,
     selectedSum,
+    selectedDesign,
     selectedWay,
     recipientEmail,
     recipientPhone,
