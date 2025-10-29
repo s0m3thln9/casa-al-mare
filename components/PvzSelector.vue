@@ -20,7 +20,17 @@
 <script setup lang="ts">
 interface PvzData {
   address: string
+  city?: string
+  cityCode?: string
   [key: string]: any
+}
+
+interface CityData {
+  label: string
+  name: string
+  kladr: string
+  fias: string
+  region?: string
 }
 
 const props = defineProps<{
@@ -30,6 +40,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "update:modelValue", value: PvzData): void
+  (e: "update:city", value: CityData): void
 }>()
 
 const { city, modelValue } = toRefs(props)
@@ -66,17 +77,33 @@ const loadWidget = () => {
     apiKey: "a8d017e7-f4d0-4fc5-be61-1f404eb0af86",
     goods: [
       {
-        length: 20,
-        width: 30,
-        height: 10,
-        weight: 500,
+        length: 51,
+        width: 37,
+        height: 12,
+        weight: 2000,
       },
     ],
     onReady: () => {
       loaded.value = true
     },
-    onChoose: (type: string, tariff: any, addressData: PvzData) => {
+    onChoose: async (type: string, tariff: any, addressData: PvzData) => {
       emit("update:modelValue", addressData)
+
+      if (addressData.city && addressData.city !== city.value?.name) {
+        try {
+          const response = await $fetch<{ data: Record<number, CityData>; success: boolean }>(
+            `https://back.casaalmare.com/api/getCityByQuery?query=${encodeURIComponent(addressData.city)}`,
+          )
+
+          if (response?.data && response.success) {
+            const newCity = response.data[0]
+            emit("update:city", newCity)
+          }
+        } catch (error) {
+          console.error("Ошибка обновления города:", error)
+        }
+      }
+
       widget.value.close()
     },
   })
@@ -103,6 +130,15 @@ onUnmounted(() => {
     widget.value.destroy?.()
   }
 })
+
+watch(
+  () => city.value?.name,
+  (newCityName) => {
+    if (widget.value && newCityName) {
+      widget.value.setLocation?.(newCityName)
+    }
+  },
+)
 </script>
 
 <style scoped>
