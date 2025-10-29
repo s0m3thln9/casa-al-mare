@@ -68,10 +68,6 @@ export function useCatalogCard(props: UseCatalogCardProps) {
     }
   }
 
-  const updateScreenWidth = () => {
-    isWideScreen.value = document.body.clientWidth > 640
-  }
-
   const priceFormatter = (value: number): string => {
     const formattedValue = new Intl.NumberFormat("ru-RU").format(value)
     return props.variant === "mini" ? `${formattedValue.replace(/\s/g, ".")}₽` : `${formattedValue} ₽`
@@ -169,12 +165,6 @@ export function useCatalogCard(props: UseCatalogCardProps) {
 
   onMounted(() => {
     isVisible.value = true
-    updateScreenWidth()
-    window.addEventListener("resize", updateScreenWidth)
-  })
-
-  onUnmounted(() => {
-    window.removeEventListener("resize", updateScreenWidth)
   })
 
   watch(currentColorImages, () => {

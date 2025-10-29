@@ -114,7 +114,7 @@ const secondMenuItems: MenuItem[] = [
     submenu: [
       { label: "О нас", link: "/about-us" },
       { label: "Доставка и оплата", link: "/info/dostavka-i-oplata" },
-      { label: "Возврат", link: "/info/vozvrat-i-obmen" },
+      { label: "Возврат и обмен", link: "/info/vozvrat-i-obmen" },
       { label: "Уход за изделиями", link: "/care" },
     ],
   },

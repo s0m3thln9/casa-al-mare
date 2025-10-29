@@ -50,15 +50,15 @@ const handleProfileClick = () => {
           <li><NuxtLink to="/catalog?path=kupalniki">Купальники</NuxtLink></li>
           <li><NuxtLink to="/catalog?path=kupalniki%2Fniz">Нижняя часть купальника</NuxtLink></li>
           <li><NuxtLink to="/catalog?path=kupalniki%2Fverx">Верхняя часть купальника</NuxtLink></li>
-          <li><NuxtLink to="/catalog">Головные уборы</NuxtLink></li>
-          <li><NuxtLink to="/catalog">Аксессуары</NuxtLink></li>
+          <li><NuxtLink to="/catalog?path=plyazhnaya-odezhda">Пляжная одежда</NuxtLink></li>
+          <li><NuxtLink to="/certificate">Сертификаты</NuxtLink></li>
         </ul>
       </div>
       <div class="flex flex-col gap-4">
         <h3 class="font-normal text-base uppercase">Покупателям</h3>
         <ul class="flex flex-col gap-4">
           <li><NuxtLink to="/info/dostavka-i-oplata">Доставка и оплата</NuxtLink></li>
-          <li><NuxtLink to="/info/vozvrat-i-obmen">Возврат</NuxtLink></li>
+          <li><NuxtLink to="/info/vozvrat-i-obmen">Возврат и обмен</NuxtLink></li>
           <li><NuxtLink to="/">Реквизиты</NuxtLink></li>
           <li
             class="cursor-pointer"
@@ -99,7 +99,6 @@ const handleProfileClick = () => {
           </li>
           <li><NuxtLink to="/favorites">Избранное</NuxtLink></li>
           <li><NuxtLink to="/profile/orders">Заказы</NuxtLink></li>
-          <li><NuxtLink to="/certificate">Сертификат</NuxtLink></li>
         </ul>
       </div>
       <div class="flex flex-col gap-4 w-full mt-4 lg:w-auto lg:mt-0">
