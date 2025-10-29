@@ -73,6 +73,7 @@ const handleProfileClick = () => {
         <h3 class="font-normal text-base uppercase">О бренде</h3>
         <ul class="flex flex-col gap-4">
           <li><NuxtLink to="/about-us">О нас</NuxtLink></li>
+          <li><NuxtLink to="/contacts">Контакты</NuxtLink></li>
           <li>
             <a
               href="https://t.me/casaalmare_swim"
@@ -82,7 +83,15 @@ const handleProfileClick = () => {
               Telegram
             </a>
           </li>
-          <li><NuxtLink to="/">WhatsApp</NuxtLink></li>
+          <li>
+            <a
+              href="https://wa.me/79300360494"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              WhatsApp
+            </a>
+          </li>
           <li><NuxtLink to="/">Pinterest</NuxtLink></li>
         </ul>
       </div>
@@ -139,7 +148,14 @@ const handleProfileClick = () => {
     <div class="flex flex-col items-center gap-12 sm:hidden">
       <div class="w-full flex flex-col gap-2">
         <div class="flex gap-2">
-          <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Whatsapp</button>
+          <a
+            class="w-full h-full"
+            href="https://wa.me/79300360494"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Whatsapp</button>
+          </a>
           <a
             class="w-full h-full"
             href="https://t.me/casaalmare_swim"

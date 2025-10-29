@@ -15,19 +15,46 @@
           height="692"
           class="rounded-lg"
         />
-        <div class="grid sm:grid-cols-3 w-fit gap-10 sm:gap-6 text-sm">
-          <div class="grid grid-rows-2 text-center gap-1 sm:gap-2">
-            <span>Адрес</span>
-            <span class="font-light">ул Лазурная. д.2</span>
-          </div>
-          <div class="grid grid-rows-2 text-center gap-1 sm:gap-2">
+        <div class="grid lg:grid-cols-5 w-fit gap-10 sm:gap-6 text-sm">
+          <a
+            class="grid grid-rows-2 text-center gap-1 sm:gap-2"
+            href="https://wa.me/79300360494"
+            target="_blank"
+            rel="noopener"
+          >
+            <span>Whatsapp</span>
+            <span class="font-light">+7 (930) 036-04-94</span>
+          </a>
+          <a
+            class="grid grid-rows-2 text-center gap-1 sm:gap-2"
+            href="https://t.me/casaalmare_swim"
+            target="_blank"
+            rel="noopener"
+          >
+            <span>Telegram</span>
+            <span class="font-light">@casaalmare_swim</span>
+          </a>
+          <a
+            class="grid grid-rows-2 text-center gap-1 sm:gap-2"
+            href="tel:+74950040494"
+          >
             <span>Телефон</span>
-            <span class="font-light">+7 999 999 99 99</span>
-          </div>
-          <div class="grid grid-rows-2 text-center gap-1 sm:gap-2">
-            <span>Email</span>
-            <span class="font-light">name@mail.com</span>
-          </div>
+            <span class="font-light">+7 (495) 004-04-94</span>
+          </a>
+          <a
+            class="grid grid-rows-2 text-center gap-1 sm:gap-2"
+            href="mailto:clients@casaalmare.com"
+          >
+            <span>Для отзывов</span>
+            <span class="font-light">clients@casaalmare.com</span>
+          </a>
+          <a
+            class="grid grid-rows-2 text-center gap-1 sm:gap-2"
+            href="mailto:pr@casaalmare.com"
+          >
+            <span>Сотрудничество</span>
+            <span class="font-light">pr@casaalmare.com</span>
+          </a>
         </div>
       </div>
     </div>
