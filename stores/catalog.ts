@@ -529,6 +529,90 @@ export const useCatalogStore = defineStore("catalog", () => {
     return items.value.find((item) => item.id === id)
   }
 
+  const getPendingFilteredCount = (): number => {
+    if (items.value.length === 0) return 0
+    let filtered = [...items.value]
+    const f = pendingFilters.value
+    const filledSegments = f.parentsAliases.filter((seg) => seg.length > 0)
+
+    if (filledSegments.length > 0) {
+      if (filledSegments.length > maxParentsLength.value) return 0
+
+      filtered = filtered.filter((item) => {
+        const matchesFirstTwoLevels = filledSegments.every((aliases, idx) => {
+          if (idx >= item.parents.length) return false
+          return aliases.some((alias) => item.parents[idx]?.alias === alias)
+        })
+
+        if (!matchesFirstTwoLevels) return false
+
+        if (f.thirdLevelByParent && Object.keys(f.thirdLevelByParent).length > 0) {
+          const secondLevelParent = item.parents[1]?.alias
+
+          if (!secondLevelParent) return false
+
+          const thirdLevelFilters = f.thirdLevelByParent[secondLevelParent]
+
+          if (thirdLevelFilters && thirdLevelFilters.length > 0) {
+            if (!item.parents[2]) return false
+            return thirdLevelFilters.includes(item.parents[2].alias)
+          }
+
+          return true
+        }
+
+        return true
+      })
+    }
+
+    if (f.colors.length > 0) {
+      const colorCodes = f.colors.map((c) => c.code)
+      filtered = filtered.filter(
+        (item) => item.keys?.some((k) => k.type === "color" && colorCodes.includes(k.alias)) || false,
+      )
+    }
+    if (f.maxPrice !== null) {
+      filtered = filtered.filter((item) => parseInt(item.price || "0") <= parseInt(f.maxPrice!))
+    }
+    if (f.withDiscount === "Со скидкой") {
+      filtered = filtered.filter((item) => {
+        const price = parseInt(item.price || "0")
+        const oldPrice = parseInt(item.oldPrice || "0")
+        return oldPrice > 0 && oldPrice > price
+      })
+    }
+    if (f.inStock === "В наличии") {
+      filtered = filtered.filter((item) =>
+        Object.values(item.vector || {}).some((variant: any) => (variant.quantity ?? 0) > 0),
+      )
+    }
+    if (f.materials && f.materials.trim() !== "") {
+      filtered = filtered.filter(
+        (item) => item.keys?.some((k) => k.type === "material" && k.alias === f.materials) || false,
+      )
+    }
+    if (f.useTypes.length > 0) {
+      filtered = filtered.filter((item) => f.useTypes.some((u) => item.useType.includes(u)))
+    }
+    if (f.keystrings.length > 0) {
+      filtered = filtered.filter((item) =>
+        f.keystrings.every((key) => item.keys?.some((k) => k.alias === key) || false),
+      )
+    }
+    if (f.extra && Object.keys(f.extra).length > 0) {
+      filtered = filtered.filter((item) => {
+        return Object.entries(f.extra).every(([type, aliases]) => {
+          return aliases.length === 0 || item.keys?.some((k) => k.type === type && aliases.includes(k.alias)) || false
+        })
+      })
+    }
+    if (f.searchQuery && f.searchQuery.trim() !== "") {
+      const searchTerm = f.searchQuery.toLowerCase().trim()
+      filtered = filtered.filter((item) => item.name.toLowerCase().includes(searchTerm))
+    }
+    return filtered.length
+  }
+
   watch(filteredItems, () => {
     if (filteredItems.value.length > 0) {
       currentVisibleCardCount.value = 12
@@ -551,6 +635,7 @@ export const useCatalogStore = defineStore("catalog", () => {
     filters,
     popupDynamicFilters,
     filteredItems,
+    getPendingFilteredCount,
     getItemById,
     reset,
     applyFilters,

@@ -190,6 +190,10 @@ const load = () => {
   const newCount = catalogStore.currentVisibleCardCount + 12
   catalogStore.currentVisibleCardCount = Math.min(newCount, catalogStore.filteredItems.length)
 }
+
+const pendingFilteredCount = computed(() => {
+  return catalogStore.getPendingFilteredCount()
+})
 </script>
 
 <template>
@@ -234,7 +238,7 @@ const load = () => {
       <div class="flex items-center gap-1">
         <span class="text-[11px] font-[Manrope]" />
         <button
-          class="cursor-pointer"
+          class="cursor-pointer flex items-center font-[Manrope] text-xs text-[#211D1D]"
           @click="
             async () => {
               catalogStore.syncPending()
@@ -242,6 +246,7 @@ const load = () => {
             }
           "
         >
+          {{ `(${pendingFilteredCount})` }}
           <NuxtImg
             src="/sliders.svg"
             alt="sliders"
@@ -540,7 +545,7 @@ const load = () => {
           <AppButton
             custom-class="w-full py-4 sm:p-4"
             variant="primary"
-            content="Показать результаты"
+            :content="`(${pendingFilteredCount}) Показать результаты`"
             extra
             @click="
               () => {
