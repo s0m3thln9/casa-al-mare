@@ -35,17 +35,13 @@ const barStyles = computed(() => (index: number) => ({
 
 const certificateImages = ref<string[]>([])
 
-const fallbackImages = [
-  "/certificate-1.png",
-  "/certificate-2.png",
-  "/certificate-1.png",
-  "/certificate-2.png",
-  "/certificate-1.png",
-  "/certificate-2.png",
-]
+const fallbackImages = ["/certificate-1.png", "/certificate-2.png", "/certificate-3.png"]
+
+const isLoadingImages = ref(true)
 
 onMounted(async () => {
   try {
+    isLoadingImages.value = true
     const response = await $fetch<{ success: boolean; images: string[] }>(
       "https://back.casaalmare.com/api/getCertImages",
     )
@@ -57,6 +53,8 @@ onMounted(async () => {
   } catch (error) {
     console.error("Ошибка загрузки изображений сертификата:", error)
     certificateImages.value = fallbackImages
+  } finally {
+    isLoadingImages.value = false
   }
 })
 
@@ -99,45 +97,81 @@ const getStepDescription = computed(() => {
     </div>
     <div class="px-0 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-8 sm:px-4">
       <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        <div
-          v-if="certificateImages.length > 0"
-          class="block sm:hidden relative w-full aspect-[460/680] overflow-hidden"
-          @touchstart="handleTouchStart"
-          @touchend="handleTouchEnd"
-        >
+        <template v-if="certificateImages.length > 0">
+          <div
+            class="block sm:hidden relative w-full aspect-[460/680] overflow-hidden"
+            @touchstart="handleTouchStart"
+            @touchend="handleTouchEnd"
+          >
+            <NuxtImg
+              v-for="(img, index) in certificateImages"
+              :key="index"
+              v-slot="{ src, isLoaded, imgAttrs }"
+              :src="img"
+              alt="certificate"
+              width="460"
+              height="680"
+              class="absolute top-0 left-0 w-full h-full"
+            >
+              <div
+                v-if="!isLoaded"
+                class="w-full h-full bg-[#F9F6EC]"
+                :style="imageStyles(index)"
+              />
+              <img
+                v-else
+                v-bind="imgAttrs"
+                :src="src"
+                :style="imageStyles(index)"
+                class="w-full h-full object-cover"
+                alt="certificate"
+              />
+            </NuxtImg>
+          </div>
+          <div class="flex sm:hidden justify-center items-center gap-1 px-4 mt-2">
+            <div
+              v-for="(_, index) in certificateImages"
+              :key="index"
+              class="flex-1 border-y border-[#A6CEFF]"
+              :style="barStyles(index)"
+            />
+          </div>
           <NuxtImg
             v-for="(img, index) in certificateImages"
             :key="index"
+            v-slot="{ src, isLoaded, imgAttrs }"
             :src="img"
             alt="certificate"
-            width="460"
-            height="680"
-            loading="lazy"
-            class="absolute top-0 left-0 w-full h-full sm:rounded-lg"
-            :style="imageStyles(index)"
-          />
-        </div>
-        <div
-          v-if="certificateImages.length > 0"
-          class="flex sm:hidden justify-center items-center gap-1 px-4 mt-2"
-        >
-          <div
-            v-for="(_, index) in certificateImages"
-            :key="index"
-            class="flex-1 border-y border-[#A6CEFF]"
-            :style="barStyles(index)"
-          />
-        </div>
-        <NuxtImg
-          v-for="(img, index) in certificateImages"
-          :key="index"
-          :src="img"
-          alt="certificate"
-          width="726"
-          height="1080"
-          loading="lazy"
-          class="sm:rounded-lg hidden sm:block"
-        />
+            width="726"
+            height="1080"
+            class="sm:rounded-lg hidden sm:block aspect-[726/1080]"
+          >
+            <div
+              v-if="!isLoaded"
+              class="w-full h-full bg-[#F9F6EC] sm:rounded-lg"
+            />
+            <img
+              v-else
+              v-bind="imgAttrs"
+              :src="src"
+              class="w-full h-full object-cover sm:rounded-lg"
+              alt="certificate"
+            />
+          </NuxtImg>
+        </template>
+        <template v-else>
+          <div class="block sm:hidden">
+            <div class="relative w-full aspect-[460/680] overflow-hidden bg-[#F9F6EC]" />
+            <div class="flex justify-center items-center gap-1 px-4 mt-2">
+              <div class="flex-1 border-y border-[#A6CEFF]" />
+              <div class="flex-1 border-y border-[#A6CEFF]" />
+              <div class="flex-1 border-y border-[#A6CEFF]" />
+            </div>
+          </div>
+          <div class="hidden sm:block aspect-[726/1080] w-full bg-[#F9F6EC] sm:rounded-lg" />
+          <div class="hidden sm:block aspect-[726/1080] w-full bg-[#F9F6EC] sm:rounded-lg" />
+          <div class="hidden sm:block aspect-[726/1080] w-full bg-[#F9F6EC] sm:rounded-lg" />
+        </template>
       </div>
       <div class="px-2 flex flex-col sm:px-0">
         <div class="flex justify-center items-center">
@@ -175,7 +209,6 @@ const getStepDescription = computed(() => {
               />
             </div>
 
-            <!-- Выбор дизайна сертификата -->
             <div
               v-if="certificateStore.step === 2"
               class="w-full grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4"
@@ -192,13 +225,25 @@ const getStepDescription = computed(() => {
                 @click="certificateStore.selectedDesign = index"
               >
                 <NuxtImg
+                  v-slot="{ src, isLoaded, imgAttrs }"
                   :src="img"
                   alt="certificate design"
                   width="200"
                   height="200"
-                  loading="lazy"
-                  class="w-full h-full object-cover"
-                />
+                  class="w-full h-full"
+                >
+                  <div
+                    v-if="!isLoaded"
+                    class="w-full h-full bg-[#F9F6EC] rounded-lg"
+                  />
+                  <img
+                    v-else
+                    v-bind="imgAttrs"
+                    :src="src"
+                    class="w-full h-full object-cover rounded-lg"
+                    alt="certificate design"
+                  />
+                </NuxtImg>
               </div>
             </div>
 
@@ -308,7 +353,7 @@ const getStepDescription = computed(() => {
         </div>
         <div class="w-full mt-14">
           <CollapsibleBlock
-            label="Описание сертификта"
+            label="Описание сертификата"
             description="Текстовое описание сертификата"
           />
         </div>
