@@ -136,7 +136,6 @@ if (props.modelValue) {
       <span
         v-if="getPriceData()"
         class="mt-0.5 block sm:mt-1"
-        :class="{ 'mb-2': isHovered }"
       >
         {{ priceFormatter(getPriceData().price) }}
         <span
@@ -151,14 +150,6 @@ if (props.modelValue) {
         class="mt-0.5 block sm:mt-1 text-gray-500"
       >
         Цена не указана
-      </span>
-
-      <span
-        v-if="!isHovered || popup"
-        class="my-1 hidden sm:block"
-        :class="{ 'mb-2': popup }"
-      >
-        {{ currentColorName }}
       </span>
 
       <div

@@ -78,7 +78,7 @@ export function useCatalogCard(props: UseCatalogCardProps) {
   }
 
   const handleMouseMove = (e: MouseEvent) => {
-    if (isTransitioning.value || !isWideScreen.value || numImages.value <= 1) return
+    if (isTransitioning.value || isWideScreen.value || numImages.value <= 1) return
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
     const numSections = numImages.value
     const section = rect.width / numSections
