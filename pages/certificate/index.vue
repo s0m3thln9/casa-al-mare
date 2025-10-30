@@ -305,7 +305,7 @@ const getStepDescription = computed(() => {
                   :options="[
                     { code: '+7', country: 'Россия' },
                     { code: '+375', country: 'Беларусь' },
-                    { code: '+380', country: 'Украина' },
+                    { code: '+384', country: 'Украина' },
                     { code: '+77', country: 'Казахстан' },
                     { code: '+998', country: 'Узбекистан' },
                     { code: '+992', country: 'Таджикистан' },
