@@ -59,7 +59,7 @@ const handleProfileClick = () => {
         <ul class="flex flex-col gap-4">
           <li><NuxtLink to="/info/dostavka-i-oplata">Доставка и оплата</NuxtLink></li>
           <li><NuxtLink to="/info/vozvrat-i-obmen">Возврат и обмен</NuxtLink></li>
-          <li><NuxtLink to="/">Реквизиты</NuxtLink></li>
+          <li><NuxtLink to="/info/rekvizity">Реквизиты</NuxtLink></li>
           <li
             class="cursor-pointer"
             @click="popupStore.open('reverse')"
@@ -177,7 +177,12 @@ const handleProfileClick = () => {
         >
           Обратная связь
         </button>
-        <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Реквизиты</button>
+        <NuxtLink
+          class="w-full h-full"
+          to="/info/rekvizity"
+        >
+          <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Реквизиты</button>
+        </NuxtLink>
         <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">
           Политика конфиденциальности и оферта
         </button>

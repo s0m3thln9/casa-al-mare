@@ -46,7 +46,7 @@ const badgeText = (count: number) => (count > 99 ? "99+" : count.toString())
         </li>
         <li class="hover:text-[#F3A454]"><NuxtLink to="/catalog">Новинки</NuxtLink></li>
         <li class="hover:text-[#F3A454]"><NuxtLink to="/blog">Блог</NuxtLink></li>
-        <li class="hover:text-[#F3A454]"><NuxtLink to="/collections/collection">NEW COLLECTION</NuxtLink></li>
+        <li class="hover:text-[#F3A454]"><NuxtLink to="/collections">CAMPAIGNS</NuxtLink></li>
         <li class="hover:text-[#F3A454]">
           <a
             href="https://t.me/casaalmare_swim"
