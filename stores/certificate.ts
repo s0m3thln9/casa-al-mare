@@ -5,7 +5,11 @@ export const useCertificateStore = defineStore("certificate", () => {
   const selectedDesign = ref<number | null>(null)
   const selectedWay = ref<string | null>(null)
   const recipientEmail = ref("")
-  const recipientPhone = ref("")
+  const recipientPhone = ref<{
+    code: string
+    phone: string
+    country: string
+  } | null>(null)
   const selectedDetails = ref<string | null>(null)
   const recipientName = ref("")
   const message = ref("")
@@ -19,8 +23,14 @@ export const useCertificateStore = defineStore("certificate", () => {
       if (selectedWay.value === "Электронной почтой") {
         return recipientEmail.value.trim() !== ""
       } else if (selectedWay.value === "По SMS") {
-        return recipientPhone.value.trim() !== ""
+        // Проверяем, что объект телефона существует и поля не пустые
+        return (
+          recipientPhone.value !== null &&
+          recipientPhone.value.code.trim() !== "" &&
+          recipientPhone.value.phone.trim() !== ""
+        )
       } else {
+        // Например, "Получу сам" — тогда способ выбран, и доп. данных не нужно
         return selectedWay.value !== null
       }
     } else if (step.value === 4) {

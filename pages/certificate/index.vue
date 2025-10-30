@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { AppInput, SelectInput } from "#components"
 import { computed, ref, onMounted, watch } from "vue"
 import { useCertificateStore } from "~/stores/certificate"
 
@@ -13,6 +14,31 @@ const touchStartX = ref(0)
 const touchStartY = ref(0)
 const isHorizontalSwipe = ref(false)
 const isTransitioning = ref(false)
+
+const recipientEmailRef = ref<InstanceType<typeof AppInput> | null>(null)
+const recipientPhoneRef = ref<InstanceType<typeof SelectInput> | null>(null)
+const recipientNameRef = ref<InstanceType<typeof SelectInput> | null>(null)
+
+interface PhoneOption {
+  code: string
+  country: string
+  iso: string
+}
+
+const phoneOptions: PhoneOption[] = [
+  { code: "+7", country: "Россия", iso: "RU" },
+  { code: "+375", country: "Беларусь", iso: "BY" },
+  { code: "+380", country: "Украина", iso: "UA" },
+  { code: "+77", country: "Казахстан", iso: "KZ" },
+  { code: "+998", country: "Узбекистан", iso: "UZ" },
+  { code: "+992", country: "Таджикистан", iso: "TJ" },
+  { code: "+993", country: "Туркменистан", iso: "TM" },
+  { code: "+996", country: "Кыргызстан", iso: "KG" },
+  { code: "+374", country: "Армения", iso: "AM" },
+  { code: "+994", country: "Азербайджан", iso: "AZ" },
+  { code: "+373", country: "Молдова", iso: "MD" },
+  { code: "+995", country: "Грузия", iso: "GE" },
+]
 
 const imageStyles = computed(() => (index: number) => {
   const len = certificateImages.value.length
@@ -188,11 +214,11 @@ const getStepDescription = computed(() => {
               v-slot="{ src, isLoaded, imgAttrs }"
               :src="img"
               :custom="true"
-              class="absolute top-0 left-0 w-full h-full"
+              class="absolute top-0 left-0 w-full"
             >
               <div
                 v-if="!isLoaded"
-                class="w-full h-full aspect-[460/680] bg-[#F9F6EC]"
+                class="w-full aspect-[460/680] bg-[#F9F6EC]"
                 :style="imageStyles(index)"
               />
               <img
@@ -200,7 +226,7 @@ const getStepDescription = computed(() => {
                 v-bind="imgAttrs"
                 :src="src"
                 :style="imageStyles(index)"
-                class="w-full h-full object-cover"
+                class="w-full object-cover"
                 alt="certificate"
               />
             </NuxtImg>
@@ -229,7 +255,7 @@ const getStepDescription = computed(() => {
               v-else
               v-bind="imgAttrs"
               :src="src"
-              class="w-full h-full object-cover rounded-2xl"
+              class="w-full object-cover rounded-2xl"
               alt="certificate"
             />
           </NuxtImg>
@@ -333,12 +359,22 @@ const getStepDescription = computed(() => {
               v-if="certificateStore.step === 4"
               class="w-full flex flex-col gap-8"
             >
-              <AppInput
-                id="recipientName"
-                v-model="certificateStore.recipientName"
-                label="Имя получателя*"
-                type="text"
-              />
+              <AppTooltip
+                text="Это поле обязательно для заполнения"
+                type="error"
+                :show="recipientNameRef?.showError"
+                class="w-full"
+              >
+                <AppInput
+                  id="recipientName"
+                  ref="recipientNameRef"
+                  v-model="certificateStore.recipientName"
+                  type="text"
+                  label="Имя"
+                  custom-class="w-full"
+                  required
+                />
+              </AppTooltip>
               <AppInput
                 id="message"
                 v-model="certificateStore.message"
@@ -366,36 +402,40 @@ const getStepDescription = computed(() => {
                 "
                 class="w-full flex flex-col"
               >
-                <AppInput
+                <AppTooltip
                   v-if="certificateStore.selectedWay === 'Электронной почтой'"
-                  id="recipientEmail"
-                  v-model="certificateStore.recipientEmail"
-                  label="Введите e-mail получателя*"
-                  type="email"
-                />
-                <SelectInput
+                  text="Это поле обязательно для заполнения"
+                  type="error"
+                  :show="recipientEmailRef?.showError"
+                  class="w-full"
+                >
+                  <AppInput
+                    id="recipientEmail"
+                    ref="recipientEmailRef"
+                    v-model="certificateStore.recipientEmail"
+                    type="text"
+                    label="E-mail"
+                    custom-class="w-full"
+                    required
+                  />
+                </AppTooltip>
+                <AppTooltip
                   v-if="certificateStore.selectedWay === 'По SMS'"
-                  id="recipientPhone"
-                  v-model="certificateStore.recipientPhone"
-                  :options="[
-                    { code: '+7', country: 'Россия' },
-                    { code: '+375', country: 'Беларусь' },
-                    { code: '+384', country: 'Украина' },
-                    { code: '+77', country: 'Казахстан' },
-                    { code: '+998', country: 'Узбекистан' },
-                    { code: '+992', country: 'Таджикистан' },
-                    { code: '+993', country: 'Туркменистан' },
-                    { code: '+996', country: 'Кыргызстан' },
-                    { code: '+374', country: 'Армения' },
-                    { code: '+994', country: 'Азербайджан' },
-                    { code: '+373', country: 'Молдова' },
-                    { code: '+7', country: 'Абхазия' },
-                    { code: '+995', country: 'Грузия' },
-                  ]"
-                  type="text"
-                  label="Номер телефона"
-                  required
-                />
+                  text="Это поле обязательно для заполнения"
+                  type="error"
+                  :show="recipientPhoneRef?.showError"
+                  class="w-full"
+                >
+                  <SelectInput
+                    id="recipientPhone"
+                    ref="recipientPhoneRef"
+                    v-model="certificateStore.recipientPhone"
+                    custom-class="w-full"
+                    :options="phoneOptions"
+                    label="Номер телефона"
+                    required
+                  />
+                </AppTooltip>
               </div>
             </div>
           </div>
