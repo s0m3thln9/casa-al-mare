@@ -235,6 +235,52 @@ export const useCatalogStore = defineStore("catalog", () => {
           ]),
       )
       const levelOptions = Array.from(uniqueParents.values())
+
+      // Special sorting for second level (level === 1)
+      if (level === 1 && levelOptions.length > 0) {
+        // Map each second-level option to its first-level parent(s)
+        const optionToFirstParents = new Map<string, string[]>()
+
+        levelItems.forEach((item) => {
+          if (item.parents.length > 1) {
+            const secondAlias = item.parents[1]?.alias
+            const firstAlias = item.parents[0]?.alias
+            if (secondAlias && firstAlias) {
+              if (!optionToFirstParents.has(secondAlias)) {
+                optionToFirstParents.set(secondAlias, [])
+              }
+              if (!optionToFirstParents.get(secondAlias)!.includes(firstAlias)) {
+                optionToFirstParents.get(secondAlias)!.push(firstAlias)
+              }
+            }
+          }
+        })
+
+        // Get first-level names for sorting
+        const firstLevelMap = new Map<string, string>()
+        items.value.forEach((item) => {
+          if (item.parents[0]) {
+            firstLevelMap.set(item.parents[0].alias, item.parents[0].name)
+          }
+        })
+
+        levelOptions.sort((a, b) => {
+          // Get first-level parent names for a and b
+          const aFirstAliases = optionToFirstParents.get(a.alias) || []
+          const bFirstAliases = optionToFirstParents.get(b.alias) || []
+
+          const aFirstNames = aFirstAliases.map((alias) => firstLevelMap.get(alias) || alias).sort()
+          const bFirstNames = bFirstAliases.map((alias) => firstLevelMap.get(alias) || alias).sort()
+
+          // Compare first by first parent name
+          const firstCompare = (aFirstNames[0] || "").localeCompare(bFirstNames[0] || "")
+          if (firstCompare !== 0) return firstCompare
+
+          // Then by own name
+          return a.name.localeCompare(b.name)
+        })
+      }
+
       pathLevels.push(levelOptions)
 
       if (level === 0) {

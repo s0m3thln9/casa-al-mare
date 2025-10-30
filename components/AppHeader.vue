@@ -7,9 +7,8 @@ const orderStore = useOrderStore()
 const favoritesCount = computed(() => favoritesStore.favorites.length)
 const headerZIndex = ref(10)
 const handleSearchToggle = (isOpen: boolean) => {
-	headerZIndex.value = isOpen ? 50 : 30
+  headerZIndex.value = isOpen ? 50 : 30
 }
-
 
 const cartCount = computed(() => {
   return orderStore.cartItems.reduce((total, item) => total + item.count, 0)
@@ -20,9 +19,9 @@ const badgeText = (count: number) => (count > 99 ? "99+" : count.toString())
 
 <template>
   <header
-	  :class="[
+    :class="[
       'sticky top-0 left-0 font-[Manrope] text-xs flex justify-between items-center p-2 bg-[#FFFFFA] text-[#211D1D] sm:text-sm sm:p-4',
-      `z-${headerZIndex}`
+      `z-${headerZIndex}`,
     ]"
   >
     <div>
@@ -57,7 +56,15 @@ const badgeText = (count: number) => (count > 99 ? "99+" : count.toString())
             Telegram
           </a>
         </li>
-        <li class="hover:text-[#F3A454]"><NuxtLink to="/">WhatsApp</NuxtLink></li>
+        <li class="hover:text-[#F3A454]">
+          <a
+            href="https://wa.me/79300360494"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            WhatsApp
+          </a>
+        </li>
       </ul>
     </nav>
     <nav>

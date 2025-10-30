@@ -206,6 +206,7 @@ const pendingFilteredCount = computed(() => {
       <div class="flex gap-4">
         <button
           class="cursor-pointer"
+          :disabled="catalogStore.isLoading"
           @click="
             async () => {
               catalogStore.syncPending()
@@ -239,6 +240,7 @@ const pendingFilteredCount = computed(() => {
         <span class="text-[11px] font-[Manrope]" />
         <button
           class="cursor-pointer flex items-center font-[Manrope] text-xs text-[#211D1D]"
+          :disabled="catalogStore.isLoading"
           @click="
             async () => {
               catalogStore.syncPending()
@@ -274,38 +276,42 @@ const pendingFilteredCount = computed(() => {
       v-if="currentCardCount === '4' || currentCardCount === '2'"
       class="overflow-hidden grid grid-cols-2 px-2 gap-x-1 gap-y-2 sm:grid-cols-4 sm:px-4 sm:gap-x-4 sm:gap-y-6"
     >
-      <template
-        v-for="(item, index) in visibleItems"
-        :key="item.id"
-      >
-        <template v-if="index > 0 && index % 6 === 0">
-          <BannerCard
-            :image-url="images.promo1"
-            text="SS26 SOLAR POWER"
-            custom-class="rounded-lg aspect-[1] col-span-2 sm:hidden"
-            object-position="center"
+      <template v-if="!catalogStore.isLoading">
+        <template
+          v-for="(item, index) in visibleItems"
+          :key="item.id"
+        >
+          <template v-if="index > 0 && index % 6 === 0">
+            <BannerCard
+              :image-url="images.promo1"
+              text="SS26 SOLAR POWER"
+              custom-class="rounded-lg aspect-[1] col-span-2 sm:hidden"
+              object-position="center"
+            />
+          </template>
+          <CatalogCard
+            :id="item.id"
+            variant="large"
+            link
           />
         </template>
-        <CatalogCard
-          :id="item.id"
-          variant="large"
-          link
-        />
       </template>
     </div>
     <div
       v-else
       class="overflow-hidden grid grid-cols-3 px-2 gap-x-1 gap-y-2 sm:grid-cols-6 sm:px-4 sm:gap-x-4 sm:gap-y-6"
     >
-      <template
-        v-for="item in visibleItems"
-        :key="item.id"
-      >
-        <CatalogCard
-          :id="item.id"
-          variant="mini"
-          link
-        />
+      <template v-if="!catalogStore.isLoading">
+        <template
+          v-for="item in visibleItems"
+          :key="item.id"
+        >
+          <CatalogCard
+            :id="item.id"
+            variant="mini"
+            link
+          />
+        </template>
       </template>
     </div>
     <div

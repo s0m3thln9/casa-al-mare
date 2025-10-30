@@ -10,19 +10,18 @@ const emit = defineEmits<{
 }>()
 
 const select = (value: string) => {
-  const currentValues = [...props.modelValue]
+  const currentValues = Array.isArray(props.modelValue) ? [...props.modelValue] : []
   const index = currentValues.indexOf(value)
   if (index > -1) {
     currentValues.splice(index, 1)
   } else {
     currentValues.push(value)
   }
-
   emit("update:modelValue", currentValues)
 }
 
 const isSelected = (value: string): boolean => {
-  return props.modelValue.includes(value)
+  return Array.isArray(props.modelValue) && props.modelValue.includes(value)
 }
 </script>
 
