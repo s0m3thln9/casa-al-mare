@@ -9,7 +9,6 @@ const doc = computed(() => docsStore.getDocBySlug(slug.value))
 
 const breadcrumbsItems = computed(() => [
   { name: "Главная", path: "/" },
-  { name: "Инфо" },
   { name: doc.value?.pagetitle || "Не найдено" },
 ])
 </script>
