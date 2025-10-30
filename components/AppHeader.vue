@@ -6,8 +6,12 @@ const favoritesStore = useFavoritesStore()
 const authModalStore = useAuthModalStore()
 const authStore = useAuthStore()
 const orderStore = useOrderStore()
+const viewport = useViewport()
+
+const isMobile = computed(() => viewport.isLessThan("sm"))
 const favoritesCount = computed(() => favoritesStore.favorites.length)
 const headerZIndex = ref(10)
+
 const handleSearchToggle = (isOpen: boolean) => {
   headerZIndex.value = isOpen ? 50 : 30
 }
@@ -25,6 +29,23 @@ const handleFavClick = () => {
 }
 
 const badgeText = (count: number) => (count > 99 ? "99+" : count.toString())
+
+// Вычисляемое свойство для текста кнопки меню
+const menuButtonText = computed(() => {
+  if (isMobile.value && menuStore.isOpen) {
+    return "Назад"
+  }
+  return "Меню"
+})
+
+// Обработчик клика по кнопке меню
+const handleMenuButtonClick = () => {
+  if (menuStore.isOpen) {
+    menuStore.close()
+  } else {
+    menuStore.open()
+  }
+}
 </script>
 
 <template>
@@ -105,9 +126,9 @@ const badgeText = (count: number) => (count > 99 ? "99+" : count.toString())
         <li class="block hover:text-[#F3A454] cursor-pointer lg:hidden">
           <button
             class="menu-button2"
-            @click="menuStore.open"
+            @click="handleMenuButtonClick"
           >
-            Меню
+            {{ menuButtonText }}
           </button>
         </li>
       </ul>

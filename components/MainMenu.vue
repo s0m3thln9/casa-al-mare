@@ -15,7 +15,9 @@ interface MenuItem {
   path?: string
   submenu?: MenuItem[]
   customClass?: string
+  customClass2?: string
   func?: () => void
+  a?: string
 }
 
 const menuStore = useMenuStore()
@@ -93,11 +95,31 @@ const menuItems = computed<MenuItem[]>(() => {
     label: "Сертификаты",
     link: "/certificate",
   })
+  items.push({
+    label: "Новинки",
+    link: "/catalog",
+    customClass2: "sm:hidden",
+  })
+  items.push({
+    label: "Блог",
+    link: "/blog",
+    customClass2: "sm:hidden",
+  })
+  items.push({
+    label: "CAMPAIGNS",
+    link: "/collections",
+    customClass2: "sm:hidden",
+  })
 
   return items
 })
 
 const secondMenuItems: MenuItem[] = [
+  {
+    label: "Избранное",
+    customClass2: "sm:hidden",
+    link: "/favorites",
+  },
   {
     label: "В личный кабинет",
     func: () => {
@@ -126,6 +148,16 @@ const secondMenuItems: MenuItem[] = [
   {
     label: "Контакты",
     link: "/contacts",
+  },
+  {
+    label: "Telegram",
+    customClass2: "sm:hidden",
+    a: "https://t.me/casaalmare_swim",
+  },
+  {
+    label: "WhatsApp",
+    customClass2: "sm:hidden",
+    a: "https://wa.me/79300360494",
   },
 ]
 
@@ -168,6 +200,11 @@ const proceedWithNavigationAndClose = (item: MenuItem) => {
 
   if (item.func) {
     item.func()
+    return
+  }
+
+  if (item.a) {
+    window.open(item.a, "_blank", "noopener,noreferrer")
     return
   }
 
@@ -226,17 +263,23 @@ watch(
     @click.self="menuStore.close"
   >
     <div
-      class="max-h-[calc(100vh-32px)] sm:max-h-[calc(100vh-62px)] overflow-hidden fixed top-[32px] flex bg-[#FFFFFA] transition-all duration-300 h-full sm:top-[62px] sm:rounded-b-3xl sm:border-t-[0.5px] sm:border-r-[0.5px] sm:border-b-[0.5px] sm:border-[#F9F6EC] sm:h-auto"
+      class="fixed top-[32px] flex bg-[#FFFFFA] transition-all duration-300 sm:top-[62px] sm:rounded-b-3xl sm:border-t-[0.5px] sm:border-r-[0.5px] sm:border-b-[0.5px] sm:border-[#F9F6EC]"
       :class="[
         menuStore.isOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0',
-        isMobile ? 'w-full' : 'w-fit',
+        isMobile
+          ? 'w-full h-[calc(100vh-32px)] overflow-y-auto'
+          : 'w-fit h-auto max-h-[calc(100vh-62px)] overflow-hidden',
       ]"
     >
       <div
-        class="flex flex-col z-31 bg-[#FFFFFA] overflow-y-auto"
+        class="flex flex-col z-31 bg-[#FFFFFA]"
         :class="[
           selectedSubmenu !== null && 'border-r-[0.5px] border-[#F9F6EC]',
-          isMobile ? (selectedSubmenu !== null ? 'w-0' : 'px-2 pt-8 pb-6 w-full justify-between') : 'p-6 gap-6',
+          isMobile
+            ? selectedSubmenu !== null
+              ? 'w-0 overflow-hidden'
+              : 'px-2 pt-8 pb-6 w-full justify-between'
+            : 'p-6 gap-6 overflow-y-auto',
         ]"
       >
         <div
@@ -265,10 +308,13 @@ watch(
             v-for="(item, index) in menuItems"
             :key="index"
             class="flex items-center justify-between cursor-pointer text-[#211D1D]"
-            :class="isMobile ? 'font-[Inter] text-[17px] uppercase' : 'text-base font-[Manrope] font-light'"
+            :class="[
+              isMobile ? 'font-[Inter] text-[17px] uppercase' : 'text-base font-[Manrope] font-light',
+              item.customClass2,
+            ]"
             @click.stop="handleMenuClick(item)"
           >
-            <span class="px-2 py-1">{{ item.label }}</span>
+            <span :class="['px-2 py-1', !isMobile && item.customClass]">{{ item.label }}</span>
             <NuxtImg
               v-if="item.submenu"
               src="/arrow-right.svg"
@@ -279,14 +325,14 @@ watch(
           </li>
         </ul>
         <ul
-          class="flex flex-col border-t-[0.5px] border-[#F9F6EC]"
-          :class="isMobile ? 'pt-6 gap-6' : 'py-4 gap-4'"
+          class="flex flex-col border-t-[1px]"
+          :class="isMobile ? 'py-4 gap-4 border-[#BBB8B6]' : 'pt-6 gap-6 border-[#F9F6EC]'"
         >
           <li
             v-for="(item, index) in secondMenuItems"
             :key="index"
-            class="flex items-center justify-between cursor-pointer text-[#211D1D]"
-            :class="isMobile ? 'font-[Inter] text-[17px] uppercase' : 'text-base font-[Manrope] font-light'"
+            class="flex items-center justify-between cursor-pointer text-[#211D1D] font-light font-[Manrope]"
+            :class="[isMobile ? 'px-4 text-[15px]' : 'text-base', item.customClass2]"
             @click.stop="handleMenuClick(item)"
           >
             <span :class="['px-2 py-1', !isMobile && item.customClass]">{{ item.label }}</span>
@@ -301,13 +347,13 @@ watch(
         </ul>
       </div>
       <div
-        class="flex flex-col gap-8 transition-[transform,_opacity] duration-300 overflow-y-auto"
+        class="flex flex-col gap-8 transition-[transform,_opacity] duration-300"
         :class="
           selectedSubmenu !== null
             ? isMobile
-              ? 'w-full px-4 gap-10 pt-8'
-              : 'min-w-[254px] p-6 translate-x-0 opacity-100'
-            : 'w-0 p-0 -translate-x-full opacity-0'
+              ? 'w-full px-4 gap-10 pt-8 pb-6 overflow-y-auto'
+              : 'min-w-[254px] p-6 translate-x-0 opacity-100 overflow-y-auto'
+            : 'w-0 p-0 -translate-x-full opacity-0 overflow-hidden'
         "
       >
         <div
