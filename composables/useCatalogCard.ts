@@ -14,7 +14,7 @@ export function useCatalogCard(props: UseCatalogCardProps) {
   const isHovered = ref(false)
   const isVisible = ref(false)
   const viewport = useViewport()
-  const isWideScreen = computed(() => viewport.isLessThan("sm"))
+  const isNarrowScreen = computed(() => viewport.isLessThan("sm"))
   const touchStartX = ref(0)
   const item = shallowRef<Item | null>(null)
   const favoritesStore = useFavoritesStore()
@@ -22,10 +22,6 @@ export function useCatalogCard(props: UseCatalogCardProps) {
   const isFavoriteLocal = ref(favoritesStore.isFavorite(props.id))
   const isStarPressed = ref(false)
   const starRef = ref<InstanceType<typeof NuxtImg> | null>(null)
-
-  const currentColorName = computed(() => {
-    return item.value?.colorName || ""
-  })
 
   const availableSizes = computed(() => {
     return Object.keys(item.value?.vector || {})
@@ -74,7 +70,7 @@ export function useCatalogCard(props: UseCatalogCardProps) {
   }
 
   const handleMouseMove = (e: MouseEvent) => {
-    if (isTransitioning.value || isWideScreen.value || numImages.value <= 1) return
+    if (isTransitioning.value || isNarrowScreen.value || numImages.value <= 1) return
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
     const numSections = numImages.value
     const section = rect.width / numSections
@@ -180,19 +176,16 @@ export function useCatalogCard(props: UseCatalogCardProps) {
 
   return {
     currentImageIndex,
-    isTransitioning,
     isHovered,
     isVisible,
-    isWideScreen,
+    isNarrowScreen,
     selectedSize,
-    favoritesStore,
     imageStyles,
     barStyles,
     item,
     numImages,
     barIndices,
     currentColorImages,
-    currentColorName,
     priceFormatter,
     getPriceData,
     handleMouseMove,

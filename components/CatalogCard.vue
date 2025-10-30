@@ -17,12 +17,10 @@ const emit = defineEmits<{
 
 const {
   currentImageIndex,
-  isTransitioning,
   isHovered,
   isVisible,
-  isWideScreen,
+  isNarrowScreen,
   selectedSize,
-  favoritesStore,
   imageStyles,
   barStyles,
   item,
@@ -34,7 +32,6 @@ const {
   handleTouchEnd,
   handleClick,
   currentColorImages,
-  currentColorName,
   getPriceData,
   isFavoriteLocal,
   isStarPressed,
@@ -73,7 +70,7 @@ if (props.modelValue) {
     :class="[
       'flex flex-col items-center relative font-[Commissioner] text-[#211D1D] font-light text-[11px] text-center cursor-pointer sm:font-[Manrope] sm:text-xs',
       customClass,
-      isWideScreen && 'justify-between flex-1',
+      isNarrowScreen && 'justify-between flex-1',
     ]"
     @mouseenter="!popup && (isHovered = true)"
     @mouseleave="!popup && (isHovered = false)"
@@ -177,7 +174,7 @@ if (props.modelValue) {
       </div>
 
       <NuxtImg
-        v-if="!isWideScreen || (!popup && isHovered) || isFavoriteLocal"
+        v-if="isNarrowScreen || (!popup && isHovered) || isFavoriteLocal"
         ref="starRef"
         :src="isFavoriteLocal ? '/star-filled.svg' : '/star.svg'"
         alt="star"
@@ -303,7 +300,7 @@ if (props.modelValue) {
       </span>
 
       <NuxtImg
-        v-if="!isWideScreen || (!popup && isHovered) || isFavoriteLocal"
+        v-if="isNarrowScreen || (!popup && isHovered) || isFavoriteLocal"
         ref="starRef"
         :src="isFavoriteLocal ? '/star-filled.svg' : '/star.svg'"
         alt="star"
