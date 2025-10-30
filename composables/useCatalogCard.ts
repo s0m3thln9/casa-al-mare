@@ -98,11 +98,11 @@ export function useCatalogCard(props: UseCatalogCardProps) {
     const currentY = e.touches[0].clientY
     const deltaX = Math.abs(currentX - touchStartX.value)
     const deltaY = Math.abs(currentY - touchStartY.value)
-    const threshold = 10
+    const threshold = 15
 
     if (deltaX > threshold && deltaX > deltaY) {
       const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI)
-      if (Math.abs(angle) < 30) {
+      if (Math.abs(angle) < 45) {
         isHorizontalSwipe.value = true
         e.preventDefault()
       }
