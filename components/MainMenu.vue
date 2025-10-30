@@ -267,7 +267,7 @@ watch(
       :class="[
         menuStore.isOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0',
         isMobile
-          ? 'w-full h-[calc(100vh-32px)] overflow-y-auto'
+          ? 'w-full h-[calc(100vh-32px-env(safe-area-inset-bottom))] overflow-y-auto'
           : 'w-fit h-auto max-h-[calc(100vh-62px)] overflow-hidden',
       ]"
     >
@@ -278,7 +278,7 @@ watch(
           isMobile
             ? selectedSubmenu !== null
               ? 'w-0 overflow-hidden'
-              : 'px-2 pt-8 pb-6 w-full justify-between'
+              : 'px-2 pt-8 pb-[calc(1.5rem+env(safe-area-inset-bottom))] w-full justify-between'
             : 'p-6 gap-6 overflow-y-auto',
         ]"
       >
@@ -351,7 +351,7 @@ watch(
         :class="
           selectedSubmenu !== null
             ? isMobile
-              ? 'w-full px-4 gap-10 pt-8 pb-6 overflow-y-auto'
+              ? 'w-full px-4 gap-10 pt-8 pb-[calc(1.5rem+env(safe-area-inset-bottom))] overflow-y-auto'
               : 'min-w-[254px] p-6 translate-x-0 opacity-100 overflow-y-auto'
             : 'w-0 p-0 -translate-x-full opacity-0 overflow-hidden'
         "
