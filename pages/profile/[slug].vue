@@ -116,7 +116,6 @@ const authStore = useAuthStore()
 const authModalStore = useAuthModalStore()
 
 onMounted(async () => {
-  if (!authStore.isAuth) authModalStore.open()
   await profileStore.loadProfile()
   await orderStore.loadPaymentMethods()
 })

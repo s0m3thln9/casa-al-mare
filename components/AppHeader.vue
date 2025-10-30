@@ -3,6 +3,8 @@ import { useMenuStore } from "~/stores/menu"
 
 const menuStore = useMenuStore()
 const favoritesStore = useFavoritesStore()
+const authModalStore = useAuthModalStore()
+const authStore = useAuthStore()
 const orderStore = useOrderStore()
 const favoritesCount = computed(() => favoritesStore.favorites.length)
 const headerZIndex = ref(10)
@@ -13,6 +15,14 @@ const handleSearchToggle = (isOpen: boolean) => {
 const cartCount = computed(() => {
   return orderStore.cartItems.reduce((total, item) => total + item.count, 0)
 })
+
+const handleFavClick = () => {
+  if (authStore.isAuth) {
+    navigateTo("/favorites")
+  } else {
+    authModalStore.open()
+  }
+}
 
 const badgeText = (count: number) => (count > 99 ? "99+" : count.toString())
 </script>
@@ -71,7 +81,7 @@ const badgeText = (count: number) => (count > 99 ? "99+" : count.toString())
       <ul class="flex gap-3 sm:gap-4">
         <li class="hover:text-[#F3A454] cursor-pointer"><AppSearch @search-toggle="handleSearchToggle" /></li>
         <li class="hidden hover:text-[#F3A454] cursor-pointer lg:block relative">
-          <NuxtLink to="/favorites"
+          <NuxtLink @click="handleFavClick"
             >Избранное
             <span
               v-if="favoritesCount > 0"

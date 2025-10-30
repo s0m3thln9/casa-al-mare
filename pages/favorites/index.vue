@@ -15,12 +15,6 @@ watch(
 )
 
 const favoriteItems = computed(() => catalogStore.items.filter((item) => favoritesStore.favorites.includes(item.id)))
-
-onMounted(() => {
-  if (!authStore.isAuth) {
-    authModalStore.open()
-  }
-})
 </script>
 
 <template>
