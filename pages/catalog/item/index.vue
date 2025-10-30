@@ -20,6 +20,7 @@ const loadItem = async () => {
     isLoading.value = true
     error.value = null
 
+    // Проверяем, загружены ли товары, и загружаем только если их нет
     if (catalogStore.items.length === 0) {
       await catalogStore.loadItems()
     }

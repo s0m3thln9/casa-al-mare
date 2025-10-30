@@ -17,6 +17,9 @@ const currentCardCount = computed(() =>
 
 const route = useRoute()
 
+// Сохраняем позицию скролла перед уходом со страницы
+const scrollPosition = ref(0)
+
 const applyFiltersFromQuery = (q: any) => {
   let parentsAliasesFromQuery: string[][] = []
   const thirdLevelByParent: Record<string, string[]> = {}
@@ -94,11 +97,58 @@ const applyFiltersFromQuery = (q: any) => {
   catalogStore.currentFilters.extra = {}
 }
 
+// Инициализация скролла
+const loadMoreObserver = ref<IntersectionObserver | null>(null)
+const loadMoreTrigger = ref<HTMLElement | null>(null)
+
+const setupInfiniteScroll = () => {
+  if (loadMoreObserver.value) {
+    loadMoreObserver.value.disconnect()
+  }
+
+  loadMoreObserver.value = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && catalogStore.currentVisibleCardCount < catalogStore.filteredItems.length) {
+          load()
+        }
+      })
+    },
+    {
+      rootMargin: "200px", // Начинаем загрузку за 200px до конца
+      threshold: 0.1,
+    },
+  )
+
+  if (loadMoreTrigger.value) {
+    loadMoreObserver.value.observe(loadMoreTrigger.value)
+  }
+}
+
 onMounted(async () => {
   // Загружаем товары и применяем фильтры после загрузки
   await catalogStore.loadItems()
   applyFiltersFromQuery(route.query)
-  // Синхронизируем pendingFilters с currentFilters после применения
+
+  // Сбрасываем флаг, если он был установлен
+  catalogStore.shouldResetCount = false // <- ДОБАВИТЬ ЭТУ СТРОКУ
+
+  // Восстанавливаем позицию скролла, если возвращаемся на страницу
+  nextTick(() => {
+    if (scrollPosition.value > 0) {
+      window.scrollTo(0, scrollPosition.value)
+    }
+    setupInfiniteScroll()
+  })
+})
+
+onBeforeUnmount(() => {
+  // Сохраняем текущую позицию скролла
+  scrollPosition.value = window.scrollY
+
+  if (loadMoreObserver.value) {
+    loadMoreObserver.value.disconnect()
+  }
 })
 
 // Следим за изменениями query параметров
@@ -108,9 +158,28 @@ watch(
     // Применяем фильтры только если товары уже загружены
     if (catalogStore.items.length > 0) {
       applyFiltersFromQuery(q)
+      // Сбрасываем счетчик только если был установлен флаг
+      if (catalogStore.shouldResetCount) {
+        // <- ИЗМЕНИТЬ ЭТИ СТРОКИ
+        catalogStore.currentVisibleCardCount = 12
+        catalogStore.shouldResetCount = false
+      }
+      nextTick(() => {
+        setupInfiniteScroll()
+      })
     }
   },
-  { immediate: false }, // Изменено на false, так как применяем в onMounted
+  { immediate: false },
+)
+
+// Пересоздаем observer при изменении количества отображаемых карточек
+watch(
+  () => catalogStore.currentVisibleCardCount,
+  () => {
+    nextTick(() => {
+      setupInfiniteScroll()
+    })
+  },
 )
 
 const breadcrumsItems = computed(() => {
@@ -130,7 +199,6 @@ const breadcrumsItems = computed(() => {
       const aliases = segment.split(",").filter((a) => a.trim() !== "")
 
       if (aliases.length === 1) {
-        // Один алиас - обычное поведение
         const category = catalogStore.items
           .flatMap((item) => item.parents || [])
           .find((parent) => parent.alias === aliases[0])
@@ -142,7 +210,6 @@ const breadcrumsItems = computed(() => {
           path: categoryPath,
         })
       } else {
-        // Несколько алиасов - показываем через запятую
         const names = aliases.map((alias) => {
           const category = catalogStore.items
             .flatMap((item) => item.parents || [])
@@ -175,6 +242,10 @@ const load = () => {
 
 const pendingFilteredCount = computed(() => {
   return catalogStore.getPendingFilteredCount()
+})
+
+const hasMoreItems = computed(() => {
+  return catalogStore.currentVisibleCardCount < catalogStore.filteredItems.length
 })
 </script>
 
@@ -296,19 +367,21 @@ const pendingFilteredCount = computed(() => {
         </template>
       </template>
     </div>
+
+    <!-- Триггер для бесконечного скролла -->
     <div
-      v-if="catalogStore.currentVisibleCardCount < catalogStore.filteredItems.length"
-      class="flex justify-center items-center pt-4 pb-2 sm:py-10"
+      v-if="hasMoreItems && !catalogStore.isLoading"
+      ref="loadMoreTrigger"
+      class="flex justify-center items-center py-4"
     >
-      <LoadButton
-        content="Показать больше"
-        @click="load"
-      />
+      <div class="text-[#211D1D]/60 text-sm">Загрузка...</div>
     </div>
+
     <div
-      v-else
+      v-else-if="!catalogStore.isLoading && catalogStore.filteredItems.length > 0"
       class="pt-4 pb-2 sm:py-10"
     />
+
     <AppSEO
       :paragraphs="[
         'CASA AL MARE — эстетика тела, свобода выбора. Каталог CASA AL MARE создан для женщин, которые ищут не просто купальник или комплект белья, а выражение своей индивидуальности.\n' +

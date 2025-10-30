@@ -92,10 +92,7 @@ export const useCatalogStore = defineStore("catalog", () => {
     parentsAliases: [],
     thirdLevelByParent: {},
     colors: [],
-    maxPrice: null,
     sortType: null,
-    withDiscount: null,
-    inStock: null,
     materials: "",
     useTypes: [],
     keystrings: [],
@@ -105,6 +102,8 @@ export const useCatalogStore = defineStore("catalog", () => {
 
   const currentFilters = ref<SortAndFilter>({ ...pendingFilters.value })
 
+  const shouldResetCount = ref(false)
+
   const maxParentsLength = computed(() => Math.max(...items.value.map((i) => i.parents.length), 0))
 
   const padParentsAliases = (arr: string[][]): string[][] => {
@@ -113,6 +112,11 @@ export const useCatalogStore = defineStore("catalog", () => {
   }
 
   const loadItems = async (): Promise<void> => {
+    // Если товары уже загружены, не загружаем повторно
+    if (items.value.length > 0) {
+      return
+    }
+
     try {
       isLoading.value = true
       const response = await $fetch("https://back.casaalmare.com/api/getProducts")
@@ -432,23 +436,7 @@ export const useCatalogStore = defineStore("catalog", () => {
   )
 
   const filters = computed(() => {
-    const allPrices = items.value.map((item) => parseInt(item.price || "0")).filter((p) => p > 0)
-    const uniquePrices = [...new Set(allPrices)].sort((a, b) => a - b)
-    const minPrice = uniquePrices[0] ?? 0
-    const maxPrice = uniquePrices[uniquePrices.length - 1] ?? 0
-    const ranges = []
-    if (maxPrice > 0) ranges.push({ label: "до 15000", value: "15000" })
-    if (maxPrice >= 20000) ranges.push({ label: "до 20000", value: "20000" })
-    if (maxPrice >= 25000) ranges.push({ label: "до 25000", value: "25000" })
-    if (maxPrice >= 30000) ranges.push({ label: "до 30000", value: "30000" })
-    if (maxPrice >= 35000) ranges.push({ label: "до 35000", value: "35000" })
-    if (maxPrice >= 40000) ranges.push({ label: "до 40000", value: "40000" })
-    if (maxPrice >= 45000) ranges.push({ label: "до 45000", value: "45000" })
-    const filteredRanges = ranges.filter((range) => parseInt(range.value) >= minPrice)
     return {
-      maxPrices: filteredRanges,
-      inStock: [{ label: "В наличии", value: "В наличии" }],
-      withDiscount: [{ label: "Со скидкой", value: "Со скидкой" }],
       sortTypes: [
         { label: "По убыванию цены", value: "По убыванию цены" },
         { label: "По возрастанию цены", value: "По возрастанию цены" },
@@ -537,10 +525,7 @@ export const useCatalogStore = defineStore("catalog", () => {
       parentsAliases: padParentsAliases([]),
       thirdLevelByParent: {},
       colors: [],
-      maxPrice: null,
       sortType: null,
-      withDiscount: null,
-      inStock: null,
       materials: "",
       useTypes: [],
       keystrings: [],
@@ -548,16 +533,25 @@ export const useCatalogStore = defineStore("catalog", () => {
       extra: {},
     }
     currentFilters.value = JSON.parse(JSON.stringify(pendingFilters.value))
-    navigateTo("/catalog")
+    shouldResetCount.value = true // <- ДОБАВИТЬ ЭТУ СТРОКУ
     currentVisibleCardCount.value = 12
+    navigateTo("/catalog")
   }
 
   const applyFilters = (): void => {
+    const oldFiltersJson = JSON.stringify(currentFilters.value)
     currentFilters.value = JSON.parse(JSON.stringify(pendingFilters.value))
     currentFilters.value.parentsAliases = currentFilters.value.parentsAliases.filter((seg) => seg.length > 0)
+
+    const newFiltersJson = JSON.stringify(currentFilters.value)
+
+    // Устанавливаем флаг для сброса счетчика
+    if (oldFiltersJson !== newFiltersJson) {
+      shouldResetCount.value = true // <- ДОБАВИТЬ ЭТУ СТРОКУ
+    }
+
     const url = getLinkFromFilters(currentFilters.value)
     navigateTo(url)
-    currentVisibleCardCount.value = 12
   }
 
   const getItemById = (id: number): Item | undefined => {
@@ -633,12 +627,6 @@ export const useCatalogStore = defineStore("catalog", () => {
     return filtered.length
   }
 
-  watch(filteredItems, () => {
-    if (filteredItems.value.length > 0) {
-      currentVisibleCardCount.value = 12
-    }
-  })
-
   watch(items, () => {
     pendingFilters.value.parentsAliases = padParentsAliases(pendingFilters.value.parentsAliases)
     currentFilters.value.parentsAliases = padParentsAliases(currentFilters.value.parentsAliases)
@@ -664,5 +652,6 @@ export const useCatalogStore = defineStore("catalog", () => {
     getLinkFromFilters,
     maxParentsLength,
     padParentsAliases,
+    shouldResetCount,
   }
 })
