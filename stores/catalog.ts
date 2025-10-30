@@ -74,10 +74,7 @@ type SortAndFilter = {
   parentsAliases: string[][]
   thirdLevelByParent: Record<string, string[]>
   colors: { code: string; name: string; value: string }[]
-  maxPrice: string | null // Изменено с number на string
   sortType: string | null
-  withDiscount: string | null
-  inStock: string | null
   materials: string
   useTypes: string[]
   keystrings: string[]
@@ -169,17 +166,8 @@ export const useCatalogStore = defineStore("catalog", () => {
     if (filters.searchQuery && filters.searchQuery.trim() !== "") {
       params.set("query", filters.searchQuery)
     }
-    if (filters.maxPrice !== null && filters.maxPrice !== undefined) {
-      params.set("maxPrice", filters.maxPrice.toString())
-    }
     if (filters.sortType) {
       params.set("sortType", filters.sortType)
-    }
-    if (filters.inStock) {
-      params.set("inStock", filters.inStock)
-    }
-    if (filters.withDiscount) {
-      params.set("withDiscount", filters.withDiscount)
     }
     const queryString = params.toString()
     return queryString ? `/catalog?${queryString}` : "/catalog"
@@ -510,21 +498,6 @@ export const useCatalogStore = defineStore("catalog", () => {
         (item) => item.keys?.some((k) => k.type === "color" && colorCodes.includes(k.alias)) || false,
       )
     }
-    if (f.maxPrice !== null) {
-      filtered = filtered.filter((item) => parseInt(item.price || "0") <= parseInt(f.maxPrice!))
-    }
-    if (f.withDiscount === "Со скидкой") {
-      filtered = filtered.filter((item) => {
-        const price = parseInt(item.price || "0")
-        const oldPrice = parseInt(item.oldPrice || "0")
-        return oldPrice > 0 && oldPrice > price
-      })
-    }
-    if (f.inStock === "В наличии") {
-      filtered = filtered.filter((item) =>
-        Object.values(item.vector || {}).some((variant: any) => (variant.quantity ?? 0) > 0),
-      )
-    }
     if (f.materials && f.materials.trim() !== "") {
       filtered = filtered.filter(
         (item) => item.keys?.some((k) => k.type === "material" && k.alias === f.materials) || false,
@@ -631,21 +604,6 @@ export const useCatalogStore = defineStore("catalog", () => {
       const colorCodes = f.colors.map((c) => c.code)
       filtered = filtered.filter(
         (item) => item.keys?.some((k) => k.type === "color" && colorCodes.includes(k.alias)) || false,
-      )
-    }
-    if (f.maxPrice !== null) {
-      filtered = filtered.filter((item) => parseInt(item.price || "0") <= parseInt(f.maxPrice!))
-    }
-    if (f.withDiscount === "Со скидкой") {
-      filtered = filtered.filter((item) => {
-        const price = parseInt(item.price || "0")
-        const oldPrice = parseInt(item.oldPrice || "0")
-        return oldPrice > 0 && oldPrice > price
-      })
-    }
-    if (f.inStock === "В наличии") {
-      filtered = filtered.filter((item) =>
-        Object.values(item.vector || {}).some((variant: any) => (variant.quantity ?? 0) > 0),
       )
     }
     if (f.materials && f.materials.trim() !== "") {

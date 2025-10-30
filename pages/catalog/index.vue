@@ -85,28 +85,10 @@ const applyFiltersFromQuery = (q: any) => {
     catalogStore.currentFilters.searchQuery = ""
   }
 
-  if (typeof q.maxPrice === "string" && q.maxPrice.trim() !== "") {
-    catalogStore.currentFilters.maxPrice = q.maxPrice.trim()
-  } else {
-    catalogStore.currentFilters.maxPrice = null
-  }
-
   if (typeof q.sortType === "string" && q.sortType.trim() !== "") {
     catalogStore.currentFilters.sortType = q.sortType.trim()
   } else {
     catalogStore.currentFilters.sortType = null
-  }
-
-  if (typeof q.inStock === "string" && q.inStock.trim() !== "") {
-    catalogStore.currentFilters.inStock = q.inStock.trim()
-  } else {
-    catalogStore.currentFilters.inStock = null
-  }
-
-  if (typeof q.withDiscount === "string" && q.withDiscount.trim() !== "") {
-    catalogStore.currentFilters.withDiscount = q.withDiscount.trim()
-  } else {
-    catalogStore.currentFilters.withDiscount = null
   }
 
   catalogStore.currentFilters.extra = {}
@@ -517,22 +499,8 @@ const pendingFilteredCount = computed(() => {
           <div class="flex flex-col items-center gap-4">
             <div class="flex flex-wrap gap-4 items-center justify-center">
               <SingleSelectButton
-                v-model="catalogStore.pendingFilters.maxPrice"
-                :content="catalogStore.filters.maxPrices"
-              />
-            </div>
-            <div class="flex flex-wrap gap-4 items-center justify-center">
-              <SingleSelectButton
                 v-model="catalogStore.pendingFilters.sortType"
                 :content="catalogStore.filters.sortTypes"
-              />
-              <SingleSelectButton
-                v-model="catalogStore.pendingFilters.inStock"
-                :content="catalogStore.filters.inStock"
-              />
-              <SingleSelectButton
-                v-model="catalogStore.pendingFilters.withDiscount"
-                :content="catalogStore.filters.withDiscount"
               />
             </div>
           </div>
