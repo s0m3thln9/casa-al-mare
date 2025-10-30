@@ -267,7 +267,7 @@ watch(
       :class="[
         menuStore.isOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0',
         isMobile
-          ? 'w-full h-[calc(100vh-32px-env(safe-area-inset-bottom))] overflow-y-auto'
+          ? 'w-full h-[calc(100dvh-32px-env(safe-area-inset-bottom))] overflow-y-auto'
           : 'w-fit h-auto max-h-[calc(100vh-62px)] overflow-hidden',
       ]"
     >
