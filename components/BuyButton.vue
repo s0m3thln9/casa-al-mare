@@ -6,7 +6,7 @@ const props = defineProps<{
   items?: Array<{ id: number; size: string }>
   id?: number
   size?: string
-  missingParams?: "size" | "top" | "bottom" | "accessory" | "all" | null
+  missingParams?: string | null
 }>()
 
 const isLoading = ref(false)
@@ -25,6 +25,16 @@ const styleVariants = {
   success: "bg-[#FFF4A4] border-[#211D1D] text-[#211D1D] cursor-default",
   outOfStock: "bg-[#FFFFFA] border-[#8C8785] text-[#8C8785] cursor-default",
   notify: "bg-[#FFFFFA] border-[#211D1D] text-[#211D1D] cursor-pointer hover:bg-[#211D1D] hover:text-[#FFFFFA]",
+}
+
+const getMissingParamText = (param: string | null): string => {
+  if (!param) return "Выберите все параметры"
+
+  if (param === "size") return "Выберите размер"
+  if (param === "all") return "Выберите все параметры"
+
+  // Для динамических типов товаров из комплекта
+  return `Выберите ${param.toLowerCase()}`
 }
 
 const currentState = computed(() => {
@@ -59,19 +69,7 @@ const currentState = computed(() => {
       disabled = false
     }
   } else {
-    if (props.missingParams === "size") {
-      content = "Выберите размер"
-    } else if (props.missingParams === "all") {
-      content = "Выберите все параметры"
-    } else if (props.missingParams === "top") {
-      content = "Выберите верх"
-    } else if (props.missingParams === "bottom") {
-      content = "Выберите низ"
-    } else if (props.missingParams === "accessory") {
-      content = "Выберите аксессуар"
-    } else {
-      content = "Выберите все параметры"
-    }
+    content = getMissingParamText(props.missingParams)
     style = styleBase + styleVariants.default
     disabled = false
   }
@@ -115,8 +113,8 @@ const handleClick = async () => {
 
       if (props.items && props.items.length > 0) {
         const results = await Promise.allSettled(
-          props.items.map((item) =>
-            $fetch("https://back.casaalmare.com/api/addToCart", {
+          props.items.map((item) => {
+            return $fetch("https://back.casaalmare.com/api/addToCart", {
               method: "POST",
               body: {
                 id: item.id,
@@ -124,8 +122,8 @@ const handleClick = async () => {
                 count: 1,
                 token: token,
               },
-            }),
-          ),
+            })
+          }),
         )
 
         for (let i = 0; i < results.length; i++) {

@@ -30,6 +30,12 @@ export type Item = {
     name: string
     link: string
   }[]
+  set?: {
+    id: number
+    type: string
+    name: string
+    link: string
+  }[]
   complex: {
     id: number
     name: string

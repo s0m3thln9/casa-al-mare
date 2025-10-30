@@ -83,18 +83,6 @@ onMounted(async () => {
   await loadItem()
 })
 
-watch(
-  () => route.query.alias,
-  async () => {
-    itemStore.color = null
-    itemStore.size = null
-    setStore.top = ""
-    setStore.bottom = ""
-    setStore.accessory = ""
-    await loadItem()
-  },
-)
-
 const availableColors = computed(() => {
   if (!item.value || !item.value.parent) return []
   const parentId = item.value.parent
@@ -176,68 +164,62 @@ const getPopupId = (header: string): string => {
 }
 
 const relatedItemsIds = computed(() => item.value?.withItems?.map((item) => item.id).slice(0, 3) || [])
-const complexItemsIds = computed(() => item.value?.complex?.map((item) => item.id) || [])
+const setItemsIds = computed(() => item.value?.set?.map((item) => item.id) || [])
+const hasSetItems = computed(() => setItemsIds.value.length > 0)
 
 const currentImageIndex = ref(0)
 const touchStartX = ref(0)
 
 const setItems = computed(() => {
-  const items: { id: number; vector: string }[] = []
+  const result: { id: number; size: string }[] = []
 
-  if (catalogStore.items.length === 0) return items
+  if (catalogStore.items.length === 0 || !hasSetItems.value) return result
 
-  const currentColor = currentColorCode.value
+  item.value?.set?.forEach((setItem) => {
+    const itemType = setItem.type
+    const size = setStore.items[itemType]
+    const itemId = setStore.itemsIds[itemType] || setItem.id
 
-  if (setStore.top && setStore.top.trim() !== "") {
-    const topId = setStore.topId || complexItemsIds.value[0] || 31
-    const topItem = catalogStore.getItemById(topId)
-    if (topItem) {
-      const availableColors = Object.keys(topItem.colors || {})
-      const colorCode = availableColors.includes(currentColor) ? currentColor : availableColors[0] || ""
-      items.push({
-        id: topItem.id,
-        vector: `${colorCode}_${setStore.top}`,
-      })
+    if (size && size.trim() !== "") {
+      const catalogItem = catalogStore.getItemById(itemId)
+      if (catalogItem) {
+        result.push({
+          id: catalogItem.id,
+          size: size,
+        })
+      }
     }
-  }
+  })
 
-  if (setStore.bottom && setStore.bottom.trim() !== "") {
-    const bottomId = setStore.bottomId || complexItemsIds.value[1] || 32
-    const bottomItem = catalogStore.getItemById(bottomId)
-    if (bottomItem) {
-      const availableColors = Object.keys(bottomItem.colors || {})
-      const colorCode = availableColors.includes(currentColor) ? currentColor : availableColors[0] || ""
-      items.push({
-        id: bottomItem.id,
-        vector: `${colorCode}_${setStore.bottom}`,
-      })
-    }
-  }
-
-  if (setStore.accessory && setStore.accessory.trim() !== "") {
-    const accessoryId = setStore.accessoryId || complexItemsIds.value[2] || 33
-    const accessoryItem = catalogStore.getItemById(accessoryId)
-    if (accessoryItem) {
-      const availableColors = Object.keys(accessoryItem.colors || {})
-      const colorCode = availableColors.includes(currentColor) ? currentColor : availableColors[0] || ""
-      items.push({
-        id: accessoryItem.id,
-        vector: `${colorCode}_${setStore.accessory}`,
-      })
-    }
-  }
-
-  return items
+  return result
 })
 
-const setMissingParams = computed<"top" | "bottom" | "accessory" | "all" | null>(() => {
+const setMissingParams = computed<string | "all" | null>(() => {
   if (setStore.canAddToCart) return null
+
+  const allTypes = item.value?.set?.map((s) => s.type) || []
   const missing: string[] = []
-  if (!setStore.top || setStore.top.trim() === "") missing.push("top")
-  if (!setStore.bottom || setStore.bottom.trim() === "") missing.push("bottom")
-  if (!setStore.accessory || setStore.accessory.trim() === "") missing.push("accessory")
-  if (missing.length === 3) return "all"
-  return missing.length > 0 ? (missing[0] as "top" | "bottom" | "accessory") : null
+
+  allTypes.forEach((type) => {
+    if (!setStore.items[type] || setStore.items[type].trim() === "") {
+      missing.push(type)
+    }
+  })
+
+  if (missing.length === allTypes.length) return "all"
+  return missing.length > 0 ? missing[0] : null
+})
+
+const setButtonText = computed(() => {
+  if (!hasSetItems.value) return "Собрать комплект"
+
+  const types = item.value?.set?.map((s) => s.type) || []
+
+  if (types.length === 0) return "Собрать комплект"
+  if (types.length === 1) return `Добавить ${types[0].toLowerCase()}`
+  if (types.length === 2) return `Собрать комплект (${types.length} товара)`
+
+  return `Собрать комплект (${types.length} товара)`
 })
 
 const currentColorCode = computed(() => item.value?.colorVal || "")
@@ -337,7 +319,7 @@ watch(
   item,
   (newItem) => {
     if (newItem) {
-      // Устанавливаем цвет товара (каждый товар имеет один цвет)
+      // Устанавливаем цвет товара
       if (newItem.colorVal && newItem.colorName) {
         itemStore.color = {
           code: newItem.colorVal,
@@ -350,9 +332,28 @@ watch(
       if (newItem.sizes?.[0]) {
         itemStore.size = newItem.sizes[0]
       }
+
+      // Устанавливаем обязательные типы для комплекта
+      if (newItem.set && newItem.set.length > 0) {
+        const types = newItem.set.map((s) => s.type)
+        setStore.setRequiredTypes(types)
+      } else {
+        setStore.setRequiredTypes([])
+      }
     }
   },
   { immediate: true },
+)
+
+// И в watcher для смены товара
+watch(
+  () => route.query.alias,
+  async () => {
+    itemStore.color = null
+    itemStore.size = null
+    setStore.clear() // Это теперь очистит и requiredTypes
+    await loadItem()
+  },
 )
 </script>
 
@@ -650,8 +651,9 @@ watch(
             :missing-params="missingParams"
           />
           <AppButton
+            v-if="hasSetItems"
             variant="secondary"
-            content="Собрать комплект"
+            :content="setButtonText"
             custom-class="w-full py-4"
             @click="popupStore.open('set')"
           />
@@ -718,59 +720,29 @@ watch(
       </div>
     </div>
     <AppPopup
+      v-if="hasSetItems"
       title="Собрать комплект"
       popup-id="set"
     >
       <div class="flex flex-col gap-6 mt-6">
         <div class="grid grid-cols-2 gap-y-6 gap-x-4 sm:gap-x-2">
-          <div class="flex flex-col gap-2">
-            <span class="font-[Manrope] text-sm">Верх</span>
+          <div
+            v-for="setItem in item?.set"
+            :key="setItem.id"
+            class="flex flex-col gap-2"
+          >
+            <span class="font-[Manrope] text-sm">{{ setItem.type }}</span>
             <CatalogCard
               v-if="catalogStore.items.length > 0"
-              :id="complexItemsIds[0] || 0"
-              :key="currentColorCode"
-              v-model="setStore.top"
+              :id="setItem.id"
+              :key="`${currentColorCode}-${setItem.type}`"
+              :model-value="setStore.items[setItem.type]"
               :current-color-code="currentColorCode"
               custom-image-class="aspect-[200/300] w-full"
               popup
               variant="mini"
               link
-            />
-            <div
-              v-else
-              class="aspect-[200/300] w-full bg-[#F9F6EC]"
-            />
-          </div>
-          <div class="flex flex-col gap-2">
-            <span class="font-[Manrope] text-sm">Низ</span>
-            <CatalogCard
-              v-if="catalogStore.items.length > 0"
-              :id="complexItemsIds[1] || 37"
-              :key="currentColorCode"
-              v-model="setStore.bottom"
-              :current-color-code="currentColorCode"
-              custom-image-class="aspect-[200/300] w-full"
-              popup
-              variant="mini"
-              link
-            />
-            <div
-              v-else
-              class="aspect-[200/300] w-full bg-[#F9F6EC]"
-            />
-          </div>
-          <div class="flex flex-col gap-2">
-            <span class="font-[Manrope] text-sm">Аксессуар</span>
-            <CatalogCard
-              v-if="catalogStore.items.length > 0"
-              :id="complexItemsIds[2] || 37"
-              :key="currentColorCode"
-              v-model="setStore.accessory"
-              :current-color-code="currentColorCode"
-              custom-image-class="aspect-[200/300] w-full"
-              popup
-              variant="mini"
-              link
+              @update:model-value="(val) => setStore.setItem(setItem.type, val, setItem.id)"
             />
             <div
               v-else

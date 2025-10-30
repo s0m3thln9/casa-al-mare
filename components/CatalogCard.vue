@@ -129,7 +129,7 @@ if (props.modelValue) {
     </template>
 
     <template v-else>
-      <h4 class="mt-1 sm:mt-2">
+      <h4 class="mt-1 sm:mt-2 line-clamp-1">
         {{ item.name }}
       </h4>
 
@@ -154,7 +154,8 @@ if (props.modelValue) {
 
       <div
         v-if="popup"
-        class="flex gap-1 flex-wrap justify-center mt-1 @click.stop"
+        class="flex gap-1 flex-wrap justify-center mt-1"
+        @click.stop
       >
         <SingleSelectButton
           v-model="selectedSize"
@@ -286,7 +287,7 @@ if (props.modelValue) {
         </template>
       </NuxtImg>
 
-      <h4 class="mt-1">{{ item.name }}</h4>
+      <h4 class="mt-1 line-clamp-1">{{ item.name }}</h4>
       <span
         v-if="getPriceData()"
         class="mt-0.5"
