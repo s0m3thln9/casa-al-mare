@@ -248,7 +248,7 @@ if (props.modelValue) {
               <img
                 v-bind="imgAttrs"
                 :src="src"
-                :class="['rounded-lg sm:rounded-2xl absolute top-0 left-0 w-full h-full', customImageClass]"
+                :class="['rounded-2xl absolute top-0 left-0 w-full h-full', customImageClass]"
                 :style="imageStyles(index)"
                 alt="card"
               />
@@ -266,7 +266,7 @@ if (props.modelValue) {
             <img
               v-bind="imgAttrs"
               :src="src"
-              :class="['rounded-lg sm:rounded-2xl w-full aspect-[460/680] object-cover', customImageClass]"
+              :class="['rounded-2xl w-full aspect-[460/680] object-cover', customImageClass]"
               alt="card"
               @click="handleClick"
             />

@@ -101,10 +101,8 @@ const availableColors = computed(() => {
 const sortedShapes = computed(() => {
   if (!item.value?.complex || item.value.complex.length === 0) return []
 
-  // Создаем массив всех форм
   const allShapes = [...item.value.complex]
 
-  // Добавляем текущую форму если её нет в complex
   if (item.value.parents[2]) {
     const currentShapeInComplex = allShapes.find((s) => s.id === item.value?.parents[2].id)
     if (!currentShapeInComplex) {
@@ -118,7 +116,6 @@ const sortedShapes = computed(() => {
     }
   }
 
-  // Сортируем по id для стабильного порядка
   return allShapes.sort((a, b) => a.id - b.id)
 })
 
@@ -169,6 +166,9 @@ const hasSetItems = computed(() => setItemsIds.value.length > 0)
 
 const currentImageIndex = ref(0)
 const touchStartX = ref(0)
+const touchStartY = ref(0)
+const isHorizontalSwipe = ref(false)
+const isTransitioning = ref(false)
 
 const setItems = computed(() => {
   const result: { id: number; size: string }[] = []
@@ -240,6 +240,10 @@ const missingParams = computed<"size" | null>(() => {
 
 const numBars = computed(() => Math.max(currentColorImages.value.length, 1))
 
+watch(currentColorImages, () => {
+  currentImageIndex.value = 0
+})
+
 const imageStyles = computed(() => (index: number) => {
   const len = currentColorImages.value.length
   if (len === 0) {
@@ -281,20 +285,52 @@ const barStyles = computed(() => (index: number) => {
 })
 
 const handleTouchStart = (e: TouchEvent) => {
+  const len = currentColorImages.value.length
+  if (len <= 1 || isTransitioning.value) return
   touchStartX.value = e.touches[0].clientX
+  touchStartY.value = e.touches[0].clientY
+  isHorizontalSwipe.value = false
+}
+
+const handleTouchMove = (e: TouchEvent) => {
+  const len = currentColorImages.value.length
+  if (len <= 1 || isTransitioning.value || !touchStartX.value || !touchStartY.value) return
+
+  const currentX = e.touches[0].clientX
+  const currentY = e.touches[0].clientY
+  const deltaX = Math.abs(currentX - touchStartX.value)
+  const deltaY = Math.abs(currentY - touchStartY.value)
+  const threshold = 15
+
+  if (deltaX > threshold && deltaX > deltaY) {
+    const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI)
+    if (Math.abs(angle) < 45) {
+      isHorizontalSwipe.value = true
+      e.preventDefault()
+    }
+  }
 }
 
 const handleTouchEnd = (e: TouchEvent) => {
-  const touchEndX = e.changedTouches[0].clientX
-  const deltaX = touchEndX - touchStartX.value
-  const threshold = 50
   const len = currentColorImages.value.length
-  if (len === 0) return
-  if (deltaX > threshold) {
-    currentImageIndex.value = (currentImageIndex.value - 1 + len) % len
-  } else if (deltaX < -threshold) {
-    currentImageIndex.value = (currentImageIndex.value + 1) % len
+  if (len <= 1 || isTransitioning.value) return
+
+  if (!isHorizontalSwipe.value) return
+
+  const deltaX = e.changedTouches[0].clientX - touchStartX.value
+  const threshold = 50
+  if (Math.abs(deltaX) > threshold) {
+    isTransitioning.value = true
+    const direction = deltaX > 0 ? -1 : 1
+    currentImageIndex.value = (currentImageIndex.value + direction + len) % len
+    setTimeout(() => {
+      isTransitioning.value = false
+    }, 400)
   }
+
+  touchStartX.value = 0
+  touchStartY.value = 0
+  isHorizontalSwipe.value = false
 }
 
 const calculateDiscount = (price: number, oldPrice: number): number => {
@@ -319,7 +355,6 @@ watch(
   item,
   (newItem) => {
     if (newItem) {
-      // Устанавливаем цвет товара
       if (newItem.colorVal && newItem.colorName) {
         itemStore.color = {
           code: newItem.colorVal,
@@ -328,12 +363,10 @@ watch(
           art: newItem.colorArt,
         }
       }
-      // Устанавливаем первый доступный размер
       if (newItem.sizes?.[0]) {
         itemStore.size = newItem.sizes[0]
       }
 
-      // Устанавливаем обязательные типы для комплекта
       if (newItem.set && newItem.set.length > 0) {
         const types = newItem.set.map((s) => s.type)
         setStore.setRequiredTypes(types)
@@ -345,13 +378,12 @@ watch(
   { immediate: true },
 )
 
-// И в watcher для смены товара
 watch(
   () => route.query.alias,
   async () => {
     itemStore.color = null
     itemStore.size = null
-    setStore.clear() // Это теперь очистит и requiredTypes
+    setStore.clear()
     await loadItem()
   },
 )
@@ -383,8 +415,8 @@ watch(
           </div>
         </div>
         <div class="hidden sm:grid grid-cols-1 gap-2 lg:grid-cols-2">
-          <div class="aspect-[726/1080] bg-[#F9F6EC] rounded-lg" />
-          <div class="aspect-[726/1080] bg-[#F9F6EC] rounded-lg" />
+          <div class="aspect-[726/1080] bg-[#F9F6EC] rounded-2xl" />
+          <div class="aspect-[726/1080] bg-[#F9F6EC] rounded-2xl" />
         </div>
 
         <div class="px-2 flex flex-col sm:px-0 sm:sticky sm:top-0 sm:h-screen sm:overflow-y-auto">
@@ -477,6 +509,7 @@ watch(
         <div
           class="relative w-full aspect-[460/680] overflow-hidden"
           @touchstart="handleTouchStart"
+          @touchmove="handleTouchMove"
           @touchend="handleTouchEnd"
         >
           <template v-if="currentColorImages.length > 0">
@@ -530,23 +563,23 @@ watch(
             v-slot="{ src, isLoaded, imgAttrs }"
             :src="img"
             :custom="true"
-            class="sm:rounded-lg aspect-[726/1080]"
+            class="rounded-2xl aspect-[726/1080]"
           >
             <div
               v-if="!isLoaded"
-              class="aspect-[726/1080] bg-[#F9F6EC] rounded-lg"
+              class="aspect-[726/1080] bg-[#F9F6EC] rounded-2xl"
             />
             <img
               v-else
               v-bind="imgAttrs"
               :src="src"
-              class="w-full h-full object-cover sm:rounded-lg"
+              class="w-full h-full object-cover rounded-2xl"
               alt="item"
             />
           </NuxtImg>
         </template>
         <template v-else>
-          <div class="aspect-[726/1080] bg-[#F9F6EC] rounded-lg" />
+          <div class="aspect-[726/1080] bg-[#F9F6EC] rounded-2xl" />
         </template>
       </div>
       <div

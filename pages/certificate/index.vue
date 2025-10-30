@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue"
+import { computed, ref, onMounted, watch } from "vue"
 import { useCertificateStore } from "~/stores/certificate"
 
 const certificateStore = useCertificateStore()
@@ -10,8 +10,25 @@ const ways = ["Электронной почтой", "По SMS", "Доставк
 const details = ["Отправить сразу после оплаты", "Анонимно"]
 const currentImageIndex = ref(0)
 const touchStartX = ref(0)
+const touchStartY = ref(0)
+const isHorizontalSwipe = ref(false)
+const isTransitioning = ref(false)
 
 const imageStyles = computed(() => (index: number) => {
+  const len = certificateImages.value.length
+  if (len === 0) {
+    if (index === 0) {
+      return {
+        transform: "translateX(0)",
+        opacity: 1,
+        zIndex: 1,
+        transition: "transform 400ms ease-in-out, opacity 400ms ease-in-out",
+      }
+    } else {
+      return { opacity: 0, visibility: "hidden" }
+    }
+  }
+  if (index >= len) return { opacity: 0, visibility: "hidden" }
   if (index === currentImageIndex.value) {
     return {
       transform: "translateX(0)",
@@ -39,6 +56,8 @@ const fallbackImages = ["/certificate-1.png", "/certificate-2.png", "/certificat
 
 const isLoadingImages = ref(true)
 
+const numBars = computed(() => Math.max(certificateImages.value.length, 1))
+
 onMounted(async () => {
   try {
     isLoadingImages.value = true
@@ -58,20 +77,61 @@ onMounted(async () => {
   }
 })
 
+watch(certificateImages, () => {
+  currentImageIndex.value = 0
+})
+
+watch(currentImageIndex, (newVal) => {
+  console.log("Current image index changed to:", newVal)
+})
+
 const handleTouchStart = (e: TouchEvent) => {
+  const len = certificateImages.value.length
+  if (len <= 1 || isTransitioning.value) return
   touchStartX.value = e.touches[0].clientX
+  touchStartY.value = e.touches[0].clientY
+  isHorizontalSwipe.value = false
+}
+
+const handleTouchMove = (e: TouchEvent) => {
+  const len = certificateImages.value.length
+  if (len <= 1 || isTransitioning.value || !touchStartX.value || !touchStartY.value) return
+
+  const currentX = e.touches[0].clientX
+  const currentY = e.touches[0].clientY
+  const deltaX = Math.abs(currentX - touchStartX.value)
+  const deltaY = Math.abs(currentY - touchStartY.value)
+  const threshold = 15
+
+  if (deltaX > threshold && deltaX > deltaY) {
+    const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI)
+    if (Math.abs(angle) < 45) {
+      isHorizontalSwipe.value = true
+      e.preventDefault()
+    }
+  }
 }
 
 const handleTouchEnd = (e: TouchEvent) => {
-  const touchEndX = e.changedTouches[0].clientX
-  const deltaX = touchEndX - touchStartX.value
+  const len = certificateImages.value.length
+  if (len <= 1 || isTransitioning.value) return
+
+  if (!isHorizontalSwipe.value) return
+
+  const deltaX = e.changedTouches[0].clientX - touchStartX.value
   const threshold = 50
-  if (deltaX > threshold) {
-    currentImageIndex.value =
-      (currentImageIndex.value - 1 + certificateImages.value.length) % certificateImages.value.length
-  } else if (deltaX < -threshold) {
-    currentImageIndex.value = (currentImageIndex.value + 1) % certificateImages.value.length
+  if (Math.abs(deltaX) > threshold) {
+    isTransitioning.value = true
+    const direction = deltaX > 0 ? -1 : 1
+    currentImageIndex.value = (currentImageIndex.value + direction + len) % len
+    setTimeout(() => {
+      isTransitioning.value = false
+    }, 400)
   }
+
+  touchStartX.value = 0
+  touchStartY.value = 0
+  isHorizontalSwipe.value = false
 }
 
 const getStepDescription = computed(() => {
@@ -101,6 +161,7 @@ const getStepDescription = computed(() => {
           <div
             class="block sm:hidden relative w-full aspect-[460/680] overflow-hidden"
             @touchstart="handleTouchStart"
+            @touchmove="handleTouchMove"
             @touchend="handleTouchEnd"
           >
             <NuxtImg
@@ -108,14 +169,12 @@ const getStepDescription = computed(() => {
               :key="index"
               v-slot="{ src, isLoaded, imgAttrs }"
               :src="img"
-              alt="certificate"
-              width="460"
-              height="680"
+              :custom="true"
               class="absolute top-0 left-0 w-full h-full"
             >
               <div
                 v-if="!isLoaded"
-                class="w-full h-full bg-[#F9F6EC]"
+                class="w-full h-full aspect-[460/680] bg-[#F9F6EC]"
                 :style="imageStyles(index)"
               />
               <img
@@ -130,7 +189,7 @@ const getStepDescription = computed(() => {
           </div>
           <div class="flex sm:hidden justify-center items-center gap-1 px-4 mt-2">
             <div
-              v-for="(_, index) in certificateImages"
+              v-for="(_, index) in numBars"
               :key="index"
               class="flex-1 border-y border-[#A6CEFF]"
               :style="barStyles(index)"
@@ -141,20 +200,18 @@ const getStepDescription = computed(() => {
             :key="index"
             v-slot="{ src, isLoaded, imgAttrs }"
             :src="img"
-            alt="certificate"
-            width="726"
-            height="1080"
-            class="sm:rounded-lg hidden sm:block aspect-[726/1080]"
+            :custom="true"
+            class="rounded-2xl hidden sm:block aspect-[726/1080]"
           >
             <div
               v-if="!isLoaded"
-              class="w-full h-full bg-[#F9F6EC] sm:rounded-lg"
+              class="aspect-[726/1080] bg-[#F9F6EC] rounded-2xl"
             />
             <img
               v-else
               v-bind="imgAttrs"
               :src="src"
-              class="w-full h-full object-cover sm:rounded-lg"
+              class="w-full h-full object-cover rounded-2xl"
               alt="certificate"
             />
           </NuxtImg>
