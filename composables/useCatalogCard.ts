@@ -16,6 +16,8 @@ export function useCatalogCard(props: UseCatalogCardProps) {
   const viewport = useViewport()
   const isNarrowScreen = computed(() => viewport.isLessThan("sm"))
   const touchStartX = ref(0)
+  const touchStartY = ref(0)
+  const isHorizontalSwipe = ref(false)
   const item = shallowRef<Item | null>(null)
   const favoritesStore = useFavoritesStore()
   const selectedSize = ref<string | null>(null)
@@ -83,21 +85,54 @@ export function useCatalogCard(props: UseCatalogCardProps) {
   }
 
   const handleTouchStart = (e: TouchEvent) => {
+    if (numImages.value <= 1 || !isNarrowScreen.value) return
     touchStartX.value = e.touches[0].clientX
+    touchStartY.value = e.touches[0].clientY
+    isHorizontalSwipe.value = false
+  }
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (numImages.value <= 1 || !isNarrowScreen.value || !touchStartX.value || !touchStartY.value) return
+
+    const currentX = e.touches[0].clientX
+    const currentY = e.touches[0].clientY
+    const deltaX = Math.abs(currentX - touchStartX.value)
+    const deltaY = Math.abs(currentY - touchStartY.value)
+    const threshold = 10
+
+    if (deltaX > threshold && deltaX > deltaY) {
+      const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI)
+      if (Math.abs(angle) < 30) {
+        isHorizontalSwipe.value = true
+        e.preventDefault()
+      }
+    }
   }
 
   const handleTouchEnd = (e: TouchEvent) => {
-    if (numImages.value <= 1) return
+    if (numImages.value <= 1 || !isNarrowScreen.value) return
+
+    if (!isHorizontalSwipe.value) return
+
     const deltaX = e.changedTouches[0].clientX - touchStartX.value
     const threshold = 50
     if (Math.abs(deltaX) > threshold) {
-      currentImageIndex.value = (currentImageIndex.value + (deltaX > 0 ? -1 : 1) + numImages.value) % numImages.value
+      isTransitioning.value = true
+      const direction = deltaX > 0 ? -1 : 1
+      currentImageIndex.value = (currentImageIndex.value + direction + numImages.value) % numImages.value
+      setTimeout(() => {
+        isTransitioning.value = false
+      }, 400)
     }
+
+    touchStartX.value = 0
+    touchStartY.value = 0
+    isHorizontalSwipe.value = false
   }
 
   const handleClick = async () => {
     if (props.link && item.value && item.value.alias) {
-      const fullAlias = item.value.alias // Уже полный, включая colorVal если есть
+      const fullAlias = item.value.alias
       const itemLink = `/catalog/item/?alias=${fullAlias}`
       try {
         await navigateTo(itemLink)
@@ -190,6 +225,7 @@ export function useCatalogCard(props: UseCatalogCardProps) {
     getPriceData,
     handleMouseMove,
     handleTouchStart,
+    handleTouchMove,
     handleTouchEnd,
     handleClick,
     isFavoriteLocal,

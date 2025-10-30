@@ -29,6 +29,7 @@ const {
   priceFormatter,
   handleMouseMove,
   handleTouchStart,
+  handleTouchMove,
   handleTouchEnd,
   handleClick,
   currentColorImages,
@@ -231,6 +232,7 @@ if (props.modelValue) {
             v-if="numImages > 1"
             class="relative w-full aspect-[460/680] overflow-hidden"
             @touchstart="handleTouchStart"
+            @touchmove="handleTouchMove"
             @touchend="handleTouchEnd"
             @mousemove="handleMouseMove"
           >
