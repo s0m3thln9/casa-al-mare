@@ -108,28 +108,25 @@ const handleClick = async () => {
     try {
       const token = await userStore.loadToken()
 
-      let successfulCount = 0
+      const successfulCount = 0
       const totalItems = props.items ? props.items.length : 1
 
       if (props.items && props.items.length > 0) {
-        const results = await Promise.allSettled(
-          props.items.map((item) => {
-            return $fetch("https://back.casaalmare.com/api/addToCart", {
-              method: "POST",
-              body: {
-                id: item.id,
-                size: item.size,
-                count: 1,
-                token: token,
-              },
-            })
-          }),
-        )
+        const response = await $fetch("https://back.casaalmare.com/api/addToCart", {
+          method: "POST",
+          body: {
+            items: props.items.map((item) => ({
+              id: item.id,
+              size: item.size,
+              count: 1,
+            })),
+            token: token,
+          },
+        })
 
-        for (let i = 0; i < results.length; i++) {
-          const r = results[i]
-          if (r.status === "fulfilled" && r.value?.success) {
-            const item = props.items![i]
+        if (response.success) {
+          // Добавляем все товары в локальную корзину
+          for (const item of props.items) {
             const newItem: CartItem = { id: item.id, size: item.size, count: 1 }
             const existing = orderStore.cartItems.find((e: CartItem) => e.id === newItem.id && e.size === newItem.size)
             if (existing) {
@@ -137,19 +134,15 @@ const handleClick = async () => {
             } else {
               orderStore.cartItems.push(newItem)
             }
-            successfulCount++
           }
-        }
 
-        const failedItems = totalItems - successfulCount
-        if (failedItems === 0) {
           showSuccess.value = true
           setTimeout(() => {
             showSuccess.value = false
             isInCart.value = true
           }, 1500)
         } else {
-          errorMessage.value = `Добавлено ${successfulCount} из ${totalItems} товаров`
+          errorMessage.value = response.error || "Ошибка добавления"
           showError.value = true
         }
       } else {
