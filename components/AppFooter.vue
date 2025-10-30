@@ -33,7 +33,23 @@ const handleSubscribeFooter = () => {
 
 const handleProfileClick = () => {
   if (authStore.isAuth) {
-    navigateTo("/profile")
+    navigateTo("/profile/profile")
+  } else {
+    authModalStore.open()
+  }
+}
+
+const handleFavClick = () => {
+  if (authStore.isAuth) {
+    navigateTo("/profile/favorites")
+  } else {
+    authModalStore.open()
+  }
+}
+
+const handleOrdersClick = () => {
+  if (authStore.isAuth) {
+    navigateTo("/profile/orders")
   } else {
     authModalStore.open()
   }
@@ -106,8 +122,22 @@ const handleProfileClick = () => {
               В личный кабинет
             </button>
           </li>
-          <li><NuxtLink to="/favorites">Избранное</NuxtLink></li>
-          <li><NuxtLink to="/profile/orders">Заказы</NuxtLink></li>
+          <li>
+            <button
+              class="cursor-pointer"
+              @click="handleFavClick"
+            >
+              Избранное
+            </button>
+          </li>
+          <li>
+            <button
+              class="cursor-pointer"
+              @click="handleOrdersClick"
+            >
+              Заказы
+            </button>
+          </li>
         </ul>
       </div>
       <div class="flex flex-col gap-4 w-full mt-4 lg:w-auto lg:mt-0">

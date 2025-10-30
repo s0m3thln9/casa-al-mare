@@ -108,9 +108,6 @@ const handleClick = async () => {
     try {
       const token = await userStore.loadToken()
 
-      const successfulCount = 0
-      const totalItems = props.items ? props.items.length : 1
-
       if (props.items && props.items.length > 0) {
         const response = await $fetch("https://back.casaalmare.com/api/addToCart", {
           method: "POST",
@@ -149,9 +146,13 @@ const handleClick = async () => {
         const response = await $fetch("https://back.casaalmare.com/api/addToCart", {
           method: "POST",
           body: {
-            id: props.id,
-            size: props.size,
-            count: 1,
+            items: [
+              {
+                id: props.id!,
+                size: props.size!,
+                count: 1,
+              },
+            ],
             token: token,
           },
         })
