@@ -101,13 +101,27 @@ const handleTouchMove = (e: TouchEvent) => {
   const currentY = e.touches[0].clientY
   const deltaX = Math.abs(currentX - touchStartX.value)
   const deltaY = Math.abs(currentY - touchStartY.value)
-  const threshold = 15
 
-  if (deltaX > threshold && deltaX > deltaY) {
-    const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI)
-    if (Math.abs(angle) < 45) {
+  // Увеличиваем порог для определения направления свайпа
+  const directionThreshold = 10
+
+  // Определяем направление только если есть достаточное движение
+  if (deltaX > directionThreshold || deltaY > directionThreshold) {
+    // Если уже определили, что это горизонтальный свайп, блокируем прокрутку
+    if (isHorizontalSwipe.value) {
+      e.preventDefault()
+      return
+    }
+
+    // Определяем направление: если горизонтальное движение значительно больше вертикального
+    if (deltaX > deltaY * 1.5 && deltaX > directionThreshold) {
       isHorizontalSwipe.value = true
       e.preventDefault()
+    }
+    // Если вертикальное движение больше, позволяем прокрутку страницы
+    else if (deltaY > deltaX) {
+      // Явно разрешаем вертикальную прокрутку
+      return
     }
   }
 }
@@ -116,7 +130,11 @@ const handleTouchEnd = (e: TouchEvent) => {
   const len = certificateImages.value.length
   if (len <= 1 || isTransitioning.value) return
 
-  if (!isHorizontalSwipe.value) return
+  if (!isHorizontalSwipe.value) {
+    touchStartX.value = 0
+    touchStartY.value = 0
+    return
+  }
 
   const deltaX = e.changedTouches[0].clientX - touchStartX.value
   const threshold = 50
