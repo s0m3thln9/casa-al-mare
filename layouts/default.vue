@@ -10,7 +10,6 @@ interface CartResponseData {
 }
 
 const isCookieAccepted = ref(true)
-// const isCitySelected = ref(false)
 const email = ref("")
 const emailReverse = ref("")
 const name = ref("")
@@ -28,10 +27,6 @@ const textRef = ref()
 const catalogStore = useCatalogStore()
 const orderStore = useOrderStore()
 const docsStore = useDocsStore()
-
-// const selectCity = () => {
-//   isCitySelected.value = true
-// }
 
 const userStore = useUserStore()
 onMounted(async () => {
@@ -123,7 +118,6 @@ onMounted(async () => {
           count: item.count,
           updated_at: item.updated_at,
           name: item.name,
-          colors: item.colors,
           sizes: item.sizes,
           images: item.images,
           vector: item.vector,
@@ -172,10 +166,6 @@ const phoneOptions: PhoneOption[] = [
       <NuxtPage />
     </main>
     <AppFooter />
-    <!--    <CitySelection-->
-    <!--      v-show="!isCitySelected"-->
-    <!--      @select-city="selectCity"-->
-    <!--    />-->
     <CookieConsent v-model="isCookieAccepted" />
     <AppPopup
       title="Подпишитесь на рассылку"

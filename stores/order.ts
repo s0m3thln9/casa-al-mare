@@ -321,17 +321,6 @@ export const useOrderStore = defineStore("order", () => {
         city.value = userStore.user.profile.extended.city
       }
 
-      if (!city.value) {
-        try {
-          const response = await $fetch<CityData>("https://back.casaalmare.com/api/getCityByIP")
-          if (response && response.name) {
-            city.value = response
-          }
-        } catch (error) {
-          console.error("Ошибка определения города по IP:", error)
-        }
-      }
-
       if (pointsData.value?.success && pointsData.value.points !== undefined) {
         if (userStore.user) {
           userStore.user.points = pointsData.value.points
@@ -476,7 +465,6 @@ export const useOrderStore = defineStore("order", () => {
           city.value = loadedOrder.city
         } else if (userStore.user?.profile?.extended.city) {
           city.value = userStore.user.profile.extended.city
-        } else if (!city.value) {
         }
         if (loadedOrder.currentAddress) currentAddress.value = loadedOrder.currentAddress
         if (loadedOrder.commentForCourier) commentForCourier.value = loadedOrder.commentForCourier

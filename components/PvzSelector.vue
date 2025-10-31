@@ -153,6 +153,17 @@ watch(
   border: 1px solid #211d1d;
   border-radius: 1rem;
   cursor: pointer;
+  .spinner {
+    border: 2px solid rgba(0, 0, 0, 0.6);
+    border-top-color: #000;
+  }
+}
+
+.button_green:hover {
+  .spinner {
+    border: 2px solid rgba(0, 0, 0, 0.6);
+    border-top-color: #000;
+  }
 }
 
 .activnaya {
@@ -166,11 +177,19 @@ watch(
   border: 1px solid #211d1d;
   border-radius: 1rem;
   cursor: pointer;
+  .spinner {
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    border-top-color: #fff;
+  }
 }
 
 .activnaya:hover {
   background-color: #fffffa;
   color: #211d1d;
+  .spinner {
+    border: 2px solid rgba(0, 0, 0, 0.6);
+    border-top-color: #000;
+  }
 }
 
 .spinner {
