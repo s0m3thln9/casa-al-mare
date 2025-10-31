@@ -21,40 +21,32 @@ const route = useRoute()
 const scrollPosition = ref(0)
 
 const applyFiltersFromQuery = (q: any) => {
-  let parentsAliasesFromQuery: string[][] = []
-  const thirdLevelByParent: Record<string, string[]> = {}
+  let parentsAliasesFromQuery: string[] = []
+  const thirdLevelByParent: Record<string, string> = {}
 
   if (typeof q.path === "string" && q.path.trim() !== "") {
     const segments = q.path
       .replace(/^\/+|\/+$/g, "")
       .split("/")
       .filter((p) => p.trim() !== "")
-      .map((segment) => segment.split(",").filter((alias) => alias.trim() !== ""))
 
     parentsAliasesFromQuery = segments.slice(0, 2)
 
     if (segments.length > 2 && parentsAliasesFromQuery.length === 2) {
-      const thirdLevelAliases = segments[2]
-      const secondLevelParents = parentsAliasesFromQuery[1]
+      const thirdLevelAlias = segments[2]
+      const secondLevelParent = parentsAliasesFromQuery[1]
 
-      thirdLevelAliases.forEach((thirdAlias) => {
-        const itemWithThisChild = catalogStore.items.find(
-          (item) =>
-            item.parents.length > 2 &&
-            item.parents[2]?.alias === thirdAlias &&
-            secondLevelParents.some((parentAlias) => item.parents[1]?.alias === parentAlias),
-        )
+      const itemWithThisChild = catalogStore.items.find(
+        (item) =>
+          item.parents.length > 2 &&
+          item.parents[2]?.alias === thirdLevelAlias &&
+          item.parents[1]?.alias === secondLevelParent,
+      )
 
-        if (itemWithThisChild && itemWithThisChild.parents[1]) {
-          const parentAlias = itemWithThisChild.parents[1].alias
-          if (!thirdLevelByParent[parentAlias]) {
-            thirdLevelByParent[parentAlias] = []
-          }
-          if (!thirdLevelByParent[parentAlias].includes(thirdAlias)) {
-            thirdLevelByParent[parentAlias].push(thirdAlias)
-          }
-        }
-      })
+      if (itemWithThisChild && itemWithThisChild.parents[1]) {
+        const parentAlias = itemWithThisChild.parents[1].alias
+        thirdLevelByParent[parentAlias] = thirdLevelAlias
+      }
     }
   }
 
@@ -77,9 +69,12 @@ const applyFiltersFromQuery = (q: any) => {
   }
 
   if (typeof q.material === "string" && q.material.trim() !== "") {
-    catalogStore.currentFilters.materials = q.material.trim()
+    catalogStore.currentFilters.materials = q.material
+      .split(",")
+      .map((m) => m.trim())
+      .filter((m) => m !== "") // Изменено: разделяем по запятой
   } else {
-    catalogStore.currentFilters.materials = ""
+    catalogStore.currentFilters.materials = [] // Изменено с "" на []
   }
 
   if (typeof q.query === "string") {
@@ -196,35 +191,16 @@ const breadcrumsItems = computed(() => {
       .filter((p) => p.trim() !== "")
 
     segments.forEach((segment, index) => {
-      const aliases = segment.split(",").filter((a) => a.trim() !== "")
+      const category = catalogStore.items
+        .flatMap((item) => item.parents || [])
+        .find((parent) => parent.alias === segment)
+      const pathSegments = segments.slice(0, index + 1)
+      const categoryPath = `/catalog?path=${pathSegments.join("/")}`
 
-      if (aliases.length === 1) {
-        const category = catalogStore.items
-          .flatMap((item) => item.parents || [])
-          .find((parent) => parent.alias === aliases[0])
-        const pathSegments = segments.slice(0, index + 1)
-        const categoryPath = `/catalog?path=${pathSegments.join("/")}`
-
-        items.push({
-          name: category?.name || aliases[0].charAt(0).toUpperCase() + aliases[0].slice(1).replace(/-/g, " "),
-          path: categoryPath,
-        })
-      } else {
-        const names = aliases.map((alias) => {
-          const category = catalogStore.items
-            .flatMap((item) => item.parents || [])
-            .find((parent) => parent.alias === alias)
-          return category?.name || alias.charAt(0).toUpperCase() + alias.slice(1).replace(/-/g, " ")
-        })
-
-        const pathSegments = segments.slice(0, index + 1)
-        const categoryPath = `/catalog?path=${pathSegments.join("/")}`
-
-        items.push({
-          name: names.join(", "),
-          path: categoryPath,
-        })
-      }
+      items.push({
+        name: category?.name || segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, " "),
+        path: categoryPath,
+      })
     })
   }
 
@@ -410,8 +386,9 @@ const hasMoreItems = computed(() => {
             <div
               v-if="
                 levelOptions.length > 0 &&
-                catalogStore.pendingFilters.parentsAliases.slice(0, levelIndex).filter((seg) => seg.length > 0)
-                  .length === levelIndex
+                (catalogStore.pendingFilters.parentsAliases || [])
+                  .slice(0, levelIndex)
+                  .filter((seg) => seg && typeof seg === 'string' && seg.trim() !== '').length === levelIndex
               "
               class="flex flex-col items-center gap-4 sm:gap-6"
             >
@@ -426,7 +403,7 @@ const hasMoreItems = computed(() => {
                 class="flex gap-6 items-center justify-center"
               >
                 <ImageButton
-                  v-model="catalogStore.pendingFilters.parentsAliases[levelIndex]"
+                  :model-value="catalogStore.pendingFilters.parentsAliases[levelIndex] || ''"
                   :items="
                     levelOptions.map((opt) => ({
                       alias: opt.alias,
@@ -435,16 +412,25 @@ const hasMoreItems = computed(() => {
                       activeImage: opt.activeImage || opt.image || '',
                     }))
                   "
-                  multiple
+                  @update:model-value="
+                    (val) => {
+                      catalogStore.pendingFilters.parentsAliases[levelIndex] = val || ''
+                    }
+                  "
                 />
               </div>
               <div
                 v-else
                 class="flex flex-wrap gap-4 items-center justify-center"
               >
-                <MultiSelectButton
-                  v-model="catalogStore.pendingFilters.parentsAliases[levelIndex]"
+                <SingleSelectButton
+                  :model-value="catalogStore.pendingFilters.parentsAliases[levelIndex] || ''"
                   :content="levelOptions.map((opt) => ({ value: opt.alias, label: opt.name }))"
+                  @update:model-value="
+                    (val) => {
+                      catalogStore.pendingFilters.parentsAliases[levelIndex] = val || ''
+                    }
+                  "
                 />
               </div>
             </div>
@@ -463,7 +449,7 @@ const hasMoreItems = computed(() => {
                 class="flex gap-6 items-center justify-center"
               >
                 <ImageButton
-                  :model-value="catalogStore.pendingFilters.thirdLevelByParent[group.parentAlias] || []"
+                  :model-value="catalogStore.pendingFilters.thirdLevelByParent[group.parentAlias] || ''"
                   :items="
                     group.options.map((opt) => ({
                       alias: opt.alias,
@@ -472,12 +458,8 @@ const hasMoreItems = computed(() => {
                       activeImage: opt.activeImage || opt.image || '',
                     }))
                   "
-                  multiple
                   @update:model-value="
                     (val) => {
-                      if (!catalogStore.pendingFilters.thirdLevelByParent[group.parentAlias]) {
-                        catalogStore.pendingFilters.thirdLevelByParent[group.parentAlias] = []
-                      }
                       catalogStore.pendingFilters.thirdLevelByParent[group.parentAlias] = val
                     }
                   "
@@ -487,14 +469,11 @@ const hasMoreItems = computed(() => {
                 v-else
                 class="flex flex-wrap gap-4 items-center justify-center"
               >
-                <MultiSelectButton
-                  :model-value="catalogStore.pendingFilters.thirdLevelByParent[group.parentAlias] || []"
+                <SingleSelectButton
+                  :model-value="catalogStore.pendingFilters.thirdLevelByParent[group.parentAlias] || ''"
                   :content="group.options.map((opt) => ({ value: opt.alias, label: opt.name }))"
                   @update:model-value="
                     (val) => {
-                      if (!catalogStore.pendingFilters.thirdLevelByParent[group.parentAlias]) {
-                        catalogStore.pendingFilters.thirdLevelByParent[group.parentAlias] = []
-                      }
                       catalogStore.pendingFilters.thirdLevelByParent[group.parentAlias] = val
                     }
                   "
@@ -532,7 +511,7 @@ const hasMoreItems = computed(() => {
             v-if="catalogStore.popupDynamicFilters.materials.length > 0"
             class="flex flex-wrap gap-4 items-center justify-center"
           >
-            <SingleSelectButton
+            <MultiSelectButton
               v-model="catalogStore.pendingFilters.materials"
               :content="catalogStore.popupDynamicFilters.materials.map((m) => ({ value: m.alias, label: m.name }))"
             />
