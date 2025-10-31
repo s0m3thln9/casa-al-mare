@@ -84,7 +84,7 @@ const menuItems = computed<MenuItem[]>(() => {
   const tree = docsStore.tree?.data
   if (!tree?.catalog) return []
 
-  const items: MenuItem[] = [{ label: "Смотреть все", link: "/catalog" }]
+  const items: MenuItem[] = [{ label: "Смотреть все", link: "/catalog", customClass2: "mb-4" }]
 
   // Добавляем динамически сгенерированные пункты из дерева
   const dynamicItems = buildMenuFromTree(tree.catalog)
@@ -94,6 +94,7 @@ const menuItems = computed<MenuItem[]>(() => {
   items.push({
     label: "Сертификаты",
     link: "/certificate",
+    customClass2: "my-4",
   })
   items.push({
     label: "Новинки",
@@ -103,7 +104,7 @@ const menuItems = computed<MenuItem[]>(() => {
   items.push({
     label: "Блог",
     link: "/blog",
-    customClass2: "sm:hidden",
+    customClass2: "sm:hidden max-sm:-my-6",
   })
   items.push({
     label: "CAMPAIGNS",
