@@ -113,7 +113,6 @@ const handleTabChange = (tab: string) => {
 }
 
 const authStore = useAuthStore()
-const authModalStore = useAuthModalStore()
 
 onMounted(async () => {
   await profileStore.loadProfile()
@@ -275,10 +274,7 @@ watch(
             </AppTooltip>
           </div>
         </div>
-        <span class="w-full font-light text-xs text-[#F3A454] mt-2">
-          Получайте поздравления и дополнительные скидки
-        </span>
-        <div class="w-full flex flex-col mt-8 gap-4">
+        <div class="w-full flex flex-col mt-4 gap-4">
           <span class="font-light text-xs">Адрес доставки</span>
           <AppTooltip
             text="Это поле обязательно для заполнения"
