@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { AppCheckbox, AppButton, AppInput } from "#components"
-import type { CartItem, OrderState } from "~/stores/order"
+import { AppCheckbox, AppButton } from "#components"
+import type { CartItem, OrderState, CityData, PvzData } from "~/stores/order"
 
 interface CheckOrderStatusResponse {
   success: boolean
+  status?: number
   order?: OrderState
   error?: string
   orderId?: number
@@ -22,10 +23,124 @@ const localShowErrorPaymentMethod = ref<boolean>(false)
 const localIsLoadingPayment = ref<boolean>(false)
 const loadedOrder = ref<OrderState | null>(null)
 
-const localCartDetailed = computed(() => orderStore.cartDetailed)
+// Локальные данные заказа (изолированные от стора)
+const localCartItems = ref<CartItem[]>([])
+const localDeliveryMethod = ref<string | null>(null)
+const localCity = ref<CityData | null>(null)
+const localCurrentAddress = ref<string | null>(null)
+const localCommentForCourier = ref<string>("")
+const localPaymentMethod = ref<string | null>(null)
+const localSelectedPvz = ref<PvzData | null>(null)
+const localDeliveryCost = ref<number>(0)
+const localDeliveryTime = ref<string | null>(null)
+const localPointsToUse = ref<number>(0)
+const localSelectedCertificates = ref<string[]>([])
+const localTotalSum = ref<number>(0)
+const localTotalOldSum = ref<number>(0)
+const localFinalPrice = ref<number>(0)
 
-const localTotalOldSum = computed(() => orderStore.totalOldSum)
-const localFinalPrice = computed(() => orderStore.finalPrice)
+// Локальные computed для отображения
+const localCartDetailed = computed(() => {
+  return localCartItems.value
+    .map((cartItem) => {
+      if (!cartItem.variant) return null
+      const size = cartItem.variant
+      const colorName = cartItem.colorName || "Цвет не указан"
+      const imagesArray = Object.values(cartItem.images).filter((img) => img)
+      return {
+        id: cartItem.id,
+        vector: cartItem.variant,
+        count: cartItem.count,
+        name: cartItem.name,
+        color: colorName,
+        images: imagesArray,
+        size,
+        price: cartItem.price,
+        oldPrice: cartItem.oldPrice,
+      }
+    })
+    .filter(Boolean)
+})
+
+const localDeliveryTypes = ref<
+  Array<{ id: number; name: string; term?: { min: number; max: number }; cost?: number; isExpress?: boolean }>
+>([
+  { id: 1, name: "Курьер СДЭК", term: { min: 0, max: 0 }, cost: 0 },
+  { id: 2, name: "Курьер СДЭК с примеркой", term: { min: 0, max: 0 }, cost: 0 },
+  { id: 3, name: "Экспресс-доставка", isExpress: true },
+  { id: 4, name: "СДЭК (ПВЗ)", term: { min: 0, max: 0 }, cost: 0 },
+])
+
+// Локальные функции для редактирования корзины
+function localDecrementQuantity(id: number, variant: string) {
+  const item = localCartItems.value.find((i) => i.id === id && i.variant === variant)
+  if (item && item.count > 1) {
+    item.count--
+  }
+}
+
+function localIncrementQuantity(id: number, variant: string) {
+  const item = localCartItems.value.find((i) => i.id === id && i.variant === variant)
+  if (item) {
+    item.count++
+  }
+}
+
+function localRemoveItemFromCart(id: number, variant: string) {
+  localCartItems.value = localCartItems.value.filter((item) => !(item.id === id && item.variant === variant))
+}
+
+// Функция для обновления локальной стоимости доставки
+function updateLocalDeliveryDetails() {
+  const methodId = Number(localDeliveryMethod.value)
+  const type = localDeliveryTypes.value.find((t) => t.id === methodId)
+  if (type) {
+    if (type.term && type.term.min !== undefined && type.term.max !== undefined) {
+      localDeliveryTime.value = `${type.term.min}-${type.term.max}`
+    } else if (type.isExpress) {
+      localDeliveryTime.value = null
+    } else {
+      localDeliveryTime.value = null
+    }
+    localDeliveryCost.value = type.cost || 0
+    if (methodId === 4 && localSelectedPvz.value && typeof localSelectedPvz.value.price === "number") {
+      localDeliveryCost.value = localSelectedPvz.value.price
+    }
+  } else {
+    localDeliveryTime.value = null
+    localDeliveryCost.value = 0
+  }
+  if (localTotalSum.value >= 30000) {
+    localDeliveryCost.value = 0
+  }
+
+  let certSum = 0
+  if (authStore.isAuth && userStore.user?.certificates) {
+    certSum = localSelectedCertificates.value.reduce((sum, code) => {
+      const cert = userStore.user.certificates.find((c: any) => c.code === code)
+      return cert ? sum + (cert.value_now || 0) : sum
+    }, 0)
+  }
+
+  localFinalPrice.value = Math.max(
+    localTotalSum.value + localDeliveryCost.value - localPointsToUse.value - certSum,
+    0.01,
+  )
+}
+
+// Обновление локальных сумм
+watch(
+  [localCartItems, localPointsToUse, localSelectedCertificates, localDeliveryCost],
+  () => {
+    localTotalOldSum.value = localCartItems.value.reduce((sum, item) => {
+      const oldPrice = item.oldPrice > 0 ? item.oldPrice : item.price
+      return sum + oldPrice * item.count
+    }, 0)
+    localTotalSum.value = localCartItems.value.reduce((sum, item) => sum + item.price * item.count, 0)
+    updateLocalDeliveryDetails()
+  },
+  { deep: true },
+)
 
 onMounted(async () => {
   if (!orderId) {
@@ -41,6 +156,7 @@ onMounted(async () => {
   const token = await userStore.loadToken()
   if (!token) {
     localIsPaymentSuccessful.value = false
+    orderStore.resetOrder()
     return
   }
 
@@ -56,51 +172,77 @@ onMounted(async () => {
     if (error.value) {
       console.error("Network error checking order status:", error.value)
       localIsPaymentSuccessful.value = false
+      orderStore.resetOrder()
       return
     }
 
     if (data.value) {
-      localIsPaymentSuccessful.value = data.value.success ?? false
+      // Зависимость от status: 2 = успех (оплата прошла), 1 = неуспех (не прошла), иначе - неуспех
+      localIsPaymentSuccessful.value = data.value.status === 2
 
-      if (data.value.cart && orderStore.cartItems.length === 0) {
-        const parsedCart: CartItem[] = Object.entries(data.value.cart).map(([_, item]) => ({
+      if (data.value.status === 1 || data.value.status === 2) {
+        orderStore.resetOrder()
+      }
+
+      // Всегда пытаемся загрузить cart, сначала из data.value.cart, затем из data.value.order.cart
+      let cartData = data.value.cart
+      if (!cartData && data.value.order?.cart) {
+        cartData = data.value.order.cart
+      }
+      if (cartData) {
+        localCartItems.value = Object.entries(cartData).map(([_, item]) => ({
           id: item.id,
           variant: item.variant,
           count: item.count,
           updated_at: item.updated_at,
           name: item.name,
-          colors: item.colors,
+          colorName: item.colorName || "",
           sizes: item.sizes,
           images: item.images,
-          vector: item.vector,
+          vector: item.vector || { [item.variant]: { quantity: item.count, comingSoon: false } },
           type: item.type,
           material: item.material,
           useType: item.useType,
+          price: parseInt(item.price) || 0,
+          oldPrice: parseInt(item.oldPrice) || 0,
         }))
-        orderStore.setCartItems(parsedCart)
       }
 
       if (data.value.order) {
         loadedOrder.value = data.value.order
-        if (data.value.order.paymentMethod) {
-          orderStore.paymentMethod = data.value.order.paymentMethod
-        }
+        localDeliveryMethod.value = data.value.order.deliveryMethod || null
+        localCity.value = data.value.order.city || null
+        localCurrentAddress.value = data.value.order.currentAddress || null
+        localCommentForCourier.value = data.value.order.commentForCourier || ""
+        localPaymentMethod.value = data.value.order.paymentMethod || null
+        localSelectedPvz.value = data.value.order.pvz || null
+        localDeliveryCost.value = data.value.order.deliveryCost || 0
+        localDeliveryTime.value = data.value.order.deliveryTime || null
+        localPointsToUse.value = data.value.order.points || 0
+        localSelectedCertificates.value = data.value.order.certificates || []
+
+        updateLocalDeliveryDetails()
       } else {
         localIsPaymentSuccessful.value = false
+        orderStore.resetOrder()
       }
+    } else {
+      localIsPaymentSuccessful.value = false
+      orderStore.resetOrder()
     }
   } catch (error) {
     console.error("Ошибка проверки статуса заказа:", error)
     localIsPaymentSuccessful.value = false
+    orderStore.resetOrder()
   }
 
-  if (orderStore.cartItems.length === 0) {
-    await navigateTo("/order")
+  if (localCartItems.value.length === 0 && loadedOrder.value) {
+    console.warn("Корзина пуста, но заказ существует - возможно, данные в order.cart")
   }
 })
 
 watch(
-  () => orderStore.paymentMethod,
+  () => localPaymentMethod.value,
   (newVal) => {
     if (newVal) {
       localShowErrorPaymentMethod.value = false
@@ -108,59 +250,78 @@ watch(
   },
 )
 
-async function handleRetryPay(): Promise<void> {
-  if (orderStore.isLoadingPayment) return
+// Вспомогательная функция для временного восстановления данных в стор для оплаты
+function restoreToStoreForPayment() {
+  orderStore.cartItems = [...localCartItems.value]
+  orderStore.deliveryMethod = localDeliveryMethod.value
+  orderStore.city = localCity.value
+  orderStore.currentAddress = localCurrentAddress.value
+  orderStore.commentForCourier = localCommentForCourier.value
+  orderStore.paymentMethod = localPaymentMethod.value
+  orderStore.selectedPvz = localSelectedPvz.value
+  orderStore.deliveryCost = localDeliveryCost.value
+  orderStore.deliveryTime = localDeliveryTime.value
+  orderStore.pointsToUse = localPointsToUse.value
+  orderStore.selectedCertificates = [...localSelectedCertificates.value]
+  orderStore.orderId = orderId
+}
 
-  if (orderStore.cartItems.length === 0) {
+async function handleRetryPay(): Promise<void> {
+  if (localIsLoadingPayment.value) return
+
+  if (localCartItems.value.length === 0) {
     return
   }
 
-  if (localIsPaymentSuccessful.value === null) {
-    if (!authStore.isAuth) {
-      if (orderStore.isGuestAuthStep) {
-        if (!orderStore.guestSmsCode) {
-          orderStore.guestAuthError = "Введите код из SMS"
-          orderStore.showGuestAuthError = true
-          return
-        }
-      } else {
-        orderStore.showErrorAuth = true
+  if (localIsPaymentSuccessful.value !== false) {
+    return
+  }
+
+  if (!authStore.isAuth) {
+    if (orderStore.isGuestAuthStep) {
+      if (!orderStore.guestSmsCode) {
+        orderStore.guestAuthError = "Введите код из SMS"
+        orderStore.showGuestAuthError = true
         return
       }
-    }
-
-    if (!orderStore.city) {
-      orderStore.showErrorDeliveryMethod = true
+    } else {
+      orderStore.showErrorAuth = true
       return
-    }
-
-    if (!orderStore.deliveryMethod) {
-      orderStore.showErrorDeliveryMethod = true
-      return
-    }
-
-    if (orderStore.deliveryMethod === "Курьер") {
-      if (!orderStore.currentAddress) {
-        orderStore.showErrorDeliveryMethod = true
-        return
-      }
-
-      if (orderStore.currentAddress === "Новый адрес") {
-        orderStore.showErrorDeliveryMethod = true
-        orderStore.errorDeliveryMethod = "Выберите адрес доставки"
-        return
-      }
-    }
-    if (orderStore.deliveryMethod === "СДЭК (ПВЗ)") {
-      if (!orderStore.selectedPvz) {
-        orderStore.showErrorDeliveryMethod = true
-        orderStore.errorDeliveryMethod = "Выберите пункт выдачи СДЭК"
-        return
-      }
     }
   }
 
-  if (orderStore.paymentMethod === null) {
+  if (!localCity.value) {
+    orderStore.showErrorDeliveryMethod = true
+    return
+  }
+
+  if (!localDeliveryMethod.value) {
+    orderStore.showErrorDeliveryMethod = true
+    return
+  }
+
+  const methodId = Number(localDeliveryMethod.value)
+  if ([1, 2, 3].includes(methodId)) {
+    if (!localCurrentAddress.value) {
+      orderStore.showErrorDeliveryMethod = true
+      return
+    }
+
+    if (localCurrentAddress.value === "Новый адрес") {
+      orderStore.showErrorDeliveryMethod = true
+      orderStore.errorDeliveryMethod = "Выберите адрес доставки"
+      return
+    }
+  }
+  if (methodId === 4) {
+    if (!localSelectedPvz.value) {
+      orderStore.showErrorDeliveryMethod = true
+      orderStore.errorDeliveryMethod = "Выберите пункт выдачи СДЭК"
+      return
+    }
+  }
+
+  if (localPaymentMethod.value === null) {
     localShowErrorPaymentMethod.value = true
     return
   }
@@ -169,11 +330,14 @@ async function handleRetryPay(): Promise<void> {
   orderStore.isLoadingPayment = true
 
   try {
+    restoreToStoreForPayment()
+
     const paymentData = await orderStore.getPaymentData()
     if (!paymentData || !paymentData.success) {
       console.error("Ошибка получения данных для оплаты")
       localIsLoadingPayment.value = false
       orderStore.isLoadingPayment = false
+      orderStore.resetOrder()
       return
     }
 
@@ -182,6 +346,7 @@ async function handleRetryPay(): Promise<void> {
         console.warn("Виджет уже открыт, игнорируем повторный вызов")
         localIsLoadingPayment.value = false
         orderStore.isLoadingPayment = false
+        orderStore.resetOrder()
         return
       }
 
@@ -201,12 +366,15 @@ async function handleRetryPay(): Promise<void> {
       widget.pay("charge", paymentData.data, {
         onSuccess: (options: any) => {
           console.log("Оплата успешна")
+          localIsPaymentSuccessful.value = true
+          orderStore.resetOrder()
         },
         onFail: (reason: any, options: any) => {
           console.log("Оплата неуспешна по причине " + reason)
           localIsLoadingPayment.value = false
           orderStore.isLoadingPayment = false
           orderStore.isWidgetOpen = false
+          orderStore.resetOrder()
         },
         onComplete: async (paymentResult: any, options: any) => {
           localIsLoadingPayment.value = false
@@ -218,6 +386,7 @@ async function handleRetryPay(): Promise<void> {
           } else {
             console.log("Оплата отменена или неуспешна")
             localIsPaymentSuccessful.value = false
+            orderStore.resetOrder()
           }
         },
       })
@@ -225,12 +394,14 @@ async function handleRetryPay(): Promise<void> {
       await navigateTo(paymentData.link, { external: paymentData.external })
       localIsLoadingPayment.value = false
       orderStore.isLoadingPayment = false
+      orderStore.resetOrder()
     }
   } catch (error) {
     console.error("Ошибка при оплате:", error)
     localIsLoadingPayment.value = false
     orderStore.isLoadingPayment = false
     orderStore.isWidgetOpen = false
+    orderStore.resetOrder()
   }
 }
 </script>
@@ -242,10 +413,7 @@ async function handleRetryPay(): Promise<void> {
         class="p-10 flex flex-col gap-12 w-full max-w-[652px] rounded-4xl border-[0.7px] border-[#BBB8B6] h-fit"
         :class="localIsPaymentSuccessful && 'bg-[#F9F6EC]'"
       >
-        <div
-          v-if="localIsPaymentSuccessful"
-          class="flex flex-col gap-4"
-        >
+        <div v-if="localIsPaymentSuccessful">
           <h2 class="font-[Inter] text-[17px] text-[#211D1D] uppercase">Благодарим Вас за заказ №{{ orderId }}!</h2>
           <p class="font-[Manrope] text-sm text-[#211D1D] font-light">
             Мы уже проверяем ваш платеж и в течение 30 минут информация появится в вашем личном кабинете
@@ -255,10 +423,7 @@ async function handleRetryPay(): Promise<void> {
             +7999 999 99 99
           </p>
         </div>
-        <div
-          v-else
-          class="flex flex-col gap-4"
-        >
+        <div v-else>
           <h2 class="font-[Inter] text-[17px] text-[#E29650] uppercase">Оплата заказа не прошла</h2>
           <p class="font-[Manrope] text-sm text-[#211D1D] font-light">
             При оплате картами может возникать задержка до 5-ти минут. Если оплата была проведена, то она обязательно
@@ -273,16 +438,16 @@ async function handleRetryPay(): Promise<void> {
       <div class="p-8 w-full max-w-[564px] h-fit rounded-lg border-[0.7px] border-[#BBB8B6]">
         <div v-if="localIsPaymentSuccessful">
           <h2 class="font-[Inter] text-[17px] text-[#211D1D] uppercase">заказанные товары</h2>
-          <div class="flex flex-col gap-6 mt-8">
+          <div
+            v-if="localCartDetailed.length > 0"
+            class="flex flex-col gap-6 mt-8"
+          >
             <div
               v-for="(item, index) in localCartDetailed"
               :key="index"
               class="flex items-center justify-between w-full"
             >
-              <div
-                v-if="item"
-                class="flex items-center gap-2"
-              >
+              <div class="flex items-center gap-2">
                 <NuxtImg
                   :src="item.images[0] || ''"
                   alt="order-img"
@@ -306,10 +471,7 @@ async function handleRetryPay(): Promise<void> {
                   </span>
                 </div>
               </div>
-              <div
-                v-if="item"
-                class="flex flex-col items-end gap-4"
-              >
+              <div class="flex flex-col items-end gap-4">
                 <div class="flex items-center gap-2">
                   <div class="py-1 px-3 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light">
                     {{ item.count }}
@@ -326,6 +488,12 @@ async function handleRetryPay(): Promise<void> {
               </div>
             </div>
           </div>
+          <div
+            v-else
+            class="mt-8"
+          >
+            <p class="font-light text-sm text-[#414141]">Товары успешно заказаны и отправлены.</p>
+          </div>
           <div class="flex items-center justify-between mt-8 sm:pt-4 sm:border-t sm:border-[#F9F6EC]">
             <span>Стоимость товаров:</span>
             <span class="flex items-center gap-2">
@@ -339,7 +507,10 @@ async function handleRetryPay(): Promise<void> {
           </div>
         </div>
         <div v-else>
-          <div class="flex flex-col gap-6 mt-8">
+          <div
+            v-if="localCartDetailed.length > 0"
+            class="flex flex-col gap-6 mt-8"
+          >
             <div
               v-for="(item, index) in localCartDetailed"
               :key="index"
@@ -374,8 +545,8 @@ async function handleRetryPay(): Promise<void> {
                   <div class="py-1 px-2 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light">
                     <button
                       class="w-4 h-4 flex items-center justify-center cursor-pointer"
-                      :disabled="orderStore.isLoadingPayment"
-                      @click="orderStore.decrementQuantity(item.id, item.vector)"
+                      :disabled="localIsLoadingPayment"
+                      @click="localDecrementQuantity(item.id, item.vector)"
                     >
                       <NuxtImg
                         src="/minus.svg"
@@ -386,8 +557,8 @@ async function handleRetryPay(): Promise<void> {
                     {{ item.count }}
                     <button
                       class="w-4 h-4 flex items-center justify-center cursor-pointer"
-                      :disabled="orderStore.isLoadingPayment"
-                      @click="orderStore.incrementQuantity(item.id, item.vector)"
+                      :disabled="localIsLoadingPayment"
+                      @click="localIncrementQuantity(item.id, item.vector)"
                     >
                       <NuxtImg
                         src="/plus.svg"
@@ -398,8 +569,8 @@ async function handleRetryPay(): Promise<void> {
                   </div>
                   <button
                     class="w-6 h-6 flex items-center justify-center cursor-pointer"
-                    :disabled="orderStore.isLoadingPayment"
-                    @click="orderStore.removeItemFromCart(item.id, item.vector)"
+                    :disabled="localIsLoadingPayment"
+                    @click="localRemoveItemFromCart(item.id, item.vector)"
                   >
                     <NuxtImg
                       src="/x.svg"
@@ -419,7 +590,12 @@ async function handleRetryPay(): Promise<void> {
               </div>
             </div>
           </div>
-
+          <div
+            v-else
+            class="mt-8"
+          >
+            <p class="font-light text-sm text-[#414141]">Корзина пуста. Перейдите к оформлению нового заказа.</p>
+          </div>
           <div class="flex items-center justify-between mt-8 sm:pt-4 sm:border-t sm:border-[#F9F6EC]">
             <span>Стоимость товаров:</span>
             <span class="flex items-center gap-2">
@@ -444,7 +620,7 @@ async function handleRetryPay(): Promise<void> {
                 <AppCheckbox
                   v-for="method in orderStore.paymentMethods"
                   :key="method.id"
-                  v-model="orderStore.paymentMethod"
+                  v-model="localPaymentMethod"
                   size="S"
                   :label="method.name"
                   :value="method.id"
@@ -455,7 +631,7 @@ async function handleRetryPay(): Promise<void> {
           <AppButton
             class="w-full mt-8"
             content="Оплатить заказ"
-            :disabled="localIsLoadingPayment || orderStore.cartItems.length === 0"
+            :disabled="localIsLoadingPayment || localCartItems.length === 0"
             @click="handleRetryPay"
           />
         </div>

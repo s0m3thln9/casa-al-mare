@@ -1,10 +1,11 @@
 <script setup lang="ts">
-const props = defineProps<{
+defineProps<{
   state: {
+    finalPrice: number
     status: number
     items?: {
       id: number
-      image: string
+      images: string[]
       name: string
       size: string
       color: string
@@ -37,27 +38,27 @@ const priceFormatter = (value: number) => {
   const formattedValue = new Intl.NumberFormat("ru-RU").format(value)
   return `${formattedValue} ₽`
 }
-
-const calculateSum = () => {
-  if (props.state.items === undefined || props.state.items.length === 0) return 0
-  return props.state.items.map((item) => item.price * item.count).reduce((acc, c) => acc + c, 0)
-}
 </script>
 
 <template>
-  <div class="border border-[#211D1D] flex flex-col gap-6 rounded-3xl w-full p-8 font-[Manrope] text-[#211D1D]">
+  <div
+    class="border flex flex-col gap-6 rounded-3xl w-full p-8 font-[Manrope] text-[#211D1D]"
+    :class="isExpandedOrder ? 'border-[#211D1D]' : 'border-[#A6CEFF]'"
+  >
     <div class="flex justify-between items-center">
       <div class="flex gap-2 items-center">
         <span class="text-sm">№ {{ state.orderId }} от {{ state.orderDate }}</span>
         <div
           :class="[
             state.status === 1
-              ? 'bg-[#E57979] border-[#E57979]'
+              ? 'bg-[#F07C6A] border-[#F07C6A]'
               : state.status === 2
                 ? 'bg-[#E29650] border-[#E29650]'
                 : state.status === 3
                   ? 'bg-[#4395C2] border-[#4395C2]'
-                  : 'bg-[#008C49] border-[#008C49]',
+                  : state.status === 4
+                    ? 'bg-[#008C49] border-[#008C49]'
+                    : 'bg-[#E57979] border-[#E57979]',
             'text-xs text-[#FFFFFA] p-1 rounded-md border',
           ]"
         >
@@ -68,7 +69,9 @@ const calculateSum = () => {
                 ? "Обрабатывается"
                 : state.status === 3
                   ? "В пути"
-                  : "Получен"
+                  : state.status === 4
+                    ? "Получен"
+                    : "Отменён"
           }}
         </div>
       </div>
@@ -95,7 +98,8 @@ const calculateSum = () => {
         >
           <div class="flex items-center gap-2">
             <NuxtImg
-              :src="item.image || ''"
+              v-if="item?.images && item.images.length > 0"
+              :src="item.images[0]"
               alt="order-img"
               width="57"
               height="72"
@@ -164,33 +168,33 @@ const calculateSum = () => {
               <input
                 type="checkbox"
                 class="w-4 h-4"
-              >
+              />
               <span class="text-[13px] font-light">Ул. Заречная, дом 19, кв. 55</span>
             </div>
             <div class="flex gap-1 items-center">
               <input
                 type="checkbox"
                 class="w-4 h-4"
-              >
+              />
               <span class="text-[13px] font-light">Москва; Ленинский проспект 62; кв 13</span>
             </div>
             <div class="flex gap-1 items-center">
               <input
                 type="checkbox"
                 class="w-4 h-4"
-              >
+              />
               <span class="text-[13px] font-light">Новый адрес</span>
             </div>
             <input
               type="text"
               placeholder="Улица, дом, корпус, строение, квартира"
               class="w-full h-[44px] px-2 py-2.5 border-[#5E5B58] border-[0.7px] rounded-lg text-xs placeholder:text-[#5E5B58]"
-            >
+            />
             <input
               type="text"
               placeholder="Номер дома и домофон / офис"
               class="w-full h-[44px] px-2 py-2.5 border-[#5E5B58] border-[0.7px] rounded-lg text-xs placeholder:text-[#5E5B58]"
-            >
+            />
             <AppButton content="Сохранить" />
           </div>
         </div>
@@ -201,7 +205,7 @@ const calculateSum = () => {
           >Способ оплаты: <span class="font-normal">{{ state.paymentMethod }}</span></span
         >
         <span class="text-xs font-light"
-          >Сумма заказа: <span class="font-normal">{{ priceFormatter(calculateSum()) }}</span></span
+          >Сумма заказа: <span class="font-normal">{{ priceFormatter(state.finalPrice) }}</span></span
         >
       </div>
       <AppButton
@@ -212,7 +216,7 @@ const calculateSum = () => {
     <span
       class="text-xs font-light -mt-6"
       :class="isExpandedOrder && 'hidden'"
-      >Сумма заказа: <span class="font-normal">{{ priceFormatter(calculateSum()) }}</span></span
+      >Сумма заказа: <span class="font-normal">{{ priceFormatter(state.finalPrice) }}</span></span
     >
   </div>
 </template>

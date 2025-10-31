@@ -27,6 +27,7 @@ export interface User {
     orderId: number
     cart: Record<string, import("~/stores/order").CartItem>
     order: {
+      order_cost?: number
       deliveryMethod: string
       paymentMethod: string
       currentAddress?: string

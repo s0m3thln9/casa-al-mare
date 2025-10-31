@@ -347,19 +347,33 @@ watch(
               status: order.status,
               deliveryDate: order.deliveryDate,
               address: order.order.currentAddress,
-              deliveryMethod: order.order.deliveryMethod,
+              deliveryMethod:
+                +order.order.deliveryMethod === 1
+                  ? 'Курьер СДЭК'
+                  : +order.order.deliveryMethod === 2
+                    ? 'Курьер СДЭК с примеркой'
+                    : +order.order.deliveryMethod === 3
+                      ? 'Экспресс-доставка'
+                      : 'СДЭК (ПВЗ)',
               paymentMethod:
-                orderStore.paymentMethods.find((m) => m.id === order.order.paymentMethod)?.name || 'Неизвестный метод',
+                +order.order.paymentMethod === 1
+                  ? 'Картой на сайте'
+                  : +order.order.deliveryMethod === 2
+                    ? 'Долями'
+                    : 'Яндекс сплит',
               receiver: userStore.user!.profile.fullname,
+              finalPrice: order.order.order_cost || 0,
               items: Object.values(order.cart).map((item) => ({
                 id: item.id,
-                size: item.variant.split('_')[1],
-                color: item.colors[item.variant.split('_')[0]].name,
-                image: item.images[item.colors[item.variant.split('_')[0]].images[0]],
+                size: item.variant,
+                color: item.colorName,
+                images: Object.values(item.images || {}).filter(
+                  (img) => img && typeof img === 'string' && img.trim() !== '',
+                ),
                 count: item.count,
                 name: item.name,
-                price: item.vector[item.variant].price,
-                oldPrice: item.vector[item.variant].oldPrice,
+                price: parseInt(item.price) || 0,
+                oldPrice: parseInt(item.oldPrice) || 0,
               })),
             }"
           />

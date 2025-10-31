@@ -49,7 +49,7 @@ interface CheckOrderStatusResponse {
   success: boolean
   order?: OrderState
   error?: string
-  orderId?: number
+  status: number
   cart?: Record<string, CartItem>
 }
 
@@ -839,12 +839,16 @@ export const useOrderStore = defineStore("order", () => {
       if (data.value?.success !== undefined) {
         isPaymentSuccessful.value = data.value.success // true/false
 
+        // Добавленная логика: если статус 1 или 2, сбрасываем заполненные поля заказа
+        if (data.value?.status === 1 || data.value?.status === 2) {
+          resetOrder()
+          console.log("Статус заказа 1 или 2: сброс заполненных полей выполнен")
+        }
+
         // Если success=true, загружаем данные
         if (data.value.success && data.value.order) {
           // Восстанавливаем состояние заказа (аналогично loadOrderState)
           const loadedOrder = data.value.order
-          if (data.value.orderId) orderId.value = data.value.orderId
-
           if (loadedOrder.deliveryMethod) deliveryMethod.value = loadedOrder.deliveryMethod
           if (loadedOrder.city) city.value = loadedOrder.city
           if (loadedOrder.currentAddress) currentAddress.value = loadedOrder.currentAddress
@@ -1251,6 +1255,7 @@ export const useOrderStore = defineStore("order", () => {
     isLoadingCert,
     email,
     name,
+    resetOrder,
     phone,
     surname,
     orderState,
