@@ -408,7 +408,10 @@ export const useOrderStore = defineStore("order", () => {
 
         // Принудительно обновляем детали после загрузки данных
         await nextTick()
-        updateDeliveryDetails()
+        // ✅ ИСПРАВЛЕНИЕ: Если метод доставки УЖЕ выбран, обновляем его стоимость
+        if (deliveryMethod.value) {
+          updateDeliveryDetails()
+        }
       }
     } catch (error) {
       console.error("Ошибка API getCdekByFias:", error)
@@ -528,7 +531,11 @@ export const useOrderStore = defineStore("order", () => {
       isLoaded.value = true
       if (city.value) {
         await loadCdekData()
-        updateDeliveryDetails()
+        // ✅ ИСПРАВЛЕНИЕ: Принудительно обновляем стоимость после загрузки
+        await nextTick()
+        if (deliveryMethod.value) {
+          updateDeliveryDetails()
+        }
       }
     }
   }
@@ -1242,6 +1249,17 @@ export const useOrderStore = defineStore("order", () => {
     updateDeliveryDetails()
     debouncedUpdateOrderState()
   })
+
+  // ✅ НОВОЕ: следим за изменением deliveryTypes и обновляем стоимость
+  watch(
+    () => deliveryTypes.value,
+    () => {
+      if (deliveryMethod.value) {
+        updateDeliveryDetails()
+      }
+    },
+    { deep: true },
+  )
 
   watch(
     () => authStore.isAuth,
