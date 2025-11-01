@@ -340,8 +340,8 @@ export const useOrderStore = defineStore("order", () => {
       }
 
       // Дополнительные адреса из user.addresses (новый формат [adr1, adr2])
-      if (userStore.user?.addresses && Array.isArray(userStore.user.addresses)) {
-        const extendedAddresses = userStore.user.addresses
+      if (userStore.user?.profile.extended.addresses && Array.isArray(userStore.user.profile.extended.addresses)) {
+        const extendedAddresses = userStore.user.profile.extended.addresses
           .filter((addr) => Array.isArray(addr) && addr[0]?.trim())
           .map((addr) => {
             const [adr1, adr2] = addr
@@ -778,15 +778,15 @@ export const useOrderStore = defineStore("order", () => {
 
           // Синхронизируем с user.addresses
           if (userStore.user) {
-            if (!userStore.user.addresses) {
-              userStore.user.addresses = []
+            if (!userStore.user.profile.extended.addresses) {
+              userStore.user.profile.extended.addresses = []
             }
             // Добавляем новый адрес в формате [adr1, adr2]
-            const addressExists = userStore.user.addresses.some(
+            const addressExists = userStore.user.profile.extended.addresses.some(
               (addr) => Array.isArray(addr) && addr[0] === firstLine && addr[1] === secondLine,
             )
             if (!addressExists) {
-              userStore.user.addresses.push(newAddress)
+              userStore.user.profile.extended.addresses.push(newAddress)
             }
           }
         } else {
@@ -1170,8 +1170,8 @@ export const useOrderStore = defineStore("order", () => {
     }
 
     // Дополнительные адреса из user.addresses (новый формат [adr1, adr2])
-    if (userStore?.user?.addresses && Array.isArray(userStore.user.addresses)) {
-      const extendedAddresses = userStore.user.addresses
+    if (userStore?.user?.profile.extended.addresses && Array.isArray(userStore.user.profile.extended.addresses)) {
+      const extendedAddresses = userStore.user.profile.extended.addresses
         .filter((addr) => Array.isArray(addr) && addr[0]?.trim())
         .map((addr) => {
           const [adr1, adr2] = addr
