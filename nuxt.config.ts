@@ -24,6 +24,7 @@ export default defineNuxtConfig({
         lang: "ru",
         prefix: "og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# article: http://ogp.me/ns/article#",
       },
+      link: [{ rel: "icon", sizes: "any", href: "/favicon.svg" }],
       meta: [
         { charset: "utf-8" },
         {
