@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import { AppSelect } from "#components"
+
 const route = useRoute()
 const router = useRouter()
 
 const tabs = ["Профиль", "Заказы", "Сертификаты", "Избранное"]
 
-// Маппинг slug -> название вкладки
 const slugToTab: Record<string, string> = {
   profile: "Профиль",
   orders: "Заказы",
@@ -12,7 +13,6 @@ const slugToTab: Record<string, string> = {
   favorites: "Избранное",
 }
 
-// Маппинг название вкладки -> slug
 const tabToSlug: Record<string, string> = {
   Профиль: "profile",
   Заказы: "orders",
@@ -20,7 +20,6 @@ const tabToSlug: Record<string, string> = {
   Избранное: "favorites",
 }
 
-// Инициализация текущей вкладки на основе slug из URL
 const slug = route.params.slug as string
 const currentTab = ref(slugToTab[slug] || "Профиль")
 
@@ -43,9 +42,9 @@ const surnameRef = ref<{ validate: () => boolean; showError: boolean } | null>(n
 const dayRef = ref<{ validate: () => boolean; showError: boolean } | null>(null)
 const monthRef = ref<{ validate: () => boolean; showError: boolean } | null>(null)
 const yearRef = ref<{ validate: () => boolean; showError: boolean } | null>(null)
+const cityRef = ref<{ validate: () => boolean; showError: boolean } | null>(null)
 const adr1Ref = ref<{ validate: () => boolean; showError: boolean } | null>(null)
 const adr2Ref = ref<{ validate: () => boolean; showError: boolean } | null>(null)
-const adr3Ref = ref<{ validate: () => boolean; showError: boolean } | null>(null)
 
 const certificateCode = ref("")
 
@@ -67,11 +66,17 @@ const handleLogout = async () => {
 }
 
 const handleSaveProfile = async (): Promise<void> => {
-  const requiredRefs = [nameRef, surnameRef, dayRef, monthRef, yearRef, adr1Ref, adr2Ref]
+  const requiredRefs = [nameRef, surnameRef, dayRef, monthRef, yearRef, cityRef, adr1Ref]
   const isValid = requiredRefs.every((ref) => ref?.value?.validate() ?? false)
   if (!isValid) return
 
-  if (adr3Ref.value && !adr3Ref.value.validate()) return
+  if (adr2Ref.value && profileStore.profileData.adr2 && !adr2Ref.value.validate()) return
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(profileStore.profileData.email)) {
+    profileStore.saveError = "Некорректный email"
+    return
+  }
 
   const success = await profileStore.saveProfile()
   if (success) {
@@ -105,7 +110,6 @@ const handleAddCertificate = async (): Promise<void> => {
   }
 }
 
-// Обработчик изменения вкладки
 const handleTabChange = (tab: string) => {
   currentTab.value = tab
   const newSlug = tabToSlug[tab]
@@ -114,12 +118,19 @@ const handleTabChange = (tab: string) => {
 
 const authStore = useAuthStore()
 
+function normalizeAddress(address: string | string[] | null): string {
+  if (!address) return ""
+  if (Array.isArray(address)) {
+    return address.filter(Boolean).join(", ")
+  }
+  return address
+}
+
 onMounted(async () => {
   await profileStore.loadProfile()
   await orderStore.loadPaymentMethods()
 })
 
-// Отслеживание изменений route для обновления активной вкладки
 watch(
   () => route.params.slug,
   (newSlug) => {
@@ -279,38 +290,40 @@ watch(
           <AppTooltip
             text="Это поле обязательно для заполнения"
             type="error"
+            :show="cityRef?.showError"
+          >
+            <AppSelect
+              ref="cityRef"
+              v-model="profileStore.profileData.city"
+              label="Город"
+              custom-class="w-full"
+              required
+              searchable
+              async-search
+              city-mode
+              async-search-url="https://back.casaalmare.com/api/getCityByQuery"
+            />
+          </AppTooltip>
+          <AppTooltip
+            text="Это поле обязательно для заполнения"
+            type="error"
             :show="adr1Ref?.showError"
           >
             <AppInput
               id="adr1"
               ref="adr1Ref"
               v-model="profileStore.profileData.adr1"
-              label="Город"
-              type="text"
-              required
-              custom-class="w-full"
-            />
-          </AppTooltip>
-          <AppTooltip
-            text="Это поле обязательно для заполнения"
-            type="error"
-            :show="adr2Ref?.showError"
-          >
-            <AppInput
-              id="adr2"
-              ref="adr2Ref"
-              v-model="profileStore.profileData.adr2"
-              label="Улица, дом"
+              label="Улица, дом, корпус, строение, квартира"
               type="text"
               required
               custom-class="w-full"
             />
           </AppTooltip>
           <AppInput
-            id="adr3"
-            ref="adr3Ref"
-            v-model="profileStore.profileData.adr3"
-            label="Подъезд, этаж, квартира"
+            id="adr2"
+            ref="adr2Ref"
+            v-model="profileStore.profileData.adr2"
+            label="Подъезд, код домофона"
             type="text"
           />
         </div>
@@ -346,7 +359,7 @@ watch(
               orderDate: order.orderDate,
               status: order.status,
               deliveryDate: order.deliveryDate,
-              address: order.order.currentAddress,
+              address: normalizeAddress(order.order.currentAddress),
               deliveryMethod:
                 +order.order.deliveryMethod === 1
                   ? 'Курьер СДЭК'
@@ -358,7 +371,7 @@ watch(
               paymentMethod:
                 +order.order.paymentMethod === 1
                   ? 'Картой на сайте'
-                  : +order.order.deliveryMethod === 2
+                  : +order.order.paymentMethod === 2
                     ? 'Долями'
                     : 'Яндекс сплит',
               receiver: userStore.user!.profile.fullname,
@@ -383,7 +396,10 @@ watch(
         v-if="currentTab === 'Сертификаты'"
         class="w-full"
       >
-        <div class="mt-8 flex flex-col w-full justify-center items-center gap-6">
+        <div
+          v-if="userStore.user?.certificates?.length > 0 || true"
+          class="mt-8 flex flex-col w-full justify-center items-center gap-6"
+        >
           <div class="grid grid-cols-2 gap-4 w-full items-center">
             <AppInput
               id="code"
@@ -413,6 +429,12 @@ watch(
             </template>
           </div>
           <span class="font-light text-sm text-[#1A1A1A] self-start">Ваш баланс: {{ certificateBalance }} рублей</span>
+        </div>
+        <div
+          v-else
+          class="mt-8 text-center"
+        >
+          <p class="font-light text-sm text-[#414141]">Сертификаты отсутствуют. Добавьте новый код выше.</p>
         </div>
       </div>
       <div

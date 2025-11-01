@@ -23,7 +23,6 @@ const localShowErrorPaymentMethod = ref<boolean>(false)
 const localIsLoadingPayment = ref<boolean>(false)
 const loadedOrder = ref<OrderState | null>(null)
 
-// Локальные данные заказа (изолированные от стора)
 const localCartItems = ref<CartItem[]>([])
 const localDeliveryMethod = ref<string | null>(null)
 const localCity = ref<CityData | null>(null)
@@ -39,7 +38,6 @@ const localTotalSum = ref<number>(0)
 const localTotalOldSum = ref<number>(0)
 const localFinalPrice = ref<number>(0)
 
-// Локальные computed для отображения
 const localCartDetailed = computed(() => {
   return localCartItems.value
     .map((cartItem) => {
@@ -71,7 +69,6 @@ const localDeliveryTypes = ref<
   { id: 4, name: "СДЭК (ПВЗ)", term: { min: 0, max: 0 }, cost: 0 },
 ])
 
-// Локальные функции для редактирования корзины
 function localDecrementQuantity(id: number, variant: string) {
   const item = localCartItems.value.find((i) => i.id === id && i.variant === variant)
   if (item && item.count > 1) {
@@ -90,7 +87,6 @@ function localRemoveItemFromCart(id: number, variant: string) {
   localCartItems.value = localCartItems.value.filter((item) => !(item.id === id && item.variant === variant))
 }
 
-// Функция для обновления локальной стоимости доставки
 function updateLocalDeliveryDetails() {
   const methodId = Number(localDeliveryMethod.value)
   const type = localDeliveryTypes.value.find((t) => t.id === methodId)
@@ -128,7 +124,6 @@ function updateLocalDeliveryDetails() {
   )
 }
 
-// Обновление локальных сумм
 watch(
   [localCartItems, localPointsToUse, localSelectedCertificates, localDeliveryCost],
   () => {
@@ -139,8 +134,16 @@ watch(
     localTotalSum.value = localCartItems.value.reduce((sum, item) => sum + item.price * item.count, 0)
     updateLocalDeliveryDetails()
   },
-  { deep: true },
+  { deep: true, immediate: true },
 )
+
+function normalizeAddress(address: string | string[] | null): string {
+  if (!address) return ""
+  if (Array.isArray(address)) {
+    return address.filter(Boolean).join(", ")
+  }
+  return address
+}
 
 onMounted(async () => {
   if (!orderId) {
@@ -177,14 +180,12 @@ onMounted(async () => {
     }
 
     if (data.value) {
-      // Зависимость от status: 2 = успех (оплата прошла), 1 = неуспех (не прошла), иначе - неуспех
       localIsPaymentSuccessful.value = data.value.status === 2
 
       if (data.value.status === 1 || data.value.status === 2) {
         orderStore.resetOrder()
       }
 
-      // Всегда пытаемся загрузить cart, сначала из data.value.cart, затем из data.value.order.cart
       let cartData = data.value.cart
       if (!cartData && data.value.order?.cart) {
         cartData = data.value.order.cart
@@ -212,7 +213,7 @@ onMounted(async () => {
         loadedOrder.value = data.value.order
         localDeliveryMethod.value = data.value.order.deliveryMethod || null
         localCity.value = data.value.order.city || null
-        localCurrentAddress.value = data.value.order.currentAddress || null
+        localCurrentAddress.value = normalizeAddress(data.value.order.currentAddress)
         localCommentForCourier.value = data.value.order.commentForCourier || ""
         localPaymentMethod.value = data.value.order.paymentMethod || null
         localSelectedPvz.value = data.value.order.pvz || null
@@ -250,7 +251,6 @@ watch(
   },
 )
 
-// Вспомогательная функция для временного восстановления данных в стор для оплаты
 function restoreToStoreForPayment() {
   orderStore.cartItems = [...localCartItems.value]
   orderStore.deliveryMethod = localDeliveryMethod.value
@@ -449,7 +449,7 @@ async function handleRetryPay(): Promise<void> {
             >
               <div class="flex items-center gap-2">
                 <NuxtImg
-                  :src="item.images[0] || ''"
+                  :src="item.images[0] || '/placeholder.jpg'"
                   alt="order-img"
                   width="57"
                   height="72"
@@ -518,7 +518,7 @@ async function handleRetryPay(): Promise<void> {
             >
               <div class="flex items-center gap-2">
                 <NuxtImg
-                  :src="item.images[0] || ''"
+                  :src="item.images[0] || '/placeholder.jpg'"
                   alt="order-img"
                   width="57"
                   height="72"

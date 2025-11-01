@@ -40,14 +40,14 @@ export interface User {
     fullname: string
     phone: string
     email: string
-    address: string
+    address: string[] // Новый формат [adr1, adr2]
     birthdate: string
     extended: {
       city?: CityData
     }
     [key: string]: any
   }
-  addresses: string[]
+  addresses: string[][] // Новый формат: массив массивов [adr1, adr2]
   extended?: UserExtended
   token?: string
 }

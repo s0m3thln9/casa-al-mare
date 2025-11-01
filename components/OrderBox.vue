@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{
+const props = defineProps<{
   state: {
     finalPrice: number
     status: number
@@ -15,7 +15,7 @@ defineProps<{
     }[]
     orderId: number
     receiver: string
-    address?: string
+    address?: string | string[]
     orderDate: string
     deliveryDate: string
     deliveryMethod: string
@@ -33,6 +33,15 @@ const toggleExpandOrder = () => {
 const toggleExpandAddress = () => {
   isExpandedAddress.value = !isExpandedAddress.value
 }
+
+const formattedAddress = computed(() => {
+  const addr = props.state.address
+  if (!addr) return ""
+  if (Array.isArray(addr)) {
+    return addr.filter(Boolean).join(", ")
+  }
+  return addr
+})
 
 const priceFormatter = (value: number) => {
   const formattedValue = new Intl.NumberFormat("ru-RU").format(value)
@@ -143,11 +152,11 @@ const priceFormatter = (value: number) => {
           >Получатель: <span class="font-normal">{{ state.receiver }}</span></span
         >
         <div
-          v-if="state.address"
+          v-if="formattedAddress"
           class="flex items-center gap-1"
         >
           <span class="text-xs font-light"
-            >Адрес доставки: <span class="font-normal">{{ state.address }}</span></span
+            >Адрес доставки: <span class="font-normal">{{ formattedAddress }}</span></span
           >
           <ExpandButton
             custom-class="px-2 py-0"
@@ -187,12 +196,20 @@ const priceFormatter = (value: number) => {
             </div>
             <input
               type="text"
-              placeholder="Улица, дом, корпус, строение, квартира"
+              :placeholder="
+                state.address
+                  ? Array.isArray(state.address)
+                    ? state.address[0] || ''
+                    : state.address
+                  : 'Улица, дом, корпус, строение, квартира'
+              "
               class="w-full h-[44px] px-2 py-2.5 border-[#5E5B58] border-[0.7px] rounded-lg text-xs placeholder:text-[#5E5B58]"
             />
             <input
               type="text"
-              placeholder="Номер дома и домофон / офис"
+              :placeholder="
+                Array.isArray(state.address) && state.address[1] ? state.address[1] : 'Номер дома и домофон / офис'
+              "
               class="w-full h-[44px] px-2 py-2.5 border-[#5E5B58] border-[0.7px] rounded-lg text-xs placeholder:text-[#5E5B58]"
             />
             <AppButton content="Сохранить" />

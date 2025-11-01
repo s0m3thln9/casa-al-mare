@@ -10,7 +10,7 @@ interface Certificate {
   value_now: number
 }
 
-interface PvzData {
+export interface PvzData {
   address: string
   [key: string]: any // Для других полей от CDEK (код, координаты и т.д.)
 }
@@ -20,7 +20,7 @@ interface PointsResponse {
   points: number
 }
 
-interface CityData {
+export interface CityData {
   label: string
   name: string
   kladr: string
@@ -62,13 +62,13 @@ interface UserInfo {
     country: string
   } | null
   email: string
-  addresses?: string[]
+  addresses?: string[][] // Новый формат: массив массивов [adr1, adr2]
 }
 
 export interface OrderState {
   deliveryMethod?: string | null
   city?: CityData | null
-  currentAddress?: string | null
+  currentAddress?: string | string[] | null // Изменено: теперь может быть массивом
   commentForCourier?: string
   paymentMethod?: string | null
   promoCode?: string | null
@@ -156,7 +156,7 @@ export const useOrderStore = defineStore("order", () => {
   const addresses = ref<string[]>([])
   const city = ref<CityData | null>(null)
   const commentForCourier = ref("")
-  const currentAddress = ref<string | null>(null)
+  const currentAddress = ref<string | string[] | null>(null)
   const deliveryMethod = ref<string | null>(null)
   const newAddressFirstLine = ref("")
   const newAddressSecondLine = ref("")
@@ -327,17 +327,31 @@ export const useOrderStore = defineStore("order", () => {
         }
       }
 
+      // Обработка адресов из нового формата [adr1, adr2]
       let allAddresses: string[] = []
-      if (userStore.user?.profile?.address && userStore.user.profile.address.trim()) {
-        const mainAddress = userStore.user.profile.address.trim()
-        allAddresses = [mainAddress]
+
+      // Основной адрес из profile.address (новый формат [adr1, adr2])
+      if (userStore.user?.profile?.address && Array.isArray(userStore.user.profile.address)) {
+        const [adr1, adr2] = userStore.user.profile.address
+        if (adr1?.trim()) {
+          const mainAddress = adr2?.trim() ? `${adr1.trim()}, ${adr2.trim()}` : adr1.trim()
+          allAddresses = [mainAddress]
+        }
       }
+
+      // Дополнительные адреса из user.addresses (новый формат [adr1, adr2])
       if (userStore.user?.addresses && Array.isArray(userStore.user.addresses)) {
-        const extendedAddresses = userStore.user.addresses.filter(
-          (addr) => addr.trim() && addr !== userStore.user?.profile?.address?.trim(),
-        )
+        const extendedAddresses = userStore.user.addresses
+          .filter((addr) => Array.isArray(addr) && addr[0]?.trim())
+          .map((addr) => {
+            const [adr1, adr2] = addr
+            return adr2?.trim() ? `${adr1.trim()}, ${adr2.trim()}` : adr1.trim()
+          })
+          .filter((addr) => !allAddresses.includes(addr)) // Избегаем дублирования
+
         allAddresses = [...allAddresses, ...extendedAddresses]
       }
+
       addresses.value = allAddresses
     } catch (error) {
       console.error("Ошибка загрузки user data:", error)
@@ -466,7 +480,18 @@ export const useOrderStore = defineStore("order", () => {
         } else if (userStore.user?.profile?.extended.city) {
           city.value = userStore.user.profile.extended.city
         }
-        if (loadedOrder.currentAddress) currentAddress.value = loadedOrder.currentAddress
+
+        // ✅ Обработка currentAddress: может быть строкой или массивом [adr1, adr2]
+        if (loadedOrder.currentAddress) {
+          if (Array.isArray(loadedOrder.currentAddress)) {
+            // Преобразуем массив в строку для отображения
+            const [adr1, adr2] = loadedOrder.currentAddress
+            currentAddress.value = adr2?.trim() ? `${adr1.trim()}, ${adr2.trim()}` : adr1.trim()
+          } else {
+            currentAddress.value = loadedOrder.currentAddress
+          }
+        }
+
         if (loadedOrder.commentForCourier) commentForCourier.value = loadedOrder.commentForCourier
         if (loadedOrder.paymentMethod) paymentMethod.value = loadedOrder.paymentMethod
         if (loadedOrder.points !== undefined) {
@@ -480,7 +505,16 @@ export const useOrderStore = defineStore("order", () => {
           if (loadedOrder.userInfo.surname) surname.value = loadedOrder.userInfo.surname
           if (loadedOrder.userInfo.phone) phone.value = loadedOrder.userInfo.phone
           if (loadedOrder.userInfo.email) email.value = loadedOrder.userInfo.email
-          if (loadedOrder.userInfo.addresses) addresses.value = loadedOrder.userInfo.addresses
+
+          // Обработка адресов гостей в новом формате [adr1, adr2]
+          if (loadedOrder.userInfo.addresses && Array.isArray(loadedOrder.userInfo.addresses)) {
+            addresses.value = loadedOrder.userInfo.addresses
+              .filter((addr) => Array.isArray(addr) && addr[0]?.trim())
+              .map((addr) => {
+                const [adr1, adr2] = addr
+                return adr2?.trim() ? `${adr1.trim()}, ${adr2.trim()}` : adr1.trim()
+              })
+          }
         }
 
         orderState.value = loadedOrder
@@ -711,17 +745,18 @@ export const useOrderStore = defineStore("order", () => {
 
     if (!firstLine) return
 
-    const newAddress = secondLine ? `${firstLine}, ${secondLine}` : firstLine
+    // Формируем адрес как массив [adr1, adr2]
+    const newAddress = [firstLine, secondLine]
 
     if (authStore.isAuth) {
-      // Авторизованный: сохраняем через API в user.extended
+      // Авторизованный: сохраняем через API
       const token = await userStore.loadToken()
       if (!token) return
 
       try {
         const { data, error } = await useFetch<ApiResponse>("https://back.casaalmare.com/api/saveAddress", {
           method: "POST",
-          body: { token, address: newAddress },
+          body: { token, address: newAddress }, // Отправляем массив [adr1, adr2]
         })
 
         if (error.value) {
@@ -730,26 +765,29 @@ export const useOrderStore = defineStore("order", () => {
         }
 
         if (data.value?.success) {
-          // Сначала добавляем в addresses.value
-          if (!addresses.value.includes(newAddress)) {
-            addresses.value.push(newAddress)
+          // Добавляем в addresses.value как строку для отображения
+          const addressString = secondLine ? `${firstLine}, ${secondLine}` : firstLine
+          if (!addresses.value.includes(addressString)) {
+            addresses.value.push(addressString)
           }
 
           // Затем обновляем currentAddress
-          currentAddress.value = newAddress
+          currentAddress.value = addressString
           newAddressFirstLine.value = ""
           newAddressSecondLine.value = ""
 
-          // Синхронизируем с user.extended
+          // Синхронизируем с user.addresses
           if (userStore.user) {
-            if (!userStore.user.extended) {
-              userStore.user.extended = { addresses: [] }
+            if (!userStore.user.addresses) {
+              userStore.user.addresses = []
             }
-            if (!userStore.user.extended.addresses) {
-              userStore.user.extended.addresses = []
+            // Добавляем новый адрес в формате [adr1, adr2]
+            const addressExists = userStore.user.addresses.some(
+              (addr) => Array.isArray(addr) && addr[0] === firstLine && addr[1] === secondLine,
+            )
+            if (!addressExists) {
+              userStore.user.addresses.push(newAddress)
             }
-            // Обновляем user.extended.addresses из addresses.value
-            userStore.user.extended.addresses = [...addresses.value]
           }
         } else {
           console.error("Ошибка сохранения адреса:", data.value?.error)
@@ -759,10 +797,11 @@ export const useOrderStore = defineStore("order", () => {
       }
     } else {
       // Гость: сохраняем локально и в orderState
-      if (!addresses.value.includes(newAddress)) {
-        addresses.value.push(newAddress)
+      const addressString = secondLine ? `${firstLine}, ${secondLine}` : firstLine
+      if (!addresses.value.includes(addressString)) {
+        addresses.value.push(addressString)
       }
-      currentAddress.value = newAddress
+      currentAddress.value = addressString
       newAddressFirstLine.value = ""
       newAddressSecondLine.value = ""
       debouncedUpdateOrderState()
@@ -837,56 +876,60 @@ export const useOrderStore = defineStore("order", () => {
       }
 
       if (data.value?.success !== undefined) {
-        isPaymentSuccessful.value = data.value.success // true/false
+        isPaymentSuccessful.value = data.value.success
 
-        // Добавленная логика: если статус 1 или 2, сбрасываем заполненные поля заказа
         if (data.value?.status === 1 || data.value?.status === 2) {
           resetOrder()
           console.log("Статус заказа 1 или 2: сброс заполненных полей выполнен")
         }
 
-        // Если success=true, загружаем данные
         if (data.value.success && data.value.order) {
-          // Восстанавливаем состояние заказа (аналогично loadOrderState)
           const loadedOrder = data.value.order
           if (loadedOrder.deliveryMethod) deliveryMethod.value = loadedOrder.deliveryMethod
           if (loadedOrder.city) city.value = loadedOrder.city
-          if (loadedOrder.currentAddress) currentAddress.value = loadedOrder.currentAddress
+
+          // ✅ Обработка currentAddress: может быть строкой или массивом [adr1, adr2]
+          if (loadedOrder.currentAddress) {
+            if (Array.isArray(loadedOrder.currentAddress)) {
+              const [adr1, adr2] = loadedOrder.currentAddress
+              currentAddress.value = adr2?.trim() ? `${adr1.trim()}, ${adr2.trim()}` : adr1.trim()
+            } else {
+              currentAddress.value = loadedOrder.currentAddress
+            }
+          }
+
           if (loadedOrder.commentForCourier) commentForCourier.value = loadedOrder.commentForCourier
           if (loadedOrder.paymentMethod) paymentMethod.value = loadedOrder.paymentMethod
-          // ЗАКОММЕНТИРОВАНО: промокоды
-          // if (loadedOrder.promoCode) selectedPromoCode.value = loadedOrder.promoCode
           if (loadedOrder.points !== undefined) {
             pointsToUse.value = loadedOrder.points
             if (userStore.user) userStore.user.points += usedPointsBackup.value - loadedOrder.points
           }
           if (loadedOrder.certificates) selectedCertificates.value = loadedOrder.certificates
 
-          // ЗАКОММЕНТИРОВАНО: промокоды
-          // if (loadedOrder.promoCodes && Array.isArray(loadedOrder.promoCodes)) {
-          //   currentPromoCodes.value = loadedOrder.promoCodes
-          // }
-          // if (loadedOrder.pendingPromoCode) {
-          //   pendingPromoCode.value = loadedOrder.pendingPromoCode
-          // }
-
           if (!authStore.isAuth && loadedOrder.userInfo) {
             if (loadedOrder.userInfo.name) name.value = loadedOrder.userInfo.name
             if (loadedOrder.userInfo.surname) surname.value = loadedOrder.userInfo.surname
             if (loadedOrder.userInfo.phone) phone.value = loadedOrder.userInfo.phone
             if (loadedOrder.userInfo.email) email.value = loadedOrder.userInfo.email
-            if (loadedOrder.userInfo.addresses) addresses.value = loadedOrder.userInfo.addresses
+
+            if (loadedOrder.userInfo.addresses && Array.isArray(loadedOrder.userInfo.addresses)) {
+              addresses.value = loadedOrder.userInfo.addresses
+                .filter((addr) => Array.isArray(addr) && addr[0]?.trim())
+                .map((addr) => {
+                  const [adr1, adr2] = addr
+                  return adr2?.trim() ? `${adr1.trim()}, ${adr2.trim()}` : adr1.trim()
+                })
+            }
           }
 
-          // Синхронизируем корзину
           if (data.value.cart) {
             const parsedCart: CartItem[] = Object.entries(data.value.cart).map(([_, item]) => ({
               id: item.id,
-              variant: item.variant, // Только размер
+              variant: item.variant,
               count: item.count,
               updated_at: item.updated_at,
               name: item.name,
-              colorName: item.colorName || "", // Добавляем значение по умолчанию
+              colorName: item.colorName || "",
               sizes: item.sizes,
               images: item.images,
               vector: item.vector,
@@ -1116,16 +1159,29 @@ export const useOrderStore = defineStore("order", () => {
 
   watchEffect(() => {
     let newAddresses: string[] = []
-    if (userStore?.user?.profile?.address && userStore.user.profile.address.trim()) {
-      const mainAddress = userStore.user.profile.address.trim()
-      newAddresses = [mainAddress]
+
+    // Основной адрес из profile.address (новый формат [adr1, adr2])
+    if (userStore?.user?.profile?.address && Array.isArray(userStore.user.profile.address)) {
+      const [adr1, adr2] = userStore.user.profile.address
+      if (adr1?.trim()) {
+        const mainAddress = adr2?.trim() ? `${adr1.trim()}, ${adr2.trim()}` : adr1.trim()
+        newAddresses = [mainAddress]
+      }
     }
+
+    // Дополнительные адреса из user.addresses (новый формат [adr1, adr2])
     if (userStore?.user?.addresses && Array.isArray(userStore.user.addresses)) {
-      const extendedAddresses = userStore.user.addresses.filter(
-        (addr) => addr.trim() && addr !== userStore?.user?.profile?.address?.trim(),
-      )
+      const extendedAddresses = userStore.user.addresses
+        .filter((addr) => Array.isArray(addr) && addr[0]?.trim())
+        .map((addr) => {
+          const [adr1, adr2] = addr
+          return adr2?.trim() ? `${adr1.trim()}, ${adr2.trim()}` : adr1.trim()
+        })
+        .filter((addr) => !newAddresses.includes(addr)) // Избегаем дублирования
+
       newAddresses = [...newAddresses, ...extendedAddresses]
     }
+
     addresses.value = newAddresses
   })
 

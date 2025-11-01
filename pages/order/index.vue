@@ -187,14 +187,18 @@ async function handlePay(): Promise<void> {
       return
     }
 
-    const methodId = Number(orderStore.deliveryMethod)
-    if ([1, 2, 3].includes(methodId)) {
+    if (["1", "2", "3"].includes(orderStore.deliveryMethod)) {
       if (!orderStore.currentAddress) {
         orderStore.showErrorDeliveryMethod = true
         return
       }
 
-      if (orderStore.currentAddress === "Новый адрес") {
+      // ✅ Проверка на "Новый адрес" с учетом массива
+      const isNewAddress =
+        orderStore.currentAddress === "Новый адрес" ||
+        (Array.isArray(orderStore.currentAddress) && orderStore.currentAddress.includes("Новый адрес"))
+
+      if (isNewAddress) {
         if (!newAddressRef.value?.validate()) {
           return
         }
@@ -203,7 +207,7 @@ async function handlePay(): Promise<void> {
         return
       }
     }
-    if (methodId === 4) {
+    if (orderStore.deliveryMethod === "4") {
       if (!orderStore.selectedPvz) {
         orderStore.showErrorDeliveryMethod = true
         orderStore.errorDeliveryMethod = "Выберите пункт выдачи СДЭК"
@@ -989,11 +993,11 @@ useSmsAutoSubmit(
                     v-model="orderStore.deliveryMethod"
                     size="M"
                     :label="`${type.name} ${!type.isExpress ? `${getTimeLabel(type)}` : ''}`"
-                    :value="type.id"
+                    :value="String(type.id)"
                   />
                 </div>
                 <div
-                  v-if="[1, 2, 3].includes(Number(orderStore.deliveryMethod))"
+                  v-if="['1', '2', '3'].includes(orderStore.deliveryMethod)"
                   class="flex flex-col gap-4"
                 >
                   <AppCheckbox
@@ -1003,15 +1007,20 @@ useSmsAutoSubmit(
                     size="S"
                     :label="address"
                     :value="address"
+                    :multiple="false"
                   />
                   <AppCheckbox
                     v-model="orderStore.currentAddress"
                     size="S"
                     label="Новый адрес"
                     value="Новый адрес"
+                    :multiple="false"
                   />
                   <div
-                    v-if="orderStore.currentAddress === 'Новый адрес'"
+                    v-if="
+                      orderStore.currentAddress === 'Новый адрес' ||
+                      (Array.isArray(orderStore.currentAddress) && orderStore.currentAddress.includes('Новый адрес'))
+                    "
                     class="flex flex-col gap-4"
                   >
                     <AppTooltip
@@ -1033,7 +1042,7 @@ useSmsAutoSubmit(
                       id="address2"
                       v-model="orderStore.newAddressSecondLine"
                       type="text"
-                      label="Номер дома и домофон / офис"
+                      label="Подъезд, код домофона"
                     />
                     <AppButton
                       custom-class="w-full"
@@ -1044,7 +1053,7 @@ useSmsAutoSubmit(
                     />
                   </div>
                 </div>
-                <div v-if="orderStore.deliveryMethod === 4">
+                <div v-if="orderStore.deliveryMethod === '4'">
                   <PvzSelector
                     v-model="orderStore.selectedPvz"
                     v-model:city="orderStore.city"

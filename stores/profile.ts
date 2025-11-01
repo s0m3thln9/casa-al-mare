@@ -9,9 +9,9 @@ interface ProfileData {
   day: string
   month: string
   year: string
-  adr1: string
-  adr2: string
-  adr3: string
+  city: string // Новое поле для города
+  adr1: string // Улица, дом
+  adr2: string // Подъезд, код домофона
 }
 
 export const useProfileStore = defineStore("profile", () => {
@@ -33,7 +33,7 @@ export const useProfileStore = defineStore("profile", () => {
     year: "1980",
     adr1: "",
     adr2: "",
-    adr3: "",
+    city: "",
   })
 
   const isSaving = ref(false)
@@ -156,11 +156,26 @@ export const useProfileStore = defineStore("profile", () => {
         }
       }
 
-      if (profile.address) {
-        const addressParts = (profile.address || "").split(", ")
-        profileData.value.adr1 = addressParts[0] || ""
-        profileData.value.adr2 = addressParts[1] || ""
-        profileData.value.adr3 = addressParts.slice(2).join(", ") || ""
+      // Город из profile.extended.city
+      if (profile.extended?.city?.name) {
+        profileData.value.city = profile.extended.city.name || ""
+      }
+
+      // Адрес из нового формата [adr1, adr2]
+      // Приоритет: profile.address, затем addresses[0]
+      if (profile.address && Array.isArray(profile.address)) {
+        profileData.value.adr1 = profile.address[0] || ""
+        profileData.value.adr2 = profile.address[1] || ""
+      } else if (
+        userStore.user.addresses &&
+        Array.isArray(userStore.user.addresses) &&
+        userStore.user.addresses.length > 0
+      ) {
+        const mainAddress = userStore.user.addresses[0]
+        if (Array.isArray(mainAddress)) {
+          profileData.value.adr1 = mainAddress[0] || ""
+          profileData.value.adr2 = mainAddress[1] || ""
+        }
       }
     }
   }
@@ -176,8 +191,9 @@ export const useProfileStore = defineStore("profile", () => {
     const fullName = `${profileData.value.name.trim()} ${profileData.value.surname.trim()}`.trim()
     const birthdateStr = `${profileData.value.year}-${String(months.indexOf(profileData.value.month) + 1).padStart(2, "0")}-${profileData.value.day.padStart(2, "0")}`
     const date = new Date(birthdateStr)
-    const fullAddress =
-      `${profileData.value.adr1.trim()}, ${profileData.value.adr2.trim()}${profileData.value.adr3.trim() ? ", " + profileData.value.adr3.trim() : ""}`.trim()
+
+    // Формируем адрес в новом формате [adr1, adr2]
+    const address = [profileData.value.adr1.trim(), profileData.value.adr2.trim()]
 
     const body: any = { token }
 
@@ -185,7 +201,10 @@ export const useProfileStore = defineStore("profile", () => {
     if (!isNaN(date.getTime()) && profileData.value.day && profileData.value.month && profileData.value.year) {
       body.birthdate = birthdateStr
     }
-    if (fullAddress) body.address = fullAddress
+    // Отправляем адрес как массив [adr1, adr2]
+    if (address[0]) body.address = address
+    // Отправляем город отдельно
+    if (profileData.value.city) body.city = profileData.value.city
 
     if (Object.keys(body).length <= 1) {
       saveError.value = "Нет данных для обновления"
@@ -211,7 +230,16 @@ export const useProfileStore = defineStore("profile", () => {
       if (userStore.user?.profile) {
         if (fullName) userStore.user.profile.fullname = fullName
         if (!isNaN(date.getTime())) userStore.user.profile.birthdate = birthdateStr
-        if (fullAddress) userStore.user.profile.address = fullAddress
+        // Обновляем адрес в profile.address
+        if (address[0]) {
+          userStore.user.profile.address = address
+        }
+        // Обновляем город
+        if (profileData.value.city) {
+          if (!userStore.user.profile.extended) userStore.user.profile.extended = {}
+          if (!userStore.user.profile.extended.city) userStore.user.profile.extended.city = {} as CityData
+          userStore.user.profile.extended.city.name = profileData.value.city
+        }
       }
       console.log("Профиль обновлен:", data.value.changes)
       buttonContent.value = "Сохранено!"
