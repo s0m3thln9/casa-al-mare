@@ -12,7 +12,7 @@ interface Certificate {
 
 export interface PvzData {
   address: string
-  [key: string]: any // Для других полей от CDEK (код, координаты и т.д.)
+  [key: string]: any
 }
 
 interface PointsResponse {
@@ -43,8 +43,6 @@ interface PromoCode {
   percent: boolean
 }
 
-// interface PromoResponse { //   success: boolean //   promo: PromoCode // }
-
 interface CheckOrderStatusResponse {
   success: boolean
   order?: OrderState
@@ -62,13 +60,13 @@ interface UserInfo {
     country: string
   } | null
   email: string
-  addresses?: string[][] // Новый формат: массив массивов [adr1, adr2]
+  addresses?: string[][]
 }
 
 export interface OrderState {
   deliveryMethod?: string | null
   city?: CityData | null
-  currentAddress?: string | string[] | null // Изменено: теперь может быть массивом
+  currentAddress?: string | string[] | null
   commentForCourier?: string
   paymentMethod?: string | null
   promoCode?: string | null
@@ -103,20 +101,20 @@ interface UpdateCartResponse {
     string,
     {
       id: number
-      variant: string // Только размер
+      variant: string
       count: number
       updated_at: number | null
       name: string
-      colorName: string // Название цвета
+      colorName: string
       sizes: string[]
       images: Record<number, string>
       vector: Record<string, { quantity: number; comingSoon: number }>
       type: string
       material: string[]
       useType: string[]
-      colors: any[] // Пустой массив
-      price: string // На верхнем уровне
-      oldPrice: string // На верхнем уровне
+      colors: any[]
+      price: string
+      oldPrice: string
     }
   >
 }
@@ -127,19 +125,19 @@ interface PaymentMethodsResponse {
 
 export type CartItem = {
   id: number
-  variant: string // Только размер (XS/S, S/M и т.д.)
+  variant: string
   count: number
   updated_at?: number
   name: string
-  colorName: string // Название цвета из API
+  colorName: string
   sizes: string[]
   images: Record<number, string>
   vector: Record<string, { quantity: number; comingSoon: boolean }>
   type: string
   material: string[]
   useType: string[]
-  price: number // На верхнем уровне
-  oldPrice: number // На верхнем уровне
+  price: number
+  oldPrice: number
 }
 
 export interface PaymentMethod {
@@ -186,15 +184,6 @@ export const useOrderStore = defineStore("order", () => {
   const guestAuthButtonDisabled = ref(false)
   const guestSmsButtonContent = ref("Подтвердить")
   const guestSmsButtonDisabled = ref(false)
-
-  // ЗАКОММЕНТИРОВАНО: промокоды
-  // const addPromoCodeError = ref<string>("")
-  // const currentPromoCodes = ref<PromoCode[]>([])
-  // const isExpandedPromoCode = ref<boolean>(false)
-  // const pendingPromoCode = ref<string | null>(null)
-  // const promoCode = ref<string>("")
-  // const selectedPromoCode = ref<string | null>(null)
-  // const isLoadingPromo = ref<boolean>(false)
 
   const isExpandedPoints = ref<boolean>(false)
   const pendingPoints = ref<string>("")
@@ -317,20 +306,14 @@ export const useOrderStore = defineStore("order", () => {
         return
       }
 
-      if (userStore.user?.profile?.extended.city?.label && !city.value) {
-        city.value = userStore.user.profile.extended.city
-      }
-
       if (pointsData.value?.success && pointsData.value.points !== undefined) {
         if (userStore.user) {
           userStore.user.points = pointsData.value.points
         }
       }
 
-      // Обработка адресов из нового формата [adr1, adr2]
       let allAddresses: string[] = []
 
-      // Основной адрес из profile.address (новый формат [adr1, adr2])
       if (userStore.user?.profile?.address && Array.isArray(userStore.user.profile.address)) {
         const [adr1, adr2] = userStore.user.profile.address
         if (adr1?.trim()) {
@@ -339,7 +322,6 @@ export const useOrderStore = defineStore("order", () => {
         }
       }
 
-      // Дополнительные адреса из user.addresses (новый формат [adr1, adr2])
       if (userStore.user?.profile.extended.addresses && Array.isArray(userStore.user.profile.extended.addresses)) {
         const extendedAddresses = userStore.user.profile.extended.addresses
           .filter((addr) => Array.isArray(addr) && addr[0]?.trim())
@@ -347,7 +329,7 @@ export const useOrderStore = defineStore("order", () => {
             const [adr1, adr2] = addr
             return adr2?.trim() ? `${adr1.trim()}, ${adr2.trim()}` : adr1.trim()
           })
-          .filter((addr) => !allAddresses.includes(addr)) // Избегаем дублирования
+          .filter((addr) => !allAddresses.includes(addr))
 
         allAddresses = [...allAddresses, ...extendedAddresses]
       }
@@ -375,7 +357,6 @@ export const useOrderStore = defineStore("order", () => {
       if (data) {
         cdekData.value = data
 
-        // Новое: всегда переинициализируем полный массив перед обновлением
         deliveryTypes.value = [
           { id: 1, name: "Курьер СДЭК", term: { min: 0, max: 0 }, cost: 0 },
           { id: 2, name: "Курьер СДЭК с примеркой", term: { min: 0, max: 0 }, cost: 0 },
@@ -383,7 +364,6 @@ export const useOrderStore = defineStore("order", () => {
           { id: 4, name: "СДЭК (ПВЗ)", term: { min: 0, max: 0 }, cost: 0 },
         ]
 
-        // Обновляем типы доставки только если данные валидны
         if (data.courier && data.courier.term && typeof data.courier.price === "number") {
           updateDeliveryType(1, data.courier.term, data.courier.price)
         }
@@ -399,16 +379,13 @@ export const useOrderStore = defineStore("order", () => {
           deliveryTypes.value = deliveryTypes.value.filter((type) => type.id !== 3)
         }
 
-        // Новое: если выбранный метод больше недоступен (например, экспресс в не-Москве), сбрасываем выбор
         if (deliveryMethod.value && !deliveryTypes.value.some((t) => t.id === Number(deliveryMethod.value))) {
           deliveryMethod.value = null
           deliveryTime.value = null
           deliveryCost.value = 0
         }
 
-        // Принудительно обновляем детали после загрузки данных
         await nextTick()
-        // ✅ ИСПРАВЛЕНИЕ: Если метод доставки УЖЕ выбран, обновляем его стоимость
         if (deliveryMethod.value) {
           updateDeliveryDetails()
         }
@@ -478,16 +455,26 @@ export const useOrderStore = defineStore("order", () => {
         if (loadedOrder.pvz) {
           selectedPvz.value = loadedOrder.pvz
         }
+
+        let targetCity: CityData | null = null
         if (loadedOrder.city) {
-          city.value = loadedOrder.city
-        } else if (userStore.user?.profile?.extended.city) {
-          city.value = userStore.user.profile.extended.city
+          targetCity = loadedOrder.city
+        } else if (userStore.user?.profile?.extended?.city) {
+          targetCity = userStore.user.profile.extended.city
+        } else {
+          targetCity = { label: "Москва", name: "Москва", kladr: "0000000100000", fias: "7700000100000" } as CityData
+          console.warn("Город не найден в user/order, установлен fallback: Москва")
         }
 
-        // ✅ Обработка currentAddress: может быть строкой или массивом [adr1, adr2]
+        if (targetCity && targetCity !== city.value) {
+          city.value = targetCity
+          console.log("Город установлен:", targetCity.label)
+        }
+
+        await nextTick()
+
         if (loadedOrder.currentAddress) {
           if (Array.isArray(loadedOrder.currentAddress)) {
-            // Преобразуем массив в строку для отображения
             const [adr1, adr2] = loadedOrder.currentAddress
             currentAddress.value = adr2?.trim() ? `${adr1.trim()}, ${adr2.trim()}` : adr1.trim()
           } else {
@@ -509,7 +496,6 @@ export const useOrderStore = defineStore("order", () => {
           if (loadedOrder.userInfo.phone) phone.value = loadedOrder.userInfo.phone
           if (loadedOrder.userInfo.email) email.value = loadedOrder.userInfo.email
 
-          // Обработка адресов гостей в новом формате [adr1, adr2]
           if (loadedOrder.userInfo.addresses && Array.isArray(loadedOrder.userInfo.addresses)) {
             addresses.value = loadedOrder.userInfo.addresses
               .filter((addr) => Array.isArray(addr) && addr[0]?.trim())
@@ -531,7 +517,6 @@ export const useOrderStore = defineStore("order", () => {
       isLoaded.value = true
       if (city.value) {
         await loadCdekData()
-        // ✅ ИСПРАВЛЕНИЕ: Принудительно обновляем стоимость после загрузки
         await nextTick()
         if (deliveryMethod.value) {
           updateDeliveryDetails()
@@ -548,7 +533,7 @@ export const useOrderStore = defineStore("order", () => {
 
     const orderStateObj: Partial<OrderState> = {
       deliveryMethod: deliveryMethod.value,
-      deliveryTime: deliveryTime.value, // Теперь строка или null
+      deliveryTime: deliveryTime.value,
       deliveryCost: deliveryCost.value,
       pvz: selectedPvz.value,
       city: city.value,
@@ -614,11 +599,10 @@ export const useOrderStore = defineStore("order", () => {
     return cartItems.value.map((cartItem) => {
       if (!cartItem.variant) return
 
-      const size = cartItem.variant // Теперь variant - это размер
-      const colorName = cartItem.colorName || "Цвет не указан" // Значение по умолчанию
+      const size = cartItem.variant
+      const colorName = cartItem.colorName || "Цвет не указан"
 
-      // Получаем массив изображений из объекта images
-      const imagesArray = Object.values(cartItem.images).filter((img) => img) // Фильтруем пустые
+      const imagesArray = Object.values(cartItem.images).filter((img) => img)
 
       return {
         id: cartItem.id,
@@ -698,11 +682,11 @@ export const useOrderStore = defineStore("order", () => {
         const rawCart = data.value.cart
         const parsedCart: CartItem[] = Object.entries(rawCart).map(([_, item]) => ({
           id: item.id,
-          variant: item.variant, // Только размер
+          variant: item.variant,
           count: item.count,
           updated_at: item.updated_at,
           name: item.name,
-          colorName: item.colorName || "", // Добавляем значение по умолчанию
+          colorName: item.colorName || "",
           sizes: item.sizes,
           images: item.images,
           vector: item.vector,
@@ -752,18 +736,16 @@ export const useOrderStore = defineStore("order", () => {
 
     if (!firstLine) return
 
-    // Формируем адрес как массив [adr1, adr2]
     const newAddress = [firstLine, secondLine]
 
     if (authStore.isAuth) {
-      // Авторизованный: сохраняем через API
       const token = await userStore.loadToken()
       if (!token) return
 
       try {
         const { data, error } = await useFetch<ApiResponse>("https://back.casaalmare.com/api/saveAddress", {
           method: "POST",
-          body: { token, address: newAddress }, // Отправляем массив [adr1, adr2]
+          body: { token, address: newAddress },
         })
 
         if (error.value) {
@@ -772,23 +754,19 @@ export const useOrderStore = defineStore("order", () => {
         }
 
         if (data.value?.success) {
-          // Добавляем в addresses.value как строку для отображения
           const addressString = secondLine ? `${firstLine}, ${secondLine}` : firstLine
           if (!addresses.value.includes(addressString)) {
             addresses.value.push(addressString)
           }
 
-          // Затем обновляем currentAddress
           currentAddress.value = addressString
           newAddressFirstLine.value = ""
           newAddressSecondLine.value = ""
 
-          // Синхронизируем с user.addresses
           if (userStore.user) {
             if (!userStore.user.profile.extended.addresses) {
               userStore.user.profile.extended.addresses = []
             }
-            // Добавляем новый адрес в формате [adr1, adr2]
             const addressExists = userStore.user.profile.extended.addresses.some(
               (addr) => Array.isArray(addr) && addr[0] === firstLine && addr[1] === secondLine,
             )
@@ -803,7 +781,6 @@ export const useOrderStore = defineStore("order", () => {
         console.error("Ошибка API saveAddress:", error)
       }
     } else {
-      // Гость: сохраняем локально и в orderState
       const addressString = secondLine ? `${firstLine}, ${secondLine}` : firstLine
       if (!addresses.value.includes(addressString)) {
         addresses.value.push(addressString)
@@ -816,7 +793,6 @@ export const useOrderStore = defineStore("order", () => {
   }
 
   function resetOrder() {
-    // Сбрасываем все состояния, связанные с заказом
     cartItems.value = []
     addresses.value = []
     city.value = null
@@ -834,14 +810,6 @@ export const useOrderStore = defineStore("order", () => {
     showErrorPaymentMethod.value = false
     selectedPvz.value = null
 
-    // ЗАКОММЕНТИРОВАНО: промокоды
-    // addPromoCodeError.value = ""
-    // currentPromoCodes.value = []
-    // isExpandedPromoCode.value = false
-    // pendingPromoCode.value = null
-    // promoCode.value = ""
-    // selectedPromoCode.value = null
-
     isExpandedPoints.value = false
     pendingPoints.value = ""
     pointsError.value = ""
@@ -852,12 +820,6 @@ export const useOrderStore = defineStore("order", () => {
     isExpandedCert.value = false
     newCertificateCode.value = ""
     selectedCertificates.value = []
-
-    // Не сбрасываем пользовательские данные
-    // email.value = ""
-    // name.value = ""
-    // phone.value = null
-    // surname.value = ""
 
     orderState.value = {}
     orderId.value = null
@@ -895,7 +857,6 @@ export const useOrderStore = defineStore("order", () => {
           if (loadedOrder.deliveryMethod) deliveryMethod.value = loadedOrder.deliveryMethod
           if (loadedOrder.city) city.value = loadedOrder.city
 
-          // ✅ Обработка currentAddress: может быть строкой или массивом [adr1, adr2]
           if (loadedOrder.currentAddress) {
             if (Array.isArray(loadedOrder.currentAddress)) {
               const [adr1, adr2] = loadedOrder.currentAddress
@@ -960,107 +921,11 @@ export const useOrderStore = defineStore("order", () => {
     return null
   }
 
-  // ЗАКОММЕНТИРОВАНО: промокоды
-  // async function addPromoCode() {
-  //   if (isLoadingPromo.value) return
-  //
-  //   isLoadingPromo.value = true
-  //   addPromoCodeError.value = ""
-  //
-  //   const code = promoCode.value.trim()
-  //
-  //   if (!code) {
-  //     addPromoCodeError.value = "Введите промокод"
-  //     isLoadingPromo.value = false
-  //     return
-  //   }
-  //
-  //   const token = await userStore.loadToken()
-  //
-  //   try {
-  //     const { data, error } = await useFetch<PromoResponse>("https://back.casaalmare.com/api/checkPromoCode", {
-  //       method: "POST",
-  //       body: { token, code },
-  //     })
-  //
-  //     if (error.value) {
-  //       addPromoCodeError.value = "Ошибка сети"
-  //       isLoadingPromo.value = false
-  //       return
-  //     }
-  //
-  //     if (data.value?.success && data.value.promo) {
-  //       const alreadyAdded = currentPromoCodes.value.some((p) => p.code === data.value!.promo.code)
-  //
-  //       if (!alreadyAdded) {
-  //         currentPromoCodes.value.push(data.value.promo)
-  //         promoCode.value = ""
-  //         addPromoCodeError.value = ""
-  //         updateOrderState()
-  //       } else {
-  //         addPromoCodeError.value = "Промокод уже добавлен"
-  //       }
-  //     } else {
-  //       addPromoCodeError.value = "Промокод не найден"
-  //     }
-  //   } catch (error) {
-  //     addPromoCodeError.value = "Ошибка проверки промокода"
-  //     console.error(error)
-  //   } finally {
-  //     isLoadingPromo.value = false
-  //   }
-  // }
-
-  // ЗАКОММЕНТИРОВАНО: промокоды
-  // function applyPromoCode() {
-  //   if (!pendingPromoCode.value) {
-  //     return
-  //   }
-  //
-  //   selectedPromoCode.value = pendingPromoCode.value
-  //
-  //   if (pointsToUse.value > 0 && userStore.user) {
-  //     userStore.user.points += pointsToUse.value
-  //   }
-  //   pointsToUse.value = 0
-  //   pendingPoints.value = ""
-  //
-  //   pendingPromoCode.value = null
-  //
-  //   updateOrderState()
-  // }
-
-  // ЗАКОММЕНТИРОВАНО: промокоды
-  // function savedMoney(promoValue: number): number {
-  //   const promo = currentPromoCodes.value.find((p) => p.value === promoValue)
-  //   if (!promo) return 0
-  //
-  //   const sumWithoutDiscount = cartDetailed.value.reduce((sum, item) => {
-  //     const isNonDiscounted = item.oldPrice === 0 || item.oldPrice === item.price
-  //     return isNonDiscounted ? sum + item.price * item.count : sum
-  //   }, 0)
-  //
-  //   if (promo.percent) {
-  //     return Math.round(sumWithoutDiscount * promo.value)
-  //   } else {
-  //     return Math.min(promo.value, sumWithoutDiscount)
-  //   }
-  // }
-
-  // ЗАКОММЕНТИРОВАНО: промокоды
-  // function togglePromoCode() {
-  //   isExpandedPromoCode.value = !isExpandedPromoCode.value
-  // }
-
   async function applyPoints() {
     if (isLoadingPoints.value) return
 
     isLoadingPoints.value = true
     pointsError.value = ""
-
-    // ЗАКОММЕНТИРОВАНО: промокоды
-    // selectedPromoCode.value = null
-    // pendingPromoCode.value = null
 
     const points = Number(pendingPoints.value)
 
@@ -1159,6 +1024,31 @@ export const useOrderStore = defineStore("order", () => {
     isExpandedCert.value = !isExpandedCert.value
   }
 
+  async function refreshCityForUI() {
+    let targetCity: CityData | null = null
+    if (orderState.value.city) {
+      targetCity = orderState.value.city
+    } else if (userStore.user?.profile?.extended?.city) {
+      targetCity = userStore.user.profile.extended.city
+    } else {
+      targetCity = { label: "Москва", name: "Москва", kladr: "0000000100000", fias: "7700000100000" } as CityData
+    }
+
+    if (targetCity && targetCity !== city.value) {
+      city.value = targetCity
+      await nextTick()
+      console.log("Город обновлён для UI:", targetCity.label)
+    }
+
+    if (city.value) {
+      await loadCdekData()
+      await nextTick()
+      if (deliveryMethod.value) {
+        updateDeliveryDetails()
+      }
+    }
+  }
+
   function priceFormatter(value: number): string {
     const formattedValue = new Intl.NumberFormat("ru-RU").format(Math.round(value))
     return `${formattedValue} ₽`
@@ -1167,7 +1057,6 @@ export const useOrderStore = defineStore("order", () => {
   watchEffect(() => {
     let newAddresses: string[] = []
 
-    // Основной адрес из profile.address (новый формат [adr1, adr2])
     if (userStore?.user?.profile?.address && Array.isArray(userStore.user.profile.address)) {
       const [adr1, adr2] = userStore.user.profile.address
       if (adr1?.trim()) {
@@ -1176,7 +1065,6 @@ export const useOrderStore = defineStore("order", () => {
       }
     }
 
-    // Дополнительные адреса из user.addresses (новый формат [adr1, adr2])
     if (userStore?.user?.profile.extended.addresses && Array.isArray(userStore.user.profile.extended.addresses)) {
       const extendedAddresses = userStore.user.profile.extended.addresses
         .filter((addr) => Array.isArray(addr) && addr[0]?.trim())
@@ -1184,7 +1072,7 @@ export const useOrderStore = defineStore("order", () => {
           const [adr1, adr2] = addr
           return adr2?.trim() ? `${adr1.trim()}, ${adr2.trim()}` : adr1.trim()
         })
-        .filter((addr) => !newAddresses.includes(addr)) // Избегаем дублирования
+        .filter((addr) => !newAddresses.includes(addr))
 
       newAddresses = [...newAddresses, ...extendedAddresses]
     }
@@ -1206,11 +1094,20 @@ export const useOrderStore = defineStore("order", () => {
     () => city.value,
     async (newCity) => {
       if (newCity) {
-        await loadCdekData() // Уже было, но теперь с улучшенной логикой внутри
-        // Принудительно обновляем метод доставки, если он был выбран ранее
+        await loadCdekData()
         if (deliveryMethod.value) {
           updateDeliveryDetails()
         }
+      }
+    },
+    { immediate: true, deep: true },
+  )
+
+  watch(
+    () => userStore.user?.profile?.extended?.city,
+    (newCity) => {
+      if (newCity && !city.value) {
+        city.value = newCity
       }
     },
     { immediate: true, deep: true },
@@ -1222,15 +1119,14 @@ export const useOrderStore = defineStore("order", () => {
 
     if (type) {
       if (type.term && type.term.min !== undefined && type.term.max !== undefined) {
-        deliveryTime.value = `${type.term.min}-${type.term.max}` // Новое: формируем строку периода
+        deliveryTime.value = `${type.term.min}-${type.term.max}`
       } else if (type.isExpress) {
-        deliveryTime.value = null // Для экспресса — null
+        deliveryTime.value = null
       } else {
-        deliveryTime.value = null // По умолчанию null, если term отсутствует
+        deliveryTime.value = null
       }
       deliveryCost.value = type.cost || 0
 
-      // Специально для ПВЗ (id=4): если selectedPvz есть, можно скорректировать цену
       if (methodId === 4 && selectedPvz.value && selectedPvz.value.price) {
         deliveryCost.value = selectedPvz.value.price
       }
@@ -1239,7 +1135,6 @@ export const useOrderStore = defineStore("order", () => {
       deliveryCost.value = 0
     }
 
-    // Применяем логику бесплатной доставки
     if (totalSum.value >= 30000) {
       deliveryCost.value = 0
     }
@@ -1250,7 +1145,6 @@ export const useOrderStore = defineStore("order", () => {
     debouncedUpdateOrderState()
   })
 
-  // ✅ НОВОЕ: следим за изменением deliveryTypes и обновляем стоимость
   watch(
     () => deliveryTypes.value,
     () => {
@@ -1309,14 +1203,6 @@ export const useOrderStore = defineStore("order", () => {
     showErrorPaymentMethod,
     isLoadingPayment,
     paymentMethods,
-    // ЗАКОММЕНТИРОВАНО: промокоды
-    // addPromoCodeError,
-    // currentPromoCodes,
-    // isExpandedPromoCode,
-    // pendingPromoCode,
-    // promoCode,
-    // selectedPromoCode,
-    // isLoadingPromo,
     isExpandedPoints,
     pendingPoints,
     pointsError,
@@ -1373,15 +1259,11 @@ export const useOrderStore = defineStore("order", () => {
     loadCdekData,
     updateDeliveryDetails,
     isWidgetOpen,
-    // ЗАКОММЕНТИРОВАНО: промокоды
-    // addPromoCode,
-    // applyPromoCode,
-    // savedMoney,
-    // togglePromoCode,
     selectedPvz,
     applyPoints,
     togglePoints,
     addCertificate,
+    refreshCityForUI,
     toggleCert,
     priceFormatter,
   }

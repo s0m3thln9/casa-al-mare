@@ -13,16 +13,16 @@ interface CartResponseData {
       count: number
       id: number
       images: Record<number, string>
-      variant: string // Теперь только размер (XS/S, S/M, M/L)
+      variant: string
       updated_at: null | number
       material: string[]
       name: string
-      oldPrice: string // На верхнем уровне
-      price: string // На верхнем уровне
+      oldPrice: string
+      price: string
       sizes: string[]
       type: string
       useType: string[]
-      colors: any[] // Пустой массив (не используется)
+      colors: any[]
       vector: Record<string, { quantity: number; comingSoon: number }>
     }
   >
@@ -86,7 +86,7 @@ const loadCloudPaymentsScript = (): Promise<void> => {
     script.src = "https://widget.cloudpayments.ru/bundles/cloudpayments.js"
     script.onload = () => {
       console.log("CloudPayments script loaded")
-      setTimeout(() => resolve(), 100) // Даем время на инициализацию
+      setTimeout(() => resolve(), 100)
     }
     script.onerror = () => {
       console.error("Failed to load CloudPayments script")
@@ -102,6 +102,7 @@ onMounted(async () => {
   } catch (error) {
     console.error("Error loading CloudPayments:", error)
   }
+
   const getCart = async (): Promise<void> => {
     const token = await userStore.loadToken()
     if (!token) return
@@ -131,11 +132,11 @@ onMounted(async () => {
           }
           return {
             id: item.id,
-            variant: item.variant, // Только размер
+            variant: item.variant,
             count: item.count,
             updated_at: item.updated_at || undefined,
             name: item.name,
-            colorName: item.colorName || "", // Добавляем значение по умолчанию
+            colorName: item.colorName || "",
             sizes: item.sizes,
             images: item.images,
             vector,
@@ -157,6 +158,16 @@ onMounted(async () => {
   await orderStore.loadPaymentMethods()
   await orderStore.loadUserData()
   await orderStore.loadOrderState()
+
+  await nextTick()
+  await orderStore.refreshCityForUI()
+  await nextTick()
+
+  if (cityRef.value && orderStore.city) {
+    // cityRef.value.setValue(orderStore.city)
+  }
+
+  console.log("Город после загрузки:", orderStore.city?.label)
 })
 
 async function handlePay(): Promise<void> {
@@ -180,10 +191,21 @@ async function handlePay(): Promise<void> {
       }
     }
 
-    if (!cityRef.value?.validate()) return
+    if (!orderStore.city || !orderStore.city.label) {
+      orderStore.showErrorDeliveryMethod = true
+      orderStore.errorDeliveryMethod = "Выберите город"
+      return
+    }
+
+    if (!cityRef.value?.validate()) {
+      orderStore.showErrorDeliveryMethod = true
+      orderStore.errorDeliveryMethod = "Выберите город"
+      return
+    }
 
     if (!orderStore.deliveryMethod) {
       orderStore.showErrorDeliveryMethod = true
+      orderStore.errorDeliveryMethod = "Выберите способ доставки"
       return
     }
 
@@ -193,7 +215,6 @@ async function handlePay(): Promise<void> {
         return
       }
 
-      // ✅ Проверка на "Новый адрес" с учетом массива
       const isNewAddress =
         orderStore.currentAddress === "Новый адрес" ||
         (Array.isArray(orderStore.currentAddress) && orderStore.currentAddress.includes("Новый адрес"))
@@ -238,7 +259,6 @@ async function handlePay(): Promise<void> {
         return
       }
 
-      // Проверяем, что скрипт загружен
       if (!(window as any).cp) {
         console.error("CloudPayments script not loaded")
         alert("Ошибка загрузки платежной системы. Перезагрузите страницу.")
@@ -246,7 +266,6 @@ async function handlePay(): Promise<void> {
         return
       }
 
-      // Проверяем обязательные поля
       console.log("=== Payment Data Debug ===")
       console.log("Full payment data:", JSON.stringify(paymentData, null, 2))
       console.log("Widget data:", paymentData.data)
@@ -261,7 +280,6 @@ async function handlePay(): Promise<void> {
         return
       }
 
-      // Проверяем, что amount является числом
       if (typeof paymentData.data.amount !== "number" || paymentData.data.amount <= 0) {
         console.error("Invalid amount:", paymentData.data.amount)
         alert("Ошибка: некорректная сумма платежа")
@@ -976,6 +994,7 @@ useSmsAutoSubmit(
                 >
                   <AppSelect
                     ref="cityRef"
+                    :key="orderStore.city?.label || 'default'"
                     v-model="orderStore.city"
                     label="Город"
                     custom-class="w-full"
@@ -1074,7 +1093,7 @@ useSmsAutoSubmit(
               :show="orderStore.showErrorPaymentMethod"
               @update:show="(value) => (orderStore.showErrorPaymentMethod = value)"
             >
-              <div class="relative flex flex-col gap-6">
+              <div class="relative max-sm:hidden flex flex-col gap-6">
                 <span class="font-light text-sm">Способ оплаты</span>
                 <div class="flex flex-col gap-4">
                   <AppCheckbox

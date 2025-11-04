@@ -65,6 +65,11 @@ watch(
     }
     if (!isDropdownOpen.value && props.searchable) {
       searchQuery.value = displayValue.value
+      nextTick(() => {
+        if (inputRef.value) {
+          inputRef.value.value = searchQuery.value
+        }
+      })
     }
   },
 )
@@ -72,18 +77,31 @@ watch(
 watch(selected, (newValue) => {
   if (!isDropdownOpen.value && props.searchable) {
     searchQuery.value = displayValue.value
+    nextTick(() => {
+      if (inputRef.value) {
+        inputRef.value.value = searchQuery.value
+      }
+    })
   }
 })
 
 const filteredOptions = computed(() => {
-  if (props.asyncSearch && props.cityMode) {
-    return asyncOptions.value
+  let options =
+    props.asyncSearch && props.cityMode
+      ? asyncOptions.value
+      : props.searchable && searchQuery.value
+        ? props.options.filter((option) => option.toLowerCase().includes(searchQuery.value.toLowerCase()))
+        : props.options
+
+  if (props.cityMode && typeof selected.value === "object" && selected.value) {
+    const selectedCity = selected.value as CityData
+    const isAlreadyInOptions = options.some((opt) => typeof opt === "object" && opt.kladr === selectedCity.kladr)
+    if (!isAlreadyInOptions) {
+      options = [selectedCity, ...options]
+    }
   }
 
-  if (!props.searchable || !searchQuery.value) {
-    return props.options
-  }
-  return props.options.filter((option) => option.toLowerCase().includes(searchQuery.value.toLowerCase()))
+  return options
 })
 
 const searchCities = async () => {
@@ -154,13 +172,18 @@ watch(isDropdownOpen, (newValue) => {
 })
 
 const select = (item: CityData | string) => {
-  selected.value = item
-  if (props.cityMode && typeof item === "object") {
-    searchQuery.value = item.label
-    emit("update:modelValue", item)
+  const newSelected = item
+  if (selected.value === newSelected) {
+    isDropdownOpen.value = false
+    return
+  }
+  selected.value = newSelected
+  if (props.cityMode && typeof newSelected === "object") {
+    searchQuery.value = newSelected.label
+    emit("update:modelValue", newSelected)
   } else {
-    searchQuery.value = typeof item === "string" ? item : ""
-    emit("update:modelValue", item)
+    searchQuery.value = typeof newSelected === "string" ? newSelected : ""
+    emit("update:modelValue", newSelected)
   }
   isDropdownOpen.value = false
   if (props.required) {
@@ -182,7 +205,6 @@ const handleSearchInput = (event: Event) => {
     asyncOptions.value = []
   }
 
-  // Debounced async search
   if (props.asyncSearch && searchQuery.value.length >= 2) {
     if (searchTimeout.value) {
       clearTimeout(searchTimeout.value)
@@ -197,6 +219,14 @@ const handleSearchInput = (event: Event) => {
 }
 
 onMounted(() => {
+  if (props.searchable && selected.value) {
+    searchQuery.value = displayValue.value
+    nextTick(() => {
+      if (inputRef.value) {
+        inputRef.value.value = searchQuery.value
+      }
+    })
+  }
   document.addEventListener("click", handleClickOutside)
 })
 
@@ -213,7 +243,21 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 }
 
-defineExpose({ validate, showError })
+const setValue = (value: CityData | string | null) => {
+  selected.value = value
+  if (props.searchable) {
+    searchQuery.value = displayValue.value
+    nextTick(() => {
+      if (inputRef.value) {
+        inputRef.value.value = searchQuery.value
+      }
+    })
+  }
+  emit("update:modelValue", value)
+  validate()
+}
+
+defineExpose({ validate, showError, setValue })
 </script>
 
 <template>
