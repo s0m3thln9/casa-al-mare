@@ -217,7 +217,7 @@ const handleOrdersClick = () => {
           Политика конфиденциальности и оферта
         </button>
       </div>
-      <NuxtImg
+      <img
         src="/logo-3.svg"
         alt="CASA AL MARE"
         width="156"

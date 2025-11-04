@@ -232,9 +232,9 @@ const hasMoreItems = computed(() => {
       class="flex justify-between px-4 py-6"
     >
       <AppBreadcrumbs :items="breadcrumsItems" />
-      <div class="flex gap-4">
+      <div class="flex gap-4 items-center">
         <button
-          class="cursor-pointer"
+          class="cursor-pointer flex items-center justify-center w-6 h-6"
           :disabled="catalogStore.isLoading"
           @click="
             async () => {
@@ -243,12 +243,7 @@ const hasMoreItems = computed(() => {
             }
           "
         >
-          <NuxtImg
-            src="/sliders.svg"
-            alt="sliders"
-            width="24"
-            height="24"
-          />
+          <div class="sliders-icon" />
         </button>
         <SelectButton
           v-model="catalogStore.desktopStrokeCardCount"
@@ -278,12 +273,7 @@ const hasMoreItems = computed(() => {
           "
         >
           {{ `(${pendingFilteredCount})` }}
-          <NuxtImg
-            src="/sliders.svg"
-            alt="sliders"
-            width="21"
-            height="21"
-          />
+          <div class="sliders-icon w-[21px] h-[21px]" />
         </button>
       </div>
     </div>
@@ -586,4 +576,13 @@ const hasMoreItems = computed(() => {
   </main>
 </template>
 
-<style scoped></style>
+<style scoped>
+.sliders-icon {
+  background-image: url("/sliders.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 100%;
+  height: 100%;
+}
+</style>

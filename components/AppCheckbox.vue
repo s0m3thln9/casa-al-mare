@@ -12,7 +12,6 @@ const emit = defineEmits<{
   (e: "update:modelValue", value: string | number | string[] | null): void
 }>()
 
-// Определяем режим работы
 const isMultipleMode = computed(() => {
   if (props.multiple !== undefined) return props.multiple
   return Array.isArray(props.modelValue)
@@ -64,12 +63,22 @@ const toggle = () => {
         isSelected && 'bg-[#211D1D] border-[#F9F6EC]',
       ]"
     >
-      <NuxtImg
+      <div
         v-if="isSelected"
-        src="/check.svg"
-        alt="Check mark"
+        class="check-icon"
       />
     </button>
     <span class="text-sm font-light">{{ label }}</span>
   </div>
 </template>
+
+<style scoped>
+.check-icon {
+  background-image: url("/check.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 100%;
+  height: 100%;
+}
+</style>

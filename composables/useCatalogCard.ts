@@ -1,5 +1,4 @@
 import type { NuxtImg } from "#components"
-import type { Item } from "~/stores/catalog"
 
 interface UseCatalogCardProps {
   variant: "mini" | "large"

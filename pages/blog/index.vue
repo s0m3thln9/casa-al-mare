@@ -60,7 +60,7 @@ onMounted(() => {
           v-if="!areImagesLoaded"
           class="aspect-[610/570] w-full bg-[#F9F6EC] rounded-lg"
         />
-        <NuxtImg
+        <img
           v-else
           :src="images.blog1"
           alt="blog"
@@ -87,7 +87,7 @@ onMounted(() => {
           v-if="!areImagesLoaded"
           class="aspect-[610/570] w-full bg-[#F9F6EC] rounded-lg"
         />
-        <NuxtImg
+        <img
           v-else
           :src="images.blog2"
           alt="blog"
@@ -114,7 +114,7 @@ onMounted(() => {
           v-if="!areImagesLoaded"
           class="aspect-[610/570] w-full bg-[#F9F6EC] rounded-lg"
         />
-        <NuxtImg
+        <img
           v-else
           :src="images.blog3"
           alt="blog"
@@ -141,7 +141,7 @@ onMounted(() => {
           v-if="!areImagesLoaded"
           class="aspect-[610/570] w-full bg-[#F9F6EC] rounded-lg"
         />
-        <NuxtImg
+        <img
           v-else
           :src="images.blog4"
           alt="blog"
@@ -168,7 +168,7 @@ onMounted(() => {
           v-if="!areImagesLoaded"
           class="aspect-[610/570] w-full bg-[#F9F6EC] rounded-lg"
         />
-        <NuxtImg
+        <img
           v-else
           :src="images.blog5"
           alt="blog"
@@ -195,7 +195,7 @@ onMounted(() => {
           v-if="!areImagesLoaded"
           class="aspect-[610/570] w-full bg-[#F9F6EC] rounded-lg"
         />
-        <NuxtImg
+        <img
           v-else
           :src="images.blog6"
           alt="blog"

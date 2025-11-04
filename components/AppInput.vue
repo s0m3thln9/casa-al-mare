@@ -119,20 +119,32 @@ defineExpose({ validate, showError })
         }
       "
       @input="handleInput"
-    >
+    />
     <button
       v-if="type === 'password'"
       class="cursor-pointer absolute top-1/2 -translate-y-1/2 right-[10.5px] w-fit"
       aria-label="Переключить видимость пароля"
       @click="toggleVisibility"
     >
-      <NuxtImg
-        :src="isHidden ? '/eye.svg' : '/eye-off.svg'"
-        class="w-[23px]"
-        :alt="isHidden ? 'Показать пароль' : 'Скрыть пароль'"
+      <div
+        class="eye-icon"
+        :class="{ 'eye-off': !isHidden }"
       />
     </button>
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.eye-icon {
+  background-image: url("/eye.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 23px;
+  height: 23px;
+  background-position: center;
+}
+
+.eye-icon.eye-off {
+  background-image: url("/eye-off.svg");
+}
+</style>

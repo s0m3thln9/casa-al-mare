@@ -172,7 +172,7 @@ const phoneOptions: PhoneOption[] = [
       popup-id="subscription"
     >
       <div class="flex flex-col items-stretch gap-6 mt-8 sm:mt-14">
-        <NuxtImg
+        <img
           src="/pop-up-sub.jpg"
           alt="sub"
           width="390"
@@ -213,7 +213,7 @@ const phoneOptions: PhoneOption[] = [
       popup-id="reverse"
     >
       <div class="flex flex-col items-stretch gap-6 mt-8 sm:mt-14">
-        <NuxtImg
+        <img
           src="/pop-up-sub.jpg"
           alt="sub"
           width="390"

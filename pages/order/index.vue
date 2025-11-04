@@ -597,7 +597,7 @@ useSmsAutoSubmit(
                     v-if="item"
                     class="flex items-center gap-2"
                   >
-                    <NuxtImg
+                    <img
                       :src="item?.images[0] || ''"
                       alt="order-img"
                       width="57"
@@ -631,11 +631,7 @@ useSmsAutoSubmit(
                           :disabled="orderStore.isLoadingPayment"
                           @click="orderStore.decrementQuantity(item.id, item.vector)"
                         >
-                          <NuxtImg
-                            src="/minus.svg"
-                            alt="minus"
-                            class="w-full"
-                          />
+                          <div class="minus-icon" />
                         </button>
                         {{ item.count }}
                         <button
@@ -643,11 +639,7 @@ useSmsAutoSubmit(
                           :disabled="orderStore.isLoadingPayment"
                           @click="orderStore.incrementQuantity(item.id, item.vector)"
                         >
-                          <NuxtImg
-                            src="/plus.svg"
-                            alt="plus"
-                            class="w-full"
-                          />
+                          <div class="plus-icon" />
                         </button>
                       </div>
                       <button
@@ -655,11 +647,7 @@ useSmsAutoSubmit(
                         :disabled="orderStore.isLoadingPayment"
                         @click="orderStore.removeItemFromCart(item.id, item.vector)"
                       >
-                        <NuxtImg
-                          src="/x.svg"
-                          alt="x"
-                          class="w-full"
-                        />
+                        <div class="x-icon" />
                       </button>
                     </div>
                     <span class="text-xs font-light">
@@ -1173,10 +1161,7 @@ useSmsAutoSubmit(
                   class="w-4 h-4 flex items-center justify-center cursor-pointer transition-transform duration-300"
                   :class="orderStore.isExpandedPoints ? 'rotate-0' : 'rotate-180'"
                 >
-                  <NuxtImg
-                    src="/order-arrow.svg"
-                    class="w-full"
-                  />
+                  <div class="arrow-icon" />
                 </button>
               </div>
               <div
@@ -1225,10 +1210,7 @@ useSmsAutoSubmit(
                   class="w-4 h-4 flex items-center justify-center cursor-pointer transition-transform duration-300"
                   :class="orderStore.isExpandedCert ? 'rotate-0' : 'rotate-180'"
                 >
-                  <NuxtImg
-                    src="/order-arrow.svg"
-                    class="w-full"
-                  />
+                  <div class="arrow-icon" />
                 </button>
               </div>
               <div
@@ -1342,7 +1324,7 @@ useSmsAutoSubmit(
                     v-if="item"
                     class="flex items-center gap-2"
                   >
-                    <NuxtImg
+                    <img
                       :src="item?.images[0] || ''"
                       alt="order-img"
                       width="57"
@@ -1376,11 +1358,7 @@ useSmsAutoSubmit(
                           :disabled="orderStore.isLoadingPayment"
                           @click="orderStore.decrementQuantity(item.id, item.vector)"
                         >
-                          <NuxtImg
-                            src="/minus.svg"
-                            alt="minus"
-                            class="w-full"
-                          />
+                          <div class="minus-icon" />
                         </button>
                         {{ item.count }}
                         <button
@@ -1388,11 +1366,7 @@ useSmsAutoSubmit(
                           :disabled="orderStore.isLoadingPayment"
                           @click="orderStore.incrementQuantity(item.id, item.vector)"
                         >
-                          <NuxtImg
-                            src="/plus.svg"
-                            alt="plus"
-                            class="w-full"
-                          />
+                          <div class="plus-icon" />
                         </button>
                       </div>
                       <button
@@ -1400,11 +1374,7 @@ useSmsAutoSubmit(
                         :disabled="orderStore.isLoadingPayment"
                         @click="orderStore.removeItemFromCart(item.id, item.vector)"
                       >
-                        <NuxtImg
-                          src="/x.svg"
-                          alt="x"
-                          class="w-full"
-                        />
+                        <div class="x-icon" />
                       </button>
                     </div>
                     <span class="text-xs font-light">
@@ -1430,10 +1400,7 @@ useSmsAutoSubmit(
                       class="w-4 h-4 flex items-center justify-center cursor-pointer transition-transform duration-300"
                       :class="orderStore.isExpandedPoints ? 'rotate-0' : 'rotate-180'"
                     >
-                      <NuxtImg
-                        src="/order-arrow.svg"
-                        class="w-full"
-                      />
+                      <div class="arrow-icon" />
                     </button>
                   </div>
                   <div
@@ -1478,10 +1445,7 @@ useSmsAutoSubmit(
                       class="w-4 h-4 flex items-center justify-center cursor-pointer transition-transform duration-300"
                       :class="orderStore.isExpandedCert ? 'rotate-0' : 'rotate-180'"
                     >
-                      <NuxtImg
-                        src="/order-arrow.svg"
-                        class="w-full"
-                      />
+                      <div class="arrow-icon" />
                     </button>
                   </div>
                   <div
@@ -1637,5 +1601,45 @@ useSmsAutoSubmit(
 <style scoped>
 .collapsible-div {
   transition-property: max-height, opacity;
+}
+
+.minus-icon {
+  background-image: url("/minus.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 100%;
+  height: 100%;
+  background-position: center;
+}
+
+.plus-icon {
+  background-image: url("/plus.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 100%;
+  height: 100%;
+  background-position: center;
+}
+
+.x-icon {
+  background-image: url("/x.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 100%;
+  height: 100%;
+  background-position: center;
+}
+
+.arrow-icon {
+  background-image: url("/order-arrow.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 100%;
+  height: 100%;
+  background-position: center;
+}
+
+.arrow-icon.rotate-180 {
+  transform: rotate(180deg);
 }
 </style>

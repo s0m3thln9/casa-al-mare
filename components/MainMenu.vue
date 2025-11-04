@@ -287,7 +287,7 @@ watch(
           class="w-[252px] min-h-[180px] relative overflow-hidden cursor-pointer"
           :class="isMobile && 'hidden'"
         >
-          <NuxtImg
+          <img
             src="/menu-1.jpg"
             alt="banner"
             class="object-cover rounded-lg"
@@ -316,12 +316,10 @@ watch(
             @click.stop="handleMenuClick(item)"
           >
             <span :class="['px-2 py-1', !isMobile && item.customClass]">{{ item.label }}</span>
-            <NuxtImg
+            <div
               v-if="item.submenu"
-              src="/arrow-right.svg"
-              alt="arrow"
-              class="w-1.5 transition-transform duration-300"
-              :class="{ 'rotate-180': selectedSubmenuLabel === item.label }"
+              class="arrow-icon transition-transform duration-300"
+              :class="{ rotated: selectedSubmenuLabel === item.label }"
             />
           </li>
         </ul>
@@ -337,12 +335,10 @@ watch(
             @click.stop="handleMenuClick(item)"
           >
             <span :class="['px-2 py-1', !isMobile && item.customClass]">{{ item.label }}</span>
-            <NuxtImg
+            <div
               v-if="item.submenu"
-              src="/arrow-right.svg"
-              alt="arrow"
-              class="w-1.5 transition-transform duration-300"
-              :class="{ 'rotate-180': selectedSubmenuLabel === item.label }"
+              class="arrow-icon transition-transform duration-300"
+              :class="{ rotated: selectedSubmenuLabel === item.label }"
             />
           </li>
         </ul>
@@ -362,11 +358,7 @@ watch(
           class="flex items-center gap-2 cursor-pointer"
           @click="goBack"
         >
-          <NuxtImg
-            src="/arrow-right.svg"
-            alt="arrow"
-            class="w-2 rotate-180"
-          />
+          <div class="back-arrow-icon" />
           <span class="font-[Inter] text-[17px] uppercase">{{ selectedSubmenuLabel }}</span>
         </div>
         <ul class="flex flex-col gap-4 py-4">
@@ -385,4 +377,27 @@ watch(
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.arrow-icon {
+  background-image: url("/arrow-right.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 0.375rem;
+  height: 0.375rem;
+  background-position: center;
+}
+
+.arrow-icon.rotated {
+  transform: rotate(180deg);
+}
+
+.back-arrow-icon {
+  background-image: url("/arrow-right.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 0.5rem;
+  height: 0.5rem;
+  background-position: center;
+  transform: rotate(180deg);
+}
+</style>

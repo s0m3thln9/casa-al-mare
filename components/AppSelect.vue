@@ -301,9 +301,8 @@ defineExpose({ validate, showError, setValue })
           {{ displayValue }}
         </span>
         <button class="w-4 h-4 flex justify-center items-center cursor-pointer focus:outline-none">
-          <NuxtImg
-            src="/chevron-down.svg"
-            class="w-full"
+          <div
+            class="chevron-icon"
             :class="isDropdownOpen ? 'rotate-180' : 'rotate-0'"
           />
         </button>
@@ -322,10 +321,9 @@ defineExpose({ validate, showError, setValue })
           @input="handleSearchInput"
         />
         <button class="w-4 h-4 flex justify-center items-center cursor-pointer focus:outline-none">
-          <NuxtImg
+          <div
             v-if="!isLoading"
-            src="/chevron-down.svg"
-            class="w-full"
+            class="chevron-icon"
             :class="isDropdownOpen ? 'rotate-180' : 'rotate-0'"
           />
           <div
@@ -397,5 +395,14 @@ defineExpose({ validate, showError, setValue })
 
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+.chevron-icon {
+  background-image: url("/chevron-down.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 100%;
+  height: 100%;
 }
 </style>

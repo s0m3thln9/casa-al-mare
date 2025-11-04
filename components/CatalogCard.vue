@@ -174,13 +174,12 @@ if (props.modelValue) {
         />
       </div>
 
-      <NuxtImg
+      <div
         v-if="isNarrowScreen || (!popup && isHovered) || isFavoriteLocal"
         ref="starRef"
-        :src="isFavoriteLocal ? '/star-filled.svg' : '/star.svg'"
-        alt="star"
+        :style="{ backgroundImage: `url(${isFavoriteLocal ? '/star-filled.svg' : '/star.svg'})` }"
         :class="[
-          'star-button absolute z-7 cursor-pointer',
+          'star-button absolute z-7 cursor-pointer star-icon',
           'w-5 h-5 right-2.5 top-2.5 md:w-6 md:h-6 md:right-4 md:top-4',
           isStarPressed && 'star-pressed',
         ]"
@@ -301,13 +300,13 @@ if (props.modelValue) {
         Цена не указана
       </span>
 
-      <NuxtImg
+      <div
         v-if="isNarrowScreen || (!popup && isHovered) || isFavoriteLocal"
         ref="starRef"
-        :src="isFavoriteLocal ? '/star-filled.svg' : '/star.svg'"
+        :style="{ backgroundImage: `url(${isFavoriteLocal ? '/star-filled.svg' : '/star.svg'})` }"
         alt="star"
         :class="[
-          'star-button absolute z-9 cursor-pointer',
+          'star-button absolute z-9 cursor-pointer star-icon',
           'w-5 h-5 right-2.5 top-2.5 md:w-6 md:h-6 md:right-4 md:top-4',
           isStarPressed && 'star-pressed',
         ]"
@@ -370,5 +369,11 @@ if (props.modelValue) {
       transform 0.2s ease-in-out,
       filter 0.2s ease-out;
   }
+}
+
+.star-icon {
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 </style>

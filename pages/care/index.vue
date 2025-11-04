@@ -43,7 +43,7 @@ onMounted(() => {
         v-if="!areImagesLoaded"
         class="aspect-[909/692] w-full bg-[#F9F6EC] rounded-lg"
       />
-      <NuxtImg
+      <img
         v-else
         src="/about.jpg"
         alt="about"

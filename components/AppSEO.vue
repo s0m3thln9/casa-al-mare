@@ -55,7 +55,7 @@ const onTransitionEnd = () => {
 <template>
   <div :class="['px-4 py-3 flex justify-center items-center sm:py-0', customClass]">
     <div class="flex flex-col items-center gap-6 pt-10 pb-6 px-6 border border-[#BBB8B6] rounded-2xl w-full sm:pt-12">
-      <NuxtImg
+      <img
         src="/logo-2.svg"
         alt="CASA AL MARE"
         width="230"

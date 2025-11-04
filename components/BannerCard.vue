@@ -39,7 +39,7 @@ const handleClick = () => {
         :style="{ objectPosition: objectPosition || 'center' }"
         loading="lazy"
         alt="banner"
-      >
+      />
     </NuxtImg>
     <div
       v-if="text"
@@ -51,11 +51,20 @@ const handleClick = () => {
       v-if="plus"
       class="absolute bottom-2 right-2 p-1 bg-[#FFFFFA99] rounded-sm font-[Commissioner] font-light text-[#211D1D] uppercase text-[10px] sm:rounded-lg sm:text-base/5 sm:font-[Manrope] sm:font-normal sm:bottom-4 sm:right-4"
     >
-      <NuxtImg
-        src="/grid.svg"
-        alt="grid"
-        class="w-3"
-      />
+      <div class="w-3 h-3">
+        <div class="grid-icon" />
+      </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.grid-icon {
+  background-image: url("/grid.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 100%;
+  height: 100%;
+}
+</style>

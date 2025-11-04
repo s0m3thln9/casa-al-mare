@@ -463,7 +463,7 @@ async function handleRetryPay(): Promise<void> {
               class="flex items-center justify-between w-full"
             >
               <div class="flex items-center gap-2">
-                <NuxtImg
+                <img
                   :src="item.images[0] || '/placeholder.jpg'"
                   alt="order-img"
                   width="57"
@@ -532,7 +532,7 @@ async function handleRetryPay(): Promise<void> {
               class="flex items-center justify-between w-full"
             >
               <div class="flex items-center gap-2">
-                <NuxtImg
+                <img
                   :src="item.images[0] || '/placeholder.jpg'"
                   alt="order-img"
                   width="57"
@@ -563,11 +563,7 @@ async function handleRetryPay(): Promise<void> {
                       :disabled="localIsLoadingPayment"
                       @click="localDecrementQuantity(item.id, item.vector)"
                     >
-                      <NuxtImg
-                        src="/minus.svg"
-                        alt="minus"
-                        class="w-full"
-                      />
+                      <div class="minus-icon" />
                     </button>
                     {{ item.count }}
                     <button
@@ -575,11 +571,7 @@ async function handleRetryPay(): Promise<void> {
                       :disabled="localIsLoadingPayment"
                       @click="localIncrementQuantity(item.id, item.vector)"
                     >
-                      <NuxtImg
-                        src="/plus.svg"
-                        alt="plus"
-                        class="w-full"
-                      />
+                      <div class="plus-icon" />
                     </button>
                   </div>
                   <button
@@ -587,11 +579,7 @@ async function handleRetryPay(): Promise<void> {
                     :disabled="localIsLoadingPayment"
                     @click="localRemoveItemFromCart(item.id, item.vector)"
                   >
-                    <NuxtImg
-                      src="/x.svg"
-                      alt="x"
-                      class="w-full"
-                    />
+                    <div class="x-icon" />
                   </button>
                 </div>
                 <span class="text-xs font-light">
@@ -658,5 +646,32 @@ async function handleRetryPay(): Promise<void> {
 <style scoped>
 .collapsible-div {
   transition-property: max-height, opacity;
+}
+
+.minus-icon {
+  background-image: url("/minus.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 100%;
+  height: 100%;
+  background-position: center;
+}
+
+.plus-icon {
+  background-image: url("/plus.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 100%;
+  height: 100%;
+  background-position: center;
+}
+
+.x-icon {
+  background-image: url("/x.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 100%;
+  height: 100%;
+  background-position: center;
 }
 </style>

@@ -354,9 +354,8 @@ defineExpose({ validate, showError })
             {{ selectedCountry?.code || "Код" }}
           </span>
           <button class="w-4 h-4 flex justify-center items-center cursor-pointer outline-none">
-            <NuxtImg
-              src="/chevron-down.svg"
-              class="w-full transition-transform"
+            <div
+              class="chevron-icon w-full transition-transform"
               :class="isDropdownOpen ? 'rotate-180' : 'rotate-0'"
             />
           </button>
@@ -383,7 +382,7 @@ defineExpose({ validate, showError })
             @input="handleInput"
             @focus="onFocus"
             @blur="onBlur"
-          >
+          />
         </div>
       </div>
 
@@ -399,7 +398,7 @@ defineExpose({ validate, showError })
           v-model="search"
           placeholder="Поиск"
           class="h-[32px] w-full px-2.5 py-2 border-[0.5px] border-[#BBB8B6] rounded-lg text-[#211D1D] font-[Manrope] outline-none text-xs"
-        >
+        />
         <div class="flex flex-col gap-2 w-full pr-3 max-h-[140px] overflow-y-scroll">
           <div
             v-for="(item, index) in filteredOptions"
@@ -420,3 +419,14 @@ defineExpose({ validate, showError })
     </div>
   </div>
 </template>
+
+<style scoped>
+.chevron-icon {
+  background-image: url("/chevron-down.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 100%;
+  height: 100%;
+}
+</style>

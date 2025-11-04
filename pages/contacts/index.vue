@@ -8,7 +8,7 @@
     </div>
     <div class="mt-8 grid">
       <div class="flex flex-col items-center gap-8 sm:gap-6">
-        <NuxtImg
+        <img
           src="/contact-1.png"
           alt="maps"
           width="951"

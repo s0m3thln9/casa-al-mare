@@ -25,14 +25,9 @@ const props = defineProps<{
 }>()
 
 const isExpandedOrder = ref(false)
-const isExpandedAddress = ref(false)
 
 const toggleExpandOrder = () => {
   isExpandedOrder.value = !isExpandedOrder.value
-}
-
-const toggleExpandAddress = () => {
-  isExpandedAddress.value = !isExpandedAddress.value
 }
 
 const formattedAddress = computed(() => {
@@ -91,15 +86,10 @@ const navigateToItem = (itemAlias: string | undefined, itemId: number) => {
         </div>
       </div>
       <button
-        class="w-4 h-4 flex items-center justify-center cursor-pointer"
-        :class="isExpandedOrder ? 'rotate-0' : 'rotate-180'"
+        class="toggle-button cursor-pointer flex items-center justify-center"
+        :class="{ rotated: !isExpandedOrder }"
         @click="toggleExpandOrder"
-      >
-        <NuxtImg
-          src="/order-arrow.svg"
-          class="w-full"
-        />
-      </button>
+      />
     </div>
     <div
       class="collapsible-div flex flex-col gap-6 overflow-hidden transition-max-height duration-300 ease-in-out"
@@ -112,7 +102,7 @@ const navigateToItem = (itemAlias: string | undefined, itemId: number) => {
           class="flex items-center justify-between w-full"
         >
           <div class="flex items-center gap-2">
-            <NuxtImg
+            <img
               v-if="item?.images && item.images.length > 0"
               :src="item.images[0]"
               alt="order-img"
@@ -164,62 +154,6 @@ const navigateToItem = (itemAlias: string | undefined, itemId: number) => {
           <span class="text-xs font-light"
             >Адрес доставки: <span class="font-normal">{{ formattedAddress }}</span></span
           >
-          <ExpandButton
-            custom-class="px-2 py-0"
-            content="Изменить"
-            expanded-content="Вернуть"
-            @click="toggleExpandAddress"
-          />
-        </div>
-        <div
-          class="overflow-hidden collapsible-div flex flex-col transition-max-height duration-300 ease-in-out"
-          :class="{
-            'max-h-500 p-4 border border-[#BBB8B6] opacity-100 rounded-2xl': isExpandedAddress,
-            'max-h-0 p-0 opacity-0': !isExpandedAddress,
-          }"
-        >
-          <div class="flex flex-col gap-4">
-            <div class="flex gap-1 items-center">
-              <input
-                type="checkbox"
-                class="w-4 h-4"
-              />
-              <span class="text-[13px] font-light">Ул. Заречная, дом 19, кв. 55</span>
-            </div>
-            <div class="flex gap-1 items-center">
-              <input
-                type="checkbox"
-                class="w-4 h-4"
-              />
-              <span class="text-[13px] font-light">Москва; Ленинский проспект 62; кв 13</span>
-            </div>
-            <div class="flex gap-1 items-center">
-              <input
-                type="checkbox"
-                class="w-4 h-4"
-              />
-              <span class="text-[13px] font-light">Новый адрес</span>
-            </div>
-            <input
-              type="text"
-              :placeholder="
-                state.address
-                  ? Array.isArray(state.address)
-                    ? state.address[0] || ''
-                    : state.address
-                  : 'Улица, дом, корпус, строение, квартира'
-              "
-              class="w-full h-[44px] px-2 py-2.5 border-[#5E5B58] border-[0.7px] rounded-lg text-xs placeholder:text-[#5E5B58]"
-            />
-            <input
-              type="text"
-              :placeholder="
-                Array.isArray(state.address) && state.address[1] ? state.address[1] : 'Номер дома и домофон / офис'
-              "
-              class="w-full h-[44px] px-2 py-2.5 border-[#5E5B58] border-[0.7px] rounded-lg text-xs placeholder:text-[#5E5B58]"
-            />
-            <AppButton content="Сохранить" />
-          </div>
         </div>
         <span class="text-xs font-light"
           >Способ доставки: <span class="font-normal">{{ state.deliveryMethod }}</span></span
@@ -247,5 +181,19 @@ const navigateToItem = (itemAlias: string | undefined, itemId: number) => {
 <style scoped>
 .collapsible-div {
   transition-property: max-height, opacity;
+}
+
+.toggle-button {
+  background-image: url("/order-arrow.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 1rem;
+  height: 1rem;
+  border: none;
+  background-position: center;
+}
+
+.toggle-button.rotated {
+  transform: rotate(180deg);
 }
 </style>
