@@ -72,10 +72,11 @@ export type Item = {
 
 type SortAndFilter = {
   parentsAliases: string[]
+  secondLevelAliases: string[] // ДОБАВИТЬ эту строку
   thirdLevelByParent: Record<string, string>
   colors: { code: string; name: string; value: string }[]
   sortType: string | null
-  materials: string[] // Изменено с string на string[]
+  materials: string[]
   useTypes: string[]
   keystrings: string[]
   searchQuery: string
@@ -90,10 +91,11 @@ export const useCatalogStore = defineStore("catalog", () => {
   const isLoading = ref(true)
   const pendingFilters = ref<SortAndFilter>({
     parentsAliases: [],
+    secondLevelAliases: [], // ДОБАВИТЬ эту строку
     thirdLevelByParent: {},
     colors: [],
     sortType: null,
-    materials: [], // Изменено с "" на []
+    materials: [],
     useTypes: [],
     keystrings: [],
     searchQuery: "",
@@ -142,16 +144,21 @@ export const useCatalogStore = defineStore("catalog", () => {
     if (filters.parentsAliases && filters.parentsAliases.length > 0) {
       const filteredSegments = filters.parentsAliases.filter((segment) => segment && segment.trim() !== "")
 
+      // ИЗМЕНИТЬ: добавляем второй уровень из secondLevelAliases
+      if (filters.secondLevelAliases && filters.secondLevelAliases.length > 0) {
+        filteredSegments.push(filters.secondLevelAliases.join(","))
+      }
+
       if (filters.thirdLevelByParent && Object.keys(filters.thirdLevelByParent).length > 0) {
         const thirdLevelSegments: string[] = []
 
-        if (filters.parentsAliases[1] && filters.parentsAliases[1].trim() !== "") {
-          const parentAlias = filters.parentsAliases[1]
-          const child = filters.thirdLevelByParent[parentAlias]
+        // ИЗМЕНИТЬ: проверяем все выбранные второго уровня
+        filters.secondLevelAliases?.forEach((parentAlias) => {
+          const child = filters.thirdLevelByParent![parentAlias]
           if (child && child.trim() !== "") {
             thirdLevelSegments.push(child)
           }
-        }
+        })
 
         if (thirdLevelSegments.length > 0) {
           filteredSegments.push(thirdLevelSegments.join(","))
@@ -166,8 +173,7 @@ export const useCatalogStore = defineStore("catalog", () => {
       params.set("color", filters.colors[0].code)
     }
     if (filters.materials && filters.materials.length > 0) {
-      // Изменено условие
-      params.set("material", filters.materials.join(",")) // Изменено: join вместо прямого использования
+      params.set("material", filters.materials.join(","))
     }
     if (filters.searchQuery && filters.searchQuery.trim() !== "") {
       params.set("query", filters.searchQuery)
@@ -191,16 +197,24 @@ export const useCatalogStore = defineStore("catalog", () => {
 
   const getFilteredItemsForLevel = (level: number) => {
     let filtered = [...items.value]
-    const prevSegments = pendingFilters.value.parentsAliases.slice(0, level).filter((seg) => seg && seg.trim() !== "") // Добавлена проверка на существование
 
-    if (prevSegments.length > 0) {
-      filtered = filtered.filter((item) => {
-        return prevSegments.every((alias, idx) => {
-          if (idx >= item.parents.length) return false
-          return item.parents[idx]?.alias === alias
+    // Фильтруем по первому уровню
+    if (level >= 1) {
+      const firstSegment = pendingFilters.value.parentsAliases[0]
+      if (firstSegment && firstSegment.trim() !== "") {
+        filtered = filtered.filter((item) => {
+          return item.parents[0]?.alias === firstSegment
         })
+      }
+    }
+
+    // Фильтруем по второму уровню (если мы на третьем уровне)
+    if (level >= 2 && pendingFilters.value.secondLevelAliases && pendingFilters.value.secondLevelAliases.length > 0) {
+      filtered = filtered.filter((item) => {
+        return pendingFilters.value.secondLevelAliases.some((alias) => item.parents[1]?.alias === alias)
       })
     }
+
     return filtered
   }
 
@@ -284,16 +298,15 @@ export const useCatalogStore = defineStore("catalog", () => {
       }
     }
 
-    // Группируем третий уровень по родителям второго уровня с catName
+    // ИЗМЕНИТЬ весь блок thirdLevelGroups
     const thirdLevelGroups: {
       parentAlias: string
       catName: string
       options: { name: string; alias: string; image?: string; activeImage?: string }[]
     }[] = []
 
-    // Безопасное получение заполненных сегментов
     const currentLevelAliases = (pendingFilters.value.parentsAliases || [])
-      .map((seg) => seg || "") // Преобразуем null/undefined в пустые строки
+      .map((seg) => seg || "")
       .slice(
         0,
         (pendingFilters.value.parentsAliases || []).filter((seg) => seg && typeof seg === "string" && seg.trim() !== "")
@@ -301,54 +314,58 @@ export const useCatalogStore = defineStore("catalog", () => {
       )
       .filter((seg) => seg && typeof seg === "string" && seg.trim() !== "")
 
-    // Проверяем, выбран ли второй уровень
-    if (currentLevelAliases.length >= 2 && currentLevelAliases[1] && currentLevelAliases[1].trim() !== "") {
-      const secondLevelAlias = currentLevelAliases[1]
+    // ИЗМЕНИТЬ: проверяем что выбран первый уровень и есть выбранные элементы второго уровня
+    if (
+      currentLevelAliases.length >= 1 &&
+      pendingFilters.value.secondLevelAliases &&
+      pendingFilters.value.secondLevelAliases.length > 0
+    ) {
+      const firstLevelAlias = currentLevelAliases[0]
 
-      // Находим товары с этим родителем
-      const itemsWithParent = items.value.filter((item) => {
-        if (!item.parents || item.parents.length < 2) return false
-        // Проверяем первый уровень
-        if (
-          currentLevelAliases[0] &&
-          currentLevelAliases[0].trim() !== "" &&
-          item.parents[0]?.alias !== currentLevelAliases[0]
-        )
-          return false
-        // Проверяем второй уровень (конкретный родитель)
-        return item.parents[1]?.alias === secondLevelAlias
-      })
+      // ИЗМЕНИТЬ: обрабатываем каждый выбранный элемент второго уровня
+      pendingFilters.value.secondLevelAliases.forEach((secondLevelAlias) => {
+        if (!secondLevelAlias || secondLevelAlias.trim() === "") return
 
-      // Проверяем, есть ли у родителя catName
-      const parentCategory = itemsWithParent[0]?.parents?.[1]
-      const catName = parentCategory?.catName
+        // Находим товары с этим родителем
+        const itemsWithParent = items.value.filter((item) => {
+          if (!item.parents || item.parents.length < 2) return false
+          // Проверяем первый уровень
+          if (item.parents[0]?.alias !== firstLevelAlias) return false
+          // Проверяем второй уровень (конкретный родитель)
+          return item.parents[1]?.alias === secondLevelAlias
+        })
 
-      if (catName && itemsWithParent.some((item) => item.parents && item.parents.length > 2 && item.parents[2])) {
-        // Собираем уникальные дочерние категории третьего уровня
-        const childOptions = new Map(
-          itemsWithParent
-            .filter((item) => item.parents && item.parents.length > 2)
-            .map((item) => item.parents[2])
-            .filter(Boolean)
-            .map((p) => [
-              p.alias,
-              {
-                name: p.name,
-                alias: p.alias,
-                image: p.image,
-                activeImage: p.activeImage,
-              },
-            ]),
-        )
+        // Проверяем, есть ли у родителя catName
+        const parentCategory = itemsWithParent[0]?.parents?.[1]
+        const catName = parentCategory?.catName
 
-        if (childOptions.size > 0) {
-          thirdLevelGroups.push({
-            parentAlias: secondLevelAlias,
-            catName: catName,
-            options: Array.from(childOptions.values()),
-          })
+        if (catName && itemsWithParent.some((item) => item.parents && item.parents.length > 2 && item.parents[2])) {
+          // Собираем уникальные дочерние категории третьего уровня
+          const childOptions = new Map(
+            itemsWithParent
+              .filter((item) => item.parents && item.parents.length > 2)
+              .map((item) => item.parents[2])
+              .filter(Boolean)
+              .map((p) => [
+                p.alias,
+                {
+                  name: p.name,
+                  alias: p.alias,
+                  image: p.image,
+                  activeImage: p.activeImage,
+                },
+              ]),
+          )
+
+          if (childOptions.size > 0) {
+            thirdLevelGroups.push({
+              parentAlias: secondLevelAlias,
+              catName: catName,
+              options: Array.from(childOptions.values()),
+            })
+          }
         }
-      }
+      })
     }
 
     const pathFilteredItems = getFilteredItemsForLevel(
@@ -433,14 +450,38 @@ export const useCatalogStore = defineStore("catalog", () => {
         }
         pendingFilters.value.parentsAliases = resetParentsAliases
 
+        // ИЗМЕНИТЬ: при изменении первого уровня сбрасываем второй уровень
+        if (changedIndex === 0) {
+          pendingFilters.value.secondLevelAliases = []
+        }
+
         if (changedIndex <= 1) {
           pendingFilters.value.thirdLevelByParent = {}
         }
 
         pendingFilters.value.colors = []
-        pendingFilters.value.materials = [] // Изменено с "" на []
+        pendingFilters.value.materials = []
         pendingFilters.value.extra = {}
       }
+    },
+    { deep: true },
+  )
+
+  // ДОБАВИТЬ этот watch после существующего watch для parentsAliases
+  watch(
+    () => [...(pendingFilters.value.secondLevelAliases || [])],
+    (newVal, oldVal) => {
+      if (!oldVal || isSyncing.value) return
+
+      // Сбрасываем фильтры третьего уровня для удаленных элементов
+      const removed = oldVal.filter((alias) => !newVal.includes(alias))
+      removed.forEach((alias) => {
+        delete pendingFilters.value.thirdLevelByParent[alias]
+      })
+
+      pendingFilters.value.colors = []
+      pendingFilters.value.materials = []
+      pendingFilters.value.extra = {}
     },
     { deep: true },
   )
@@ -464,13 +505,18 @@ export const useCatalogStore = defineStore("catalog", () => {
       if (filledSegments.length > maxParentsLength.value) return []
 
       filtered = filtered.filter((item) => {
-        const matchesFirstTwoLevels = filledSegments.every((alias, idx) => {
-          if (idx >= item.parents.length) return false
-          return item.parents[idx]?.alias === alias
-        })
+        // ИЗМЕНИТЬ: проверяем только первый уровень
+        if (filledSegments.length > 0 && item.parents[0]?.alias !== filledSegments[0]) {
+          return false
+        }
 
-        if (!matchesFirstTwoLevels) return false
+        // ИЗМЕНИТЬ: проверяем второй уровень через secondLevelAliases
+        if (f.secondLevelAliases && f.secondLevelAliases.length > 0) {
+          const hasMatchingSecondLevel = f.secondLevelAliases.some((alias) => item.parents[1]?.alias === alias)
+          if (!hasMatchingSecondLevel) return false
+        }
 
+        // Проверяем третий уровень
         if (f.thirdLevelByParent && Object.keys(f.thirdLevelByParent).length > 0) {
           const secondLevelParent = item.parents[1]?.alias
 
@@ -490,6 +536,7 @@ export const useCatalogStore = defineStore("catalog", () => {
       })
     }
 
+    // Остальная логика фильтрации остается без изменений
     if (f.colors.length > 0) {
       const colorCodes = f.colors.map((c) => c.code)
       filtered = filtered.filter(
@@ -497,9 +544,8 @@ export const useCatalogStore = defineStore("catalog", () => {
       )
     }
     if (f.materials && f.materials.length > 0) {
-      // Изменено условие
       filtered = filtered.filter(
-        (item) => item.keys?.some((k) => k.type === "material" && f.materials.includes(k.alias)) || false, // Изменено на includes
+        (item) => item.keys?.some((k) => k.type === "material" && f.materials.includes(k.alias)) || false,
       )
     }
     if (f.useTypes.length > 0) {
@@ -534,10 +580,11 @@ export const useCatalogStore = defineStore("catalog", () => {
   const reset = (): void => {
     pendingFilters.value = {
       parentsAliases: padParentsAliases([]),
+      secondLevelAliases: [], // ДОБАВИТЬ эту строку
       thirdLevelByParent: {},
       colors: [],
       sortType: null,
-      materials: [], // Изменено с "" на []
+      materials: [],
       useTypes: [],
       keystrings: [],
       searchQuery: "",
@@ -581,13 +628,18 @@ export const useCatalogStore = defineStore("catalog", () => {
       if (filledSegments.length > maxParentsLength.value) return 0
 
       filtered = filtered.filter((item) => {
-        const matchesFirstTwoLevels = filledSegments.every((alias, idx) => {
-          if (idx >= item.parents.length) return false
-          return item.parents[idx]?.alias === alias
-        })
+        // ИЗМЕНИТЬ: проверяем только первый уровень
+        if (filledSegments.length > 0 && item.parents[0]?.alias !== filledSegments[0]) {
+          return false
+        }
 
-        if (!matchesFirstTwoLevels) return false
+        // ИЗМЕНИТЬ: проверяем второй уровень через secondLevelAliases
+        if (f.secondLevelAliases && f.secondLevelAliases.length > 0) {
+          const hasMatchingSecondLevel = f.secondLevelAliases.some((alias) => item.parents[1]?.alias === alias)
+          if (!hasMatchingSecondLevel) return false
+        }
 
+        // Проверяем третий уровень
         if (f.thirdLevelByParent && Object.keys(f.thirdLevelByParent).length > 0) {
           const secondLevelParent = item.parents[1]?.alias
 
@@ -607,6 +659,7 @@ export const useCatalogStore = defineStore("catalog", () => {
       })
     }
 
+    // Остальная логика без изменений
     if (f.colors.length > 0) {
       const colorCodes = f.colors.map((c) => c.code)
       filtered = filtered.filter(
@@ -614,9 +667,8 @@ export const useCatalogStore = defineStore("catalog", () => {
       )
     }
     if (f.materials && f.materials.length > 0) {
-      // Изменено условие
       filtered = filtered.filter(
-        (item) => item.keys?.some((k) => k.type === "material" && f.materials.includes(k.alias)) || false, // Изменено на includes
+        (item) => item.keys?.some((k) => k.type === "material" && f.materials.includes(k.alias)) || false,
       )
     }
     if (f.useTypes.length > 0) {

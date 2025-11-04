@@ -22,6 +22,7 @@ const scrollPosition = ref(0)
 
 const applyFiltersFromQuery = (q: any) => {
   let parentsAliasesFromQuery: string[] = []
+  let secondLevelAliases: string[] = []
   const thirdLevelByParent: Record<string, string> = {}
 
   if (typeof q.path === "string" && q.path.trim() !== "") {
@@ -30,29 +31,40 @@ const applyFiltersFromQuery = (q: any) => {
       .split("/")
       .filter((p) => p.trim() !== "")
 
-    parentsAliasesFromQuery = segments.slice(0, 2)
+    // Первый уровень
+    parentsAliasesFromQuery = segments.slice(0, 1)
 
-    if (segments.length > 2 && parentsAliasesFromQuery.length === 2) {
-      const thirdLevelAlias = segments[2]
-      const secondLevelParent = parentsAliasesFromQuery[1]
+    // ИЗМЕНИТЬ: второй уровень может содержать несколько значений через запятую
+    if (segments.length > 1) {
+      secondLevelAliases = segments[1].split(",").filter((s) => s.trim() !== "")
+    }
 
-      const itemWithThisChild = catalogStore.items.find(
-        (item) =>
-          item.parents.length > 2 &&
-          item.parents[2]?.alias === thirdLevelAlias &&
-          item.parents[1]?.alias === secondLevelParent,
-      )
+    // ИЗМЕНИТЬ: третий уровень для каждого родителя второго уровня
+    if (segments.length > 2 && secondLevelAliases.length > 0) {
+      const thirdLevelSegments = segments[2].split(",").filter((s) => s.trim() !== "")
 
-      if (itemWithThisChild && itemWithThisChild.parents[1]) {
-        const parentAlias = itemWithThisChild.parents[1].alias
-        thirdLevelByParent[parentAlias] = thirdLevelAlias
-      }
+      // Связываем третий уровень с родителями второго
+      thirdLevelSegments.forEach((thirdAlias) => {
+        const itemWithThisChild = catalogStore.items.find(
+          (item) =>
+            item.parents.length > 2 &&
+            item.parents[2]?.alias === thirdAlias &&
+            secondLevelAliases.includes(item.parents[1]?.alias),
+        )
+
+        if (itemWithThisChild && itemWithThisChild.parents[1]) {
+          const parentAlias = itemWithThisChild.parents[1].alias
+          thirdLevelByParent[parentAlias] = thirdAlias
+        }
+      })
     }
   }
 
   catalogStore.currentFilters.parentsAliases = parentsAliasesFromQuery
+  catalogStore.currentFilters.secondLevelAliases = secondLevelAliases // ДОБАВИТЬ эту строку
   catalogStore.currentFilters.thirdLevelByParent = thirdLevelByParent
 
+  // Остальная логика остается без изменений
   if (typeof q.color === "string" && q.color.trim() !== "") {
     const colorCode = q.color.trim()
     const colorKey = catalogStore.items.find((item) =>
@@ -72,9 +84,9 @@ const applyFiltersFromQuery = (q: any) => {
     catalogStore.currentFilters.materials = q.material
       .split(",")
       .map((m) => m.trim())
-      .filter((m) => m !== "") // Изменено: разделяем по запятой
+      .filter((m) => m !== "")
   } else {
-    catalogStore.currentFilters.materials = [] // Изменено с "" на []
+    catalogStore.currentFilters.materials = []
   }
 
   if (typeof q.query === "string") {
@@ -190,18 +202,58 @@ const breadcrumsItems = computed(() => {
       .split("/")
       .filter((p) => p.trim() !== "")
 
-    segments.forEach((segment, index) => {
+    // Первый уровень
+    if (segments.length > 0) {
+      const firstLevelAlias = segments[0]
       const category = catalogStore.items
         .flatMap((item) => item.parents || [])
-        .find((parent) => parent.alias === segment)
-      const pathSegments = segments.slice(0, index + 1)
-      const categoryPath = `/catalog?path=${pathSegments.join("/")}`
+        .find((parent) => parent.alias === firstLevelAlias)
 
       items.push({
-        name: category?.name || segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, " "),
-        path: categoryPath,
+        name: category?.name || firstLevelAlias.charAt(0).toUpperCase() + firstLevelAlias.slice(1).replace(/-/g, " "),
+        path: `/catalog?path=${firstLevelAlias}`,
       })
-    })
+    }
+
+    // ИЗМЕНИТЬ: Второй уровень (все элементы в одном breadcrumb через запятую)
+    if (segments.length > 1) {
+      const secondLevelAliases = segments[1].split(",").filter((s) => s.trim() !== "")
+
+      if (secondLevelAliases.length > 0) {
+        const names = secondLevelAliases.map((secondAlias) => {
+          const category = catalogStore.items
+            .flatMap((item) => item.parents || [])
+            .find((parent) => parent.alias === secondAlias)
+
+          return category?.name || secondAlias.charAt(0).toUpperCase() + secondAlias.slice(1).replace(/-/g, " ")
+        })
+
+        items.push({
+          name: names.join(", "),
+          path: `/catalog?path=${segments[0]}/${segments[1]}`,
+        })
+      }
+    }
+
+    // ИЗМЕНИТЬ: Третий уровень (все элементы в одном breadcrumb через запятую)
+    if (segments.length > 2) {
+      const thirdLevelAliases = segments[2].split(",").filter((s) => s.trim() !== "")
+
+      if (thirdLevelAliases.length > 0) {
+        const names = thirdLevelAliases.map((thirdAlias) => {
+          const category = catalogStore.items
+            .flatMap((item) => item.parents || [])
+            .find((parent) => parent.alias === thirdAlias)
+
+          return category?.name || thirdAlias.charAt(0).toUpperCase() + thirdAlias.slice(1).replace(/-/g, " ")
+        })
+
+        items.push({
+          name: names.join(", "),
+          path: `/catalog?path=${segments[0]}/${segments[1]}/${segments[2]}`,
+        })
+      }
+    }
   }
 
   return items
@@ -388,41 +440,80 @@ const hasMoreItems = computed(() => {
               >
                 {{ catalogStore.popupDynamicFilters.pathLevelNames[levelIndex] }}
               </h3>
-              <div
-                v-if="levelOptions.some((opt) => opt.image && opt.image.trim() !== '')"
-                class="flex gap-6 items-center justify-center"
-              >
-                <ImageButton
-                  :model-value="catalogStore.pendingFilters.parentsAliases[levelIndex] || ''"
-                  :items="
-                    levelOptions.map((opt) => ({
-                      alias: opt.alias,
-                      name: opt.name,
-                      image: opt.image || '',
-                      activeImage: opt.activeImage || opt.image || '',
-                    }))
-                  "
-                  @update:model-value="
-                    (val) => {
-                      catalogStore.pendingFilters.parentsAliases[levelIndex] = val || ''
-                    }
-                  "
-                />
-              </div>
-              <div
-                v-else
-                class="flex flex-wrap gap-4 items-center justify-center"
-              >
-                <SingleSelectButton
-                  :model-value="catalogStore.pendingFilters.parentsAliases[levelIndex] || ''"
-                  :content="levelOptions.map((opt) => ({ value: opt.alias, label: opt.name }))"
-                  @update:model-value="
-                    (val) => {
-                      catalogStore.pendingFilters.parentsAliases[levelIndex] = val || ''
-                    }
-                  "
-                />
-              </div>
+
+              <!-- ИЗМЕНИТЬ: для первого уровня (levelIndex === 0) используем SingleSelectButton -->
+              <template v-if="levelIndex === 0">
+                <div
+                  v-if="levelOptions.some((opt) => opt.image && opt.image.trim() !== '')"
+                  class="flex gap-6 items-center justify-center"
+                >
+                  <ImageButton
+                    :model-value="catalogStore.pendingFilters.parentsAliases[levelIndex] || ''"
+                    :items="
+                      levelOptions.map((opt) => ({
+                        alias: opt.alias,
+                        name: opt.name,
+                        image: opt.image || '',
+                        activeImage: opt.activeImage || opt.image || '',
+                      }))
+                    "
+                    @update:model-value="
+                      (val) => {
+                        catalogStore.pendingFilters.parentsAliases[levelIndex] = val || ''
+                      }
+                    "
+                  />
+                </div>
+                <div
+                  v-else
+                  class="flex flex-wrap gap-4 items-center justify-center"
+                >
+                  <SingleSelectButton
+                    :model-value="catalogStore.pendingFilters.parentsAliases[levelIndex] || ''"
+                    :content="levelOptions.map((opt) => ({ value: opt.alias, label: opt.name }))"
+                    @update:model-value="
+                      (val) => {
+                        catalogStore.pendingFilters.parentsAliases[levelIndex] = val || ''
+                      }
+                    "
+                  />
+                </div>
+              </template>
+
+              <!-- ИЗМЕНИТЬ: для второго уровня (levelIndex === 1) используем MultiSelectButton -->
+              <template v-else-if="levelIndex === 1">
+                <div
+                  v-if="levelOptions.some((opt) => opt.image && opt.image.trim() !== '')"
+                  class="flex gap-6 items-center justify-center"
+                >
+                  <ImageButton
+                    :model-value="catalogStore.pendingFilters.secondLevelAliases"
+                    :items="
+                      levelOptions.map((opt) => ({
+                        alias: opt.alias,
+                        name: opt.name,
+                        image: opt.image || '',
+                        activeImage: opt.activeImage || opt.image || '',
+                      }))
+                    "
+                    multiple
+                    @update:model-value="
+                      (val) => {
+                        catalogStore.pendingFilters.secondLevelAliases = val
+                      }
+                    "
+                  />
+                </div>
+                <div
+                  v-else
+                  class="flex flex-wrap gap-4 items-center justify-center"
+                >
+                  <MultiSelectButton
+                    v-model="catalogStore.pendingFilters.secondLevelAliases"
+                    :content="levelOptions.map((opt) => ({ value: opt.alias, label: opt.name }))"
+                  />
+                </div>
+              </template>
             </div>
           </template>
 
