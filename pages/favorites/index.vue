@@ -15,6 +15,12 @@ watch(
 )
 
 const favoriteItems = computed(() => catalogStore.items.filter((item) => favoritesStore.favorites.includes(item.id)))
+
+const recommendedItemsIds = computed(() => {
+  const allIds = catalogStore.items.map((i) => i.id)
+  const shuffled = [...allIds].sort(() => 0.5 - Math.random())
+  return shuffled.slice(0, 4)
+})
 </script>
 
 <template>
@@ -55,19 +61,19 @@ const favoriteItems = computed(() => catalogStore.items.filter((item) => favorit
         >
           Тут ничего нет
         </h3>
-        <!--        <h2 class="hidden mt-10 font-[Inter] text-4xl text-center sm:block">Вам может понравиться</h2>-->
-        <!--        <div class="hidden mt-12 grid-cols-4 px-4 gap-x-4 gap-y-6 sm:grid">-->
-        <!--          <template-->
-        <!--            v-for="(_, index) in new Array(4)"-->
-        <!--            :key="index"-->
-        <!--          >-->
-        <!--            <CatalogCard-->
-        <!--              :id="37"-->
-        <!--              variant="large"-->
-        <!--              link-->
-        <!--            />-->
-        <!--          </template>-->
-        <!--        </div>-->
+        <h2 class="hidden mt-10 font-[Inter] text-4xl text-center sm:block">Вам может понравиться</h2>
+        <div class="hidden mt-12 grid-cols-4 px-4 gap-x-4 gap-y-6 sm:grid">
+          <template
+            v-for="id in recommendedItemsIds"
+            :key="id"
+          >
+            <CatalogCard
+              :id="id"
+              variant="large"
+              link
+            />
+          </template>
+        </div>
         <AppSEO
           :paragraphs="[
             'CASA AL MARE — эстетика тела, свобода выбора.\n' +

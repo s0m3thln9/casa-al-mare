@@ -20,7 +20,6 @@ const loadItem = async () => {
     isLoading.value = true
     error.value = null
 
-    // Проверяем, загружены ли товары, и загружаем только если их нет
     if (catalogStore.items.length === 0) {
       await catalogStore.loadItems()
     }
@@ -161,7 +160,13 @@ const getPopupId = (header: string): string => {
   )
 }
 
-const relatedItemsIds = computed(() => item.value?.withItems?.map((item) => item.id).slice(0, 3) || [])
+const relatedItemsIds = computed(() => {
+  const currentId = item.value?.id
+  const allIds = catalogStore.items.filter((i) => i.id !== currentId).map((i) => i.id)
+  const shuffled = [...allIds].sort(() => 0.5 - Math.random())
+  return shuffled.slice(0, 3)
+})
+
 const setItemsIds = computed(() => item.value?.set?.map((item) => item.id) || [])
 const hasSetItems = computed(() => setItemsIds.value.length > 0)
 
@@ -302,25 +307,18 @@ const handleTouchMove = (e: TouchEvent) => {
   const deltaX = Math.abs(currentX - touchStartX.value)
   const deltaY = Math.abs(currentY - touchStartY.value)
 
-  // Увеличиваем порог для определения направления свайпа
   const directionThreshold = 10
 
-  // Определяем направление только если есть достаточное движение
   if (deltaX > directionThreshold || deltaY > directionThreshold) {
-    // Если уже определили, что это горизонтальный свайп, блокируем прокрутку
     if (isHorizontalSwipe.value) {
       e.preventDefault()
       return
     }
 
-    // Определяем направление: если горизонтальное движение значительно больше вертикального
     if (deltaX > deltaY * 1.5 && deltaX > directionThreshold) {
       isHorizontalSwipe.value = true
       e.preventDefault()
-    }
-    // Если вертикальное движение больше, позволяем прокрутку страницы
-    else if (deltaY > deltaX) {
-      // Явно разрешаем вертикальную прокрутку
+    } else if (deltaY > deltaX) {
       return
     }
   }
