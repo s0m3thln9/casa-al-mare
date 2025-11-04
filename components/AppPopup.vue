@@ -40,16 +40,10 @@ const handleKeydown = (event: KeyboardEvent) => {
       }"
     >
       <div
-        class="flex gap-4"
+        class="flex gap-4 items-center cursor-pointer"
         @click="popupStore.close"
       >
-        <button class="cursor-pointer">
-          <NuxtImg
-            src="/arrow-left.svg"
-            alt="arrow"
-            class="w-2"
-          />
-        </button>
+        <button class="cursor-pointer" />
         <span class="font-[Inter] text-[17px] uppercase sm:normal-case sm:text-2xl">{{ title }}</span>
       </div>
       <slot />
@@ -57,4 +51,14 @@ const handleKeydown = (event: KeyboardEvent) => {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+button {
+  background-image: url("/arrow-left.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 1rem;
+  height: 1rem;
+  border: none;
+  background-position: center;
+}
+</style>
