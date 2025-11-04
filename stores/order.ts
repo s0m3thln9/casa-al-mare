@@ -461,12 +461,13 @@ export const useOrderStore = defineStore("order", () => {
           targetCity = loadedOrder.city
         } else if (userStore.user?.profile?.extended?.city) {
           targetCity = userStore.user.profile.extended.city
-        } else {
-          targetCity = { label: "Москва", name: "Москва", kladr: "0000000100000", fias: "7700000100000" } as CityData
-          console.warn("Город не найден в user/order, установлен fallback: Москва")
+        } else if (userStore.user?.city) {
+          targetCity = userStore.user.city
         }
 
-        if (targetCity && targetCity !== city.value) {
+        if (!targetCity || targetCity.label === "" || targetCity === false) {
+          city.value = null
+        } else if (targetCity && targetCity !== city.value) {
           city.value = targetCity
           console.log("Город установлен:", targetCity.label)
         }
@@ -1030,11 +1031,13 @@ export const useOrderStore = defineStore("order", () => {
       targetCity = orderState.value.city
     } else if (userStore.user?.profile?.extended?.city) {
       targetCity = userStore.user.profile.extended.city
-    } else {
-      targetCity = { label: "Москва", name: "Москва", kladr: "0000000100000", fias: "7700000100000" } as CityData
+    } else if (userStore.user?.city) {
+      targetCity = userStore.user.city
     }
 
-    if (targetCity && targetCity !== city.value) {
+    if (!targetCity || targetCity.label === "" || targetCity === false) {
+      city.value = null
+    } else if (targetCity && targetCity !== city.value) {
       city.value = targetCity
       await nextTick()
       console.log("Город обновлён для UI:", targetCity.label)
@@ -1083,7 +1086,9 @@ export const useOrderStore = defineStore("order", () => {
   watch(
     () => userStore.city,
     (newCity) => {
-      if (newCity && !city.value) {
+      if (!newCity || newCity.label === "" || newCity === false) {
+        if (city.value) city.value = null
+      } else if (newCity && !city.value) {
         city.value = newCity
       }
     },
@@ -1106,7 +1111,9 @@ export const useOrderStore = defineStore("order", () => {
   watch(
     () => userStore.user?.profile?.extended?.city,
     (newCity) => {
-      if (newCity && !city.value) {
+      if (!newCity || newCity.label === "" || newCity === false) {
+        if (city.value) city.value = null
+      } else if (newCity && !city.value) {
         city.value = newCity
       }
     },
@@ -1185,6 +1192,17 @@ export const useOrderStore = defineStore("order", () => {
       debouncedUpdateOrderState()
     },
     { deep: true },
+  )
+
+  watch(
+    [addresses, deliveryMethod],
+    ([newAddresses, newDeliveryMethod]) => {
+      const isCourierMethod = ["1", "2", "3"].includes(newDeliveryMethod || "")
+      if (newAddresses.length === 0 && isCourierMethod && !currentAddress.value) {
+        currentAddress.value = "Новый адрес"
+      }
+    },
+    { immediate: true, deep: true },
   )
 
   return {

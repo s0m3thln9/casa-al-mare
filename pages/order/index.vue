@@ -163,8 +163,12 @@ onMounted(async () => {
   await orderStore.refreshCityForUI()
   await nextTick()
 
-  if (cityRef.value && orderStore.city) {
-    // cityRef.value.setValue(orderStore.city)
+  if (cityRef.value) {
+    if (orderStore.city && orderStore.city.label) {
+      // cityRef.value.setValue(orderStore.city)
+    } else {
+      cityRef.value.clear()
+    }
   }
 
   console.log("Город после загрузки:", orderStore.city?.label)
@@ -212,6 +216,7 @@ async function handlePay(): Promise<void> {
     if (["1", "2", "3"].includes(orderStore.deliveryMethod)) {
       if (!orderStore.currentAddress) {
         orderStore.showErrorDeliveryMethod = true
+        orderStore.errorDeliveryMethod = "Выберите адрес доставки"
         return
       }
 
@@ -221,11 +226,15 @@ async function handlePay(): Promise<void> {
 
       if (isNewAddress) {
         if (!newAddressRef.value?.validate()) {
+          orderStore.showErrorDeliveryMethod = true
+          orderStore.errorDeliveryMethod = "Введите адрес доставки"
           return
         }
-        orderStore.showErrorDeliveryMethod = true
-        orderStore.errorDeliveryMethod = "Выберите адрес доставки"
-        return
+        if (orderStore.currentAddress === "Новый адрес") {
+          orderStore.showErrorDeliveryMethod = true
+          orderStore.errorDeliveryMethod = "Сохраните новый адрес перед оплатой"
+          return
+        }
       }
     }
     if (orderStore.deliveryMethod === "4") {
