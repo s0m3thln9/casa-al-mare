@@ -17,6 +17,7 @@ const orderId = parseInt(route.params.id as string)
 const userStore = useUserStore()
 const orderStore = useOrderStore()
 const authStore = useAuthStore()
+const catalogStore = useCatalogStore()
 
 const localIsPaymentSuccessful = ref<boolean | null>(null)
 const localShowErrorPaymentMethod = ref<boolean>(false)
@@ -85,6 +86,20 @@ function localIncrementQuantity(id: number, variant: string) {
 
 function localRemoveItemFromCart(id: number, variant: string) {
   localCartItems.value = localCartItems.value.filter((item) => !(item.id === id && item.variant === variant))
+}
+
+const navigateToItem = async (itemId: number) => {
+  if (catalogStore.items.length === 0) {
+    await catalogStore.loadItems()
+  }
+  const item = catalogStore.getItemById(itemId)
+  const fullAlias = item?.alias || String(itemId)
+  const itemLink = `/catalog/item/?alias=${fullAlias}`
+  try {
+    await navigateTo(itemLink)
+  } catch (error) {
+    console.error("Navigation error:", error)
+  }
 }
 
 function updateLocalDeliveryDetails() {
@@ -458,7 +473,7 @@ async function handleRetryPay(): Promise<void> {
                 <div class="flex flex-col gap-1">
                   <span
                     class="font-light text-sm text-[#414141] cursor-pointer"
-                    @click="navigateTo(`/catalog/${item.id}`)"
+                    @click="navigateToItem(item.id)"
                   >
                     {{ item.name }}
                   </span>
@@ -527,7 +542,7 @@ async function handleRetryPay(): Promise<void> {
                 <div class="flex flex-col gap-1">
                   <span
                     class="font-light text-sm text-[#414141] cursor-pointer"
-                    @click="navigateTo(`/catalog/${item.id}`)"
+                    @click="navigateToItem(item.id)"
                   >
                     {{ item.name }}
                   </span>

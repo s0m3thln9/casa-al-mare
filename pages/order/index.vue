@@ -39,6 +39,7 @@ const authStore = useAuthStore()
 const authModalStore = useAuthModalStore()
 const orderStore = useOrderStore()
 const userStore = useUserStore()
+const catalogStore = useCatalogStore()
 
 const isExpanded = ref(false)
 
@@ -52,6 +53,20 @@ const handleProfileClick = () => {
 
 const toggleExpanded = () => {
   isExpanded.value = !isExpanded.value
+}
+
+const navigateToItem = async (itemId: number) => {
+  if (catalogStore.items.length === 0) {
+    await catalogStore.loadItems()
+  }
+  const item = catalogStore.getItemById(itemId)
+  const fullAlias = item?.alias || String(itemId)
+  const itemLink = `/catalog/item/?alias=${fullAlias}`
+  try {
+    await navigateTo(itemLink)
+  } catch (error) {
+    console.error("Navigation error:", error)
+  }
 }
 
 interface PhoneOption {
@@ -165,7 +180,6 @@ onMounted(async () => {
 
   if (cityRef.value) {
     if (orderStore.city && orderStore.city.label) {
-      // cityRef.value.setValue(orderStore.city)
     } else {
       cityRef.value.clear()
     }
@@ -593,7 +607,7 @@ useSmsAutoSubmit(
                     <div class="flex flex-col gap-1">
                       <span
                         class="font-light text-sm text-[#414141] cursor-pointer"
-                        @click="navigateTo(`/catalog/${item.id}`)"
+                        @click="navigateToItem(item.id)"
                       >
                         {{ item.name }}
                       </span>
@@ -1338,7 +1352,7 @@ useSmsAutoSubmit(
                     <div class="flex flex-col gap-1">
                       <span
                         class="font-light text-sm text-[#414141] cursor-pointer"
-                        @click="navigateTo(`/catalog/${item.id}`)"
+                        @click="navigateToItem(item.id)"
                       >
                         {{ item.name }}
                       </span>

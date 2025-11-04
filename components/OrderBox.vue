@@ -5,6 +5,7 @@ const props = defineProps<{
     status: number
     items?: {
       id: number
+      alias?: string
       images: string[]
       name: string
       size: string
@@ -46,6 +47,11 @@ const formattedAddress = computed(() => {
 const priceFormatter = (value: number) => {
   const formattedValue = new Intl.NumberFormat("ru-RU").format(value)
   return `${formattedValue} ₽`
+}
+
+const navigateToItem = (itemAlias: string | undefined, itemId: number) => {
+  const alias = itemAlias || String(itemId)
+  navigateTo(`/catalog/item/?alias=${alias}`)
 }
 </script>
 
@@ -117,7 +123,7 @@ const priceFormatter = (value: number) => {
             <div class="flex flex-col gap-1">
               <span
                 class="font-light text-sm text-[#414141] cursor-pointer"
-                @click="navigateTo(`/catalog/${item.id}`)"
+                @click="navigateToItem(item.alias, item.id)"
               >
                 {{ item.name }}
               </span>

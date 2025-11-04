@@ -387,6 +387,7 @@ watch(
                 name: item.name,
                 price: parseInt(item.price) || 0,
                 oldPrice: parseInt(item.oldPrice) || 0,
+                alias: item.alias,
               })),
             }"
           />
