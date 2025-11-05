@@ -178,6 +178,7 @@ const phoneOptions: PhoneOption[] = [
           width="390"
           height="532"
           class="rounded-lg"
+          loading="lazy"
         />
         <AppTooltip
           text="Это поле обязательно для заполнения"
@@ -219,6 +220,7 @@ const phoneOptions: PhoneOption[] = [
           width="390"
           height="532"
           class="rounded-lg"
+          loading="lazy"
         />
         <h2 class="font-[Manrope] uppercase text-[#211D1D]">Текст</h2>
         <AppTooltip

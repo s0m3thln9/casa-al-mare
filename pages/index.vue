@@ -1,5 +1,16 @@
 <script setup lang="ts">
-const { data: videoData } = await useFetch("https://back.casaalmare.com/api/getMainVideo")
+interface VideoSource {
+  mp4: string
+  ogv: string
+  webm: string
+}
+
+interface VideoData {
+  pc: VideoSource
+  mob: VideoSource
+}
+
+const { data } = await useFetch<VideoData>("https://back.casaalmare.com/api/getMainVideo")
 const images = {
   promo1: "/promo-1.jpg",
   promo2: "/promo-2.jpg",
@@ -15,20 +26,9 @@ const images = {
 
 <template>
   <main class="bg-[#FFFFFA]">
-    <!--    <RunningLine-->
-    <!--      :messages="[-->
-    <!--        'Сообщение об акции и эксклюзивных условиях',-->
-    <!--        'Сообщение об акции и эксклюзивных условиях',-->
-    <!--        'Сообщение об акции и эксклюзивных условиях',-->
-    <!--        'Сообщение об акции и эксклюзивных условиях',-->
-    <!--        'Сообщение об акции и эксклюзивных условиях',-->
-    <!--        'Сообщение об акции и эксклюзивных условиях',-->
-    <!--        'Сообщение об акции и эксклюзивных условиях',-->
-    <!--      ]"-->
-    <!--    />-->
     <VideoBanner
-      v-if="videoData"
-      :video-data="videoData"
+      v-if="data"
+      :video-data="data"
       text="В каталог"
       custom-class="sm:aspect-[375/607] md:aspect-[5/4] lg:aspect-[1920/962]"
       link="/catalog"

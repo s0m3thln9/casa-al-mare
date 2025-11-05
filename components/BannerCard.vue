@@ -26,6 +26,7 @@ const handleClick = () => {
       :src="imageUrl"
       :custom="true"
       sizes="sm:100vw md:50vw lg:25vw"
+      format="webp"
     >
       <div
         v-if="!isLoaded"
@@ -37,8 +38,8 @@ const handleClick = () => {
         :src="src"
         class="w-full h-full object-cover"
         :style="{ objectPosition: objectPosition || 'center' }"
-        loading="lazy"
         alt="banner"
+        fetchpriority="high"
       />
     </NuxtImg>
     <div
