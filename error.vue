@@ -1,0 +1,333 @@
+<script setup lang="ts">
+const isCookieAccepted = ref(true)
+const email = ref("")
+const emailReverse = ref("")
+const name = ref("")
+const phone = ref<{
+  code: string
+  phone: string
+  country: string
+} | null>(null)
+const text = ref("")
+const emailRef = ref()
+const emailReverseRef = ref()
+const nameRef = ref()
+const phoneRef = ref()
+const textRef = ref()
+
+const buttonState = ref({
+  content: "Подписаться",
+  isLoading: false,
+  showSuccess: false,
+})
+
+const buttonStateReverse = ref({
+  content: "Отправить",
+  isLoading: false,
+  showSuccess: false,
+})
+
+const handleSubscription = () => {
+  if (emailRef.value.validate()) {
+    buttonState.value.isLoading = true
+    setTimeout(() => {
+      buttonState.value.isLoading = false
+      buttonState.value.content = "Вы подписаны"
+      buttonState.value.showSuccess = true
+      setTimeout(() => {
+        buttonState.value.content = "Подписаться"
+        buttonState.value.showSuccess = false
+      }, 1000)
+    }, 1000)
+  }
+}
+
+const handleReverseForm = () => {
+  const isNameValid = nameRef.value?.validate()
+  const isEmailValid = emailReverseRef.value?.validate()
+  const isPhoneValid = phoneRef.value?.validate()
+  const isTextValid = textRef.value?.validate()
+
+  if (isNameValid && isEmailValid && isPhoneValid && isTextValid) {
+    buttonStateReverse.value.isLoading = true
+    setTimeout(() => {
+      buttonStateReverse.value.isLoading = false
+      buttonStateReverse.value.content = "Благодарим за обращение"
+      buttonStateReverse.value.showSuccess = true
+      setTimeout(() => {
+        buttonStateReverse.value.content = "Отправить"
+        buttonStateReverse.value.showSuccess = false
+        name.value = ""
+        emailReverse.value = ""
+        phone.value = null
+        text.value = ""
+      }, 1000)
+    }, 1000)
+  } else {
+    console.warn("Форма обратной связи не валидна")
+  }
+}
+
+interface PhoneOption {
+  code: string
+  country: string
+  iso: string
+}
+
+const authStore = useAuthStore()
+const authModalStore = useAuthModalStore()
+
+const phoneOptions: PhoneOption[] = [
+  { code: "+7", country: "Россия", iso: "RU" },
+  { code: "+375", country: "Беларусь", iso: "BY" },
+  { code: "+380", country: "Украина", iso: "UA" },
+  { code: "+77", country: "Казахстан", iso: "KZ" },
+  { code: "+998", country: "Узбекистан", iso: "UZ" },
+  { code: "+992", country: "Таджикистан", iso: "TJ" },
+  { code: "+993", country: "Туркменистан", iso: "TM" },
+  { code: "+996", country: "Кыргызстан", iso: "KG" },
+  { code: "+374", country: "Армения", iso: "AM" },
+  { code: "+994", country: "Азербайджан", iso: "AZ" },
+  { code: "+373", country: "Молдова", iso: "MD" },
+  { code: "+995", country: "Грузия", iso: "GE" },
+]
+
+const handleProfileClick = () => {
+  if (authStore.isAuth) {
+    navigateTo("/profile/profile")
+  } else {
+    authModalStore.open()
+  }
+}
+</script>
+
+<template>
+  <div class="min-h-screen flex flex-col">
+    <AppHeader />
+    <main class="flex-1 bg-[#FFFFFA]">
+      <main
+        class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D] flex justify-start items-center pt-8 pb-8 flex-col max-sm:px-2"
+      >
+        <h2 class="uppercase max-sm:text-left max-sm:text-[17px] max-sm:font-[Inter] max-sm:self-start">Не найдено</h2>
+        <div class="grid sm:grid-cols-4 mt-[10%] gap-8 sm:justify-items-center max-sm:self-start">
+          <div
+            class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
+            @click="navigateTo('/catalog')"
+          >
+            Смотреть все
+          </div>
+          <div
+            class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
+            @click="navigateTo('/catalog?path=kupalniki/niz')"
+          >
+            Нижняя часть купальника
+          </div>
+          <div
+            class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
+            @click="navigateTo('/catalog')"
+          >
+            Головные уборы
+          </div>
+          <div
+            class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
+            @click="navigateTo('/certificate')"
+          >
+            Cертификаты
+          </div>
+          <div
+            class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
+            @click="navigateTo('/catalog?path=kupalniki')"
+          >
+            Купальники
+          </div>
+          <div
+            class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
+            @click="navigateTo('/catalog?path=kupalniki/verx')"
+          >
+            Верхняя часть купальника
+          </div>
+          <div
+            class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
+            @click="navigateTo('/catalog')"
+          >
+            Аксессуары
+          </div>
+          <div
+            class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
+            @click="handleProfileClick"
+          >
+            В личный кабинет
+          </div>
+        </div>
+      </main>
+    </main>
+    <AppFooter />
+    <CookieConsent v-model="isCookieAccepted" />
+    <AppPopup
+      title="Подпишитесь на рассылку"
+      popup-id="subscription"
+    >
+      <div class="flex flex-col items-stretch gap-6 mt-8 sm:mt-14">
+        <img
+          src="/pop-up-sub.jpg"
+          alt="sub"
+          width="390"
+          height="532"
+          class="rounded-lg"
+          loading="lazy"
+        />
+        <AppTooltip
+          text="Это поле обязательно для заполнения"
+          type="error"
+          :show="emailRef?.showError"
+        >
+          <AppInput
+            id="email"
+            ref="emailRef"
+            v-model="email"
+            label="Введите e-mail для получения новостей"
+            type="email"
+            custom-class="w-full"
+            required
+          />
+        </AppTooltip>
+        <AppButton
+          :content="buttonState.content"
+          :is-loading="buttonState.isLoading"
+          :show-success="buttonState.showSuccess"
+          variant="primary"
+          custom-class="w-full px-0"
+          @click="handleSubscription"
+        />
+        <p class="w-full font-light text-[10px] text-[#5E5B58] font-[Commissioner] sm:w-[350px]">
+          Нажимая на кнопку «Подписаться», я соглашаюсь на обработку моих персональных данных и ознакомлен(а) с
+          условиями конфиденциальности.
+        </p>
+      </div>
+    </AppPopup>
+    <AppPopup
+      title="Обратная связь"
+      popup-id="reverse"
+    >
+      <div class="flex flex-col items-stretch gap-6 mt-8 sm:mt-14">
+        <img
+          src="/pop-up-sub.jpg"
+          alt="sub"
+          width="390"
+          height="532"
+          class="rounded-lg"
+          loading="lazy"
+        />
+        <h2 class="font-[Manrope] uppercase text-[#211D1D]">Текст</h2>
+        <AppTooltip
+          text="Это поле обязательно для заполнения"
+          type="error"
+          :show="nameRef?.showError"
+        >
+          <AppInput
+            id="name"
+            ref="nameRef"
+            v-model="name"
+            label="Имя"
+            type="text"
+            custom-class="w-full"
+            required
+          />
+        </AppTooltip>
+        <AppTooltip
+          text="Это поле обязательно для заполнения"
+          type="error"
+          :show="emailReverseRef?.showError"
+        >
+          <AppInput
+            id="emailReverse"
+            ref="emailReverseRef"
+            v-model="emailReverse"
+            label="E-mail"
+            type="email"
+            custom-class="w-full"
+            required
+          />
+        </AppTooltip>
+        <AppTooltip
+          text="Это поле обязательно для заполнения"
+          type="error"
+          :show="phoneRef?.showError"
+        >
+          <SelectInput
+            id="phone"
+            ref="phoneRef"
+            v-model="phone"
+            custom-class="w-full"
+            :options="phoneOptions"
+            label="Номер телефона"
+            required
+          />
+        </AppTooltip>
+        <AppTooltip
+          text="Это поле обязательно для заполнения"
+          type="error"
+          :show="textRef?.showError"
+        >
+          <AppInput
+            id="text"
+            ref="textRef"
+            v-model="text"
+            label="Сообщение"
+            type="text"
+            custom-class="w-full"
+            required
+          />
+        </AppTooltip>
+        <AppButton
+          :content="buttonStateReverse.content"
+          :is-loading="buttonStateReverse.isLoading"
+          :show-success="buttonStateReverse.showSuccess"
+          variant="primary"
+          custom-class="w-full px-0"
+          @click="handleReverseForm"
+        />
+        <p class="w-full font-light text-[10px] text-[#5E5B58] font-[Commissioner] sm:w-[350px]">
+          Нажимая на кнопку «Отправить», я соглашаюсь на обработку моих персональных данных и ознакомлен(а) с условиями
+          конфиденциальности.
+        </p>
+      </div>
+    </AppPopup>
+  </div>
+</template>
+
+<style>
+body {
+  width: 100%;
+}
+
+* {
+  scrollbar-width: thin !important;
+  scrollbar-color: #211d1d #f9f6ec !important;
+  text-decoration-thickness: 0.5px;
+}
+
+::-webkit-scrollbar {
+  width: 4px !important;
+  height: 4px !important;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1 !important;
+  border-radius: 23px !important;
+  margin: 1px 0 !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #211d1d !important;
+  border-radius: 23px !important;
+  transition: background 0.3s ease !important;
+}
+
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+</style>

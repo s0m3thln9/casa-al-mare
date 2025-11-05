@@ -45,7 +45,7 @@ const isExpanded = ref(false)
 
 const handleProfileClick = () => {
   if (authStore.isAuth) {
-    navigateTo("/profile")
+    navigateTo("/profile/profile")
   } else {
     authModalStore.open()
   }
