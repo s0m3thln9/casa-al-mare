@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { SelectInput } from "#components"
-import { useDocsStore } from "~/stores/docs"
+import { type AppInput, SelectInput } from "#components"
 
 interface CartResponseData {
   success: boolean
@@ -9,139 +8,42 @@ interface CartResponseData {
   cart: Record<string, import("~/stores/order").CartItem>
 }
 
-const isCookieAccepted = ref(true)
-const email = ref("")
-const emailReverse = ref("")
-const name = ref("")
-const phone = ref<{
+interface PhoneOption {
   code: string
-  phone: string
   country: string
-} | null>(null)
-const text = ref("")
-const emailRef = ref()
-const emailReverseRef = ref()
-const nameRef = ref()
-const phoneRef = ref()
-const textRef = ref()
-const catalogStore = useCatalogStore()
-const orderStore = useOrderStore()
-const docsStore = useDocsStore()
+  iso: string
+}
 
-const userStore = useUserStore()
-onMounted(async () => {
-  await userStore.loadToken()
-  await userStore.fetchUser()
-  await docsStore.fetchTree()
-})
+const isCookieAccepted = ref(true)
 
+const email = ref("")
+const emailRef = ref<InstanceType<typeof AppInput> | null>(null)
 const buttonState = ref({
   content: "Подписаться",
   isLoading: false,
   showSuccess: false,
 })
 
+const name = ref("")
+const emailReverse = ref("")
+const phone = ref<{ code: string; phone: string; country: string } | null>(null)
+const text = ref("")
+const nameRef = ref<InstanceType<typeof AppInput> | null>(null)
+const emailReverseRef = ref<InstanceType<typeof AppInput> | null>(null)
+const phoneRef = ref<InstanceType<typeof SelectInput> | null>(null)
+const textRef = ref<InstanceType<typeof AppInput> | null>(null)
 const buttonStateReverse = ref({
   content: "Отправить",
   isLoading: false,
   showSuccess: false,
 })
 
-const handleSubscription = () => {
-  if (emailRef.value.validate()) {
-    buttonState.value.isLoading = true
-    setTimeout(() => {
-      buttonState.value.isLoading = false
-      buttonState.value.content = "Вы подписаны"
-      buttonState.value.showSuccess = true
-      setTimeout(() => {
-        buttonState.value.content = "Подписаться"
-        buttonState.value.showSuccess = false
-      }, 1000)
-    }, 1000)
-  }
-}
+const catalogStore = useCatalogStore()
+const orderStore = useOrderStore()
+const docsStore = useDocsStore()
+const userStore = useUserStore()
 
-const handleReverseForm = () => {
-  const isNameValid = nameRef.value?.validate()
-  const isEmailValid = emailReverseRef.value?.validate()
-  const isPhoneValid = phoneRef.value?.validate()
-  const isTextValid = textRef.value?.validate()
-
-  if (isNameValid && isEmailValid && isPhoneValid && isTextValid) {
-    buttonStateReverse.value.isLoading = true
-    setTimeout(() => {
-      buttonStateReverse.value.isLoading = false
-      buttonStateReverse.value.content = "Благодарим за обращение"
-      buttonStateReverse.value.showSuccess = true
-      setTimeout(() => {
-        buttonStateReverse.value.content = "Отправить"
-        buttonStateReverse.value.showSuccess = false
-        name.value = ""
-        emailReverse.value = ""
-        phone.value = null
-        text.value = ""
-      }, 1000)
-    }, 1000)
-  } else {
-    console.warn("Форма обратной связи не валидна")
-  }
-}
-
-onMounted(() => {
-  catalogStore.loadItems()
-})
-
-onMounted(async () => {
-  const getCart = async (): Promise<void> => {
-    const token = await userStore.loadToken()
-    if (!token) return
-
-    try {
-      const { data, error } = await useFetch<CartResponseData>("https://back.casaalmare.com/api/getCart", {
-        method: "POST",
-        body: {
-          token: token,
-        },
-      })
-
-      if (error.value) {
-        console.error("Network error fetching cart:", error.value)
-        return
-      }
-
-      if (data.value?.success && data.value?.cart) {
-        const rawCart = data.value.cart
-        const parsedCart: import("~/stores/order").CartItem[] = Object.entries(rawCart).map(([_, item]) => ({
-          id: item.id,
-          variant: item.variant,
-          count: item.count,
-          updated_at: item.updated_at,
-          name: item.name,
-          sizes: item.sizes,
-          images: item.images,
-          vector: item.vector,
-          type: item.type,
-          material: item.material,
-          useType: item.useType,
-        }))
-        orderStore.setCartItems(parsedCart)
-      }
-    } catch (error) {
-      console.error("Ошибка при получении корзины:", error)
-    }
-  }
-
-  await getCart()
-  await orderStore.loadUserData()
-  await orderStore.loadOrderState()
-})
-
-interface PhoneOption {
-  code: string
-  country: string
-  iso: string
-}
+const TIMEOUT_DURATION = 1000
 
 const phoneOptions: PhoneOption[] = [
   { code: "+7", country: "Россия", iso: "RU" },
@@ -157,6 +59,90 @@ const phoneOptions: PhoneOption[] = [
   { code: "+373", country: "Молдова", iso: "MD" },
   { code: "+995", country: "Грузия", iso: "GE" },
 ]
+
+const handleSubscription = () => {
+  if (emailRef.value?.validate?.()) {
+    buttonState.value.isLoading = true
+    setTimeout(() => {
+      buttonState.value.isLoading = false
+      buttonState.value.content = "Вы подписаны"
+      buttonState.value.showSuccess = true
+      setTimeout(() => {
+        buttonState.value.content = "Подписаться"
+        buttonState.value.showSuccess = false
+      }, TIMEOUT_DURATION)
+    }, TIMEOUT_DURATION)
+  }
+}
+
+const handleReverseForm = () => {
+  const isValid =
+    nameRef.value?.validate?.() &&
+    emailReverseRef.value?.validate?.() &&
+    phoneRef.value?.validate?.() &&
+    textRef.value?.validate?.()
+
+  if (isValid) {
+    buttonStateReverse.value.isLoading = true
+    setTimeout(() => {
+      buttonStateReverse.value.isLoading = false
+      buttonStateReverse.value.content = "Благодарим за обращение"
+      buttonStateReverse.value.showSuccess = true
+      setTimeout(() => {
+        buttonStateReverse.value.content = "Отправить"
+        buttonStateReverse.value.showSuccess = false
+        name.value = ""
+        emailReverse.value = ""
+        phone.value = null
+        text.value = ""
+      }, TIMEOUT_DURATION)
+    }, TIMEOUT_DURATION)
+  }
+}
+
+const getCart = async () => {
+  const token = await userStore.loadToken()
+  if (!token) return
+
+  try {
+    const data = await $fetch<CartResponseData>("https://back.casaalmare.com/api/getCart", {
+      method: "POST",
+      body: { token },
+    })
+
+    if (data?.success && data.cart) {
+      const parsedCart = Object.values(data.cart).map((item) => ({
+        id: item.id,
+        variant: item.variant,
+        count: item.count,
+        updated_at: item.updated_at,
+        name: item.name,
+        sizes: item.sizes,
+        images: item.images,
+        vector: item.vector,
+        type: item.type,
+        material: item.material,
+        useType: item.useType,
+        colorName: item.colorName,
+        price: item.price,
+        oldPrice: item.oldPrice,
+      }))
+      orderStore.setCartItems(parsedCart)
+    }
+  } catch (error) {
+    console.error("Ошибка при получении корзины:", error)
+  }
+}
+
+onMounted(async () => {
+  await userStore.loadToken()
+  await userStore.fetchUser()
+  await docsStore.fetchTree()
+  await catalogStore.loadItems()
+  await getCart()
+  await orderStore.loadUserData()
+  await orderStore.loadOrderState()
+})
 </script>
 
 <template>
@@ -262,9 +248,9 @@ const phoneOptions: PhoneOption[] = [
             id="phone"
             ref="phoneRef"
             v-model="phone"
-            custom-class="w-full"
             :options="phoneOptions"
             label="Номер телефона"
+            custom-class="w-full"
             required
           />
         </AppTooltip>
@@ -299,6 +285,7 @@ const phoneOptions: PhoneOption[] = [
     </AppPopup>
   </div>
 </template>
+
 <style>
 body {
   width: 100%;

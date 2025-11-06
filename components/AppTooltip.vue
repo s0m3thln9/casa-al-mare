@@ -31,7 +31,6 @@ watch(
   (val) => {
     if (val) {
       visible.value = true
-
       if (props.autoHide) {
         if (hideTimer) clearTimeout(hideTimer)
         hideTimer = setTimeout(() => {
@@ -62,31 +61,27 @@ watch(
         type === 'error' && 'text-[#211D1D] bg-[#FFF4A4]',
         position === 'top' && [
           'bottom-full left-1/2 -translate-x-1/2 mb-2',
-          type === 'info' &&
-            'before:top-full before:left-1/2 before:-translate-x-1/2 before:border-x-8 before:border-x-transparent before:border-t-8 before:border-t-[#211D1D]',
-          type === 'error' &&
-            'before:top-full before:left-1/2 before:-translate-x-1/2 before:border-x-8 before:border-x-transparent before:border-t-8 before:border-t-[#FFF4A4]',
+          `before:top-full before:left-1/2 before:-translate-x-1/2 before:border-x-8 before:border-x-transparent before:border-t-8 ${
+            type === 'info' ? 'before:border-t-[#211D1D]' : 'before:border-t-[#FFF4A4]'
+          }`,
         ],
         position === 'bottom' && [
           'top-full left-1/2 -translate-x-1/2 mt-2',
-          type === 'info' &&
-            'before:bottom-full before:left-1/2 before:-translate-x-1/2 before:border-x-8 before:border-x-transparent before:border-b-8 before:border-b-[#211D1D]',
-          type === 'error' &&
-            'before:bottom-full before:left-1/2 before:-translate-x-1/2 before:border-x-8 before:border-x-transparent before:border-b-8 before:border-b-[#FFF4A4]',
+          `before:bottom-full before:left-1/2 before:-translate-x-1/2 before:border-x-8 before:border-x-transparent before:border-b-8 ${
+            type === 'info' ? 'before:border-b-[#211D1D]' : 'before:border-b-[#FFF4A4]'
+          }`,
         ],
         position === 'left' && [
           'right-full top-1/2 -translate-y-1/2 mr-2',
-          type === 'info' &&
-            'before:right-[-8px] before:top-1/2 before:-translate-y-1/2 before:border-y-8 before:border-y-transparent before:border-l-8 before:border-l-[#211D1D]',
-          type === 'error' &&
-            'before:right-[-8px] before:top-1/2 before:-translate-y-1/2 before:border-y-8 before:border-y-transparent before:border-l-8 before:border-l-[#FFF4A4]',
+          `before:right-[-8px] before:top-1/2 before:-translate-y-1/2 before:border-y-8 before:border-y-transparent before:border-l-8 ${
+            type === 'info' ? 'before:border-l-[#211D1D]' : 'before:border-l-[#FFF4A4]'
+          }`,
         ],
         position === 'right' && [
           'left-full top-1/2 -translate-y-1/2 ml-2',
-          type === 'info' &&
-            'before:left-[-8px] before:top-1/2 before:-translate-y-1/2 before:border-y-8 before:border-y-transparent before:border-r-8 before:border-r-[#211D1D]',
-          type === 'error' &&
-            'before:left-[-8px] before:top-1/2 before:-translate-y-1/2 before:border-y-8 before:border-y-transparent before:border-r-8 before:border-r-[#FFF4A4]',
+          `before:left-[-8px] before:top-1/2 before:-translate-y-1/2 before:border-y-8 before:border-y-transparent before:border-r-8 ${
+            type === 'info' ? 'before:border-r-[#211D1D]' : 'before:border-r-[#FFF4A4]'
+          }`,
         ],
       ]"
     >

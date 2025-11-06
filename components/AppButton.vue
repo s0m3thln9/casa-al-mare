@@ -57,6 +57,7 @@ const currentState = computed(() => {
   <button
     :class="currentState.style"
     :disabled="currentState.disabled"
+    aria-label="Кнопка"
   >
     {{ currentState.content }}
   </button>

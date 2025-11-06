@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { usePopupStore } from "~/stores/popup"
-
 defineProps<{
   title: string
   popupId: string
 }>()
 
 const popupStore = usePopupStore()
+
+const handleKeydown = (event: KeyboardEvent) => {
+  if (event.key === "Escape") {
+    popupStore.close()
+  }
+}
 
 onMounted(() => {
   window.addEventListener("keydown", handleKeydown)
@@ -15,12 +19,6 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener("keydown", handleKeydown)
 })
-
-const handleKeydown = (event: KeyboardEvent) => {
-  if (event.key === "Escape") {
-    popupStore.close()
-  }
-}
 </script>
 
 <template>
@@ -43,7 +41,10 @@ const handleKeydown = (event: KeyboardEvent) => {
         class="flex gap-4 items-center cursor-pointer"
         @click="popupStore.close"
       >
-        <button class="cursor-pointer" />
+        <button
+          class="cursor-pointer"
+          aria-label="Закрыть"
+        />
         <span class="font-[Inter] text-[17px] uppercase sm:normal-case sm:text-2xl">{{ title }}</span>
       </div>
       <slot />
@@ -56,9 +57,9 @@ button {
   background-image: url("/arrow-left.svg");
   background-size: contain;
   background-repeat: no-repeat;
+  background-position: center;
   width: 1rem;
   height: 1rem;
   border: none;
-  background-position: center;
 }
 </style>
