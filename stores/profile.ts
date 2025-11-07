@@ -241,7 +241,6 @@ export const useProfileStore = defineStore("profile", () => {
           userStore.user.profile.extended.city.name = profileData.value.city
         }
       }
-      console.log("Профиль обновлен:", data.value.changes)
       buttonContent.value = "Сохранено!"
       return true
     } catch (err) {

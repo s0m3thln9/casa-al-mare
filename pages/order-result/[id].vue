@@ -380,12 +380,10 @@ async function handleRetryPay(): Promise<void> {
       const widget = new (window as any).cp.CloudPayments()
       widget.pay("charge", paymentData.data, {
         onSuccess: (options: any) => {
-          console.log("Оплата успешна")
           localIsPaymentSuccessful.value = true
           orderStore.resetOrder()
         },
         onFail: (reason: any, options: any) => {
-          console.log("Оплата неуспешна по причине " + reason)
           localIsLoadingPayment.value = false
           orderStore.isLoadingPayment = false
           orderStore.isWidgetOpen = false
@@ -399,7 +397,6 @@ async function handleRetryPay(): Promise<void> {
           if (paymentResult.success && paymentResult.code === 0) {
             await navigateTo(paymentData.link)
           } else {
-            console.log("Оплата отменена или неуспешна")
             localIsPaymentSuccessful.value = false
             orderStore.resetOrder()
           }

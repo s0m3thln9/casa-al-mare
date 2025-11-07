@@ -116,6 +116,7 @@ const handleOrdersClick = () => {
         <ul class="flex flex-col gap-4">
           <li>
             <button
+              aria-label="В личный кабинет"
               class="cursor-pointer"
               @click="handleProfileClick"
             >
@@ -124,6 +125,7 @@ const handleOrdersClick = () => {
           </li>
           <li>
             <button
+              aria-label="Избранное"
               class="cursor-pointer"
               @click="handleFavClick"
             >
@@ -132,6 +134,7 @@ const handleOrdersClick = () => {
           </li>
           <li>
             <button
+              aria-label="Заказы"
               class="cursor-pointer"
               @click="handleOrdersClick"
             >
@@ -184,7 +187,12 @@ const handleOrdersClick = () => {
             target="_blank"
             rel="noopener noreferrer"
           >
-            <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Whatsapp</button>
+            <button
+              aria-label="Whatsapp"
+              class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]"
+            >
+              Whatsapp
+            </button>
           </a>
           <a
             class="w-full h-full"
@@ -192,9 +200,15 @@ const handleOrdersClick = () => {
             target="_blank"
             rel="noopener noreferrer"
           >
-            <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Telegram</button>
+            <button
+              aria-label="Telegram"
+              class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]"
+            >
+              Telegram
+            </button>
           </a>
           <button
+            aria-label="Рассылка"
             class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]"
             @click="popupStore.open('subscription')"
           >
@@ -202,6 +216,7 @@ const handleOrdersClick = () => {
           </button>
         </div>
         <button
+          aria-label="Обратная связь"
           class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]"
           @click="popupStore.open('reverse')"
         >
@@ -213,7 +228,10 @@ const handleOrdersClick = () => {
         >
           <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Реквизиты</button>
         </NuxtLink>
-        <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">
+        <button
+          class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]"
+          aria-label="Политика конфиденциальности и оферта"
+        >
           Политика конфиденциальности и оферта
         </button>
       </div>

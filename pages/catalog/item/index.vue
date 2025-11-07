@@ -28,10 +28,6 @@ const loadItem = async () => {
     const aliasFromQuery = route.query.alias as string
     if (typeof aliasFromQuery === "string" && aliasFromQuery.trim() !== "") {
       foundItem = catalogStore.items.find((i) => i.alias === aliasFromQuery) || null
-      console.log("Загруженный item по alias:", foundItem)
-      console.log("Sizes:", foundItem?.sizes)
-      console.log("Images:", foundItem?.images)
-      console.log("Colors:", foundItem?.colors)
       if (foundItem && foundItem.colorVal && foundItem.colorName) {
         itemStore.color = {
           code: foundItem.colorVal,
@@ -40,10 +36,6 @@ const loadItem = async () => {
         }
       }
       if (!foundItem) {
-        console.log(
-          "Доступные alias в данных:",
-          catalogStore.items.map((i) => i.alias),
-        )
         error.value = "Товар не найден по указанному alias. Проверьте ссылку."
         item.value = null
         return
@@ -54,10 +46,6 @@ const loadItem = async () => {
         const id = Number(idFromParams)
         foundItem = catalogStore.getItemById(id) || null
         if (!foundItem) {
-          console.log(
-            "Доступные ID в данных:",
-            catalogStore.items.map((i) => i.id),
-          )
           error.value = "Товар не найден по ID."
           item.value = null
           return
@@ -721,12 +709,7 @@ watch(
               @click="popupStore.open(getPopupId(section.header))"
             >
               <span class="font-light text-sm">{{ section.header }}</span>
-              <NuxtImg
-                src="/help.svg"
-                alt="help"
-                width="16"
-                height="16"
-              />
+              <div class="icon-help w-4 h-4 shrink-0" />
             </div>
             <div
               v-if="index < tabSections.length - 1"
@@ -742,12 +725,7 @@ watch(
             @click="popupStore.open('subscription')"
           >
             <span class="font-light text-sm">Подписаться на рассылку</span>
-            <NuxtImg
-              src="/mail.svg"
-              alt="mail"
-              width="16"
-              height="16"
-            />
+            <div class="icon-mail w-4 h-4 shrink-0" />
           </div>
         </div>
       </div>
@@ -1124,5 +1102,19 @@ watch(
   .html-content-wrapper :deep(tbody tr:first-child td) {
     border-top: 8px solid transparent;
   }
+}
+
+.icon-mail {
+  background-image: url("/mail.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.icon-help {
+  background-image: url("/help.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 </style>

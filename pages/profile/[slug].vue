@@ -55,7 +55,6 @@ const certificateBalance = computed(() => {
 const handleResetPassword = async (): Promise<void> => {
   const success = await profileStore.resetPassword()
   if (success) {
-    console.log("Запрос на сброс пароля отправлен!")
   } else {
     console.error("Ошибка сброса пароля")
   }
@@ -84,7 +83,6 @@ const handleSaveProfile = async (): Promise<void> => {
     setTimeout(() => {
       profileStore.buttonContent = "Сохранить"
     }, 2000)
-    console.log("Профиль сохранен!")
     profileStore.saveError = ""
   } else {
     console.error("Ошибка сохранения")
@@ -104,7 +102,6 @@ const handleAddCertificate = async (): Promise<void> => {
   if (!orderStore.certificateError) {
     certificateCode.value = ""
     await userStore.fetchUser()
-    console.log("Сертификат добавлен!")
   } else {
     console.error("Ошибка добавления сертификата:", orderStore.certificateError)
   }

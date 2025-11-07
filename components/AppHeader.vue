@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { useMenuStore } from "~/stores/menu"
-
 const menuStore = useMenuStore()
 const favoritesStore = useFavoritesStore()
 const authModalStore = useAuthModalStore()
@@ -30,7 +28,6 @@ const handleFavClick = () => {
 
 const badgeText = (count: number) => (count > 99 ? "99+" : count.toString())
 
-// Вычисляемое свойство для текста кнопки меню
 const menuButtonText = computed(() => {
   if (isMobile.value && menuStore.isOpen) {
     return "Назад"
@@ -38,7 +35,6 @@ const menuButtonText = computed(() => {
   return "Меню"
 })
 
-// Обработчик клика по кнопке меню
 const handleMenuButtonClick = () => {
   if (menuStore.isOpen) {
     menuStore.close()
@@ -69,6 +65,7 @@ const handleMenuButtonClick = () => {
       <ul class="flex gap-4">
         <li class="hover:text-[#F3A454]">
           <button
+            aria-label="Меню"
             class="cursor-pointer menu-button"
             @click="menuStore.open"
           >
@@ -125,6 +122,7 @@ const handleMenuButtonClick = () => {
         </li>
         <li class="block hover:text-[#F3A454] cursor-pointer lg:hidden">
           <button
+            aria-label="Меню"
             class="menu-button2"
             @click="handleMenuButtonClick"
           >

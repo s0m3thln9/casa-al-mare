@@ -469,7 +469,6 @@ export const useOrderStore = defineStore("order", () => {
           city.value = null
         } else if (targetCity && targetCity !== city.value) {
           city.value = targetCity
-          console.log("Город установлен:", targetCity.label)
         }
 
         await nextTick()
@@ -508,7 +507,6 @@ export const useOrderStore = defineStore("order", () => {
         }
 
         orderState.value = loadedOrder
-        console.log("Order state loaded successfully:", loadedOrder)
       } else {
         console.error("Server error loading order state:", data.value?.error)
       }
@@ -850,7 +848,6 @@ export const useOrderStore = defineStore("order", () => {
 
         if (data.value?.status === 1 || data.value?.status === 2) {
           resetOrder()
-          console.log("Статус заказа 1 или 2: сброс заполненных полей выполнен")
         }
 
         if (data.value.success && data.value.order) {
@@ -1040,7 +1037,6 @@ export const useOrderStore = defineStore("order", () => {
     } else if (targetCity && targetCity !== city.value) {
       city.value = targetCity
       await nextTick()
-      console.log("Город обновлён для UI:", targetCity.label)
     }
 
     if (city.value) {
