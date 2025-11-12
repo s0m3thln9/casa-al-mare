@@ -15,7 +15,7 @@ const isLoadingNominals = ref(true)
 
 const breadcrumbsItems: { name: string; path?: string }[] = [{ name: "Главная", path: "/" }, { name: "Сертификат" }]
 const ways = ["Электронной почтой", "По SMS", "Доставка"]
-const details = ["Отправить сразу после оплаты", "Анонимно"]
+const details = ["Анонимно"]
 const currentImageIndex = ref(0)
 const touchStartX = ref(0)
 const touchStartY = ref(0)
@@ -46,6 +46,20 @@ const phoneOptions: PhoneOption[] = [
   { code: "+373", country: "Молдова", iso: "MD" },
   { code: "+995", country: "Грузия", iso: "GE" },
 ]
+
+const handleSubmit = async () => {
+  if (certificateStore.step === 4) {
+    const result = await certificateStore.submitCertificate()
+
+    if (result.success) {
+      certificateStore.resetForm()
+    } else {
+      console.error(`Ошибка: ${result.error}`)
+    }
+  } else {
+    certificateStore.nextStep()
+  }
+}
 
 const imageStyles = computed(() => (index: number) => {
   const len = certificateImages.value.length
@@ -312,7 +326,7 @@ const getStepDescription = computed(() => {
           </div>
           <div
             :class="[
-              'flex justify-center items-center font-light sm:font-normal',
+              'flex justify-center items-center font-light sm:font-normal w-full',
               certificateStore.step === 4 ||
               certificateStore.step === 2 ||
               (certificateStore.step === 3 &&
@@ -380,6 +394,7 @@ const getStepDescription = computed(() => {
               class="w-full flex flex-col gap-8"
             >
               <AppTooltip
+                v-if="certificateStore.selectedDetails !== 'Анонимно'"
                 text="Это поле обязательно для заполнения"
                 type="error"
                 :show="recipientNameRef?.showError"
@@ -466,23 +481,27 @@ const getStepDescription = computed(() => {
               @click="certificateStore.prevStep"
             />
             <AppButton
-              :disabled="!certificateStore.canGoNext"
+              :disabled="!certificateStore.canGoNext || certificateStore.isSubmitting"
               variant="primary"
               :content="
-                certificateStore.step === 1 && certificateStore.selectedSum === null
-                  ? 'Сначала выберите номинал'
-                  : certificateStore.step === 2 && certificateStore.selectedDesign === null
-                    ? 'Выберите дизайн'
-                    : certificateStore.step === 3 && certificateStore.selectedWay === null
-                      ? 'Выберите способ отправки'
-                      : certificateStore.step === 4 && certificateStore.selectedDetails === null
-                        ? 'Укажите детали отправки'
-                        : certificateStore.step === 4 && certificateStore.selectedDetails !== null
-                          ? 'Отправить сертификат'
-                          : 'Далее'
+                certificateStore.isSubmitting
+                  ? 'Отправка...'
+                  : certificateStore.step === 1 && certificateStore.selectedSum === null
+                    ? 'Сначала выберите номинал'
+                    : certificateStore.step === 2 && certificateStore.selectedDesign === null
+                      ? 'Выберите дизайн'
+                      : certificateStore.step === 3 && certificateStore.selectedWay === null
+                        ? 'Выберите способ отправки'
+                        : certificateStore.step === 4 &&
+                            certificateStore.selectedDetails !== 'Анонимно' &&
+                            certificateStore.recipientName.trim() === ''
+                          ? 'Укажите имя получателя'
+                          : certificateStore.step === 4
+                            ? 'Оплатить'
+                            : 'Далее'
               "
               custom-class="w-full"
-              @click="certificateStore.nextStep"
+              @click="handleSubmit"
             />
           </div>
         </div>
