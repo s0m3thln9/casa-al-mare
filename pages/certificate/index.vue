@@ -220,7 +220,7 @@ const getStepDescription = computed(() => {
     case 3:
       return "Как отправить получателю?"
     case 4:
-      return "Кому и когда отправить?"
+      return "Кому отправить?"
     default:
       return ""
   }
@@ -328,6 +328,7 @@ const getStepDescription = computed(() => {
             :class="[
               'flex justify-center items-center font-light sm:font-normal w-full',
               certificateStore.step === 4 ||
+              certificateStore.step === 1 ||
               certificateStore.step === 2 ||
               (certificateStore.step === 3 &&
                 (certificateStore.selectedWay === 'Электронной почтой' || certificateStore.selectedWay === 'По SMS'))
