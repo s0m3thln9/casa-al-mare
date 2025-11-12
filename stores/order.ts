@@ -654,30 +654,31 @@ export const useOrderStore = defineStore("order", () => {
     return Math.max(price, 0.01)
   })
 
-  async function syncCartToBackend() {
+  async function decrementQuantity(id: number, variant: string) {
+    const item = cartItems.value.find((i) => i.id === id && i.variant === variant)
+    if (!item || item.count <= 1) return
+
     const token = await userStore.loadToken()
     if (!token) return
 
     try {
-      const backendItems = cartItems.value.map((item) => ({
-        id: item.id,
-        variant: item.variant,
-        count: item.count,
-      }))
       const { data, error } = await useFetch<UpdateCartResponse>("https://back.casaalmare.com/api/updateCart", {
         method: "POST",
         body: {
           token,
-          items: backendItems,
+          id,
+          variant,
+          change: -1, // отправляем изменение, а не всю корзину
         },
       })
 
       if (error.value) {
-        console.error("Network error syncing cart:", error.value)
+        console.error("Network error updating cart:", error.value)
         return
       }
 
       if (data.value?.success && data.value?.cart) {
+        // Обновляем корзину из ответа сервера
         const rawCart = data.value.cart
         const parsedCart: CartItem[] = Object.entries(rawCart).map(([_, item]) => ({
           id: item.id,
@@ -697,32 +698,113 @@ export const useOrderStore = defineStore("order", () => {
         }))
         setCartItems(parsedCart)
       } else {
-        console.error("Server error syncing cart:", data.value?.error)
+        console.error("Server error updating cart:", data.value?.error)
       }
     } catch (error) {
-      console.error("Ошибка синхронизации корзины:", error)
+      console.error("Ошибка изменения количества:", error)
     }
   }
 
-  function decrementQuantity(id: number, variant: string) {
+  async function incrementQuantity(id: number, variant: string) {
     const item = cartItems.value.find((i) => i.id === id && i.variant === variant)
-    if (item && item.count > 1) {
-      item.count--
-      syncCartToBackend()
+    if (!item) return
+
+    const token = await userStore.loadToken()
+    if (!token) return
+
+    try {
+      const { data, error } = await useFetch<UpdateCartResponse>("https://back.casaalmare.com/api/updateCart", {
+        method: "POST",
+        body: {
+          token,
+          id,
+          variant,
+          change: 1, // отправляем изменение, а не всю корзину
+        },
+      })
+
+      if (error.value) {
+        console.error("Network error updating cart:", error.value)
+        return
+      }
+
+      if (data.value?.success && data.value?.cart) {
+        // Обновляем корзину из ответа сервера
+        const rawCart = data.value.cart
+        const parsedCart: CartItem[] = Object.entries(rawCart).map(([_, item]) => ({
+          id: item.id,
+          variant: item.variant,
+          count: item.count,
+          updated_at: item.updated_at,
+          name: item.name,
+          colorName: item.colorName || "",
+          sizes: item.sizes,
+          images: item.images,
+          vector: item.vector,
+          type: item.type,
+          material: item.material,
+          useType: item.useType,
+          price: parseInt(item.price) || 0,
+          oldPrice: parseInt(item.oldPrice) || 0,
+        }))
+        setCartItems(parsedCart)
+      } else {
+        console.error("Server error updating cart:", data.value?.error)
+      }
+    } catch (error) {
+      console.error("Ошибка изменения количества:", error)
     }
   }
 
-  function incrementQuantity(id: number, variant: string) {
+  async function removeItemFromCart(id: number, variant: string) {
     const item = cartItems.value.find((i) => i.id === id && i.variant === variant)
-    if (item) {
-      item.count++
-      syncCartToBackend()
-    }
-  }
+    if (!item) return
 
-  function removeItemFromCart(id: number, variant: string) {
-    cartItems.value = cartItems.value.filter((item) => !(item.id === id && item.variant === variant))
-    syncCartToBackend()
+    const token = await userStore.loadToken()
+    if (!token) return
+
+    try {
+      const { data, error } = await useFetch<UpdateCartResponse>("https://back.casaalmare.com/api/updateCart", {
+        method: "POST",
+        body: {
+          token,
+          id,
+          variant,
+          change: -item.count, // отправляем отрицательное текущее количество
+        },
+      })
+
+      if (error.value) {
+        console.error("Network error removing item:", error.value)
+        return
+      }
+
+      if (data.value?.success && data.value?.cart) {
+        // Обновляем корзину из ответа сервера
+        const rawCart = data.value.cart
+        const parsedCart: CartItem[] = Object.entries(rawCart).map(([_, item]) => ({
+          id: item.id,
+          variant: item.variant,
+          count: item.count,
+          updated_at: item.updated_at,
+          name: item.name,
+          colorName: item.colorName || "",
+          sizes: item.sizes,
+          images: item.images,
+          vector: item.vector,
+          type: item.type,
+          material: item.material,
+          useType: item.useType,
+          price: parseInt(item.price) || 0,
+          oldPrice: parseInt(item.oldPrice) || 0,
+        }))
+        setCartItems(parsedCart)
+      } else {
+        console.error("Server error removing item:", data.value?.error)
+      }
+    } catch (error) {
+      console.error("Ошибка удаления товара:", error)
+    }
   }
 
   function setCartItems(items: CartItem[] | null | undefined) {
