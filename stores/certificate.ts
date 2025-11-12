@@ -1,7 +1,7 @@
 export const useCertificateStore = defineStore("certificate", () => {
   const step = ref(1)
   const certificateType = ref("Электронный")
-  const selectedSum = ref<string | null>(null)
+  const selectedSum = ref<number | null>(null)
   const selectedDesign = ref<number | null>(null)
   const selectedWay = ref<string | null>(null)
   const recipientEmail = ref("")
@@ -16,7 +16,7 @@ export const useCertificateStore = defineStore("certificate", () => {
 
   const canGoNext = computed(() => {
     if (step.value === 1) {
-      return selectedSum.value !== null
+      return selectedSum.value !== null && selectedSum.value > 0
     } else if (step.value === 2) {
       return selectedDesign.value !== null
     } else if (step.value === 3) {

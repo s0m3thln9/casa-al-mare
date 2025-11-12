@@ -5,8 +5,15 @@ import { useCertificateStore } from "~/stores/certificate"
 
 const certificateStore = useCertificateStore()
 
+interface Nominal {
+  id: number
+  nominal: number
+}
+
+const nominals = ref<Nominal[]>([])
+const isLoadingNominals = ref(true)
+
 const breadcrumbsItems: { name: string; path?: string }[] = [{ name: "Главная", path: "/" }, { name: "Сертификат" }]
-const sums = ["999", "9999", "99999", "999999"]
 const ways = ["Электронной почтой", "По SMS", "Доставка"]
 const details = ["Отправить сразу после оплаты", "Анонимно"]
 const currentImageIndex = ref(0)
@@ -100,6 +107,18 @@ onMounted(async () => {
     certificateImages.value = fallbackImages
   } finally {
     isLoadingImages.value = false
+  }
+
+  try {
+    isLoadingNominals.value = true
+    const nominalsResponse = await $fetch<Nominal[]>("https://back.casaalmare.com/api/getCertNominals")
+    if (nominalsResponse && nominalsResponse.length > 0) {
+      nominals.value = nominalsResponse
+    }
+  } catch (error) {
+    console.error("Ошибка загрузки номиналов:", error)
+  } finally {
+    isLoadingNominals.value = false
   }
 })
 
@@ -306,7 +325,8 @@ const getStepDescription = computed(() => {
               <SingleSelectButton
                 v-if="certificateStore.step === 1"
                 v-model="certificateStore.selectedSum"
-                :content="sums"
+                :content="nominals.map((n) => n.nominal.toString())"
+                :disabled="isLoadingNominals"
               />
             </div>
 
