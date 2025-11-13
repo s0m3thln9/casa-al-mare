@@ -32,6 +32,14 @@ const selectedSubmenuLabel = ref<string | null>(null)
 const viewport = useViewport()
 const isMobile = computed(() => viewport.isLessThan("sm"))
 
+const handleFavClick = () => {
+  if (authStore.isAuth) {
+    navigateTo("/favorites")
+  } else {
+    authModalStore.open()
+  }
+}
+
 // Рекурсивная функция для построения меню из дерева (только 1 уровень)
 const buildMenuFromTree = (node: DocNode, parentPath = ""): MenuItem[] => {
   const items: MenuItem[] = []
@@ -119,7 +127,14 @@ const secondMenuItems: MenuItem[] = [
   {
     label: "Избранное",
     customClass2: "sm:hidden",
-    link: "/favorites",
+    func: () => {
+      menuStore.close()
+      if (authStore.isAuth) {
+        navigateTo("/favorites")
+      } else {
+        authModalStore.open()
+      }
+    },
   },
   {
     label: "В личный кабинет",

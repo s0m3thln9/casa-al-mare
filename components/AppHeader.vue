@@ -98,7 +98,7 @@ const handleMenuButtonClick = () => {
     <nav>
       <ul class="flex gap-3 sm:gap-4">
         <li class="hover:text-[#F3A454] cursor-pointer"><AppSearch @search-toggle="handleSearchToggle" /></li>
-        <li class="hidden hover:text-[#F3A454] cursor-pointer lg:block relative">
+        <li class="hidden hover:text-[#F3A454] cursor-pointer sm:block relative">
           <NuxtLink @click="handleFavClick"
             >Избранное
             <span
