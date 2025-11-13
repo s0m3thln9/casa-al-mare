@@ -465,6 +465,12 @@ export const useOrderStore = defineStore("order", () => {
     })
   }
 
+  const needsDelivery = computed(() => {
+    const items = cartItems.value
+    if (items.length === 0) return false
+    return items.some((item) => item.id !== -1 || (item.id === -1 && item.certificateType === "Физический"))
+  })
+
   async function loadOrderState() {
     const token = await userStore.loadToken()
     if (!token) return
@@ -550,6 +556,15 @@ export const useOrderStore = defineStore("order", () => {
         }
 
         orderState.value = loadedOrder
+        if (!needsDelivery.value) {
+          deliveryMethod.value = null
+          city.value = null
+          currentAddress.value = null
+          selectedPvz.value = null
+          deliveryTime.value = null
+          deliveryCost.value = 0
+          commentForCourier.value = ""
+        }
       } else {
         console.error("Server error loading order state:", data.value?.error)
       }
@@ -569,6 +584,14 @@ export const useOrderStore = defineStore("order", () => {
 
   const updateOrderState = async () => {
     if (isPaymentSuccessful.value !== null) return
+
+    if (!needsDelivery.value) {
+      deliveryMethod.value = null
+      city.value = null
+      currentAddress.value = null
+      selectedPvz.value = null
+      commentForCourier.value = ""
+    }
 
     const token = await userStore.loadToken()
     if (!token) return
@@ -1036,6 +1059,15 @@ export const useOrderStore = defineStore("order", () => {
           if (!data.value.success) {
             isWidgetOpen.value = false
           }
+          if (!needsDelivery.value) {
+            deliveryMethod.value = null
+            city.value = null
+            currentAddress.value = null
+            selectedPvz.value = null
+            deliveryTime.value = null
+            deliveryCost.value = 0
+            commentForCourier.value = ""
+          }
         }
         return data.value
       }
@@ -1250,9 +1282,19 @@ export const useOrderStore = defineStore("order", () => {
   )
 
   function updateDeliveryDetails() {
+    if (!needsDelivery.value) {
+      deliveryCost.value = 0
+      deliveryTime.value = null
+      deliveryMethod.value = null
+      city.value = null
+      currentAddress.value = null
+      selectedPvz.value = null
+      return
+    }
+
     if (!hasGoods.value) {
       deliveryCost.value = 0
-      return // Скрываем/сбрасываем доставку, если только сертификаты
+      return
     }
 
     const methodId = Number(deliveryMethod.value)
@@ -1276,7 +1318,7 @@ export const useOrderStore = defineStore("order", () => {
       deliveryCost.value = 0
     }
 
-    if (goodsSum.value >= 30000) {
+    if (totalSum.value >= 30000) {
       deliveryCost.value = 0
     }
   }
@@ -1421,6 +1463,7 @@ export const useOrderStore = defineStore("order", () => {
     refreshCityForUI,
     toggleCert,
     priceFormatter,
+    needsDelivery,
     parseCart,
   }
 })

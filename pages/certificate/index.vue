@@ -395,7 +395,6 @@ const getStepDescription = computed(() => {
               class="w-full flex flex-col gap-8"
             >
               <AppTooltip
-                v-if="certificateStore.selectedDetails !== 'Анонимно'"
                 text="Это поле обязательно для заполнения"
                 type="error"
                 :show="recipientNameRef?.showError"
@@ -493,9 +492,7 @@ const getStepDescription = computed(() => {
                       ? 'Выберите дизайн'
                       : certificateStore.step === 3 && certificateStore.selectedWay === null
                         ? 'Выберите способ отправки'
-                        : certificateStore.step === 4 &&
-                            certificateStore.selectedDetails !== 'Анонимно' &&
-                            certificateStore.recipientName.trim() === ''
+                        : certificateStore.step === 4 && certificateStore.recipientName.trim() === ''
                           ? 'Укажите имя получателя'
                           : certificateStore.step === 4
                             ? 'Оплатить'

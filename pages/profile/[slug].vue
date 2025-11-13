@@ -128,6 +128,13 @@ onMounted(async () => {
 })
 
 watch(
+  () => userStore.user,
+  async () => {
+    await profileStore.loadProfile()
+  },
+)
+
+watch(
   () => route.params.slug,
   (newSlug) => {
     if (typeof newSlug === "string" && slugToTab[newSlug]) {
@@ -363,7 +370,9 @@ watch(
                     ? 'Курьер СДЭК с примеркой'
                     : +order.order.deliveryMethod === 3
                       ? 'Экспресс-доставка'
-                      : 'СДЭК (ПВЗ)',
+                      : +order.order.deliveryMethod === 4
+                        ? 'СДЭК (ПВЗ)'
+                        : null,
               paymentMethod:
                 +order.order.paymentMethod === 1
                   ? 'Картой на сайте'

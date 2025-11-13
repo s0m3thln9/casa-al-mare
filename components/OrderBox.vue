@@ -22,7 +22,7 @@ const props = defineProps<{
     address?: string | string[]
     orderDate: string
     deliveryDate: string
-    deliveryMethod: string
+    deliveryMethod: string | null
     paymentMethod: string
   }
 }>()
@@ -129,7 +129,7 @@ const navigateToItem = (itemAlias: string | undefined, itemId: number) => {
                 <template v-if="!item.isCertificate">
                   Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
                 </template>
-                <template v-else> Кому: {{ item.recipientName || item.deliveryDetails }} </template>
+                <template v-else> Кому: {{ item.recipientName }} </template>
               </span>
               <span class="text-xs text-[#414141]">
                 {{ priceFormatter(item.price) }}
@@ -166,7 +166,9 @@ const navigateToItem = (itemAlias: string | undefined, itemId: number) => {
             >Адрес доставки: <span class="font-normal">{{ formattedAddress }}</span></span
           >
         </div>
-        <span class="text-xs font-light"
+        <span
+          v-if="state.deliveryMethod"
+          class="text-xs font-light"
           >Способ доставки: <span class="font-normal">{{ state.deliveryMethod }}</span></span
         >
         <span class="text-xs font-light"

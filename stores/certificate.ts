@@ -38,7 +38,7 @@ export const useCertificateStore = defineStore("certificate", () => {
             }
           : null,
         deliveryDetails: selectedDetails.value,
-        recipientName: selectedDetails.value === "Анонимно" ? null : recipientName.value.trim() || null,
+        recipientName: recipientName.value.trim() || null,
         message: message.value || null,
         token: token,
       }
@@ -81,9 +81,6 @@ export const useCertificateStore = defineStore("certificate", () => {
         return selectedWay.value !== null
       }
     } else if (step.value === 4) {
-      if (selectedDetails.value === "Анонимно") {
-        return true
-      }
       return recipientName.value.trim() !== ""
     }
     return false
@@ -113,12 +110,6 @@ export const useCertificateStore = defineStore("certificate", () => {
     message.value = ""
     submitError.value = null
   }
-
-  watch(selectedDetails, (newValue) => {
-    if (newValue === "Анонимно") {
-      recipientName.value = ""
-    }
-  })
 
   return {
     step,

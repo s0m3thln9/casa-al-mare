@@ -135,7 +135,6 @@ export const useProfileStore = defineStore("profile", () => {
   }
 
   const loadProfile = async () => {
-    await userStore.fetchUser()
     if (userStore.user?.profile) {
       const profile = userStore.user.profile
 

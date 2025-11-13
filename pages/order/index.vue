@@ -184,54 +184,55 @@ async function handlePay(): Promise<void> {
         return
       }
     }
-
-    if (!orderStore.city || !orderStore.city.label) {
-      orderStore.showErrorDeliveryMethod = true
-      orderStore.errorDeliveryMethod = "Выберите город"
-      return
-    }
-
-    if (!cityRef.value?.validate()) {
-      orderStore.showErrorDeliveryMethod = true
-      orderStore.errorDeliveryMethod = "Выберите город"
-      return
-    }
-
-    if (!orderStore.deliveryMethod) {
-      orderStore.showErrorDeliveryMethod = true
-      orderStore.errorDeliveryMethod = "Выберите способ доставки"
-      return
-    }
-
-    if (["1", "2", "3"].includes(orderStore.deliveryMethod)) {
-      if (!orderStore.currentAddress) {
+    if (orderStore.needsDelivery) {
+      if (!orderStore.city || !orderStore.city.label) {
         orderStore.showErrorDeliveryMethod = true
-        orderStore.errorDeliveryMethod = "Выберите адрес доставки"
+        orderStore.errorDeliveryMethod = "Выберите город"
         return
       }
 
-      const isNewAddress =
-        orderStore.currentAddress === "Новый адрес" ||
-        (Array.isArray(orderStore.currentAddress) && orderStore.currentAddress.includes("Новый адрес"))
+      if (!cityRef.value?.validate()) {
+        orderStore.showErrorDeliveryMethod = true
+        orderStore.errorDeliveryMethod = "Выберите город"
+        return
+      }
 
-      if (isNewAddress) {
-        if (!newAddressRef.value?.validate()) {
+      if (!orderStore.deliveryMethod) {
+        orderStore.showErrorDeliveryMethod = true
+        orderStore.errorDeliveryMethod = "Выберите способ доставки"
+        return
+      }
+
+      if (["1", "2", "3"].includes(orderStore.deliveryMethod)) {
+        if (!orderStore.currentAddress) {
           orderStore.showErrorDeliveryMethod = true
-          orderStore.errorDeliveryMethod = "Введите адрес доставки"
+          orderStore.errorDeliveryMethod = "Выберите адрес доставки"
           return
         }
-        if (orderStore.currentAddress === "Новый адрес") {
-          orderStore.showErrorDeliveryMethod = true
-          orderStore.errorDeliveryMethod = "Сохраните новый адрес перед оплатой"
-          return
+
+        const isNewAddress =
+          orderStore.currentAddress === "Новый адрес" ||
+          (Array.isArray(orderStore.currentAddress) && orderStore.currentAddress.includes("Новый адрес"))
+
+        if (isNewAddress) {
+          if (!newAddressRef.value?.validate()) {
+            orderStore.showErrorDeliveryMethod = true
+            orderStore.errorDeliveryMethod = "Введите адрес доставки"
+            return
+          }
+          if (orderStore.currentAddress === "Новый адрес") {
+            orderStore.showErrorDeliveryMethod = true
+            orderStore.errorDeliveryMethod = "Сохраните новый адрес перед оплатой"
+            return
+          }
         }
       }
-    }
-    if (orderStore.deliveryMethod === "4") {
-      if (!orderStore.selectedPvz) {
-        orderStore.showErrorDeliveryMethod = true
-        orderStore.errorDeliveryMethod = "Выберите пункт выдачи СДЭК"
-        return
+      if (orderStore.deliveryMethod === "4") {
+        if (!orderStore.selectedPvz) {
+          orderStore.showErrorDeliveryMethod = true
+          orderStore.errorDeliveryMethod = "Выберите пункт выдачи СДЭК"
+          return
+        }
       }
     }
   }
@@ -578,7 +579,7 @@ useSmsAutoSubmit(
                         <template v-if="!item.isCertificate">
                           Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
                         </template>
-                        <template v-else> Кому: {{ item.recipientName || item.deliveryDetails }} </template>
+                        <template v-else> Кому: {{ item.recipientName }} </template>
                       </span>
                       <span class="text-xs text-[#414141]">
                         {{ orderStore.priceFormatter(item.price) }}
@@ -804,6 +805,7 @@ useSmsAutoSubmit(
         </div>
         <div
           class="p-4 pb-6 sm:p-10 flex flex-col sm:gap-12 gap-6 w-full max-w-[652px] sm:rounded-4xl rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
+          :class="!orderStore.needsDelivery && 'max-sm:hidden'"
         >
           <template v-if="orderStore.isPaymentSuccessful === null">
             <AppTooltip
@@ -961,114 +963,116 @@ useSmsAutoSubmit(
                 </div>
               </div>
             </AppTooltip>
-            <AppTooltip
-              :text="orderStore.errorDeliveryMethod ? orderStore.errorDeliveryMethod : 'Выберите способ доставки'"
-              type="error"
-              :show="orderStore.showErrorDeliveryMethod"
-              @update:show="(value) => (orderStore.showErrorDeliveryMethod = value)"
-            >
-              <div class="relative flex flex-col gap-6 w-full">
-                <span class="sm:font-light text-[17px] sm:text-sm">Доставка</span>
-                <AppTooltip
-                  text="Это поле обязательно для заполнения"
-                  type="error"
-                  :show="cityRef?.showError"
-                >
-                  <AppSelect
-                    ref="cityRef"
-                    :key="orderStore.city?.label || 'default'"
-                    v-model="orderStore.city"
-                    label="Город"
-                    custom-class="w-full"
-                    required
-                    searchable
-                    async-search
-                    city-mode
-                    async-search-url="https://back.casaalmare.com/api/getCityByQuery"
-                  />
-                </AppTooltip>
-                <div class="flex flex-col gap-6">
-                  <AppCheckbox
-                    v-for="type in orderStore.deliveryTypes"
-                    :key="type.id"
-                    v-model="orderStore.deliveryMethod"
-                    size="M"
-                    :label="`${type.name} ${!type.isExpress ? `${getTimeLabel(type)}` : ''}`"
-                    :value="String(type.id)"
-                  />
-                </div>
-                <div
-                  v-if="['1', '2', '3'].includes(orderStore.deliveryMethod)"
-                  class="flex flex-col gap-4"
-                >
-                  <AppCheckbox
-                    v-for="(address, index) in orderStore.addresses"
-                    :key="index"
-                    v-model="orderStore.currentAddress"
-                    size="S"
-                    :label="address"
-                    :value="address"
-                    :multiple="false"
-                  />
-                  <AppCheckbox
-                    v-model="orderStore.currentAddress"
-                    size="S"
-                    label="Новый адрес"
-                    value="Новый адрес"
-                    :multiple="false"
-                  />
-                  <div
-                    v-if="
-                      orderStore.currentAddress === 'Новый адрес' ||
-                      (Array.isArray(orderStore.currentAddress) && orderStore.currentAddress.includes('Новый адрес'))
-                    "
-                    class="flex flex-col gap-4"
+            <template v-if="orderStore.needsDelivery">
+              <AppTooltip
+                :text="orderStore.errorDeliveryMethod ? orderStore.errorDeliveryMethod : 'Выберите способ доставки'"
+                type="error"
+                :show="orderStore.showErrorDeliveryMethod"
+                @update:show="(value) => (orderStore.showErrorDeliveryMethod = value)"
+              >
+                <div class="relative flex flex-col gap-6 w-full">
+                  <span class="sm:font-light text-[17px] sm:text-sm">Доставка</span>
+                  <AppTooltip
+                    text="Это поле обязательно для заполнения"
+                    type="error"
+                    :show="cityRef?.showError"
                   >
-                    <AppTooltip
-                      text="Это поле обязательно для заполнения"
-                      type="error"
-                      :show="newAddressRef?.showError"
-                    >
-                      <AppInput
-                        id="address1"
-                        ref="newAddressRef"
-                        v-model="orderStore.newAddressFirstLine"
-                        type="text"
-                        label="Улица, дом, корпус, строение, квартира"
-                        custom-class="w-full"
-                        required
-                      />
-                    </AppTooltip>
-                    <AppInput
-                      id="address2"
-                      v-model="orderStore.newAddressSecondLine"
-                      type="text"
-                      label="Подъезд, код домофона"
-                    />
-                    <AppButton
+                    <AppSelect
+                      ref="cityRef"
+                      :key="orderStore.city?.label || 'default'"
+                      v-model="orderStore.city"
+                      label="Город"
                       custom-class="w-full"
-                      content="Сохранить"
-                      variant="primary"
-                      :disabled="orderStore.isLoadingPayment"
-                      @click="handleSave"
+                      required
+                      searchable
+                      async-search
+                      city-mode
+                      async-search-url="https://back.casaalmare.com/api/getCityByQuery"
+                    />
+                  </AppTooltip>
+                  <div class="flex flex-col gap-6">
+                    <AppCheckbox
+                      v-for="type in orderStore.deliveryTypes"
+                      :key="type.id"
+                      v-model="orderStore.deliveryMethod"
+                      size="M"
+                      :label="`${type.name} ${!type.isExpress ? `${getTimeLabel(type)}` : ''}`"
+                      :value="String(type.id)"
                     />
                   </div>
-                </div>
-                <div v-if="orderStore.deliveryMethod === '4'">
-                  <PvzSelector
-                    v-model="orderStore.selectedPvz"
-                    v-model:city="orderStore.city"
-                    :city="{ name: orderStore.city?.name || 'Москва' }"
+                  <div
+                    v-if="['1', '2', '3'].includes(orderStore.deliveryMethod)"
+                    class="flex flex-col gap-4"
+                  >
+                    <AppCheckbox
+                      v-for="(address, index) in orderStore.addresses"
+                      :key="index"
+                      v-model="orderStore.currentAddress"
+                      size="S"
+                      :label="address"
+                      :value="address"
+                      :multiple="false"
+                    />
+                    <AppCheckbox
+                      v-model="orderStore.currentAddress"
+                      size="S"
+                      label="Новый адрес"
+                      value="Новый адрес"
+                      :multiple="false"
+                    />
+                    <div
+                      v-if="
+                        orderStore.currentAddress === 'Новый адрес' ||
+                        (Array.isArray(orderStore.currentAddress) && orderStore.currentAddress.includes('Новый адрес'))
+                      "
+                      class="flex flex-col gap-4"
+                    >
+                      <AppTooltip
+                        text="Это поле обязательно для заполнения"
+                        type="error"
+                        :show="newAddressRef?.showError"
+                      >
+                        <AppInput
+                          id="address1"
+                          ref="newAddressRef"
+                          v-model="orderStore.newAddressFirstLine"
+                          type="text"
+                          label="Улица, дом, корпус, строение, квартира"
+                          custom-class="w-full"
+                          required
+                        />
+                      </AppTooltip>
+                      <AppInput
+                        id="address2"
+                        v-model="orderStore.newAddressSecondLine"
+                        type="text"
+                        label="Подъезд, код домофона"
+                      />
+                      <AppButton
+                        custom-class="w-full"
+                        content="Сохранить"
+                        variant="primary"
+                        :disabled="orderStore.isLoadingPayment"
+                        @click="handleSave"
+                      />
+                    </div>
+                  </div>
+                  <div v-if="orderStore.deliveryMethod === '4'">
+                    <PvzSelector
+                      v-model="orderStore.selectedPvz"
+                      v-model:city="orderStore.city"
+                      :city="{ name: orderStore.city?.name || 'Москва' }"
+                    />
+                  </div>
+                  <AppInput
+                    id="forCourier"
+                    v-model="orderStore.commentForCourier"
+                    type="text"
+                    label="Пожелания и комментарии для курьера"
                   />
                 </div>
-                <AppInput
-                  id="forCourier"
-                  v-model="orderStore.commentForCourier"
-                  type="text"
-                  label="Пожелания и комментарии для курьера"
-                />
-              </div>
-            </AppTooltip>
+              </AppTooltip>
+            </template>
             <AppTooltip
               text="Выберите способ оплаты"
               type="error"
@@ -1230,18 +1234,18 @@ useSmsAutoSubmit(
         <div class="sm:hidden mt-4 flex flex-col gap-6 w-full max-w-[652px] h-fit">
           <template v-if="orderStore.isPaymentSuccessful === null">
             <div class="flex flex-col gap-1 text-sm font-light">
-              <template v-if="orderStore.hasGoods">
+              <template v-if="orderStore.needsDelivery">
                 <div class="flex items-center justify-between">
                   <span>Доставка:</span>
                   <span>
                     {{
                       Number(orderStore.deliveryMethod) === 3
                         ? "по согласованию с менеджером"
-                        : orderStore.goodsSum >= 30000
+                        : orderStore.totalSum >= 30000
                           ? "бесплатно"
                           : orderStore.priceFormatter(orderStore.deliveryCost)
-                    }}</span
-                  >
+                    }}
+                  </span>
                 </div>
               </template>
               <div class="flex items-center justify-between">
@@ -1316,7 +1320,7 @@ useSmsAutoSubmit(
                         <template v-if="!item.isCertificate">
                           Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
                         </template>
-                        <template v-else> Кому: {{ item.recipientName || item.deliveryDetails }} </template>
+                        <template v-else> Кому: {{ item.recipientName }} </template>
                       </span>
                       <span class="text-xs text-[#414141]">
                         {{ orderStore.priceFormatter(item.price) }}
@@ -1472,7 +1476,7 @@ useSmsAutoSubmit(
                   </div>
                 </div>
                 <div class="flex flex-col gap-1 text-sm font-light">
-                  <template v-if="orderStore.hasGoods">
+                  <template v-if="orderStore.needsDelivery">
                     <div class="flex items-center justify-between">
                       <span>Доставка:</span>
                       <span>
@@ -1484,8 +1488,8 @@ useSmsAutoSubmit(
                               : orderStore.priceFormatter(orderStore.deliveryCost)
                         }}
                       </span>
-                    </div></template
-                  >
+                    </div>
+                  </template>
                   <div class="flex items-center justify-between">
                     <span>Стоимость товаров:</span>
                     <span class="flex items-center gap-2">

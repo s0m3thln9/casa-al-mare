@@ -4,7 +4,6 @@ const favoritesStore = useFavoritesStore()
 const authModalStore = useAuthModalStore()
 const authStore = useAuthStore()
 const orderStore = useOrderStore()
-const userStore = useUserStore()
 const viewport = useViewport()
 
 const isMobile = computed(() => viewport.isLessThan("sm"))
@@ -16,11 +15,7 @@ const handleSearchToggle = (isOpen: boolean) => {
 }
 
 const cartCount = computed(() => {
-  if (userStore.user?.total_quantity || 0 > orderStore.cartItems.reduce((total, item) => total + item.count, 0)) {
-    return userStore.user?.total_quantity || 0
-  } else {
-    return orderStore.cartItems.reduce((total, item) => total + item.count, 0)
-  }
+  return orderStore.cartItems.reduce((total, item) => total + item.count, 0)
 })
 
 const handleFavClick = () => {
