@@ -147,3 +147,42 @@ export interface PvzData {
   weight_min: number
   work_time: string
 }
+
+export interface ProfileExtended {
+  addresses: string[][]
+  city: CityData
+  country: string[]
+  favorites: number[]
+  firstname: string
+  lastname: string
+  token: string
+}
+
+export interface ProfileData {
+  email: string
+  name: string
+  surname: string
+  phone: string
+  day: string
+  month: string
+  year: string
+  city: CityData
+  adr1: string
+  adr2: string
+}
+
+export interface ResetPassword {
+  success: boolean
+  error: string
+}
+
+export interface EditUser {
+  success: boolean
+  changes: {
+    fullname: string
+    birthdate: string
+    address: string[]
+    city: CityData
+  }
+  error?: string
+}

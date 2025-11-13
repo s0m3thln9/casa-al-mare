@@ -65,6 +65,11 @@ const handleLogout = async () => {
 }
 
 const handleSaveProfile = async (): Promise<void> => {
+  if (!profileStore.hasChanges) {
+    profileStore.saveError = "Нет изменений для сохранения"
+    return
+  }
+
   const requiredRefs = [nameRef, surnameRef, dayRef, monthRef, yearRef, cityRef, adr1Ref]
   const isValid = requiredRefs.every((ref) => ref?.value?.validate() ?? false)
   if (!isValid) return
@@ -343,7 +348,7 @@ watch(
           <AppButton
             variant="primary"
             :content="profileStore.buttonContent"
-            :disabled="profileStore.isSaving"
+            :disabled="!profileStore.hasChanges || profileStore.isSaving"
             custom-class="w-full mt-8"
             @click="handleSaveProfile"
           />

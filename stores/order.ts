@@ -10,22 +10,9 @@ interface Certificate {
   value_now: number
 }
 
-export interface PvzData {
-  address: string
-  [key: string]: any
-}
-
 interface PointsResponse {
   success: boolean
   points: number
-}
-
-export interface CityData {
-  label: string
-  name: string
-  kladr: string
-  fias: string
-  region?: string
 }
 
 interface PaymentDataResponse {

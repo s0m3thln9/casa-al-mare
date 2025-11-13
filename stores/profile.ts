@@ -1,17 +1,12 @@
 import { defineStore } from "pinia"
-import type { EditUserResponse } from "~/pages/profile/[slug].vue"
+import type { CityData, EditUser, ProfileData, ProfileExtended, ResetPassword } from "~/types"
 
-interface ProfileData {
-  email: string
-  name: string
-  surname: string
-  phone: string
-  day: string
-  month: string
-  year: string
-  city: string // Новое поле для города
-  adr1: string // Улица, дом
-  adr2: string // Подъезд, код домофона
+interface Body {
+  token: string
+  fullname: string
+  birthdate: string
+  address: string[]
+  city: CityData
 }
 
 export const useProfileStore = defineStore("profile", () => {
@@ -33,7 +28,14 @@ export const useProfileStore = defineStore("profile", () => {
     year: "1980",
     adr1: "",
     adr2: "",
-    city: "",
+    city: {} as CityData,
+  })
+
+  const originalProfileData = ref<ProfileData | null>(null)
+
+  const hasChanges = computed(() => {
+    if (!originalProfileData.value) return false
+    return JSON.stringify(profileData.value) !== JSON.stringify(originalProfileData.value)
   })
 
   const isSaving = ref(false)
@@ -82,29 +84,16 @@ export const useProfileStore = defineStore("profile", () => {
     resetMessage.value = ""
 
     try {
-      const { data: responseData, error: fetchError } = await useFetch(
-        "https://back.casaalmare.com/api/resetPassword",
-        {
-          method: "POST",
-          body: { email },
-          headers: {
-            "Content-Type": "application/json",
-          },
+      const data = await $fetch<ResetPassword>("https://back.casaalmare.com/api/resetPassword", {
+        method: "POST",
+        body: { email },
+        headers: {
+          "Content-Type": "application/json",
         },
-      )
+      })
 
       isResetLoading.value = false
 
-      if (fetchError.value) {
-        console.error("Fetch error details:", fetchError.value)
-        resetMessage.value = fetchError.value.data?.message || fetchError.value.message || "Ошибка сети или сервера"
-        resetMessageType.value = "error"
-        resetButtonContent.value = "Попробовать снова"
-        resetButtonDisabled.value = false
-        return false
-      }
-
-      const data = responseData.value
       if (data?.success) {
         resetMessage.value = `Письмо отправлено на ${email}`
         resetMessageType.value = "info"
@@ -123,13 +112,13 @@ export const useProfileStore = defineStore("profile", () => {
         resetButtonDisabled.value = false
         return false
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Unexpected error in resetPassword:", err)
-      resetMessage.value = "Ошибка сети или сервера"
+      isResetLoading.value = false
+      resetMessage.value = (err as string) || "Ошибка сети или сервера"
       resetMessageType.value = "error"
       resetButtonContent.value = "Попробовать снова"
       resetButtonDisabled.value = false
-      isResetLoading.value = false
       return false
     }
   }
@@ -155,27 +144,31 @@ export const useProfileStore = defineStore("profile", () => {
         }
       }
 
-      // Город из profile.extended.city
-      if (profile.extended?.city?.name) {
-        profileData.value.city = profile.extended.city.name || ""
+      if (profile.extended?.city) {
+        profileData.value.city = profile.extended.city || {}
+      } else {
+        profileData.value.city = {} as CityData
       }
 
-      // Адрес из нового формата [adr1, adr2]
-      // Приоритет: profile.address, затем addresses[0]
       if (profile.address && Array.isArray(profile.address)) {
         profileData.value.adr1 = profile.address[0] || ""
         profileData.value.adr2 = profile.address[1] || ""
       } else if (
-        userStore.user.addresses &&
-        Array.isArray(userStore.user.addresses) &&
-        userStore.user.addresses.length > 0
+        profile.extended.addresses &&
+        Array.isArray(profile.extended.addresses) &&
+        profile.extended.addresses.length > 0
       ) {
-        const mainAddress = userStore.user.addresses[0]
+        const mainAddress = profile.extended.addresses[0]
         if (Array.isArray(mainAddress)) {
           profileData.value.adr1 = mainAddress[0] || ""
           profileData.value.adr2 = mainAddress[1] || ""
         }
+      } else {
+        profileData.value.adr1 = ""
+        profileData.value.adr2 = ""
       }
+
+      originalProfileData.value = { ...profileData.value }
     }
   }
 
@@ -191,19 +184,17 @@ export const useProfileStore = defineStore("profile", () => {
     const birthdateStr = `${profileData.value.year}-${String(months.indexOf(profileData.value.month) + 1).padStart(2, "0")}-${profileData.value.day.padStart(2, "0")}`
     const date = new Date(birthdateStr)
 
-    // Формируем адрес в новом формате [adr1, adr2]
     const address = [profileData.value.adr1.trim(), profileData.value.adr2.trim()]
 
-    const body: any = { token }
+    const body: Body = {} as Body
+    body.token = token
 
     if (fullName) body.fullname = fullName
     if (!isNaN(date.getTime()) && profileData.value.day && profileData.value.month && profileData.value.year) {
       body.birthdate = birthdateStr
     }
-    // Отправляем адрес как массив [adr1, adr2]
     if (address[0]) body.address = address
-    // Отправляем город отдельно
-    if (profileData.value.city) body.city = profileData.value.city
+    if (profileData.value.city && Object.keys(profileData.value.city).length > 0) body.city = profileData.value.city
 
     if (Object.keys(body).length <= 1) {
       saveError.value = "Нет данных для обновления"
@@ -215,40 +206,42 @@ export const useProfileStore = defineStore("profile", () => {
     buttonContent.value = "Сохранение..."
 
     try {
-      const { data, error } = await useFetch<EditUserResponse>("https://back.casaalmare.com/api/editUser", {
+      const data = await $fetch<EditUser>("https://back.casaalmare.com/api/editUser", {
         method: "POST",
-        body: JSON.stringify(body),
+        body,
       })
 
-      if (error.value || !data.value?.success) {
-        saveError.value = data.value?.error || "Неизвестная ошибка сервера"
+      if (!data?.success) {
+        saveError.value = data?.error || "Неизвестная ошибка сервера"
         buttonContent.value = "Попробовать снова"
+        isSaving.value = false
         return false
       }
 
       if (userStore.user?.profile) {
         if (fullName) userStore.user.profile.fullname = fullName
         if (!isNaN(date.getTime())) userStore.user.profile.birthdate = birthdateStr
-        // Обновляем адрес в profile.address
         if (address[0]) {
           userStore.user.profile.address = address
         }
-        // Обновляем город
-        if (profileData.value.city) {
-          if (!userStore.user.profile.extended) userStore.user.profile.extended = {}
+        if (profileData.value.city && Object.keys(profileData.value.city).length > 0) {
+          if (!userStore.user.profile.extended) userStore.user.profile.extended = {} as ProfileExtended
           if (!userStore.user.profile.extended.city) userStore.user.profile.extended.city = {} as CityData
-          userStore.user.profile.extended.city.name = profileData.value.city
+          userStore.user.profile.extended.city = profileData.value.city
         }
       }
+
+      originalProfileData.value = { ...profileData.value }
+
       buttonContent.value = "Сохранено!"
+      isSaving.value = false
       return true
-    } catch (err) {
-      saveError.value = "Ошибка сети или сервера"
+    } catch (err: unknown) {
+      saveError.value = (err as string) || "Ошибка сети или сервера"
       buttonContent.value = "Попробовать снова"
       console.error("Ошибка API editUser:", err)
-      return false
-    } finally {
       isSaving.value = false
+      return false
     }
   }
 
@@ -268,5 +261,6 @@ export const useProfileStore = defineStore("profile", () => {
     isSaving,
     saveError,
     buttonContent,
+    hasChanges,
   }
 })
