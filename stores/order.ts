@@ -124,6 +124,7 @@ interface PaymentMethodsResponse {
 }
 
 export type CartItem = {
+  key: string
   id: number
   variant: string
   count: number
@@ -426,6 +427,44 @@ export const useOrderStore = defineStore("order", () => {
     }
   }
 
+  function parseCart(rawCart: Record<string, any>): CartItem[] {
+    return Object.entries(rawCart).map(([key, item]) => {
+      const vector: Record<string, { quantity: number; comingSoon: boolean }> = {}
+      if (item.vector) {
+        for (const [size, vecData] of Object.entries(item.vector)) {
+          vector[size] = {
+            quantity: vecData.quantity || 0,
+            comingSoon: !!vecData.comingSoon,
+          }
+        }
+      }
+      return {
+        key,
+        id: item.id,
+        variant: item.variant || (item.id === -1 ? "certificate" : ""),
+        count: item.count,
+        updated_at: item.updated_at || undefined,
+        name: item.name,
+        colorName: item.colorName || "",
+        sizes: item.sizes || [],
+        images: item.images || {},
+        vector,
+        type: item.type || "",
+        material: item.material || [],
+        useType: item.useType || [],
+        price: parseInt(item.price) || 0,
+        oldPrice: parseInt(item.oldPrice) || 0,
+        certificateType: item.options?.certificateType,
+        deliveryMethod: item.options?.deliveryMethod,
+        recipientEmail: item.options?.recipientEmail,
+        recipientName: item.options?.recipientName,
+        recipientPhone: item.options?.recipientPhone,
+        deliveryDetails: item.options?.deliveryDetails,
+        options: item.options,
+      }
+    })
+  }
+
   async function loadOrderState() {
     const token = await userStore.loadToken()
     if (!token) return
@@ -595,26 +634,63 @@ export const useOrderStore = defineStore("order", () => {
   const debouncedUpdateOrderState = debounce(updateOrderState, 500)
 
   const cartDetailed = computed(() => {
-    return cartItems.value.map((cartItem) => {
-      if (!cartItem.variant) return
+    return cartItems.value
+      .map((cartItem) => {
+        const isCertificate = cartItem.id === -1
 
-      const size = cartItem.variant
-      const colorName = cartItem.colorName || "Цвет не указан"
+        if (isCertificate) {
+          return {
+            key: cartItem.key,
+            id: cartItem.id,
+            count: cartItem.count,
+            name: cartItem.name,
+            images: cartItem.images,
+            price: cartItem.price,
+            oldPrice: cartItem.oldPrice,
+            certificateType: cartItem.certificateType || cartItem.options?.certificateType,
+            deliveryMethod: cartItem.deliveryMethod || cartItem.options?.deliveryMethod,
+            recipientEmail: cartItem.recipientEmail || cartItem.options?.recipientEmail,
+            recipientName: cartItem.recipientName || cartItem.options?.recipientName,
+            recipientPhone: cartItem.recipientPhone || cartItem.options?.recipientPhone,
+            deliveryDetails: cartItem.deliveryDetails || cartItem.options?.deliveryDetails,
+            vector: "certificate",
+            isCertificate: true,
+          }
+        }
 
-      const imagesArray = Object.values(cartItem.images).filter((img) => img)
+        if (!cartItem.variant) return null
 
-      return {
-        id: cartItem.id,
-        vector: cartItem.variant,
-        count: cartItem.count,
-        name: cartItem.name,
-        color: colorName,
-        images: imagesArray,
-        size,
-        price: cartItem.price,
-        oldPrice: cartItem.oldPrice,
-      }
-    })
+        const size = cartItem.variant
+        const colorName = cartItem.colorName || "Цвет не указан"
+
+        const imagesArray = Object.values(cartItem.images).filter((img) => img)
+
+        return {
+          key: cartItem.key,
+          id: cartItem.id,
+          vector: cartItem.variant,
+          count: cartItem.count,
+          name: cartItem.name,
+          color: colorName,
+          images: imagesArray,
+          size,
+          price: cartItem.price,
+          oldPrice: cartItem.oldPrice,
+          isCertificate: false,
+        }
+      })
+      .filter(Boolean)
+  })
+
+  const goodsSum = computed(() => {
+    return cartItems.value.reduce((sum, cartItem) => {
+      if (cartItem.id === -1) return sum
+      return sum + cartItem.price * cartItem.count
+    }, 0)
+  })
+
+  const certsInCartSum = computed(() => {
+    return totalSum.value - goodsSum.value
   })
 
   const totalOldSum = computed(() => {
@@ -631,44 +707,50 @@ export const useOrderStore = defineStore("order", () => {
   })
 
   const finalPrice = computed(() => {
-    let price = totalSum.value
+    let price = goodsSum.value
 
     if (pointsToUse.value > 0 && userStore.user) {
       price -= Math.min(pointsToUse.value, price)
     }
 
     if (selectedCertificates.value.length > 0 && userStore.user) {
-      const certSum = selectedCertificates.value.reduce((sum, code) => {
+      const certDiscount = selectedCertificates.value.reduce((sum, code) => {
         const cert = userStore.user!.certificates.find((c) => c.code === code)
         return cert ? sum + cert.value_now : sum
       }, 0)
-      price -= Math.min(certSum, price)
+      price -= Math.min(certDiscount, price)
     }
 
     let deliveryFee = deliveryCost.value
-    if (totalSum.value >= 30000) {
+    if (goodsSum.value >= 30000) {
       deliveryFee = 0
     }
-    price += deliveryFee
+    price += deliveryFee + certsInCartSum.value
 
     return Math.max(price, 0.01)
   })
 
-  async function decrementQuantity(id: number, variant: string) {
-    const item = cartItems.value.find((i) => i.id === id && i.variant === variant)
+  async function decrementQuantity(keyOrId: string) {
+    let item: CartItem | undefined
+    if (cartItems.value.some((i) => i.key === keyOrId)) {
+      item = cartItems.value.find((i) => i.key === keyOrId)
+    } else {
+      item = cartItems.value.find((i) => i.id === Number(keyOrId))
+    }
     if (!item || item.count <= 1) return
 
     const token = await userStore.loadToken()
     if (!token) return
 
+    const key = item.key
+
     try {
       const { data, error } = await useFetch<UpdateCartResponse>("https://back.casaalmare.com/api/updateCart", {
         method: "POST",
         body: {
           token,
-          id,
-          variant,
-          change: -1, // отправляем изменение, а не всю корзину
+          key,
+          change: -1,
         },
       })
 
@@ -678,24 +760,8 @@ export const useOrderStore = defineStore("order", () => {
       }
 
       if (data.value?.success && data.value?.cart) {
-        // Обновляем корзину из ответа сервера
         const rawCart = data.value.cart
-        const parsedCart: CartItem[] = Object.entries(rawCart).map(([_, item]) => ({
-          id: item.id,
-          variant: item.variant,
-          count: item.count,
-          updated_at: item.updated_at,
-          name: item.name,
-          colorName: item.colorName || "",
-          sizes: item.sizes,
-          images: item.images,
-          vector: item.vector,
-          type: item.type,
-          material: item.material,
-          useType: item.useType,
-          price: parseInt(item.price) || 0,
-          oldPrice: parseInt(item.oldPrice) || 0,
-        }))
+        const parsedCart = parseCart(rawCart)
         setCartItems(parsedCart)
       } else {
         console.error("Server error updating cart:", data.value?.error)
@@ -705,21 +771,27 @@ export const useOrderStore = defineStore("order", () => {
     }
   }
 
-  async function incrementQuantity(id: number, variant: string) {
-    const item = cartItems.value.find((i) => i.id === id && i.variant === variant)
+  async function incrementQuantity(keyOrId: string) {
+    let item: CartItem | undefined
+    if (cartItems.value.some((i) => i.key === keyOrId)) {
+      item = cartItems.value.find((i) => i.key === keyOrId)
+    } else {
+      item = cartItems.value.find((i) => i.id === Number(keyOrId))
+    }
     if (!item) return
 
     const token = await userStore.loadToken()
     if (!token) return
+
+    const key = item.key
 
     try {
       const { data, error } = await useFetch<UpdateCartResponse>("https://back.casaalmare.com/api/updateCart", {
         method: "POST",
         body: {
           token,
-          id,
-          variant,
-          change: 1, // отправляем изменение, а не всю корзину
+          key,
+          change: 1,
         },
       })
 
@@ -729,24 +801,8 @@ export const useOrderStore = defineStore("order", () => {
       }
 
       if (data.value?.success && data.value?.cart) {
-        // Обновляем корзину из ответа сервера
         const rawCart = data.value.cart
-        const parsedCart: CartItem[] = Object.entries(rawCart).map(([_, item]) => ({
-          id: item.id,
-          variant: item.variant,
-          count: item.count,
-          updated_at: item.updated_at,
-          name: item.name,
-          colorName: item.colorName || "",
-          sizes: item.sizes,
-          images: item.images,
-          vector: item.vector,
-          type: item.type,
-          material: item.material,
-          useType: item.useType,
-          price: parseInt(item.price) || 0,
-          oldPrice: parseInt(item.oldPrice) || 0,
-        }))
+        const parsedCart = parseCart(rawCart)
         setCartItems(parsedCart)
       } else {
         console.error("Server error updating cart:", data.value?.error)
@@ -756,21 +812,27 @@ export const useOrderStore = defineStore("order", () => {
     }
   }
 
-  async function removeItemFromCart(id: number, variant: string) {
-    const item = cartItems.value.find((i) => i.id === id && i.variant === variant)
+  async function removeItemFromCart(keyOrId: string) {
+    let item: CartItem | undefined
+    if (cartItems.value.some((i) => i.key === keyOrId)) {
+      item = cartItems.value.find((i) => i.key === keyOrId)
+    } else {
+      item = cartItems.value.find((i) => i.id === Number(keyOrId))
+    }
     if (!item) return
 
     const token = await userStore.loadToken()
     if (!token) return
+
+    const key = item.key
 
     try {
       const { data, error } = await useFetch<UpdateCartResponse>("https://back.casaalmare.com/api/updateCart", {
         method: "POST",
         body: {
           token,
-          id,
-          variant,
-          change: -item.count, // отправляем отрицательное текущее количество
+          key,
+          change: -item.count,
         },
       })
 
@@ -780,24 +842,8 @@ export const useOrderStore = defineStore("order", () => {
       }
 
       if (data.value?.success && data.value?.cart) {
-        // Обновляем корзину из ответа сервера
         const rawCart = data.value.cart
-        const parsedCart: CartItem[] = Object.entries(rawCart).map(([_, item]) => ({
-          id: item.id,
-          variant: item.variant,
-          count: item.count,
-          updated_at: item.updated_at,
-          name: item.name,
-          colorName: item.colorName || "",
-          sizes: item.sizes,
-          images: item.images,
-          vector: item.vector,
-          type: item.type,
-          material: item.material,
-          useType: item.useType,
-          price: parseInt(item.price) || 0,
-          oldPrice: parseInt(item.oldPrice) || 0,
-        }))
+        const parsedCart = parseCart(rawCart)
         setCartItems(parsedCart)
       } else {
         console.error("Server error removing item:", data.value?.error)
@@ -971,22 +1017,7 @@ export const useOrderStore = defineStore("order", () => {
           }
 
           if (data.value.cart) {
-            const parsedCart: CartItem[] = Object.entries(data.value.cart).map(([_, item]) => ({
-              id: item.id,
-              variant: item.variant,
-              count: item.count,
-              updated_at: item.updated_at,
-              name: item.name,
-              colorName: item.colorName || "",
-              sizes: item.sizes,
-              images: item.images,
-              vector: item.vector,
-              type: item.type,
-              material: item.material,
-              useType: item.useType,
-              price: parseInt(item.price) || 0,
-              oldPrice: parseInt(item.oldPrice) || 0,
-            }))
+            const parsedCart = parseCart(data.value.cart)
             setCartItems(parsedCart)
           }
           if (!data.value.success) {
@@ -1015,7 +1046,7 @@ export const useOrderStore = defineStore("order", () => {
       return
     }
 
-    const maxPoints = Math.floor(totalSum.value * 0.2)
+    const maxPoints = Math.floor(goodsSum.value * 0.2)
 
     if (points > (userStore.user?.points || 0)) {
       pointsError.value = "Недостаточно баллов"
@@ -1186,6 +1217,8 @@ export const useOrderStore = defineStore("order", () => {
     { immediate: true, deep: true },
   )
 
+  const hasGoods = computed(() => goodsSum.value > 0)
+
   watch(
     () => userStore.user?.profile?.extended?.city,
     (newCity) => {
@@ -1199,6 +1232,11 @@ export const useOrderStore = defineStore("order", () => {
   )
 
   function updateDeliveryDetails() {
+    if (!hasGoods.value) {
+      deliveryCost.value = 0
+      return // Скрываем/сбрасываем доставку, если только сертификаты
+    }
+
     const methodId = Number(deliveryMethod.value)
     const type = deliveryTypes.value.find((t) => t.id === methodId)
 
@@ -1220,7 +1258,7 @@ export const useOrderStore = defineStore("order", () => {
       deliveryCost.value = 0
     }
 
-    if (totalSum.value >= 30000) {
+    if (goodsSum.value >= 30000) {
       deliveryCost.value = 0
     }
   }
@@ -1287,6 +1325,7 @@ export const useOrderStore = defineStore("order", () => {
     cartItems,
     addresses,
     city,
+    hasGoods,
     commentForCourier,
     currentAddress,
     deliveryMethod,
@@ -1311,6 +1350,8 @@ export const useOrderStore = defineStore("order", () => {
     isLoadingCert,
     email,
     name,
+    goodsSum,
+    certsInCartSum,
     resetOrder,
     phone,
     surname,
@@ -1362,5 +1403,6 @@ export const useOrderStore = defineStore("order", () => {
     refreshCityForUI,
     toggleCert,
     priceFormatter,
+    parseCart,
   }
 })

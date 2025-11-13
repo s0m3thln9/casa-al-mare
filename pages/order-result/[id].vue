@@ -36,17 +36,40 @@ const localDeliveryTime = ref<string | null>(null)
 const localPointsToUse = ref<number>(0)
 const localSelectedCertificates = ref<string[]>([])
 const localTotalSum = ref<number>(0)
-const localTotalOldSum = ref<number>(0)
 const localFinalPrice = ref<number>(0)
 
 const localCartDetailed = computed(() => {
   return localCartItems.value
     .map((cartItem) => {
+      const isCertificate = cartItem.id === -1
+
+      if (isCertificate) {
+        const imagesArray = Object.values(cartItem.images).filter((img) => img)
+        return {
+          key: cartItem.key,
+          id: cartItem.id,
+          count: cartItem.count,
+          name: cartItem.name,
+          images: imagesArray,
+          price: cartItem.price,
+          oldPrice: cartItem.oldPrice,
+          certificateType: cartItem.certificateType || cartItem.options?.certificateType,
+          deliveryMethod: cartItem.deliveryMethod || cartItem.options?.deliveryMethod,
+          recipientEmail: cartItem.recipientEmail || cartItem.options?.recipientEmail,
+          recipientName: cartItem.recipientName || cartItem.options?.recipientName,
+          recipientPhone: cartItem.recipientPhone || cartItem.options?.recipientPhone,
+          deliveryDetails: cartItem.deliveryDetails || cartItem.options?.deliveryDetails,
+          vector: "certificate",
+          isCertificate: true,
+        }
+      }
+
       if (!cartItem.variant) return null
       const size = cartItem.variant
       const colorName = cartItem.colorName || "Цвет не указан"
       const imagesArray = Object.values(cartItem.images).filter((img) => img)
       return {
+        key: cartItem.key,
         id: cartItem.id,
         vector: cartItem.variant,
         count: cartItem.count,
@@ -56,6 +79,7 @@ const localCartDetailed = computed(() => {
         size,
         price: cartItem.price,
         oldPrice: cartItem.oldPrice,
+        isCertificate: false,
       }
     })
     .filter(Boolean)
@@ -70,22 +94,26 @@ const localDeliveryTypes = ref<
   { id: 4, name: "СДЭК (ПВЗ)", term: { min: 0, max: 0 }, cost: 0 },
 ])
 
-function localDecrementQuantity(id: number, variant: string) {
-  const item = localCartItems.value.find((i) => i.id === id && i.variant === variant)
+function localDecrementQuantity(key: string) {
+  const item = localCartItems.value.find((i) => i.key === key)
+  if (!item) return
   if (item && item.count > 1) {
     item.count--
   }
 }
 
-function localIncrementQuantity(id: number, variant: string) {
-  const item = localCartItems.value.find((i) => i.id === id && i.variant === variant)
+function localIncrementQuantity(key: string) {
+  const item = localCartItems.value.find((i) => i.key === key)
+  if (!item) return
   if (item) {
     item.count++
   }
 }
 
-function localRemoveItemFromCart(id: number, variant: string) {
-  localCartItems.value = localCartItems.value.filter((item) => !(item.id === id && item.variant === variant))
+function localRemoveItemFromCart(key: string) {
+  const item = localCartItems.value.find((i) => i.key === key)
+  if (!item) return
+  localCartItems.value = localCartItems.value.filter((item) => item.key !== key)
 }
 
 const navigateToItem = async (itemId: number) => {
@@ -101,6 +129,24 @@ const navigateToItem = async (itemId: number) => {
     console.error("Navigation error:", error)
   }
 }
+
+const localGoodsSum = computed(() => {
+  return localCartItems.value.reduce((sum, cartItem) => {
+    if (cartItem.id === -1) return sum
+    return sum + cartItem.price * cartItem.count
+  }, 0)
+})
+
+const localCertsInCartSum = computed(() => {
+  return localTotalSum.value - localGoodsSum.value
+})
+
+const localTotalOldSum = computed(() => {
+  return localCartItems.value.reduce((sum, cartItem) => {
+    const oldPrice = cartItem.oldPrice > 0 ? cartItem.oldPrice : cartItem.price
+    return sum + oldPrice * cartItem.count
+  }, 0)
+})
 
 function updateLocalDeliveryDetails() {
   const methodId = Number(localDeliveryMethod.value)
@@ -121,31 +167,29 @@ function updateLocalDeliveryDetails() {
     localDeliveryTime.value = null
     localDeliveryCost.value = 0
   }
-  if (localTotalSum.value >= 30000) {
+  if (localGoodsSum.value >= 30000) {
     localDeliveryCost.value = 0
   }
 
-  let certSum = 0
+  let certDiscount = 0
   if (authStore.isAuth && userStore.user?.certificates) {
-    certSum = localSelectedCertificates.value.reduce((sum, code) => {
+    certDiscount = localSelectedCertificates.value.reduce((sum, code) => {
       const cert = userStore.user.certificates.find((c: any) => c.code === code)
       return cert ? sum + (cert.value_now || 0) : sum
     }, 0)
   }
 
-  localFinalPrice.value = Math.max(
-    localTotalSum.value + localDeliveryCost.value - localPointsToUse.value - certSum,
-    0.01,
-  )
+  let price = localGoodsSum.value
+  if (localPointsToUse.value > 0) {
+    price -= Math.min(localPointsToUse.value, price)
+  }
+  price -= Math.min(certDiscount, price)
+  localFinalPrice.value = Math.max(price + localDeliveryCost.value + localCertsInCartSum.value, 0.01)
 }
 
 watch(
-  [localCartItems, localPointsToUse, localSelectedCertificates, localDeliveryCost],
+  [localCartItems, localPointsToUse, localSelectedCertificates, localDeliveryCost, localGoodsSum],
   () => {
-    localTotalOldSum.value = localCartItems.value.reduce((sum, item) => {
-      const oldPrice = item.oldPrice > 0 ? item.oldPrice : item.price
-      return sum + oldPrice * item.count
-    }, 0)
     localTotalSum.value = localCartItems.value.reduce((sum, item) => sum + item.price * item.count, 0)
     updateLocalDeliveryDetails()
   },
@@ -206,22 +250,7 @@ onMounted(async () => {
         cartData = data.value.order.cart
       }
       if (cartData) {
-        localCartItems.value = Object.entries(cartData).map(([_, item]) => ({
-          id: item.id,
-          variant: item.variant,
-          count: item.count,
-          updated_at: item.updated_at,
-          name: item.name,
-          colorName: item.colorName || "",
-          sizes: item.sizes,
-          images: item.images,
-          vector: item.vector || { [item.variant]: { quantity: item.count, comingSoon: false } },
-          type: item.type,
-          material: item.material,
-          useType: item.useType,
-          price: parseInt(item.price) || 0,
-          oldPrice: parseInt(item.oldPrice) || 0,
-        }))
+        localCartItems.value = orderStore.parseCart(cartData)
       }
 
       if (data.value.order) {
@@ -459,7 +488,10 @@ async function handleRetryPay(): Promise<void> {
               :key="index"
               class="flex items-center justify-between w-full"
             >
-              <div class="flex items-center gap-2">
+              <div
+                v-if="item"
+                class="flex items-center gap-2"
+              >
                 <img
                   :src="item.images[0] || '/placeholder.jpg'"
                   alt="order-img"
@@ -475,7 +507,10 @@ async function handleRetryPay(): Promise<void> {
                     {{ item.name }}
                   </span>
                   <span class="font-light text-[13px]">
-                    Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
+                    <template v-if="!item.isCertificate">
+                      Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
+                    </template>
+                    <template v-else> Кому: {{ item.recipientName || item.deliveryDetails }} </template>
                   </span>
                   <span class="text-xs text-[#414141]">
                     {{ orderStore.priceFormatter(item.price) }}
@@ -483,7 +518,10 @@ async function handleRetryPay(): Promise<void> {
                   </span>
                 </div>
               </div>
-              <div class="flex flex-col items-end gap-4">
+              <div
+                v-if="item"
+                class="flex flex-col items-end gap-4"
+              >
                 <div class="flex items-center gap-2">
                   <div class="py-1 px-3 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light">
                     {{ item.count }}
@@ -528,7 +566,10 @@ async function handleRetryPay(): Promise<void> {
               :key="index"
               class="flex items-center justify-between w-full"
             >
-              <div class="flex items-center gap-2">
+              <div
+                v-if="item"
+                class="flex items-center gap-2"
+              >
                 <img
                   :src="item.images[0] || '/placeholder.jpg'"
                   alt="order-img"
@@ -544,7 +585,10 @@ async function handleRetryPay(): Promise<void> {
                     {{ item.name }}
                   </span>
                   <span class="font-light text-[13px]">
-                    Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
+                    <template v-if="!item.isCertificate">
+                      Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
+                    </template>
+                    <template v-else> Кому: {{ item.recipientName || item.deliveryDetails }} </template>
                   </span>
                   <span class="text-xs text-[#414141]">
                     {{ orderStore.priceFormatter(item.price) }}
@@ -552,21 +596,29 @@ async function handleRetryPay(): Promise<void> {
                   </span>
                 </div>
               </div>
-              <div class="flex flex-col items-end gap-4">
+              <div
+                v-if="item"
+                class="flex flex-col items-end gap-4"
+              >
                 <div class="flex items-center gap-2">
-                  <div class="py-1 px-2 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light">
+                  <div
+                    class="py-1 px-2 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light"
+                    :class="item.isCertificate && 'px-2.5'"
+                  >
                     <button
+                      v-if="!item.isCertificate"
                       class="w-4 h-4 flex items-center justify-center cursor-pointer"
                       :disabled="localIsLoadingPayment"
-                      @click="localDecrementQuantity(item.id, item.vector)"
+                      @click="localDecrementQuantity(item.key)"
                     >
                       <div class="minus-icon" />
                     </button>
                     {{ item.count }}
                     <button
+                      v-if="!item.isCertificate"
                       class="w-4 h-4 flex items-center justify-center cursor-pointer"
                       :disabled="localIsLoadingPayment"
-                      @click="localIncrementQuantity(item.id, item.vector)"
+                      @click="localIncrementQuantity(item.key)"
                     >
                       <div class="plus-icon" />
                     </button>
@@ -574,7 +626,7 @@ async function handleRetryPay(): Promise<void> {
                   <button
                     class="w-6 h-6 flex items-center justify-center cursor-pointer"
                     :disabled="localIsLoadingPayment"
-                    @click="localRemoveItemFromCart(item.id, item.vector)"
+                    @click="localRemoveItemFromCart(item.key)"
                   >
                     <div class="x-icon" />
                   </button>

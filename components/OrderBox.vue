@@ -13,6 +13,9 @@ const props = defineProps<{
       price: number
       oldPrice: number
       count: number
+      isCertificate?: boolean
+      recipientName?: string
+      deliveryDetails?: string
     }[]
     orderId: number
     receiver: string
@@ -45,6 +48,11 @@ const priceFormatter = (value: number) => {
 }
 
 const navigateToItem = (itemAlias: string | undefined, itemId: number) => {
+  // Не навигируем для сертификатов
+  if (itemId === -1) {
+    navigateTo("/certificate")
+    return
+  }
   const alias = itemAlias || String(itemId)
   navigateTo(`/catalog/item/?alias=${alias}`)
 }
@@ -118,7 +126,10 @@ const navigateToItem = (itemAlias: string | undefined, itemId: number) => {
                 {{ item.name }}
               </span>
               <span class="font-light text-[13px]">
-                Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
+                <template v-if="!item.isCertificate">
+                  Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
+                </template>
+                <template v-else> Кому: {{ item.recipientName || item.deliveryDetails }} </template>
               </span>
               <span class="text-xs text-[#414141]">
                 {{ priceFormatter(item.price) }}

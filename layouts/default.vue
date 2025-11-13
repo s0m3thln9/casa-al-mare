@@ -111,22 +111,7 @@ const getCart = async () => {
     })
 
     if (data?.success && data.cart) {
-      const parsedCart = Object.values(data.cart).map((item) => ({
-        id: item.id,
-        variant: item.variant,
-        count: item.count,
-        updated_at: item.updated_at,
-        name: item.name,
-        sizes: item.sizes,
-        images: item.images,
-        vector: item.vector,
-        type: item.type,
-        material: item.material,
-        useType: item.useType,
-        colorName: item.colorName,
-        price: item.price,
-        oldPrice: item.oldPrice,
-      }))
+      const parsedCart = orderStore.parseCart(data.cart)
       orderStore.setCartItems(parsedCart)
     }
   } catch (error) {

@@ -56,6 +56,10 @@ const toggleExpanded = () => {
 }
 
 const navigateToItem = async (itemId: number) => {
+  if (itemId === -1) {
+    navigateTo("/certificate")
+    return
+  }
   if (catalogStore.items.length === 0) {
     await catalogStore.loadItems()
   }
@@ -135,31 +139,7 @@ onMounted(async () => {
 
       if (data.value?.success && data.value?.cart) {
         const rawCart = data.value.cart
-        const parsedCart: import("~/stores/order").CartItem[] = Object.entries(rawCart).map(([_, item]) => {
-          const vector: Record<string, { quantity: number; comingSoon: boolean }> = {}
-          for (const [size, vecData] of Object.entries(item.vector || {})) {
-            vector[size] = {
-              quantity: vecData.quantity || 0,
-              comingSoon: !!vecData.comingSoon,
-            }
-          }
-          return {
-            id: item.id,
-            variant: item.variant,
-            count: item.count,
-            updated_at: item.updated_at || undefined,
-            name: item.name,
-            colorName: item.colorName || "",
-            sizes: item.sizes,
-            images: item.images,
-            vector,
-            type: item.type,
-            material: item.material,
-            useType: item.useType,
-            price: parseInt(item.price) || 0,
-            oldPrice: parseInt(item.oldPrice) || 0,
-          }
-        })
+        const parsedCart = orderStore.parseCart(rawCart)
         orderStore.setCartItems(parsedCart)
       }
     } catch (error) {
@@ -581,7 +561,7 @@ useSmsAutoSubmit(
                     class="flex items-center gap-2"
                   >
                     <img
-                      :src="item?.images[0] || ''"
+                      :src="(item?.images ? item?.images[0] : '') || ''"
                       alt="order-img"
                       width="57"
                       height="72"
@@ -595,7 +575,10 @@ useSmsAutoSubmit(
                         {{ item.name }}
                       </span>
                       <span class="font-light text-[13px]">
-                        Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
+                        <template v-if="!item.isCertificate">
+                          Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
+                        </template>
+                        <template v-else> Кому: {{ item.recipientName || item.deliveryDetails }} </template>
                       </span>
                       <span class="text-xs text-[#414141]">
                         {{ orderStore.priceFormatter(item.price) }}
@@ -608,19 +591,24 @@ useSmsAutoSubmit(
                     class="flex flex-col items-end gap-4"
                   >
                     <div class="flex items-center gap-2">
-                      <div class="py-1 px-2 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light">
+                      <div
+                        class="py-1 px-2 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light"
+                        :class="item.isCertificate && 'px-2.5'"
+                      >
                         <button
+                          v-if="!item.isCertificate"
                           class="w-4 h-4 flex items-center justify-center cursor-pointer"
                           :disabled="orderStore.isLoadingPayment"
-                          @click="orderStore.decrementQuantity(item.id, item.vector)"
+                          @click="orderStore.decrementQuantity(item.key)"
                         >
                           <div class="minus-icon" />
                         </button>
                         {{ item.count }}
                         <button
+                          v-if="!item.isCertificate"
                           class="w-4 h-4 flex items-center justify-center cursor-pointer"
                           :disabled="orderStore.isLoadingPayment"
-                          @click="orderStore.incrementQuantity(item.id, item.vector)"
+                          @click="orderStore.incrementQuantity(item.key)"
                         >
                           <div class="plus-icon" />
                         </button>
@@ -628,7 +616,7 @@ useSmsAutoSubmit(
                       <button
                         class="w-6 h-6 flex items-center justify-center cursor-pointer"
                         :disabled="orderStore.isLoadingPayment"
-                        @click="orderStore.removeItemFromCart(item.id, item.vector)"
+                        @click="orderStore.removeItemFromCart(item.key)"
                       >
                         <div class="x-icon" />
                       </button>
@@ -1241,18 +1229,20 @@ useSmsAutoSubmit(
         <div class="sm:hidden mt-4 flex flex-col gap-6 w-full max-w-[652px] h-fit">
           <template v-if="orderStore.isPaymentSuccessful === null">
             <div class="flex flex-col gap-1 text-sm font-light">
-              <div class="flex items-center justify-between">
-                <span>Доставка:</span>
-                <span>
-                  {{
-                    Number(orderStore.deliveryMethod) === 3
-                      ? "по согласованию с менеджером"
-                      : orderStore.totalSum >= 30000
-                        ? "бесплатно"
-                        : orderStore.priceFormatter(orderStore.deliveryCost)
-                  }}</span
-                >
-              </div>
+              <template v-if="orderStore.hasGoods">
+                <div class="flex items-center justify-between">
+                  <span>Доставка:</span>
+                  <span>
+                    {{
+                      Number(orderStore.deliveryMethod) === 3
+                        ? "по согласованию с менеджером"
+                        : orderStore.goodsSum >= 30000
+                          ? "бесплатно"
+                          : orderStore.priceFormatter(orderStore.deliveryCost)
+                    }}</span
+                  >
+                </div>
+              </template>
               <div class="flex items-center justify-between">
                 <span>Стоимость товаров:</span>
                 <span class="flex items-center gap-2">
@@ -1308,7 +1298,7 @@ useSmsAutoSubmit(
                     class="flex items-center gap-2"
                   >
                     <img
-                      :src="item?.images[0] || ''"
+                      :src="(item?.images ? item?.images[0] : '') || ''"
                       alt="order-img"
                       width="57"
                       height="72"
@@ -1322,7 +1312,10 @@ useSmsAutoSubmit(
                         {{ item.name }}
                       </span>
                       <span class="font-light text-[13px]">
-                        Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
+                        <template v-if="!item.isCertificate">
+                          Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
+                        </template>
+                        <template v-else> Кому: {{ item.recipientName || item.deliveryDetails }} </template>
                       </span>
                       <span class="text-xs text-[#414141]">
                         {{ orderStore.priceFormatter(item.price) }}
@@ -1335,19 +1328,24 @@ useSmsAutoSubmit(
                     class="flex flex-col items-end gap-4"
                   >
                     <div class="flex items-center gap-2">
-                      <div class="py-1 px-2 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light">
+                      <div
+                        class="py-1 px-2 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light"
+                        :class="item.isCertificate && 'px-2.5'"
+                      >
                         <button
+                          v-if="!item.isCertificate"
                           class="w-4 h-4 flex items-center justify-center cursor-pointer"
                           :disabled="orderStore.isLoadingPayment"
-                          @click="orderStore.decrementQuantity(item.id, item.vector)"
+                          @click="orderStore.decrementQuantity(item.key)"
                         >
                           <div class="minus-icon" />
                         </button>
                         {{ item.count }}
                         <button
+                          v-if="!item.isCertificate"
                           class="w-4 h-4 flex items-center justify-center cursor-pointer"
                           :disabled="orderStore.isLoadingPayment"
-                          @click="orderStore.incrementQuantity(item.id, item.vector)"
+                          @click="orderStore.incrementQuantity(item.key)"
                         >
                           <div class="plus-icon" />
                         </button>
@@ -1355,7 +1353,7 @@ useSmsAutoSubmit(
                       <button
                         class="w-6 h-6 flex items-center justify-center cursor-pointer"
                         :disabled="orderStore.isLoadingPayment"
-                        @click="orderStore.removeItemFromCart(item.id, item.vector)"
+                        @click="orderStore.removeItemFromCart(item.key)"
                       >
                         <div class="x-icon" />
                       </button>
@@ -1472,18 +1470,20 @@ useSmsAutoSubmit(
                   </div>
                 </div>
                 <div class="flex flex-col gap-1 text-sm font-light">
-                  <div class="flex items-center justify-between">
-                    <span>Доставка:</span>
-                    <span>
-                      {{
-                        Number(orderStore.deliveryMethod) === 3
-                          ? "по согласованию с менеджером"
-                          : orderStore.totalSum >= 30000
-                            ? "бесплатно"
-                            : orderStore.priceFormatter(orderStore.deliveryCost)
-                      }}</span
-                    >
-                  </div>
+                  <template v-if="orderStore.hasGoods">
+                    <div class="flex items-center justify-between">
+                      <span>Доставка:</span>
+                      <span>
+                        {{
+                          Number(orderStore.deliveryMethod) === 3
+                            ? "по согласованию с менеджером"
+                            : orderStore.goodsSum >= 30000
+                              ? "бесплатно"
+                              : orderStore.priceFormatter(orderStore.deliveryCost)
+                        }}</span
+                      >
+                    </div>
+                  </template>
                   <div class="flex items-center justify-between">
                     <span>Стоимость товаров:</span>
                     <span class="flex items-center gap-2">

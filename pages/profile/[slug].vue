@@ -385,6 +385,9 @@ watch(
                 price: parseInt(item.price) || 0,
                 oldPrice: parseInt(item.oldPrice) || 0,
                 alias: item.alias,
+                isCertificate: item.id === -1,
+                recipientName: item.options?.recipientName,
+                deliveryDetails: item.options?.deliveryDetails,
               })),
             }"
           />
