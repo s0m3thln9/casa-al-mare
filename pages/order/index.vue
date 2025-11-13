@@ -1479,13 +1479,13 @@ useSmsAutoSubmit(
                         {{
                           Number(orderStore.deliveryMethod) === 3
                             ? "по согласованию с менеджером"
-                            : orderStore.goodsSum >= 30000
+                            : orderStore.deliveryCost === 0
                               ? "бесплатно"
                               : orderStore.priceFormatter(orderStore.deliveryCost)
-                        }}</span
-                      >
-                    </div>
-                  </template>
+                        }}
+                      </span>
+                    </div></template
+                  >
                   <div class="flex items-center justify-between">
                     <span>Стоимость товаров:</span>
                     <span class="flex items-center gap-2">

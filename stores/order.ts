@@ -736,10 +736,7 @@ export const useOrderStore = defineStore("order", () => {
       price -= certDeduction
     }
 
-    let deliveryFee = deliveryCost.value
-    if (goodsSum.value >= 30000) {
-      deliveryFee = 0
-    }
+    const deliveryFee = deliveryCost.value
     price += deliveryFee + certsInCartSum.value
 
     const result = Math.max(price, 0.01)
@@ -1090,6 +1087,10 @@ export const useOrderStore = defineStore("order", () => {
     isExpandedPoints.value = !isExpandedPoints.value
   }
 
+  watch(goodsSum, () => {
+    updateDeliveryDetails()
+  })
+
   async function addCertificate() {
     if (isLoadingCert.value) return
 
@@ -1113,8 +1114,7 @@ export const useOrderStore = defineStore("order", () => {
     const token = await userStore.loadToken()
 
     try {
-      // Update type to expect full certificates array
-      const { data, error } = await useFetch<ApiResponse & { certificates: Certificate[] }>(
+      const response = await $fetch<ApiResponse & { certificates: Certificate[] }>(
         "https://back.casaalmare.com/api/addCertificate",
         {
           method: "POST",
@@ -1122,34 +1122,27 @@ export const useOrderStore = defineStore("order", () => {
         },
       )
 
-      if (error.value) {
-        certificateError.value = "Ошибка сети"
-        isLoadingCert.value = false
-        return
-      }
-
-      if (data.value?.success && data.value?.certificates) {
+      if (response.success && response.certificates) {
         if (userStore.user) {
-          // Update full certificates list
-          userStore.user.certificates = data.value.certificates
-          // Сброс выбора, если новый cert не выбран; или добавить его автоматически, если сумма позволяет
+          userStore.user.certificates = response.certificates
+
           if (!selectedCertificates.value.includes(code)) {
-            const newCert = data.value.certificates.find((c: Certificate) => c.code === code)
+            const newCert = response.certificates.find((c: Certificate) => c.code === code)
             if (newCert && newCert.value_now <= goodsSum.value && selectedCertificates.value.length === 0) {
-              selectedCertificates.value.push(code) // Авто-добавление для удобства
+              selectedCertificates.value.push(code)
             }
           }
         }
+
         newCertificateCode.value = ""
         certificateError.value = ""
-        // Триггерим обновление заказа для бэкенда
         await nextTick()
         debouncedUpdateOrderState()
       } else {
-        certificateError.value = data.value?.error || "Сертификат не найден"
+        certificateError.value = response.error || "Сертификат не найден"
       }
     } catch (error) {
-      certificateError.value = "Ошибка API"
+      certificateError.value = "Ошибка сети или API"
       console.error(error)
     } finally {
       isLoadingCert.value = false
