@@ -101,7 +101,6 @@ const handleAddCertificate = async (): Promise<void> => {
 
   if (!orderStore.certificateError) {
     certificateCode.value = ""
-    await userStore.fetchUser()
   } else {
     console.error("Ошибка добавления сертификата:", orderStore.certificateError)
   }

@@ -1218,6 +1218,7 @@ useSmsAutoSubmit(
                   <AppCheckbox
                     v-model="orderStore.selectedCertificates"
                     size="S"
+                    :multiple="true"
                     :label="`Сертификат ${cert.code} на сумму ${cert.value_now} рублей`"
                     :value="cert.code"
                   />
@@ -1463,6 +1464,7 @@ useSmsAutoSubmit(
                       <AppCheckbox
                         v-model="orderStore.selectedCertificates"
                         size="S"
+                        :multiple="true"
                         :label="`Сертификат ${cert.code} на сумму ${cert.value_now} рублей`"
                         :value="cert.code"
                       />

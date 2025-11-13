@@ -527,7 +527,11 @@ export const useOrderStore = defineStore("order", () => {
           pointsToUse.value = loadedOrder.points
           if (userStore.user) userStore.user.points += usedPointsBackup.value - loadedOrder.points
         }
-        if (loadedOrder.certificates) selectedCertificates.value = loadedOrder.certificates
+        if (loadedOrder.certificates) {
+          selectedCertificates.value = Array.isArray(loadedOrder.certificates) ? loadedOrder.certificates : []
+        } else {
+          selectedCertificates.value = []
+        }
 
         if (!authStore.isAuth && loadedOrder.userInfo) {
           if (loadedOrder.userInfo.name) name.value = loadedOrder.userInfo.name
@@ -710,15 +714,26 @@ export const useOrderStore = defineStore("order", () => {
     let price = goodsSum.value
 
     if (pointsToUse.value > 0 && userStore.user) {
-      price -= Math.min(pointsToUse.value, price)
+      const pointsDeduction = Math.min(pointsToUse.value, price)
+      price -= pointsDeduction
     }
 
-    if (selectedCertificates.value.length > 0 && userStore.user) {
+    if (
+      selectedCertificates.value &&
+      Array.isArray(selectedCertificates.value) &&
+      selectedCertificates.value.length > 0 &&
+      userStore.user
+    ) {
       const certDiscount = selectedCertificates.value.reduce((sum, code) => {
         const cert = userStore.user!.certificates.find((c) => c.code === code)
-        return cert ? sum + cert.value_now : sum
+        if (cert) {
+          return sum + cert.value_now
+        } else {
+          return sum
+        }
       }, 0)
-      price -= Math.min(certDiscount, price)
+      const certDeduction = Math.min(certDiscount, price)
+      price -= certDeduction
     }
 
     let deliveryFee = deliveryCost.value
@@ -727,7 +742,8 @@ export const useOrderStore = defineStore("order", () => {
     }
     price += deliveryFee + certsInCartSum.value
 
-    return Math.max(price, 0.01)
+    const result = Math.max(price, 0.01)
+    return result
   })
 
   async function decrementQuantity(keyOrId: string) {
@@ -1097,7 +1113,8 @@ export const useOrderStore = defineStore("order", () => {
     const token = await userStore.loadToken()
 
     try {
-      const { data, error } = await useFetch<ApiResponse & { certificate: Certificate }>(
+      // Update type to expect full certificates array
+      const { data, error } = await useFetch<ApiResponse & { certificates: Certificate[] }>(
         "https://back.casaalmare.com/api/addCertificate",
         {
           method: "POST",
@@ -1111,15 +1128,23 @@ export const useOrderStore = defineStore("order", () => {
         return
       }
 
-      if (data.value?.success && data.value?.certificate) {
+      if (data.value?.success && data.value?.certificates) {
         if (userStore.user) {
-          if (!userStore.user.certificates) {
-            userStore.user.certificates = []
+          // Update full certificates list
+          userStore.user.certificates = data.value.certificates
+          // Сброс выбора, если новый cert не выбран; или добавить его автоматически, если сумма позволяет
+          if (!selectedCertificates.value.includes(code)) {
+            const newCert = data.value.certificates.find((c: Certificate) => c.code === code)
+            if (newCert && newCert.value_now <= goodsSum.value && selectedCertificates.value.length === 0) {
+              selectedCertificates.value.push(code) // Авто-добавление для удобства
+            }
           }
-          userStore.user.certificates.push(data.value.certificate)
         }
         newCertificateCode.value = ""
         certificateError.value = ""
+        // Триггерим обновление заказа для бэкенда
+        await nextTick()
+        debouncedUpdateOrderState()
       } else {
         certificateError.value = data.value?.error || "Сертификат не найден"
       }
