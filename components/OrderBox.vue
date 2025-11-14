@@ -1,29 +1,28 @@
 <script setup lang="ts">
 const props = defineProps<{
   state: {
-    finalPrice: number
+    orderId: number
+    orderDate: string
     status: number
+    deliveryMethod: string | null
+    paymentMethod: string
+    receiver: string
+    address?: string | string[]
+    finalPrice: number
     items?: {
       id: number
       alias?: string
       images: string[]
       name: string
-      size: string
-      color: string
+      size?: string
+      color?: string
       price: number
       oldPrice: number
       count: number
       isCertificate?: boolean
-      recipientName?: string
-      deliveryDetails?: string
+      recipientName?: string | null
+      deliveryDetails?: string | null
     }[]
-    orderId: number
-    receiver: string
-    address?: string | string[]
-    orderDate: string
-    deliveryDate: string
-    deliveryMethod: string | null
-    paymentMethod: string
   }
 }>()
 

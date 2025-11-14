@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { AppSelect } from "#components"
-
 const route = useRoute()
 const router = useRouter()
 
@@ -22,12 +20,6 @@ const tabToSlug: Record<string, string> = {
 
 const slug = route.params.slug as string
 const currentTab = ref(slugToTab[slug] || "Профиль")
-
-export type EditUserResponse = {
-  success: boolean
-  error?: string
-  changes?: Record<string, string>
-}
 
 const profileStore = useProfileStore()
 const userStore = useUserStore()
@@ -53,11 +45,7 @@ const certificateBalance = computed(() => {
 })
 
 const handleResetPassword = async (): Promise<void> => {
-  const success = await profileStore.resetPassword()
-  if (success) {
-  } else {
-    console.error("Ошибка сброса пароля")
-  }
+  await profileStore.resetPassword()
 }
 
 const handleLogout = async () => {
@@ -366,38 +354,35 @@ watch(
               orderId: order.orderId,
               orderDate: order.orderDate,
               status: order.status,
-              deliveryDate: order.deliveryDate,
-              address: normalizeAddress(order.order.currentAddress),
               deliveryMethod:
-                +order.order.deliveryMethod === 1
+                order.order.deliveryMethod === '1'
                   ? 'Курьер СДЭК'
-                  : +order.order.deliveryMethod === 2
+                  : order.order.deliveryMethod === '2'
                     ? 'Курьер СДЭК с примеркой'
-                    : +order.order.deliveryMethod === 3
+                    : order.order.deliveryMethod === '3'
                       ? 'Экспресс-доставка'
-                      : +order.order.deliveryMethod === 4
+                      : order.order.deliveryMethod === '4'
                         ? 'СДЭК (ПВЗ)'
                         : null,
               paymentMethod:
-                +order.order.paymentMethod === 1
+                order.order.paymentMethod === '1'
                   ? 'Картой на сайте'
-                  : +order.order.paymentMethod === 2
+                  : order.order.paymentMethod === '2'
                     ? 'Долями'
                     : 'Яндекс сплит',
               receiver: userStore.user!.profile.fullname,
+              address: normalizeAddress(order.order.currentAddress),
               finalPrice: order.order.order_cost || 0,
               items: Object.values(order.cart).map((item) => ({
                 id: item.id,
+                alias: item.alias,
+                images: Object.values(item.images || {}).filter((img) => img && img.trim() !== ''),
+                name: item.name,
                 size: item.variant,
                 color: item.colorName,
-                images: Object.values(item.images || {}).filter(
-                  (img) => img && typeof img === 'string' && img.trim() !== '',
-                ),
+                price: +item.price || 0,
+                oldPrice: +item.oldPrice || 0,
                 count: item.count,
-                name: item.name,
-                price: parseInt(item.price) || 0,
-                oldPrice: parseInt(item.oldPrice) || 0,
-                alias: item.alias,
                 isCertificate: item.id === -1,
                 recipientName: item.options?.recipientName,
                 deliveryDetails: item.options?.deliveryDetails,
@@ -411,7 +396,7 @@ watch(
         class="w-full"
       >
         <div
-          v-if="userStore.user?.certificates?.length > 0 || true"
+          v-if="(userStore.user?.certificates?.length || 0) > 0 || true"
           class="mt-8 flex flex-col w-full justify-center items-center gap-6"
         >
           <div class="grid grid-cols-2 gap-4 w-full items-center">

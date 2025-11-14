@@ -14,26 +14,7 @@ export interface TestUser {
   city: CityData
   cityQuestion: string
   favorites: number[]
-  orders: {
-    orderId: number
-    status: number
-    cart: Record<string, CartItem>
-    order: {
-      certificates: string[]
-      city: CityData
-      commentForCourier: string
-      currentAddress: string
-      deliveryCost: number
-      deliveryMethod: string
-      deliveryTime: string
-      order_cost: number
-      paymentMethod: string
-      points: number
-      pvz: PvzData | null
-      transaction: string
-      userInfo: null
-    }[]
-  }[]
+  orders: UserOrder[]
   profile: {
     address: string[]
     birthdate: string
@@ -89,16 +70,16 @@ export interface CityData {
 }
 
 export interface CartItem {
-  alias: string
-  article: string
-  externalId: string
-  variant: string
-  colorName: string
-  added_at: number | null
-  updated_at: number | null
-  sizes: string[]
-  images: string[]
-  vector: Record<
+  alias?: string
+  article?: string
+  externalId?: string
+  variant?: string
+  colorName?: string
+  added_at?: number | null
+  updated_at?: number | null
+  sizes?: string[]
+  images?: string[]
+  vector?: Record<
     string,
     {
       comingSoon: number
@@ -106,15 +87,15 @@ export interface CartItem {
       externalId: string
     }
   >
-  type: string
-  material: string[]
-  useType: string[]
+  type?: string
+  material?: string[]
+  useType?: string[]
   count: number
   id: number
   name: string
   oldPrice: number | string
   price: number | string
-  options: {
+  options?: {
     certificateType: string
     nominal: string
     design: 2
@@ -123,7 +104,7 @@ export interface CartItem {
     recipientPhone: string | null
     deliveryDetails: string | null
     recipientName: string | null
-    message: string | null
+    message?: string | null
   }
 }
 
@@ -158,6 +139,28 @@ export interface ProfileExtended {
   token: string
 }
 
+export interface UserOrder {
+  orderId: number
+  orderDate: string
+  status: number
+  cart: Record<string, CartItem>
+  order: {
+    certificates: string[]
+    city: CityData
+    commentForCourier: string
+    currentAddress: string
+    deliveryCost: number
+    deliveryMethod: string
+    deliveryTime: string
+    order_cost: number
+    paymentMethod: string
+    points: number
+    pvz: PvzData | null
+    transaction: string
+    userInfo: null
+  }
+}
+
 export interface ProfileData {
   email: string
   name: string
@@ -185,4 +188,16 @@ export interface EditUser {
     city: CityData
   }
   error?: string
+}
+
+export interface GetFavorites {
+  success: boolean
+  favorites: number[]
+  error?: string
+}
+
+export interface AddOrRemoveFavorites {
+  success: boolean
+  favorites: number[]
+  message?: string
 }
