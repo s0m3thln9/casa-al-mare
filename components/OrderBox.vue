@@ -22,6 +22,7 @@ const props = defineProps<{
       isCertificate?: boolean
       recipientName?: string | null
       deliveryDetails?: string | null
+      certificateType?: string | null
     }[]
   }
 }>()
@@ -128,7 +129,9 @@ const navigateToItem = (itemAlias: string | undefined, itemId: number) => {
                 <template v-if="!item.isCertificate">
                   Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
                 </template>
-                <template v-else> Кому: {{ item.recipientName }} </template>
+                <template v-else>
+                  Кому: {{ item.recipientName }} <span class="ml-1">Тип: {{ item.certificateType }}</span></template
+                >
               </span>
               <span class="text-xs text-[#414141]">
                 {{ priceFormatter(item.price) }}

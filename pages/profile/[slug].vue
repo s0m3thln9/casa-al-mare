@@ -386,6 +386,7 @@ watch(
                 isCertificate: item.id === -1,
                 recipientName: item.options?.recipientName,
                 deliveryDetails: item.options?.deliveryDetails,
+                certificateType: item.options?.certificateType,
               })),
             }"
           />

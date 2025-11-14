@@ -510,7 +510,10 @@ async function handleRetryPay(): Promise<void> {
                     <template v-if="!item.isCertificate">
                       Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
                     </template>
-                    <template v-else> Кому: {{ item.recipientName }} </template>
+                    <template v-else
+                      >Кому: {{ item.recipientName }}
+                      <span class="ml-1">Тип: {{ item.certificateType }}</span></template
+                    >
                   </span>
                   <span class="text-xs text-[#414141]">
                     {{ orderStore.priceFormatter(item.price) }}
@@ -588,7 +591,10 @@ async function handleRetryPay(): Promise<void> {
                     <template v-if="!item.isCertificate">
                       Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
                     </template>
-                    <template v-else> Кому: {{ item.recipientName }} </template>
+                    <template v-else
+                      >Кому: {{ item.recipientName }}
+                      <span class="ml-1">Тип: {{ item.certificateType }}</span></template
+                    >
                   </span>
                   <span class="text-xs text-[#414141]">
                     {{ orderStore.priceFormatter(item.price) }}
