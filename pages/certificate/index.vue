@@ -14,7 +14,15 @@ const nominals = ref<Nominal[]>([])
 const isLoadingNominals = ref(true)
 
 const breadcrumbsItems: { name: string; path?: string }[] = [{ name: "Главная", path: "/" }, { name: "Сертификат" }]
-const ways = ["Электронной почтой", "По SMS", "Доставка"]
+
+// Динамический массив способов доставки в зависимости от типа сертификата
+const ways = computed(() => {
+  if (certificateStore.certificateType === "Физический") {
+    return ["Доставка"]
+  }
+  return ["Электронной почтой", "По SMS"]
+})
+
 const details = ["Анонимно"]
 const currentImageIndex = ref(0)
 const touchStartX = ref(0)
@@ -46,6 +54,16 @@ const phoneOptions: PhoneOption[] = [
   { code: "+373", country: "Молдова", iso: "MD" },
   { code: "+995", country: "Грузия", iso: "GE" },
 ]
+
+// Сброс выбранного способа доставки при смене типа сертификата
+watch(
+  () => certificateStore.certificateType,
+  () => {
+    certificateStore.selectedWay = null
+    certificateStore.recipientEmail = ""
+    certificateStore.recipientPhone = null
+  },
+)
 
 const handleSubmit = async () => {
   if (certificateStore.step === 4) {
@@ -161,25 +179,18 @@ const handleTouchMove = (e: TouchEvent) => {
   const deltaX = Math.abs(currentX - touchStartX.value)
   const deltaY = Math.abs(currentY - touchStartY.value)
 
-  // Увеличиваем порог для определения направления свайпа
   const directionThreshold = 10
 
-  // Определяем направление только если есть достаточное движение
   if (deltaX > directionThreshold || deltaY > directionThreshold) {
-    // Если уже определили, что это горизонтальный свайп, блокируем прокрутку
     if (isHorizontalSwipe.value) {
       e.preventDefault()
       return
     }
 
-    // Определяем направление: если горизонтальное движение значительно больше вертикального
     if (deltaX > deltaY * 1.5 && deltaX > directionThreshold) {
       isHorizontalSwipe.value = true
       e.preventDefault()
-    }
-    // Если вертикальное движение больше, позволяем прокрутку страницы
-    else if (deltaY > deltaX) {
-      // Явно разрешаем вертикальную прокрутку
+    } else if (deltaY > deltaX) {
       return
     }
   }
