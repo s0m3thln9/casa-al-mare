@@ -372,7 +372,9 @@ watch(
                     : 'Яндекс сплит',
               receiver: userStore.user!.profile.fullname,
               address: normalizeAddress(order.order.currentAddress),
-              finalPrice: order.order.order_cost || 0,
+              finalPrice: order.order.orderCost || 0,
+              deliveryCost: order.order.deliveryCost || 0,
+              usedCertificates: order.order.used_certificates || [],
               items: Object.values(order.cart).map((item) => ({
                 id: item.id,
                 alias: item.alias,

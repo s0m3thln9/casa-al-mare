@@ -1060,6 +1060,8 @@ export const useOrderStore = defineStore("order", () => {
       }
     } catch (error) {
       console.error("Ошибка проверки статуса заказа:", error)
+    } finally {
+      await userStore.fetchUser()
     }
     return null
   }

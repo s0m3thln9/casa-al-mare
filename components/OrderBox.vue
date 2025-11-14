@@ -2,13 +2,15 @@
 const props = defineProps<{
   state: {
     orderId: number
-    orderDate: string
+    orderDate: number
     status: number
     deliveryMethod: string | null
     paymentMethod: string
     receiver: string
     address?: string | string[]
     finalPrice: number
+    deliveryCost: number
+    usedCertificates: Record<string, number>
     items?: {
       id: number
       alias?: string
@@ -56,6 +58,14 @@ const navigateToItem = (itemAlias: string | undefined, itemId: number) => {
   const alias = itemAlias || String(itemId)
   navigateTo(`/catalog/item/?alias=${alias}`)
 }
+
+const formatDate = (timestamp: number): string => {
+  const date = new Date(timestamp * 1000)
+  const day = String(date.getDate()).padStart(2, "0")
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const year = date.getFullYear()
+  return `${day}.${month}.${year}`
+}
 </script>
 
 <template>
@@ -65,7 +75,7 @@ const navigateToItem = (itemAlias: string | undefined, itemId: number) => {
   >
     <div class="flex justify-between items-center">
       <div class="flex gap-2 items-center">
-        <span class="text-sm">№ {{ state.orderId }} от {{ state.orderDate }}</span>
+        <span class="text-sm">№ {{ state.orderId }} от {{ formatDate(state.orderDate) }}</span>
         <div
           :class="[
             state.status === 1
@@ -177,7 +187,16 @@ const navigateToItem = (itemAlias: string | undefined, itemId: number) => {
           >Способ оплаты: <span class="font-normal">{{ state.paymentMethod }}</span></span
         >
         <span class="text-xs font-light"
+          >Стоимость доставки: <span class="font-normal">{{ priceFormatter(state.deliveryCost) }}</span></span
+        >
+        <span class="text-xs font-light"
           >Сумма заказа: <span class="font-normal">{{ priceFormatter(state.finalPrice) }}</span></span
+        >
+        <span class="text-xs font-light"
+          >Оплачено сертификатом:
+          <span class="font-normal">{{
+            priceFormatter(Object.values(state.usedCertificates).reduce((sum, val) => sum + val, 0))
+          }}</span></span
         >
       </div>
       <AppButton

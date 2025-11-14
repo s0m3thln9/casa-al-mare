@@ -52,7 +52,7 @@ export interface TestUser {
     website: string
     zip: string
   }
-  total_quantity: number
+  totalQuantity: number
   token: string
   uid: number
   success: boolean
@@ -141,18 +141,19 @@ export interface ProfileExtended {
 
 export interface UserOrder {
   orderId: number
-  orderDate: string
+  orderDate: number
   status: number
   cart: Record<string, CartItem>
   order: {
     certificates: string[]
+    used_certificates: Record<string, number>
     city: CityData
     commentForCourier: string
     currentAddress: string
     deliveryCost: number
     deliveryMethod: string
     deliveryTime: string
-    order_cost: number
+    orderCost: number
     paymentMethod: string
     points: number
     pvz: PvzData | null
