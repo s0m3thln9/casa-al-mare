@@ -39,6 +39,9 @@ const adr1Ref = ref<{ validate: () => boolean; showError: boolean } | null>(null
 const adr2Ref = ref<{ validate: () => boolean; showError: boolean } | null>(null)
 
 const certificateCode = ref("")
+const certificateError = ref("")
+const showCertificateError = ref(false)
+const isLoadingCertificate = ref(false)
 
 const certificateBalance = computed(() => {
   return userStore.user?.certificates?.reduce((acc, cert) => acc + cert.value_now, 0) || 0
@@ -83,19 +86,62 @@ const handleSaveProfile = async (): Promise<void> => {
 }
 
 const handleAddCertificate = async (): Promise<void> => {
+  if (isLoadingCertificate.value) return
+
+  isLoadingCertificate.value = true
+  certificateError.value = ""
+  showCertificateError.value = false
+
   const code = certificateCode.value.trim()
+
   if (!code) {
-    console.warn("Код сертификата не может быть пустым")
+    certificateError.value = "Введите код сертификата"
+    showCertificateError.value = true
+    isLoadingCertificate.value = false
     return
   }
 
-  orderStore.newCertificateCode = code
-  await orderStore.addCertificate()
+  if (userStore.user?.certificates.some((c) => c.code === code)) {
+    certificateError.value = "Сертификат уже добавлен"
+    showCertificateError.value = true
+    isLoadingCertificate.value = false
+    return
+  }
 
-  if (!orderStore.certificateError) {
-    certificateCode.value = ""
-  } else {
-    console.error("Ошибка добавления сертификата:", orderStore.certificateError)
+  const token = await userStore.loadToken()
+  if (!token) {
+    certificateError.value = "Ошибка авторизации"
+    showCertificateError.value = true
+    isLoadingCertificate.value = false
+    return
+  }
+
+  try {
+    const response = await $fetch<{ success: boolean; error?: string; certificates?: any[] }>(
+      "https://back.casaalmare.com/api/addCertificate",
+      {
+        method: "POST",
+        body: { token, code },
+      },
+    )
+
+    if (response.success && response.certificates) {
+      if (userStore.user) {
+        userStore.user.certificates = response.certificates
+      }
+      certificateCode.value = ""
+      certificateError.value = ""
+      showCertificateError.value = false
+    } else {
+      certificateError.value = response.error || "Сертификат не найден"
+      showCertificateError.value = true
+    }
+  } catch (error) {
+    certificateError.value = "Ошибка сети или API"
+    showCertificateError.value = true
+    console.error("Ошибка добавления сертификата:", error)
+  } finally {
+    isLoadingCertificate.value = false
   }
 }
 
@@ -403,16 +449,34 @@ watch(
           class="mt-8 flex flex-col w-full justify-center items-center gap-6"
         >
           <div class="grid grid-cols-2 gap-4 w-full items-center">
-            <AppInput
-              id="code"
-              v-model="certificateCode"
-              label="Введите код"
-              type="text"
-            />
+            <AppTooltip
+              :text="certificateError"
+              type="error"
+              :show="showCertificateError"
+              @update:show="
+                (value) => {
+                  if (!value) {
+                    certificateError = ''
+                    showCertificateError = false
+                  }
+                }
+              "
+            >
+              <AppInput
+                id="code"
+                v-model="certificateCode"
+                custom-class="w-full"
+                label="Введите код"
+                type="text"
+                :disabled="isLoadingCertificate"
+              />
+            </AppTooltip>
             <AppButton
               content="Применить"
               variant="primary"
               custom-class="w-full"
+              :loading="isLoadingCertificate"
+              :disabled="isLoadingCertificate"
               @click="handleAddCertificate"
             />
           </div>
