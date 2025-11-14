@@ -589,7 +589,7 @@ watch(
       </div>
       <div
         v-if="item"
-        class="px-2 flex flex-col sm:px-0 sm:sticky sm:top-0 sm:h-screen sm:overflow-y-auto"
+        class="px-2 flex flex-col sm:px-0 sm:sticky sm:top-20 sm:h-screen sm:overflow-y-auto"
       >
         <div class="flex justify-center items-center">
           <h2 class="font-[Inter] text-center text-[32px] sm:text-4xl">{{ item.name }}</h2>
