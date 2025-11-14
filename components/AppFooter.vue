@@ -174,7 +174,19 @@ const handleOrdersClick = () => {
           Нажимая на кнопку «Подписаться», я соглашаюсь на обработку моих персональных данных и ознакомлен(а) с
           условиями конфиденциальности.
         </p>
-        <span class="text-xs">Политика конфиденциальности и оферта</span>
+        <span class="text-xs"
+          ><NuxtLink
+            class="hover:underline"
+            to="/info/confidence"
+            >Политика конфиденциальности</NuxtLink
+          >
+          и
+          <NuxtLink
+            class="hover:underline"
+            to="/info/oferta"
+            >оферта</NuxtLink
+          ></span
+        >
         <span class="text-xs">CASA AL MARE © 2025</span>
       </div>
     </div>
@@ -228,12 +240,20 @@ const handleOrdersClick = () => {
         >
           <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Реквизиты</button>
         </NuxtLink>
-        <button
-          class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]"
-          aria-label="Политика конфиденциальности и оферта"
-        >
-          Политика конфиденциальности и оферта
-        </button>
+        <div class="flex gap-2">
+          <button
+            class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]"
+            aria-label="Политика конфиденциальности и оферта"
+          >
+            <NuxtLink to="/info/confidence">Политика конфиденциальности</NuxtLink>
+          </button>
+          <button
+            class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]"
+            aria-label="Политика конфиденциальности и оферта"
+          >
+            <NuxtLink to="/info/oferta">Оферта</NuxtLink>
+          </button>
+        </div>
       </div>
       <img
         src="/logo-3.svg"
