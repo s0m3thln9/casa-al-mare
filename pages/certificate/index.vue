@@ -4,6 +4,8 @@ import { computed, ref, onMounted, watch } from "vue"
 import { useCertificateStore } from "~/stores/certificate"
 
 const certificateStore = useCertificateStore()
+const userStore = useUserStore()
+const orderStore = useOrderStore()
 
 interface Nominal {
   id: number
@@ -55,7 +57,6 @@ const phoneOptions: PhoneOption[] = [
   { code: "+995", country: "Грузия", iso: "GE" },
 ]
 
-// Сброс выбранного способа доставки при смене типа сертификата
 watch(
   () => certificateStore.certificateType,
   () => {
@@ -65,12 +66,32 @@ watch(
   },
 )
 
+const getCart = async () => {
+  const token = await userStore.loadToken()
+  if (!token) return
+
+  try {
+    const data = await $fetch("https://back.casaalmare.com/api/getCart", {
+      method: "POST",
+      body: { token },
+    })
+
+    if (data?.success && data.cart) {
+      const parsedCart = orderStore.parseCart(data.cart)
+      orderStore.setCartItems(parsedCart)
+    }
+  } catch (error) {
+    console.error("Ошибка при получении корзины:", error)
+  }
+}
+
 const handleSubmit = async () => {
   if (certificateStore.step === 4) {
     const result = await certificateStore.submitCertificate()
 
     if (result.success) {
       certificateStore.resetForm()
+      await getCart()
     } else {
       console.error(`Ошибка: ${result.error}`)
     }
