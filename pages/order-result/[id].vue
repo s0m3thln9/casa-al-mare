@@ -279,6 +279,8 @@ onMounted(async () => {
     console.error("Ошибка проверки статуса заказа:", error)
     localIsPaymentSuccessful.value = false
     orderStore.resetOrder()
+  } finally {
+    await userStore.fetchUser()
   }
 
   if (localCartItems.value.length === 0 && loadedOrder.value) {
