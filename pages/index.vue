@@ -104,22 +104,22 @@ const images = {
         link="/catalog"
       />
     </div>
-    <div class="flex flex-col lg:flex-row gap-2 px-2 py-2 sm:gap-4 sm:px-4 sm:py-4">
-      <BannerCard
-        :image-url="images.promo3"
-        text="fw25 Surf tales"
-        custom-class="rounded-lg aspect-[1]"
-        object-position="center"
-        link="/collections/collection"
-      />
-      <BannerCard
-        :image-url="images.promo4"
-        text="top capsule 25"
-        custom-class="rounded-lg aspect-[1]"
-        object-position="center"
-        link="/collections/collection"
-      />
-    </div>
+<!--    <div class="flex flex-col lg:flex-row gap-2 px-2 py-2 sm:gap-4 sm:px-4 sm:py-4">-->
+<!--      <BannerCard-->
+<!--        :image-url="images.promo3"-->
+<!--        text="fw25 Surf tales"-->
+<!--        custom-class="rounded-lg aspect-[1]"-->
+<!--        object-position="center"-->
+<!--        link="/collections/collection"-->
+<!--      />-->
+<!--      <BannerCard-->
+<!--        :image-url="images.promo4"-->
+<!--        text="top capsule 25"-->
+<!--        custom-class="rounded-lg aspect-[1]"-->
+<!--        object-position="center"-->
+<!--        link="/collections/collection"-->
+<!--      />-->
+<!--    </div>-->
     <AppSEO
       :paragraphs="[
         '— это бренд стильного белья и купальников, созданный для женщин, которые ценят комфорт, эстетику и качество.\n' +
