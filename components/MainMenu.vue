@@ -299,22 +299,17 @@ watch(
         ]"
       >
         <div
-          class="w-[252px] min-h-[180px] relative overflow-hidden cursor-pointer"
+          class="w-[252px] min-h-[180px] relative overflow-hidden"
           :class="isMobile && 'hidden'"
         >
           <img
-            src="/menu-1.jpg"
+            src="/MENU.webp"
             alt="banner"
             class="object-cover rounded-lg"
             loading="lazy"
             width="252"
             height="180"
-          />
-          <div
-            class="absolute bottom-2 right-2 px-2 py-1 bg-[#FFFFFA99] backdrop-blur-sm rounded-lg font-[Commissioner] font-light text-[#211D1D] text-[11px]"
           >
-            Категории
-          </div>
         </div>
         <ul
           class="flex flex-col"

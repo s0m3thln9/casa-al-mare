@@ -176,13 +176,13 @@ const handleOrdersClick = () => {
         </p>
         <span class="text-xs"
           ><NuxtLink
-            class="hover:underline"
+            class="underline"
             to="/info/confidence"
             >Политика конфиденциальности</NuxtLink
           >
           и
           <NuxtLink
-            class="hover:underline"
+            class="underline"
             to="/info/oferta"
             >оферта</NuxtLink
           ></span
@@ -260,7 +260,7 @@ const handleOrdersClick = () => {
         alt="CASA AL MARE"
         width="156"
         height="174"
-      />
+      >
       <span class="text-xs text-[#BBB8B6]">CASA AL MARE © 2025</span>
     </div>
   </footer>

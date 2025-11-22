@@ -144,13 +144,13 @@ onMounted(async () => {
     >
       <div class="flex flex-col items-stretch gap-6 mt-8 sm:mt-14">
         <img
-          src="/pop-up-sub.jpg"
+          src="/rassilka.webp"
           alt="sub"
           width="390"
           height="532"
           class="rounded-lg"
           loading="lazy"
-        />
+        >
         <AppTooltip
           text="Это поле обязательно для заполнения"
           type="error"
@@ -186,13 +186,13 @@ onMounted(async () => {
     >
       <div class="flex flex-col items-stretch gap-6 mt-8 sm:mt-14">
         <img
-          src="/pop-up-sub.jpg"
+          src="/obratnaya_svyaz.webp"
           alt="sub"
           width="390"
           height="532"
           class="rounded-lg"
           loading="lazy"
-        />
+        >
         <h2 class="font-[Manrope] uppercase text-[#211D1D]">Текст</h2>
         <AppTooltip
           text="Это поле обязательно для заполнения"
