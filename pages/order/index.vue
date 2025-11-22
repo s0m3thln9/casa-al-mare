@@ -567,7 +567,7 @@ useSmsAutoSubmit(
                       width="57"
                       height="72"
                       class="rounded-2xl border-[0.5px] border-[#211D1D]"
-                    />
+                    >
                     <div class="flex flex-col gap-1">
                       <span
                         class="font-light text-sm text-[#414141] cursor-pointer"
@@ -1283,8 +1283,21 @@ useSmsAutoSubmit(
                 @click="handlePay"
               />
               <p class="text-xs text-[#8C8785]">
-                Нажимая на кнопку «Оплатить», Вы соглашаетесь с условиями публичной оферты, принимаете политику защиты и
-                обработки персональных данных и даете свое согласие на их обработку.
+                Нажимая на кнопку «Оплатить», Вы соглашаетесь с условиями
+                <NuxtLink
+                  class="underline"
+                  to="/info/oferta"
+                >
+                  публичной оферты
+                </NuxtLink>
+                , принимаете
+                <NuxtLink
+                  class="underline"
+                  to="/info/oferta"
+                >
+                  политику защиты и обработки персональных данных
+                </NuxtLink>
+                и даете свое согласие на их обработку.
               </p>
             </div>
           </template>
@@ -1311,7 +1324,7 @@ useSmsAutoSubmit(
                       width="57"
                       height="72"
                       class="rounded-2xl border-[0.5px] border-[#211D1D]"
-                    />
+                    >
                     <div class="flex flex-col gap-1">
                       <span
                         class="font-light text-sm text-[#414141] cursor-pointer"
@@ -1529,12 +1542,12 @@ useSmsAutoSubmit(
                   <p class="text-xs text-[#8C8785]">
                     Нажимая на кнопку «Оплатить», Вы соглашаетесь с условиями
                     <NuxtLink
-                      class="hover:underline"
+                      class="underline"
                       to="/info/oferta"
                       >публичной оферты</NuxtLink
                     >, принимаете
                     <NuxtLink
-                      class="hover:underline"
+                      class="underline"
                       to="/info/oferta"
                       >политику защиты и обработки персональных данных</NuxtLink
                     >
