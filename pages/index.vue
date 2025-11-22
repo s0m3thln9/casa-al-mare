@@ -30,15 +30,15 @@ useHead({
 
 const { data } = await useFetch<VideoData>("https://back.casaalmare.com/api/getMainVideo")
 const images = {
-  promo1: "/promo-1.jpg",
-  promo2: "/promo-2.jpg",
+  promo1: "/2_camp.webp",
+  promo2: "/1_camp.webp",
   promo3: "/promo-3.jpg",
   promo4: "/promo-4.jpg",
-  category1: "/category-1.jpg",
-  category2: "/category-2.jpg",
-  category3: "/category-3.jpg",
-  category4: "/category-4.jpg",
-  category5: "/category-5.jpg",
+  category1: "/Category_kypalniki.webp",
+  category2: "/Slitie.webp",
+  category3: "/odejda.webp",
+  category4: "/aksessyari.webp",
+  category5: "/igri.webp",
 }
 </script>
 
@@ -70,38 +70,38 @@ const images = {
     <div class="grid grid-cols-2 gap-2 px-2 sm:gap-4 md:grid-cols-6 lg:grid-cols-5 sm:px-4">
       <BannerCard
         :image-url="images.category1"
-        text="Головные уборы"
+        text="Купальники"
         custom-class="rounded-lg col-span-2 aspect-[343/400] sm:aspect-[1920/2462] md:col-span-3 lg:col-span-1"
         object-position="center"
-        link="/catalog"
+        link="/catalog?path=kupalniki"
       />
       <BannerCard
         :image-url="images.category2"
-        text="Купальники"
+        text="Слитные купальники"
         custom-class="rounded-lg aspect-[167/284] sm:aspect-[1920/2462] md:col-span-3 lg:col-span-1"
         object-position="center"
-        link="/catalog"
+        link="/catalog?path=kupalniki%2Fslitnyie-kupalniki"
       />
       <BannerCard
         :image-url="images.category3"
-        text="Низ купальника"
+        text="Одежда"
         custom-class="rounded-lg aspect-[167/284] sm:aspect-[1920/2462] md:col-span-2 lg:col-span-1"
         object-position="center"
-        link="/catalog"
+        link="/catalog?path=plyazhnaya-odezhda"
       />
       <BannerCard
         :image-url="images.category4"
-        text="Верх купальника"
-        custom-class="rounded-lg aspect-[167/284] sm:aspect-[1920/2462] md:col-span-2 lg:col-span-1"
-        object-position="center"
-        link="/catalog"
-      />
-      <BannerCard
-        :image-url="images.category5"
         text="Аксессуары"
         custom-class="rounded-lg aspect-[167/284] sm:aspect-[1920/2462] md:col-span-2 lg:col-span-1"
         object-position="center"
-        link="/catalog"
+        link="/catalog?path=aksessuaryi"
+      />
+      <BannerCard
+        :image-url="images.category5"
+        text="Настольные игры"
+        custom-class="rounded-lg aspect-[167/284] sm:aspect-[1920/2462] md:col-span-2 lg:col-span-1"
+        object-position="center"
+        link="/catalog?path=nastolnyie-igryi"
       />
     </div>
 <!--    <div class="flex flex-col lg:flex-row gap-2 px-2 py-2 sm:gap-4 sm:px-4 sm:py-4">-->
