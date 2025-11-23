@@ -1,10 +1,47 @@
 <script setup lang="ts">
-const images = {
-  card1: "/card-1.jpg",
-  card2: "/card-2.jpg",
-  card3: "/card-3.jpg",
-  promo1: "/promo-1.jpg",
+
+interface VideoSource {
+  mp4: string
+  ogv: string
+  webm: string
 }
+
+interface VideoData {
+  pc: VideoSource
+  mob: VideoSource
+}
+
+interface VideoAPIItem {
+  MIGX_id: string
+  image: string
+  mp4: string
+  ogv: string
+  webm: string
+}
+
+const { data: videoData } = await useFetch<VideoAPIItem[]>("https://back.casaalmare.com/api/getVideoByID?id=3", {
+  immediate: true,
+  transform: (response) => {
+    if (!response || !Array.isArray(response) || response.length === 0) {
+      return []
+    }
+    return response.slice(0, 2)
+  },
+})
+
+const videoData1 = computed<VideoData | null>(() => {
+  const item = videoData.value?.[0]
+  if (!item) return null
+  const source: VideoSource = { mp4: item.mp4, ogv: item.ogv, webm: item.webm }
+  return { pc: source, mob: source }
+})
+
+const videoData2 = computed<VideoData | null>(() => {
+  const item = videoData.value?.[1]
+  if (!item) return null
+  const source: VideoSource = { mp4: item.mp4, ogv: item.ogv, webm: item.webm }
+  return { pc: source, mob: source }
+})
 
 const popupStore = usePopupStore()
 const catalogStore = useCatalogStore()
@@ -352,12 +389,20 @@ const hasMoreItems = computed(() => {
           v-for="(item, index) in visibleItems"
           :key="item.id"
         >
-          <template v-if="index > 0 && index % 6 === 0">
-            <BannerCard
-              :image-url="images.promo1"
-              text="SS26 SOLAR POWER"
+          <template v-if="index === 8 && isMobile && videoData1">
+            <VideoBanner
+              :video-data="videoData1"
+              text="SS26 solar power"
               custom-class="rounded-lg aspect-[1] col-span-2 sm:hidden"
-              object-position="center"
+              link="/collections/collection"
+            />
+          </template>
+          <template v-else-if="index === 16 && isMobile && videoData2">
+            <VideoBanner
+              :video-data="videoData2"
+              text="SS26 solar power"
+              custom-class="rounded-lg aspect-[1] col-span-2 sm:hidden"
+              link="/collections/collection"
             />
           </template>
           <CatalogCard
