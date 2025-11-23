@@ -110,7 +110,6 @@ export const useCatalogStore = defineStore("catalog", () => {
 
   const padParentsAliases = (arr: string[]): string[] => {
     const len = maxParentsLength.value
-    // Фильтруем null/undefined и заменяем на пустые строки
     const cleaned = arr.map((item) => item || "")
     return cleaned.length > len
       ? cleaned.slice(0, len)
@@ -118,7 +117,6 @@ export const useCatalogStore = defineStore("catalog", () => {
   }
 
   const loadItems = async (): Promise<void> => {
-    // Если товары уже загружены, не загружаем повторно
     if (items.value.length > 0) {
       return
     }
@@ -128,8 +126,6 @@ export const useCatalogStore = defineStore("catalog", () => {
       const response = await $fetch("https://back.casaalmare.com/api/getProducts")
       if (response && Array.isArray(response)) {
         items.value = response as Item[]
-      } else {
-        throw new Error("Invalid data from server")
       }
     } catch (error) {
       console.error("Error loading items:", error)
@@ -190,7 +186,7 @@ export const useCatalogStore = defineStore("catalog", () => {
   const syncPending = (): void => {
     isSyncing.value = true
     pendingFilters.value = JSON.parse(JSON.stringify(currentFilters.value))
-    nextTick(() => {
+    void nextTick(() => {
       isSyncing.value = false
     })
   }
@@ -467,13 +463,11 @@ export const useCatalogStore = defineStore("catalog", () => {
     { deep: true },
   )
 
-  // ДОБАВИТЬ этот watch после существующего watch для parentsAliases
   watch(
     () => [...(pendingFilters.value.secondLevelAliases || [])],
     (newVal, oldVal) => {
       if (!oldVal || isSyncing.value) return
 
-      // Сбрасываем фильтры третьего уровня для удаленных элементов
       const removed = oldVal.filter((alias) => !newVal.includes(alias))
       removed.forEach((alias) => {
         delete pendingFilters.value.thirdLevelByParent[alias]
@@ -505,12 +499,10 @@ export const useCatalogStore = defineStore("catalog", () => {
       if (filledSegments.length > maxParentsLength.value) return []
 
       filtered = filtered.filter((item) => {
-        // ИЗМЕНИТЬ: проверяем только первый уровень
         if (filledSegments.length > 0 && item.parents[0]?.alias !== filledSegments[0]) {
           return false
         }
 
-        // ИЗМЕНИТЬ: проверяем второй уровень через secondLevelAliases
         if (f.secondLevelAliases && f.secondLevelAliases.length > 0) {
           const hasMatchingSecondLevel = f.secondLevelAliases.some((alias) => item.parents[1]?.alias === alias)
           if (!hasMatchingSecondLevel) return false
@@ -600,12 +592,11 @@ export const useCatalogStore = defineStore("catalog", () => {
     const oldFiltersJson = JSON.stringify(currentFilters.value)
     currentFilters.value = JSON.parse(JSON.stringify(pendingFilters.value))
     currentFilters.value.parentsAliases = currentFilters.value.parentsAliases.filter(
-      (seg) => seg && seg.trim() !== "", // Добавлена проверка на существование
+      (seg) => seg && seg.trim() !== "",
     )
 
     const newFiltersJson = JSON.stringify(currentFilters.value)
 
-    // Устанавливаем флаг для сброса счетчика
     if (oldFiltersJson !== newFiltersJson) {
       shouldResetCount.value = true
     }
@@ -628,18 +619,15 @@ export const useCatalogStore = defineStore("catalog", () => {
       if (filledSegments.length > maxParentsLength.value) return 0
 
       filtered = filtered.filter((item) => {
-        // ИЗМЕНИТЬ: проверяем только первый уровень
         if (filledSegments.length > 0 && item.parents[0]?.alias !== filledSegments[0]) {
           return false
         }
 
-        // ИЗМЕНИТЬ: проверяем второй уровень через secondLevelAliases
         if (f.secondLevelAliases && f.secondLevelAliases.length > 0) {
           const hasMatchingSecondLevel = f.secondLevelAliases.some((alias) => item.parents[1]?.alias === alias)
           if (!hasMatchingSecondLevel) return false
         }
 
-        // Проверяем третий уровень
         if (f.thirdLevelByParent && Object.keys(f.thirdLevelByParent).length > 0) {
           const secondLevelParent = item.parents[1]?.alias
 
@@ -659,7 +647,6 @@ export const useCatalogStore = defineStore("catalog", () => {
       })
     }
 
-    // Остальная логика без изменений
     if (f.colors.length > 0) {
       const colorCodes = f.colors.map((c) => c.code)
       filtered = filtered.filter(
