@@ -390,8 +390,21 @@ watch(
     itemStore.size = null
     setStore.clear()
     await loadItem()
+    
+    if (!error.value) {
+      scrollToTop()
+    }
   },
 )
+
+const scrollToTop = () => {
+  if (typeof window !== 'undefined') {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    })
+  }
+}
 </script>
 
 <template>
@@ -538,7 +551,7 @@ watch(
                 :style="imageStyles(index)"
                 class="w-full h-full object-cover"
                 alt="item"
-              />
+              >
             </NuxtImg>
           </template>
           <template v-else>
@@ -580,7 +593,7 @@ watch(
               :src="src"
               class="w-full h-full object-cover rounded-2xl"
               alt="item"
-            />
+            >
           </NuxtImg>
         </template>
         <template v-else>
@@ -831,7 +844,7 @@ watch(
               type="email"
               placeholder="Ваш email"
               class="p-2 border border-[#BBB8B6] rounded-lg text-xs"
-            />
+            >
             <AppButton
               content="Подписаться"
               custom-class="w-full"
