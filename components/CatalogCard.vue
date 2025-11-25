@@ -79,7 +79,6 @@ if (props.modelValue) {
   >
     <div
       class="w-full rounded-lg relative"
-      :style="{ height: !popup && isHovered ? 'calc(100% + 20px)' : '100%' }"
     >
       <div class="overflow-hidden rounded-lg h-full">
         <NuxtImg
@@ -100,14 +99,9 @@ if (props.modelValue) {
             :class="[
               'w-full h-full object-cover transition-all duration-300 ease-out rounded-lg',
               customImageClass,
-              popup && 'hover:scale-[1.05]',
             ]"
-            :style="{
-              height: !popup && isHovered ? 'calc(100% + 20px)' : '100%',
-              objectPosition: !popup && isHovered ? 'center top' : 'center center',
-            }"
             alt="card"
-          />
+          >
         </NuxtImg>
         <div
           v-else
@@ -250,7 +244,7 @@ if (props.modelValue) {
                 :class="['rounded-2xl absolute top-0 left-0 w-full h-full', customImageClass]"
                 :style="imageStyles(index)"
                 alt="card"
-              />
+              >
             </NuxtImg>
           </div>
 
@@ -268,7 +262,7 @@ if (props.modelValue) {
               :class="['rounded-2xl w-full aspect-[460/680] object-cover', customImageClass]"
               alt="card"
               @click="handleClick"
-            />
+            >
           </NuxtImg>
 
           <div

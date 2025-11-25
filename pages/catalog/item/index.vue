@@ -5,7 +5,7 @@ const route = useRoute()
 const catalogStore = useCatalogStore()
 const popupStore = usePopupStore()
 const itemStore = useItemStore()
-const setStore = useSetStore()
+// const setStore = useSetStore()
 
 const isLoading = ref(true)
 const error = ref<string | null>(null)
@@ -155,8 +155,8 @@ const relatedItemsIds = computed(() => {
   return shuffled.slice(0, 3)
 })
 
-const setItemsIds = computed(() => item.value?.set?.map((item) => item.id) || [])
-const hasSetItems = computed(() => setItemsIds.value.length > 0)
+// const setItemsIds = computed(() => item.value?.set?.map((item) => item.id) || [])
+// const hasSetItems = computed(() => setItemsIds.value.length > 0)
 
 const currentImageIndex = ref(0)
 const touchStartX = ref(0)
@@ -164,57 +164,57 @@ const touchStartY = ref(0)
 const isHorizontalSwipe = ref(false)
 const isTransitioning = ref(false)
 
-const setItems = computed(() => {
-  const result: { id: number; size: string }[] = []
+// const setItems = computed(() => {
+//   const result: { id: number; size: string }[] = []
+//
+//   if (catalogStore.items.length === 0 || !hasSetItems.value) return result
+//
+//   item.value?.set?.forEach((setItem) => {
+//     const itemType = setItem.type
+//     const size = setStore.items[itemType]
+//     const itemId = setStore.itemsIds[itemType] || setItem.id
+//
+//     if (size && size.trim() !== "") {
+//       const catalogItem = catalogStore.getItemById(itemId)
+//       if (catalogItem) {
+//         result.push({
+//           id: catalogItem.id,
+//           size: size,
+//         })
+//       }
+//     }
+//   })
+//
+//   return result
+// })
 
-  if (catalogStore.items.length === 0 || !hasSetItems.value) return result
+// const setMissingParams = computed<string | "all" | null>(() => {
+//   if (setStore.canAddToCart) return null
+//
+//   const allTypes = item.value?.set?.map((s) => s.type) || []
+//   const missing: string[] = []
+//
+//   allTypes.forEach((type) => {
+//     if (!setStore.items[type] || setStore.items[type].trim() === "") {
+//       missing.push(type)
+//     }
+//   })
+//
+//   if (missing.length === allTypes.length) return "all"
+//   return missing.length > 0 ? missing[0] : null
+// })
 
-  item.value?.set?.forEach((setItem) => {
-    const itemType = setItem.type
-    const size = setStore.items[itemType]
-    const itemId = setStore.itemsIds[itemType] || setItem.id
-
-    if (size && size.trim() !== "") {
-      const catalogItem = catalogStore.getItemById(itemId)
-      if (catalogItem) {
-        result.push({
-          id: catalogItem.id,
-          size: size,
-        })
-      }
-    }
-  })
-
-  return result
-})
-
-const setMissingParams = computed<string | "all" | null>(() => {
-  if (setStore.canAddToCart) return null
-
-  const allTypes = item.value?.set?.map((s) => s.type) || []
-  const missing: string[] = []
-
-  allTypes.forEach((type) => {
-    if (!setStore.items[type] || setStore.items[type].trim() === "") {
-      missing.push(type)
-    }
-  })
-
-  if (missing.length === allTypes.length) return "all"
-  return missing.length > 0 ? missing[0] : null
-})
-
-const setButtonText = computed(() => {
-  if (!hasSetItems.value) return "Собрать комплект"
-
-  const types = item.value?.set?.map((s) => s.type) || []
-
-  if (types.length === 0) return "Собрать комплект"
-  if (types.length === 1) return `Добавить ${types[0].toLowerCase()}`
-  if (types.length === 2) return `Собрать комплект (${types.length} товара)`
-
-  return `Собрать комплект (${types.length} товара)`
-})
+// const setButtonText = computed(() => {
+//   if (!hasSetItems.value) return "Собрать комплект"
+//
+//   const types = item.value?.set?.map((s) => s.type) || []
+//
+//   if (types.length === 0) return "Собрать комплект"
+//   if (types.length === 1) return `Добавить ${types[0].toLowerCase()}`
+//   if (types.length === 2) return `Собрать комплект (${types.length} товара)`
+//
+//   return `Собрать комплект (${types.length} товара)`
+// })
 
 const currentColorCode = computed(() => item.value?.colorVal || "")
 const currentSize = computed(() => itemStore.size || item.value?.sizes?.[0] || "")
@@ -372,12 +372,12 @@ watch(
         itemStore.size = newItem.sizes[0]
       }
 
-      if (newItem.set && newItem.set.length > 0) {
-        const types = newItem.set.map((s) => s.type)
-        setStore.setRequiredTypes(types)
-      } else {
-        setStore.setRequiredTypes([])
-      }
+      // if (newItem.set && newItem.set.length > 0) {
+      //   const types = newItem.set.map((s) => s.type)
+      //   setStore.setRequiredTypes(types)
+      // } else {
+      //   setStore.setRequiredTypes([])
+      // }
     }
   },
   { immediate: true },
@@ -388,7 +388,7 @@ watch(
   async () => {
     itemStore.color = null
     itemStore.size = null
-    setStore.clear()
+    // setStore.clear()
     await loadItem()
     
     if (!error.value) {
@@ -472,7 +472,7 @@ const scrollToTop = () => {
           </div>
           <div class="flex flex-col justify-center items-stretch gap-4 mt-6">
             <div>Кнопка купить</div>
-            <div>Собрать комплект</div>
+<!--            <div>Собрать комплект</div>-->
           </div>
           <div class="flex justify-center items-center mt-4 sm:mt-6">
             <div>В избранное</div>
@@ -701,13 +701,13 @@ const scrollToTop = () => {
             :is-parameters-selected="canAddToCart"
             :missing-params="missingParams"
           />
-          <AppButton
-            v-if="hasSetItems"
-            variant="secondary"
-            :content="setButtonText"
-            custom-class="w-full py-4"
-            @click="popupStore.open('set')"
-          />
+<!--          <AppButton-->
+<!--            v-if="hasSetItems"-->
+<!--            variant="secondary"-->
+<!--            :content="setButtonText"-->
+<!--            custom-class="w-full py-4"-->
+<!--            @click="popupStore.open('set')"-->
+<!--          />-->
         </div>
         <div class="flex justify-center items-center mt-4 sm:mt-6">
           <WishlistButton :item-id="item?.id" />
@@ -760,46 +760,46 @@ const scrollToTop = () => {
         />
       </div>
     </div>
-    <AppPopup
-      v-if="hasSetItems"
-      title="Собрать комплект"
-      popup-id="set"
-    >
-      <div class="flex flex-col gap-6 mt-6">
-        <div class="grid grid-cols-2 gap-y-6 gap-x-4 sm:gap-x-2">
-          <div
-            v-for="setItem in item?.set"
-            :key="setItem.id"
-            class="flex flex-col gap-2"
-          >
-            <span class="font-[Manrope] text-sm">{{ setItem.type }}</span>
-            <CatalogCard
-              v-if="catalogStore.items.length > 0"
-              :id="setItem.id"
-              :key="`${currentColorCode}-${setItem.type}`"
-              :model-value="setStore.items[setItem.type]"
-              :current-color-code="currentColorCode"
-              custom-image-class="aspect-[200/300] w-full"
-              popup
-              variant="mini"
-              link
-              @update:model-value="(val) => setStore.setItem(setItem.type, val, setItem.id)"
-            />
-            <div
-              v-else
-              class="aspect-[200/300] w-full bg-[#F9F6EC]"
-            />
-          </div>
-        </div>
-        <BuyButton
-          :items="setItems"
-          available-quantity
-          in-stock
-          :is-parameters-selected="setStore.canAddToCart"
-          :missing-params="setMissingParams"
-        />
-      </div>
-    </AppPopup>
+<!--    <AppPopup-->
+<!--      v-if="hasSetItems"-->
+<!--      title="Собрать комплект"-->
+<!--      popup-id="set"-->
+<!--    >-->
+<!--      <div class="flex flex-col gap-6 mt-6">-->
+<!--        <div class="grid grid-cols-2 gap-y-6 gap-x-4 sm:gap-x-2">-->
+<!--          <div-->
+<!--            v-for="setItem in item?.set"-->
+<!--            :key="setItem.id"-->
+<!--            class="flex flex-col gap-2"-->
+<!--          >-->
+<!--            <span class="font-[Manrope] text-sm">{{ setItem.type }}</span>-->
+<!--            <CatalogCard-->
+<!--              v-if="catalogStore.items.length > 0"-->
+<!--              :id="setItem.id"-->
+<!--              :key="`${currentColorCode}-${setItem.type}`"-->
+<!--              :model-value="setStore.items[setItem.type]"-->
+<!--              :current-color-code="currentColorCode"-->
+<!--              custom-image-class="aspect-[200/300] w-full"-->
+<!--              popup-->
+<!--              variant="mini"-->
+<!--              link-->
+<!--              @update:model-value="(val) => setStore.setItem(setItem.type, val, setItem.id)"-->
+<!--            />-->
+<!--            <div-->
+<!--              v-else-->
+<!--              class="aspect-[200/300] w-full bg-[#F9F6EC]"-->
+<!--            />-->
+<!--          </div>-->
+<!--        </div>-->
+<!--        <BuyButton-->
+<!--          :items="setItems"-->
+<!--          available-quantity-->
+<!--          in-stock-->
+<!--          :is-parameters-selected="setStore.canAddToCart"-->
+<!--          :missing-params="setMissingParams"-->
+<!--        />-->
+<!--      </div>-->
+<!--    </AppPopup>-->
     <template
       v-for="section in tabSections"
       :key="section.header"
