@@ -19,6 +19,32 @@ interface VideoAPIItem {
   webm: string
 }
 
+const isAnyFilterActive = computed(() => {
+  const filters = catalogStore.currentFilters
+  
+  const pathChanged =
+    filters.parentsAliases.length > 0 ||
+    filters.secondLevelAliases.length > 0 ||
+    Object.keys(filters.thirdLevelByParent).length > 0
+  
+  const colorChanged = filters.colors.length > 0
+  const materialChanged = filters.materials.length > 0
+  const searchQueryChanged = filters.searchQuery.trim() !== ""
+  const sortTypeChanged = filters.sortType !== null
+  const extraChanged = Object.keys(filters.extra).some(
+    (key) => filters.extra[key]?.length > 0,
+  )
+  
+  return (
+    pathChanged ||
+    colorChanged ||
+    materialChanged ||
+    searchQueryChanged ||
+    sortTypeChanged ||
+    extraChanged
+  )
+})
+
 const { data: videoData } = await useFetch<VideoAPIItem[]>("https://back.casaalmare.com/api/getVideoByID?id=3", {
   immediate: true,
   transform: (response) => {
@@ -352,7 +378,7 @@ const hasMoreItems = computed(() => {
       <div class="flex items-center gap-1">
         <span class="text-[11px] font-[Manrope]" />
         <button
-          class="cursor-pointer flex items-center font-[Manrope] text-xs text-[#211D1D]"
+          class="cursor-pointer flex items-center justify-center w-12 h-6 font-[Manrope] text-xs text-[#211D1D]"
           :disabled="catalogStore.isLoading"
           @click="
             async () => {
@@ -362,7 +388,7 @@ const hasMoreItems = computed(() => {
           "
         >
           {{ `(${pendingFilteredCount})` }}
-          <div class="sliders-icon w-[21px] h-[21px]" />
+          <div class="sliders-icon" />
         </button>
       </div>
     </div>
@@ -389,7 +415,7 @@ const hasMoreItems = computed(() => {
           v-for="(item, index) in visibleItems"
           :key="item.id"
         >
-          <template v-if="index === 8 && isMobile && videoData1">
+          <template v-if="index === 8 && isMobile && videoData1 && !isAnyFilterActive">
             <VideoBanner
               :video-data="videoData1"
               text="SS26 solar power"
@@ -397,7 +423,7 @@ const hasMoreItems = computed(() => {
               link="/collections/collection"
             />
           </template>
-          <template v-else-if="index === 16 && isMobile && videoData2">
+          <template v-else-if="index === 16 && isMobile && videoData2 && !isAnyFilterActive">
             <VideoBanner
               :video-data="videoData2"
               text="SS26 solar power"
