@@ -420,7 +420,7 @@ const hasMoreItems = computed(() => {
               :video-data="videoData1"
               text="SS26 solar power"
               custom-class="rounded-lg aspect-[1] col-span-2 sm:hidden"
-              link="/collections/collection"
+              link="/campaigns"
             />
           </template>
           <template v-else-if="index === 16 && isMobile && videoData2 && !isAnyFilterActive">
@@ -428,7 +428,7 @@ const hasMoreItems = computed(() => {
               :video-data="videoData2"
               text="SS26 solar power"
               custom-class="rounded-lg aspect-[1] col-span-2 sm:hidden"
-              link="/collections/collection"
+              link="/campaigns"
             />
           </template>
           <CatalogCard

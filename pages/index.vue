@@ -57,14 +57,14 @@ const images = {
         text="SS26 solar power"
         custom-class="rounded-lg aspect-[1]"
         object-position="center"
-        link="/collections/collection"
+        link="/campaigns"
       />
       <BannerCard
         :image-url="images.promo2"
         text="SS26 solar power"
         custom-class="rounded-lg aspect-[1]"
         object-position="center"
-        link="/collections/collection"
+        link="/campaigns"
       />
     </div>
     <div class="grid grid-cols-2 gap-2 px-2 sm:gap-4 md:grid-cols-6 lg:grid-cols-5 sm:px-4">
@@ -110,14 +110,14 @@ const images = {
 <!--        text="fw25 Surf tales"-->
 <!--        custom-class="rounded-lg aspect-[1]"-->
 <!--        object-position="center"-->
-<!--        link="/collections/collection"-->
+<!--        link="/campaigns"-->
 <!--      />-->
 <!--      <BannerCard-->
 <!--        :image-url="images.promo4"-->
 <!--        text="top capsule 25"-->
 <!--        custom-class="rounded-lg aspect-[1]"-->
 <!--        object-position="center"-->
-<!--        link="/collections/collection"-->
+<!--        link="/campaigns"-->
 <!--      />-->
 <!--    </div>-->
 <!--    <AppSEO-->

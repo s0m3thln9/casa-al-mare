@@ -108,7 +108,7 @@ const menuItems = computed<MenuItem[]>(() => {
   })
   items.push({
     label: "CAMPAIGNS",
-    link: "/collections",
+    link: "/campaigns",
     customClass2: "sm:hidden",
   })
 

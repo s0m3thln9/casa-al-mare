@@ -58,7 +58,7 @@ const handleMenuButtonClick = () => {
           alt="CASA AL MARE"
           class="min-w-[126px] h-[17px] sm:w-[229px] sm:h-[30px]"
           loading="eager"
-        />
+        >
       </NuxtLink>
     </div>
     <nav class="hidden lg:block">
@@ -74,7 +74,8 @@ const handleMenuButtonClick = () => {
         </li>
         <li class="hover:text-[#F3A454]"><NuxtLink to="/catalog">Новинки</NuxtLink></li>
         <li class="hover:text-[#F3A454]"><NuxtLink to="/blog">Блог</NuxtLink></li>
-        <li class="hover:text-[#F3A454]"><NuxtLink to="/collections">CAMPAIGNS</NuxtLink></li>
+        <li class="hover:text-[#F3A454]"><NuxtLink to="/campaigns">CAMPAIGNS
+        </NuxtLink></li>
         <li class="hover:text-[#F3A454]">
           <a
             href="https://t.me/casaalmare_swim"

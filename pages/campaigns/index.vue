@@ -30,8 +30,7 @@ const setStore = useSetStore()
 
 const breadcrumsItems: { name: string; path?: string }[] = [
   { name: "Главная", path: "/" },
-  { name: "CAMPAIGNS", path: "/collections" },
-  { name: "CAMPAIGN" },
+  { name: "CAMPAIGNS" },
 ]
 </script>
 
@@ -40,7 +39,7 @@ const breadcrumsItems: { name: string; path?: string }[] = [
     <div class="p-2 sm:px-4 sm:py-6">
       <AppBreadcrumbs :items="breadcrumsItems" />
     </div>
-    <h2 class="uppercase text-center font-[Inter] text-[17px]">Campaign</h2>
+    <h2 class="uppercase text-center font-[Inter] text-[17px]">Campaigns</h2>
     <div class="grid grid-cols-2 mt-4 px-2 gap-2 sm:gap-4 sm:px-4 sm:mt-10 md:grid-cols-4">
       <BannerCard
         :image-url="images.camp1"
