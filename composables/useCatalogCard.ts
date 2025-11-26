@@ -128,16 +128,36 @@ export function useCatalogCard(props: UseCatalogCardProps) {
     touchStartY.value = 0
     isHorizontalSwipe.value = false
   }
-
-  const handleClick = async () => {
+  
+  const handleClick = async (forceSize?: string) => {
     if (props.link && item.value && item.value.alias) {
       const fullAlias = item.value.alias
-      const itemLink = `/catalog/item/?alias=${fullAlias}`
+      let itemLink = `/catalog/item/?alias=${fullAlias}`
+      
+      const sizeToUse = forceSize || selectedSize.value
+      if (sizeToUse) {
+        itemLink += `&size=${encodeURIComponent(sizeToUse)}`
+      }
+      
       try {
         await navigateTo(itemLink)
       } catch (error) {
         console.error("Navigation error:", error)
       }
+    }
+  }
+  
+  const handleSizeClick = async (size: string, event?: Event) => {
+    if (event) {
+      event.stopPropagation()
+      event.preventDefault()
+    }
+    
+    if (props.link) {
+      selectedSize.value = size
+      await handleClick(size)
+    } else {
+      selectedSize.value = size
     }
   }
 
@@ -207,7 +227,7 @@ export function useCatalogCard(props: UseCatalogCardProps) {
       isFavoriteLocal.value = newValue
     },
   )
-
+  
   return {
     currentImageIndex,
     isHovered,
@@ -227,6 +247,7 @@ export function useCatalogCard(props: UseCatalogCardProps) {
     handleTouchMove,
     handleTouchEnd,
     handleClick,
+    handleSizeClick,
     isFavoriteLocal,
     isStarPressed,
     starRef,

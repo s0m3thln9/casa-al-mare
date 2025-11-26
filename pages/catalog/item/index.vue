@@ -58,6 +58,13 @@ const loadItem = async () => {
     }
 
     item.value = foundItem
+    const sizeFromQuery = route.query.size as string
+    if (sizeFromQuery && typeof sizeFromQuery === "string" && sizeFromQuery.trim() !== "") {
+      if (foundItem.sizes && foundItem.sizes.includes(sizeFromQuery)) {
+        await nextTick()
+        itemStore.size = sizeFromQuery
+      }
+    }
   } catch (err) {
     console.error("Ошибка загрузки страницы товара:", err)
     error.value = err instanceof Error ? err.message : "Неизвестная ошибка"

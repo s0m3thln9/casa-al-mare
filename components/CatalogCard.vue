@@ -32,6 +32,7 @@ const {
   handleTouchMove,
   handleTouchEnd,
   handleClick,
+  handleSizeClick,
   currentColorImages,
   getPriceData,
   isFavoriteLocal,
@@ -153,7 +154,9 @@ if (props.modelValue) {
           v-model="selectedSize"
           :content="availableSizes"
           custom-class="text-xs"
+          @update:model-value="(val) => link ? handleSizeClick(val) : null"
         />
+        
       </div>
 
       <div
@@ -165,6 +168,7 @@ if (props.modelValue) {
           v-model="selectedSize"
           :content="availableSizes"
           custom-class="text-xs mt-1"
+          @update:model-value="(val) => link ? handleSizeClick(val) : null"
         />
       </div>
 
