@@ -7,9 +7,10 @@ const images = {
   camp4: "/camp_4.webp",
   camp5: "/camp_5.webp",
   camp6: {
-    mp4: "/тизер_8_9x16_no logo.mp4",
-    ogv: "/тизер_8_9x16_no logo.ogv",
-    webm: "/тизер_8_9x16_no logo.webm",
+    mp4: "/тизер_9_9x16_logo.mp4",
+    ogv: "/тизер_9_9x16_logo.ogv",
+    webm: "/тизер_9_9x16_logo.webm",
+    
   },
   camp7: "/camp_7.webp",
   camp8: "/camp_8.webp",
@@ -17,9 +18,9 @@ const images = {
   camp10: "/camp_10.webp",
   camp11: "/camp_11.webp",
   camp12: {
-    mp4: "/тизер_9_9x16_logo.mp4",
-    ogv: "/тизер_9_9x16_logo.ogv",
-    webm: "/тизер_9_9x16_logo.webm",
+    mp4: "/тизер_8_9x16_no logo.mp4",
+    ogv: "/тизер_8_9x16_no logo.ogv",
+    webm: "/тизер_8_9x16_no logo.webm",
   },
   camp13: "/camp_13.webp",
   camp14: "/camp_14.webp",
