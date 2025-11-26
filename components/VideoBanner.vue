@@ -15,6 +15,7 @@ const props = defineProps<{
   text?: string
   customClass?: string
   link?: string
+  plus?: boolean
 }>()
 
 const viewport = useViewport()
@@ -45,15 +46,15 @@ const handleClick = () => {
       <source
         :src="currentVideo.mp4"
         type="video/mp4"
-      />
+      >
       <source
         :src="currentVideo.ogv"
         type="video/ogv"
-      />
+      >
       <source
         :src="currentVideo.webm"
         type="video/webm"
-      />
+      >
     </video>
 
     <div
@@ -62,5 +63,24 @@ const handleClick = () => {
     >
       {{ text }}
     </div>
+    <div
+      v-if="plus"
+      class="absolute bottom-2 right-2 p-1 bg-[#FFFFFA99] rounded-sm font-[Commissioner] font-light text-[#211D1D] uppercase text-[10px] sm:rounded-lg sm:text-base/5 sm:font-[Manrope] sm:font-normal sm:bottom-4 sm:right-4"
+    >
+      <div class="w-3 h-3">
+        <div class="grid-icon" />
+      </div>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.grid-icon {
+  background-image: url("/grid.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 100%;
+  height: 100%;
+}
+</style>

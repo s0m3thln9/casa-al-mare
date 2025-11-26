@@ -9,12 +9,12 @@
     <div class="mt-8 grid">
       <div class="flex flex-col items-center gap-8 sm:gap-6">
         <img
-          src="/contact-1.png"
+          src="/Contacts.webp"
           alt="maps"
           width="951"
           height="692"
           class="rounded-lg"
-        />
+        >
         <div class="grid lg:grid-cols-5 w-fit gap-10 sm:gap-6 text-sm">
           <a
             class="grid grid-rows-2 text-center gap-1 sm:gap-2"

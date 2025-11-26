@@ -1,20 +1,28 @@
 <script setup lang="ts">
 const images = {
   card1: "/item-page-1.jpg",
-  camp1: "/camp-1.jpg",
-  camp2: "/camp-2.jpg",
-  camp3: "/camp-3.jpg",
-  camp4: "/camp-4.jpg",
-  camp5: "/camp-5.jpg",
-  camp6: "/camp-6.jpg",
-  camp7: "/camp-7.jpg",
-  camp8: "/camp-8.jpg",
-  camp9: "/camp-9.jpg",
-  camp10: "/camp-10.jpg",
-  camp11: "/camp-11.jpg",
-  camp12: "/camp-12.jpg",
-  camp13: "/camp-13.jpg",
-  camp14: "/camp-14.jpg",
+  camp1: "/camp_1.webp",
+  camp2: "/camp_2.webp",
+  camp3: "/camp_3.webp",
+  camp4: "/camp_4.webp",
+  camp5: "/camp_5.webp",
+  camp6: {
+    mp4: "/тизер_8_9x16_no logo.mp4",
+    ogv: "/тизер_8_9x16_no logo.ogv",
+    webm: "/тизер_8_9x16_no logo.webm",
+  },
+  camp7: "/camp_7.webp",
+  camp8: "/camp_8.webp",
+  camp9: "/camp_9.webp",
+  camp10: "/camp_10.webp",
+  camp11: "/camp_11.webp",
+  camp12: {
+    mp4: "/тизер_9_9x16_logo.mp4",
+    ogv: "/тизер_9_9x16_logo.ogv",
+    webm: "/тизер_9_9x16_logo.webm",
+  },
+  camp13: "/camp_13.webp",
+  camp14: "/camp_14.webp",
 }
 
 const popupStore = usePopupStore()
@@ -69,11 +77,10 @@ const breadcrumsItems: { name: string; path?: string }[] = [
         object-position="center"
         @click="popupStore.open('set')"
       />
-      <BannerCard
-        :image-url="images.camp6"
+      <VideoBanner
         plus
+        :video-data="{ pc: images.camp6, mob: images.camp6 }"
         custom-class="rounded-lg aspect-[460/680]"
-        object-position="center"
         @click="popupStore.open('set')"
       />
       <BannerCard
@@ -111,11 +118,10 @@ const breadcrumsItems: { name: string; path?: string }[] = [
         object-position="center"
         @click="popupStore.open('set')"
       />
-      <BannerCard
-        :image-url="images.camp12"
+      <VideoBanner
         plus
+        :video-data="{ pc: images.camp12, mob: images.camp12 }"
         custom-class="rounded-lg aspect-[460/680]"
-        object-position="center"
         @click="popupStore.open('set')"
       />
       <BannerCard
