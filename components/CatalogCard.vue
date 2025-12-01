@@ -171,20 +171,31 @@ if (props.modelValue) {
           @update:model-value="(val) => link ? handleSizeClick(val) : null"
         />
       </div>
-
       <div
-        v-if="isNarrowScreen || (!popup && isHovered) || isFavoriteLocal"
-        ref="starRef"
-        :style="{ backgroundImage: `url(${isFavoriteLocal ? '/star-filled.svg' : '/star.svg'})` }"
-        :class="[
-          'star-button absolute z-7 cursor-pointer star-icon',
-          'w-5 h-5 right-2.5 top-2.5 md:w-6 md:h-6 md:right-4 md:top-4',
-          isStarPressed && 'star-pressed',
-        ]"
-        @mousedown="handleStarMouseDown"
-        @touchstart="handleStarTouchStart"
+        class="absolute z-7 w-7 h-7 right-2 top-2 md:w-8 md:h-8 md:right-3 md:top-3 flex items-center justify-center cursor-pointer group"
         @click.stop="handleStarClick"
-      />
+      >
+        <div
+          :class="[
+            'absolute inset-0 rounded-full',
+            'bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.7)_0%,rgba(255,255,255,0)_70%)]',
+            'opacity-0',
+            (isNarrowScreen || (!popup && isHovered) || isFavoriteLocal) && 'opacity-100',
+          ]"
+        />
+        <div
+          v-if="isNarrowScreen || (!popup && isHovered) || isFavoriteLocal"
+          ref="starRef"
+          :style="{ backgroundImage: `url(${isFavoriteLocal ? '/star-filled.svg' : '/star.svg'})` }"
+          :class="[
+            'star-button star-icon relative',
+            'w-5 h-5 md:w-6 md:h-6',
+            isStarPressed && 'star-pressed',
+          ]"
+          @mousedown="handleStarMouseDown"
+          @touchstart="handleStarTouchStart"
+        />
+      </div>
     </template>
   </div>
 
@@ -299,19 +310,32 @@ if (props.modelValue) {
       </span>
 
       <div
-        v-if="isNarrowScreen || (!popup && isHovered) || isFavoriteLocal"
-        ref="starRef"
-        :style="{ backgroundImage: `url(${isFavoriteLocal ? '/star-filled.svg' : '/star.svg'})` }"
-        alt="star"
-        :class="[
-          'star-button absolute z-9 cursor-pointer star-icon',
-          'w-5 h-5 right-2.5 top-2.5 md:w-6 md:h-6 md:right-4 md:top-4',
-          isStarPressed && 'star-pressed',
-        ]"
-        @mousedown="handleStarMouseDown"
-        @touchstart="handleStarTouchStart"
+        class="absolute z-10 w-7 h-7 right-2 top-2 md:w-8 md:h-8 md:right-3 md:top-3 flex items-center justify-center cursor-pointer group"
         @click.stop="handleStarClick"
-      />
+      >
+        <div
+          :class="[
+            'absolute inset-0 rounded-full transition-opacity duration-300',
+            'bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.7)_0%,rgba(255,255,255,0)_70%)]',
+            'opacity-0',
+            (isNarrowScreen || (!popup && isHovered) || isFavoriteLocal) && 'opacity-100',
+          ]"
+        />
+      
+        <div
+          v-if="isNarrowScreen || (!popup && isHovered) || isFavoriteLocal"
+          ref="starRef"
+          :style="{ backgroundImage: `url(${isFavoriteLocal ? '/star-filled.svg' : '/star.svg'})` }"
+          alt="star"
+          :class="[
+            'star-button cursor-pointer star-icon relative z-20',
+            'w-5 h-5 md:w-6 md:h-6',
+            isStarPressed && 'star-pressed',
+          ]"
+          @mousedown="handleStarMouseDown"
+          @touchstart="handleStarTouchStart"
+        />
+      </div>
     </template>
   </div>
 </template>
