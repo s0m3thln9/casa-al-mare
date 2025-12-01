@@ -295,7 +295,7 @@ watch(
           :class="isMobile && 'hidden'"
         >
           <img
-            src="/MENU.webp"
+            src="/Купальник.webp"
             alt="banner"
             class="object-cover rounded-lg"
             loading="lazy"
