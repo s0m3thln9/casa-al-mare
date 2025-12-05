@@ -4,7 +4,6 @@
   <main class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D] px-2 py-6 sm:pb-3 sm:px-4 lg:py-8">
     <div class="flex flex-col items-center gap-4 sm:gap-6">
       <h2 class="uppercase">Контакты</h2>
-      <span class="text-sm font-light">Текст</span>
     </div>
     <div class="mt-8 grid">
       <div class="flex flex-col items-center gap-8 sm:gap-6">
