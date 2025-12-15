@@ -293,7 +293,7 @@ const getStepDescription = computed(() => {
                 :style="imageStyles(index)"
                 class="w-full object-cover"
                 alt="certificate"
-              />
+              >
             </NuxtImg>
           </div>
           <div class="flex sm:hidden justify-center items-center gap-1 px-4 mt-2">
@@ -322,7 +322,7 @@ const getStepDescription = computed(() => {
               :src="src"
               class="w-full object-cover rounded-2xl"
               alt="certificate"
-            />
+            >
           </NuxtImg>
         </template>
         <template v-else>
@@ -384,7 +384,7 @@ const getStepDescription = computed(() => {
               <div
                 v-for="(img, index) in certificateImages"
                 :key="index"
-                class="relative aspect-square cursor-pointer rounded-lg overflow-hidden"
+                class="relative aspect-[3/4] cursor-pointer rounded-lg overflow-hidden"
                 :class="
                   certificateStore.selectedDesign === index
                     ? 'border-[2px] border-[#211D1D]'
@@ -410,7 +410,7 @@ const getStepDescription = computed(() => {
                     :src="src"
                     class="w-full h-full object-cover rounded-lg"
                     alt="certificate design"
-                  />
+                  >
                 </NuxtImg>
               </div>
             </div>
