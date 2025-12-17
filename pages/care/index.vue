@@ -45,8 +45,8 @@ onMounted(() => {
       />
       <img
         v-else
-        src="/about.jpg"
-        alt="about"
+        src="/care.png"
+        alt="care"
         width="909"
         height="692"
         class="rounded-lg"
