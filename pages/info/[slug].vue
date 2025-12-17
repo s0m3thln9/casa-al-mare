@@ -11,6 +11,26 @@ const breadcrumbsItems = computed(() => [
   { name: "Главная", path: "/" },
   { name: doc.value?.pagetitle || "Не найдено" },
 ])
+
+const pageTitle = computed(() => doc.value?.pagetitle ?? "")
+const description = computed(() => doc.value?.description ?? "")
+const metatags = computed(() =>
+  doc.value?.metatags?.map(tag =>
+    tag.name.startsWith("og:")
+      ? { property: tag.name, content: tag.content }
+      : { name: tag.name, content: tag.content }
+  ) ?? []
+)
+
+useHead({
+  title: pageTitle,
+  meta: computed(() => [
+    { name: "description", content: description.value },
+    ...metatags.value,
+  ]),
+})
+
+
 </script>
 
 <template>

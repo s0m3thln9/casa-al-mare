@@ -1,6 +1,25 @@
 <script setup lang="ts">
-import { AppCheckbox, AppButton } from "#components"
-import type { CartItem, OrderState, CityData, PvzData } from "~/stores/order"
+useHead({
+  title: "CASA AL MARE — стильное бельё и купальники",
+  meta: [
+    {
+      name: "description",
+      content: "CASA AL MARE — бренд стильного белья и купальников, вдохновлённый природой и искусством.",
+    },
+    {
+      property: "og:title",
+      content: "CASA AL MARE",
+    },
+    {
+      property: "og:description",
+      content: "Выбирайте купальники и бельё CASA AL MARE — сочетание модных решений, комфорта и женственности.",
+    },
+    {
+      property: "og:image",
+      content: ""
+    }
+  ],
+})
 
 interface CheckOrderStatusResponse {
   success: boolean
@@ -500,7 +519,7 @@ async function handleRetryPay(): Promise<void> {
                   width="57"
                   height="72"
                   class="rounded-2xl border-[0.5px] border-[#211D1D]"
-                />
+                >
                 <div class="flex flex-col gap-1">
                   <span
                     class="font-light text-sm text-[#414141] cursor-pointer"
@@ -581,7 +600,7 @@ async function handleRetryPay(): Promise<void> {
                   width="57"
                   height="72"
                   class="rounded-2xl border-[0.5px] border-[#211D1D]"
-                />
+                >
                 <div class="flex flex-col gap-1">
                   <span
                     class="font-light text-sm text-[#414141] cursor-pointer"

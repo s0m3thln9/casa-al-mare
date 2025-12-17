@@ -1,4 +1,27 @@
 <script setup lang="ts">
+
+useHead({
+  title: "CASA AL MARE — стильное бельё и купальники",
+  meta: [
+    {
+      name: "description",
+      content: "CASA AL MARE — бренд стильного белья и купальников, вдохновлённый природой и искусством.",
+    },
+    {
+      property: "og:title",
+      content: "CASA AL MARE",
+    },
+    {
+      property: "og:description",
+      content: "Выбирайте купальники и бельё CASA AL MARE — сочетание модных решений, комфорта и женственности.",
+    },
+    {
+      property: "og:image",
+      content: ""
+    }
+  ],
+})
+
 const images = {
   art1: "/art-1.jpg",
   art2: "/art-2.jpg",
@@ -61,7 +84,7 @@ onMounted(() => {
           width="618"
           height="570"
           class="rounded-lg aspect-[618/570]"
-        />
+        >
         <h1 class="mt-6 font-[Inter] text-2xl sm:text-4xl">Заголовок</h1>
         <span class="text-sm font-light text-[#8C8785] sm:text-base sm:font-normal">09.08.2023</span>
       </div>
@@ -136,7 +159,7 @@ onMounted(() => {
             width="900"
             height="500"
             class="rounded-lg aspect-[900/500]"
-          />
+          >
         </div>
         <div class="flex gap-6 order-7 sm:order-4">
           <div class="font-[Inter] text-[#0A0E11] text-[32px] sm:text-4xl">“</div>
@@ -192,7 +215,7 @@ onMounted(() => {
             width="442"
             height="500"
             class="rounded-lg aspect-[442/500]"
-          />
+          >
           <div
             v-if="!areImagesLoaded"
             class="aspect-[442/500] w-full bg-[#F9F6EC] rounded-lg"
@@ -204,7 +227,7 @@ onMounted(() => {
             width="442"
             height="500"
             class="rounded-lg aspect-[442/500]"
-          />
+          >
         </div>
         <div class="order-4 sm:order-7">
           <h2 class="font-[Manrope] font-light text-[15px] sm:font-[Inter] sm:font-normal sm:text-2xl">
@@ -272,7 +295,7 @@ onMounted(() => {
             width="900"
             height="500"
             class="rounded-lg aspect-[900/500]"
-          />
+          >
         </div>
         <div class="order-10">
           <p class="font-light text-sm">

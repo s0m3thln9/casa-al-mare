@@ -65,6 +65,21 @@ const getCardClass = (index: number) => {
   const isWide = index === 2 || index === 7
   return isWide ? "rounded-lg aspect-[936/680] col-span-2" : "rounded-lg aspect-[460/680]"
 }
+
+const pageTitle = computed(() => docsStore.tree?.data?.campaigns?.pagetitle)
+const description = computed(() => docsStore.tree?.data?.campaigns?.description ?? "")
+const metatags = computed(() =>
+  docsStore.tree?.data?.campaigns?.metatags?.map(tag => ({ property: tag.name,
+    content: tag.content, })) ?? [] )
+
+useHead({
+  title: pageTitle,
+  meta: computed(() => [
+    { name: "description", content: description.value },
+    ...metatags.value,
+  ]),
+})
+
 </script>
 
 <template>

@@ -129,12 +129,12 @@ export function useCatalogCard(props: UseCatalogCardProps) {
     isHorizontalSwipe.value = false
   }
   
-  const handleClick = async (forceSize?: string) => {
+  const handleClick = async (forceSize?: string | null) => {
     if (props.link && item.value && item.value.alias) {
       const fullAlias = item.value.alias
       let itemLink = `/catalog/item/?alias=${fullAlias}`
       
-      const sizeToUse = forceSize || selectedSize.value
+      const sizeToUse = forceSize ?? selectedSize.value
       if (sizeToUse) {
         itemLink += `&size=${encodeURIComponent(sizeToUse)}`
       }

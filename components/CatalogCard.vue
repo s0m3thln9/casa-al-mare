@@ -231,7 +231,7 @@ if (props.modelValue) {
     ]"
     @mouseenter="!popup && (isHovered = true)"
     @mouseleave="!popup && (isHovered = false)"
-    @click="handleClick"
+    @click="handleClick(null)"
   >
     <template v-if="!item">
       <div class="aspect-[460/680] bg-[#F9F6EC] rounded-lg w-full" />
@@ -319,7 +319,7 @@ if (props.modelValue) {
                 :src="src"
                 :class="['rounded-2xl w-full aspect-[460/680] object-cover', customImageClass]"
                 alt="card"
-                @click="handleClick"
+                @click="handleClick(null)"
               >
             </NuxtImg>
 

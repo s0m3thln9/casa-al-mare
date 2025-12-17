@@ -1,4 +1,27 @@
 <script setup lang="ts">
+
+useHead({
+  title: "CASA AL MARE — стильное бельё и купальники",
+  meta: [
+    {
+      name: "description",
+      content: "CASA AL MARE — бренд стильного белья и купальников, вдохновлённый природой и искусством.",
+    },
+    {
+      property: "og:title",
+      content: "CASA AL MARE",
+    },
+    {
+      property: "og:description",
+      content: "Выбирайте купальники и бельё CASA AL MARE — сочетание модных решений, комфорта и женственности.",
+    },
+    {
+      property: "og:image",
+      content: ""
+    }
+  ],
+})
+
 const authStore = useAuthStore()
 const authModalStore = useAuthModalStore()
 const catalogStore = useCatalogStore()

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 
+import { computed, onMounted } from "vue"
+
 interface VideoSource {
   mp4: string
   ogv: string
@@ -338,6 +340,29 @@ const pendingFilteredCount = computed(() => {
 const hasMoreItems = computed(() => {
   return catalogStore.currentVisibleCardCount < catalogStore.filteredItems.length
 })
+
+const docsStore = useDocsStore()
+
+onMounted(async () => {
+  if (!docsStore.tree) {
+    await docsStore.fetchTree()
+  }
+})
+
+const pageTitle = computed(() => docsStore.tree?.data?.catalog?.pagetitle)
+const description = computed(() => docsStore.tree?.data?.catalog?.description ?? "")
+const metatags = computed(() =>
+  docsStore.tree?.data?.catalog?.metatags?.map(tag => ({ property: tag.name,
+    content: tag.content, })) ?? [] )
+
+useHead({
+  title: pageTitle,
+  meta: computed(() => [
+    { name: "description", content: description.value },
+    ...metatags.value,
+  ]),
+})
+
 </script>
 
 <template>

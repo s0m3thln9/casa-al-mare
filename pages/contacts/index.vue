@@ -1,4 +1,28 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+
+useHead({
+  title: "CASA AL MARE — стильное бельё и купальники",
+  meta: [
+    {
+      name: "description",
+      content: "CASA AL MARE — бренд стильного белья и купальников, вдохновлённый природой и искусством.",
+    },
+    {
+      property: "og:title",
+      content: "CASA AL MARE",
+    },
+    {
+      property: "og:description",
+      content: "Выбирайте купальники и бельё CASA AL MARE — сочетание модных решений, комфорта и женственности.",
+    },
+    {
+      property: "og:image",
+      content: ""
+    }
+  ],
+})
+
+</script>
 
 <template>
   <main class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D] px-2 py-6 sm:pb-3 sm:px-4 lg:py-8">

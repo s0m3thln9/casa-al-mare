@@ -25,6 +25,10 @@ useHead({
       property: "og:description",
       content: "Выбирайте купальники и бельё CASA AL MARE — сочетание модных решений, комфорта и женственности.",
     },
+    {
+      property: "og:image",
+      content: ""
+    }
   ],
 })
 

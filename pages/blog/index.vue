@@ -1,4 +1,27 @@
 <script setup lang="ts">
+
+useHead({
+  title: "CASA AL MARE — стильное бельё и купальники",
+  meta: [
+    {
+      name: "description",
+      content: "CASA AL MARE — бренд стильного белья и купальников, вдохновлённый природой и искусством.",
+    },
+    {
+      property: "og:title",
+      content: "CASA AL MARE",
+    },
+    {
+      property: "og:description",
+      content: "Выбирайте купальники и бельё CASA AL MARE — сочетание модных решений, комфорта и женственности.",
+    },
+    {
+      property: "og:image",
+      content: ""
+    }
+  ],
+})
+
 const images = {
   blog1: "/blog-1.jpg",
   blog2: "/blog-2.jpg",
@@ -67,7 +90,7 @@ onMounted(() => {
           width="610"
           height="570"
           class="aspect-[610/570] object-cover rounded-lg"
-        />
+        >
         <div
           v-if="!areImagesLoaded"
           class="h-10 w-full bg-[#F9F6EC] rounded-lg mt-2 sm:mt-4"
@@ -94,7 +117,7 @@ onMounted(() => {
           width="610"
           height="570"
           class="aspect-[610/570] object-cover rounded-lg"
-        />
+        >
         <div
           v-if="!areImagesLoaded"
           class="h-10 w-full bg-[#F9F6EC] rounded-lg mt-2 sm:mt-4"
@@ -121,7 +144,7 @@ onMounted(() => {
           width="610"
           height="570"
           class="aspect-[610/570] object-cover rounded-lg"
-        />
+        >
         <div
           v-if="!areImagesLoaded"
           class="h-10 w-full bg-[#F9F6EC] rounded-lg mt-2 sm:mt-4"
@@ -148,7 +171,7 @@ onMounted(() => {
           width="610"
           height="570"
           class="aspect-[610/570] object-cover rounded-lg"
-        />
+        >
         <div
           v-if="!areImagesLoaded"
           class="h-10 w-full bg-[#F9F6EC] rounded-lg mt-2 sm:mt-4"
@@ -175,7 +198,7 @@ onMounted(() => {
           width="610"
           height="570"
           class="aspect-[610/570] object-cover rounded-lg"
-        />
+        >
         <div
           v-if="!areImagesLoaded"
           class="h-10 w-full bg-[#F9F6EC] rounded-lg mt-2 sm:mt-4"
@@ -202,7 +225,7 @@ onMounted(() => {
           width="610"
           height="570"
           class="aspect-[610/570] object-cover rounded-lg"
-        />
+        >
         <div
           v-if="!areImagesLoaded"
           class="h-10 w-full bg-[#F9F6EC] rounded-lg mt-2 sm:mt-4"

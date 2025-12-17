@@ -9,13 +9,17 @@ interface DocNode {
   description: string
   alias: string
   content: string
+  metatags: {
+    name: string
+    content: string
+  }[]
   subitems?: Record<string, DocNode>
   [key: string]: any
 }
 
 export const useDocsStore = defineStore("docs", () => {
   const rawState = ref<{
-    tree: { data: { docs: DocNode } } | null
+    tree: { data: { docs: DocNode, campaigns: DocNode, catalog: DocNode } } | null
     loading: boolean
     error: string | null
   }>({

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from "vue"
 import type { Item } from "~/stores/catalog"
 
 const route = useRoute()
@@ -416,6 +417,27 @@ const scrollToTop = () => {
     })
   }
 }
+
+const pageTitle = computed(() => item.value?.name ?? "")
+const description = computed(() => item.value?.description ?? "")
+
+const metatags = computed(() =>
+  item.value?.metatags?.map(tag => {
+    if (tag.name.startsWith("og:")) {
+      return { property: tag.name, content: tag.content }
+    }
+  }) ?? []
+)
+
+useHead({
+  title: pageTitle,
+  meta: computed(() => [
+    { name: "description", content: description.value },
+    ...metatags.value,
+  ]),
+})
+
+
 </script>
 
 <template>
