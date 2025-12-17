@@ -51,6 +51,18 @@ export const useDocsStore = defineStore("docs", () => {
       rawState.value.loading = false
     }
   }
+  
+  const findDocById = (nodes: Record<string, DocNode> | DocNode[], id: number | string): DocNode | null => {
+    const nodesArray = Array.isArray(nodes) ? nodes : Object.values(nodes);
+    for (const node of nodesArray) {
+      if (Number(node.id) === Number(id)) return node;
+      if (node.subitems) {
+        const found = findDocById(node.subitems, id);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
 
   const getDocBySlug = (slug: string): DocNode | null => {
     if (!tree.value?.data?.docs?.subitems) return null
@@ -71,6 +83,7 @@ export const useDocsStore = defineStore("docs", () => {
   }
 
   return {
+    findDocById,
     tree,
     loading,
     error,

@@ -34,7 +34,7 @@ const getMissingParamText = (param: string | null): string => {
   if (param === "all") return "Выберите все параметры"
 
   // Для динамических типов товаров из комплекта
-  return `Выберите ${param.toLowerCase()}`
+  return `Выберите размер для "${param.toLowerCase()}"`
 }
 
 const currentState = computed(() => {
