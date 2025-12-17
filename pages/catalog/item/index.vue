@@ -114,14 +114,6 @@ const sortedShapes = computed(() => {
   return allShapes.sort((a, b) => a.id - b.id)
 })
 
-const decodeSvg = (dataUrl?: string) => {
-  if (!dataUrl || !dataUrl.startsWith("data:image/svg+xml")) {
-    return dataUrl
-  }
-  const svgContent = dataUrl.replace(/^data:image\/svg\+xml;utf8,/, "")
-  return decodeURIComponent(svgContent)
-}
-
 const breadcrumsItems = computed(() => {
   if (isLoading.value) {
     return [{ name: "Главная", path: "/" }, { name: "Смотреть все", path: "/catalog" }, { name: "Название" }]
@@ -223,8 +215,26 @@ const isTransitioning = ref(false)
 //   return `Собрать комплект (${types.length} товара)`
 // })
 
+const isNoSizeItem = computed(() => {
+  return Object.keys(item.value?.vector)[0] === 'NS'
+})
+
+// Обновляем логику возможности добавления в корзину
+// Если это NS — добавлять можно сразу, если нет — проверяем выбор размера
+const canAddToCart = computed(() => isNoSizeItem.value || !!itemStore.size)
+
+const missingParams = computed<"size" | null>(() => {
+  if (canAddToCart.value) return null
+  return "size"
+})
+
+// Если товар NS, то текущий размер передаем как пустую строку или специальный флаг
+const currentSize = computed(() => {
+  if (isNoSizeItem.value) return ""
+  return itemStore.size || item.value?.sizes?.[0] || ""
+})
+
 const currentColorCode = computed(() => item.value?.colorVal || "")
-const currentSize = computed(() => itemStore.size || item.value?.sizes?.[0] || "")
 const currentColorImages = computed(() => {
   if (!item.value?.images) return []
   return Object.values(item.value.images || {})
@@ -232,12 +242,6 @@ const currentColorImages = computed(() => {
 
 const currentPrice = computed(() => parseInt(item.value?.price || "0"))
 const currentOldPrice = computed(() => parseInt(item.value?.oldPrice || "0"))
-const canAddToCart = computed(() => !!itemStore.size)
-
-const missingParams = computed<"size" | null>(() => {
-  if (canAddToCart.value) return null
-  return "size"
-})
 
 const numBars = computed(() => Math.max(currentColorImages.value.length, 1))
 
@@ -657,7 +661,9 @@ const scrollToTop = () => {
             </div>
           </div>
         </div>
-        <div class="flex flex-col justify-center items-center gap-4 mt-12 sm:mt-10">
+        <div
+v-if="!isNoSizeItem"
+          class="flex flex-col justify-center items-center gap-4 mt-12 sm:mt-10">
           <div class="flex justify-center items-center gap-3 font-light sm:gap-4 sm:font-normal">
             <SingleSelectButton
               v-if="(item.sizes || []).length > 0"
@@ -685,17 +691,20 @@ const scrollToTop = () => {
                 class="flex flex-col justify-center gap-2 items-center cursor-pointer"
               >
                 <div class="w-[52px] h-[52px] flex items-center justify-center">
-                  <div
-                    class="w-full h-full flex items-center justify-center"
-                    v-html="decodeSvg(item?.parents[2]?.id === shapeItem.id ? shapeItem.activeImage : shapeItem.image)"
-                  />
+                  <img
+                    :src="item?.parents[2]?.id === shapeItem.id ? shapeItem.activeImage : shapeItem.image"
+                    :alt="shapeItem.name"
+                    class="w-full h-full object-contain"
+                  >
                 </div>
                 <span class="text-xs font-[Manrope] text-center">{{ shapeItem.name }}</span>
               </NuxtLink>
             </div>
           </div>
         </div>
-        <div class="flex flex-col justify-center items-center gap-1 mt-12 sm:mt-10">
+        <div
+          v-if="!isNoSizeItem"
+          class="flex flex-col justify-center items-center gap-1 mt-12 sm:mt-10">
           <span class="font-light text-xs">На модели размер: S</span>
           <span class="text-[11px] text-[#363636]">Параметры модели: 175 80/60/89</span>
         </div>
