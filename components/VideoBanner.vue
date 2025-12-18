@@ -83,4 +83,6 @@ const handleClick = () => {
   width: 100%;
   height: 100%;
 }
+
+video { display: block !important; }
 </style>
