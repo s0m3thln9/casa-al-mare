@@ -99,7 +99,6 @@ useHead({
           plus
           :video-data="{ pc: item.video[0], mob: item.video[0] }"
           :custom-class="getCardClass(index)"
-          @click="openSetPopup(item)"
         />
         
         <BannerCard
