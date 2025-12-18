@@ -96,7 +96,6 @@ useHead({
       <template v-for="(item, index) in campaignItems" :key="item.id">
         <VideoBanner
           v-if="item.video && item.video.length > 0"
-          plus
           :video-data="{ pc: item.video[0], mob: item.video[0] }"
           :custom-class="getCardClass(index)"
         />
