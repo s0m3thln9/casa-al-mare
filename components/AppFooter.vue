@@ -66,7 +66,8 @@ const handleOrdersClick = () => {
           <li><NuxtLink to="/catalog?path=kupalniki">Купальники</NuxtLink></li>
           <li><NuxtLink to="/catalog?path=kupalniki%2Fniz">Нижняя часть купальника</NuxtLink></li>
           <li><NuxtLink to="/catalog?path=kupalniki%2Fverx">Верхняя часть купальника</NuxtLink></li>
-          <li><NuxtLink to="/catalog?path=plyazhnaya-odezhda">Пляжная одежда</NuxtLink></li>
+          <li><NuxtLink to="/catalog?path=plyazhnaya-odezhda">Одежда
+          </NuxtLink></li>
           <li><NuxtLink to="/certificate">Сертификаты</NuxtLink></li>
         </ul>
       </div>
