@@ -80,6 +80,7 @@ useHead({
   ]),
 })
 
+
 </script>
 
 <template>
@@ -103,10 +104,11 @@ useHead({
         <BannerCard
           v-else
           :image-url="item.image ? `https://back.casaalmare.com/assets/images/${item.id}/${item.image}` : ''"
-          plus
+          :plus="(item.set.filter(i => i !== '') || []).length > 0"
           :custom-class="getCardClass(index)"
           :object-position="index === 2 ? '50% 70%' : 'center'"
-          @click="openSetPopup(item)"
+          @click="(item.set.filter(i => i !== '') || []).length > 0 &&
+          openSetPopup(item)"
         />
       </template>
     </div>
