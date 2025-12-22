@@ -50,10 +50,10 @@ onMounted(() => {
       :style="{ objectPosition: objectPosition || 'center' }"
       alt="banner"
       fetchpriority="high"
-    />
+    >
     <div
       v-if="text"
-      class="absolute bottom-2 right-2 px-2 py-1 bg-[#FFFFFA99] backdrop-blur-sm rounded-2xl font-[Commissioner] font-light text-[#211D1D] uppercase text-[10px] sm:backdrop-blur-none sm:text-base/5 sm:font-[Manrope] sm:font-normal sm:px-4 sm:py-2 sm:bottom-4 sm:right-4 sm:bg-[#FFFFFA]"
+      class="absolute bottom-2 right-2 px-2 py-1 bg-[#FFFFFA99] backdrop-blur-sm rounded-2xl font-[Commissioner] font-light text-[#211D1D] uppercase text-[10px] sm:backdrop-blur-none sm:text-[13px]/5 sm:font-[Manrope] sm:font-normal sm:px-2.5 sm:py-2 sm:bottom-2.5 sm:right-2.5 sm:bg-[#FFFFFA]"
     >
       {{ text }}
     </div>
