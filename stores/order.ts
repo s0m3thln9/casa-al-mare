@@ -669,6 +669,7 @@ export const useOrderStore = defineStore("order", () => {
             deliveryDetails: cartItem.deliveryDetails || cartItem.options?.deliveryDetails,
             vector: "certificate",
             isCertificate: true,
+            isGame: cartItem.template === 6
           }
         }
 

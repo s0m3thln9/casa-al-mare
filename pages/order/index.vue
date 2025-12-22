@@ -596,10 +596,10 @@ useSmsAutoSubmit(
                         {{ item.name }}
                       </span>
                       <span class="font-light text-[13px]">
-                        <template v-if="!item.isCertificate">
+                        <template v-if="!item.isCertificate && !item.isGame">
                           Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
                         </template>
-                        <template v-else
+                        <template v-else-if="!item.isGame"
                           >Кому: {{ item.recipientName }}
                           <span class="ml-1">Тип: {{ item.certificateType }}</span></template
                         >
@@ -1353,10 +1353,10 @@ useSmsAutoSubmit(
                         {{ item.name }}
                       </span>
                       <span class="font-light text-[13px]">
-                        <template v-if="!item.isCertificate">
+                        <template v-if="!item.isCertificate && !item.isGame">
                           Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
                         </template>
-                        <template v-else
+                        <template v-else-if="!item.isGame"
                           >Кому: {{ item.recipientName }}
                           <span class="ml-1">Тип: {{ item.certificateType }}</span></template
                         >

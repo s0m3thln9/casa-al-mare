@@ -127,7 +127,7 @@ const formatDate = (timestamp: number): string => {
               width="57"
               height="72"
               class="rounded-2xl border-[0.5px] border-[#211D1D]"
-            />
+            >
             <div class="flex flex-col gap-1">
               <span
                 class="font-light text-sm text-[#414141] cursor-pointer"
@@ -136,10 +136,10 @@ const formatDate = (timestamp: number): string => {
                 {{ item.name }}
               </span>
               <span class="font-light text-[13px]">
-                <template v-if="!item.isCertificate">
+                <template v-if="!item.isCertificate && !item.isGame">
                   Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
                 </template>
-                <template v-else>
+                <template v-else-if="!item.isGame">
                   Кому: {{ item.recipientName }} <span class="ml-1">Тип: {{ item.certificateType }}</span></template
                 >
               </span>

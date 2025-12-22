@@ -455,6 +455,7 @@ watch(
                 oldPrice: +item.oldPrice || 0,
                 count: item.count,
                 isCertificate: item.id === -1,
+                isGame: item.template === 6,
                 recipientName: item.options?.recipientName,
                 deliveryDetails: item.options?.deliveryDetails,
                 certificateType: item.options?.certificateType,
