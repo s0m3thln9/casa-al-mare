@@ -126,6 +126,7 @@ useHead({
               :old-price="product.old_price"
               color="Базовый"
               :name="product.pagetitle"
+              link
             />
           </div>
         </div>
