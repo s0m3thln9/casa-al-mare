@@ -66,14 +66,14 @@ onMounted(() => {
 <template>
   <main class="mb-5 font-[Manrope] bg-[#FFFFFA] text-[#211D1D] sm:mb-10">
     <h2 class="uppercase text-center font-[Inter] text-[17px]">Блог</h2>
-    <div class="mt-4 w-full flex justify-center items-center px-2">
-      <SelectButton
-        v-model="currentBlog"
-        :variants="categories"
-        custom-class="max-w-[600px] w-full !rounded-2xl"
-        custom-button-class="flex-1 py-2 !text-[13px]"
-      />
-    </div>
+<!--    <div class="mt-4 w-full flex justify-center items-center px-2">-->
+<!--      <SelectButton-->
+<!--        v-model="currentBlog"-->
+<!--        :variants="categories"-->
+<!--        custom-class="max-w-[600px] w-full !rounded-2xl"-->
+<!--        custom-button-class="flex-1 py-2 !text-[13px]"-->
+<!--      />-->
+<!--    </div>-->
     <div class="grid px-2 mt-4 gap-6 sm:mt-10 sm:px-4 lg:grid-cols-3">
       <div
         class="flex flex-col items-center cursor-pointer"
