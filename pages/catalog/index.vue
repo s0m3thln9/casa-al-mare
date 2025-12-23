@@ -443,7 +443,7 @@ useHead({
           <template v-if="index === 8 && isMobile && videoData1 && !isAnyFilterActive">
             <VideoBanner
               :video-data="videoData1"
-              text="SS26 solar power"
+              text="Campaign"
               custom-class="rounded-lg aspect-[1] col-span-2 sm:hidden"
               link="/campaigns"
             />
@@ -451,7 +451,7 @@ useHead({
           <template v-else-if="index === 16 && isMobile && videoData2 && !isAnyFilterActive">
             <VideoBanner
               :video-data="videoData2"
-              text="SS26 solar power"
+              text="Campaign"
               custom-class="rounded-lg aspect-[1] col-span-2 sm:hidden"
               link="/campaigns"
             />
@@ -482,7 +482,6 @@ useHead({
       </template>
     </div>
 
-    <!-- Триггер для бесконечного скролла -->
     <div
       v-if="hasMoreItems && !catalogStore.isLoading"
       ref="loadMoreTrigger"
