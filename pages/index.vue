@@ -58,14 +58,12 @@ const images = {
     <div class="flex flex-col lg:flex-row gap-2 px-2 py-2 sm:gap-4 sm:px-4 sm:py-4">
       <BannerCard
         :image-url="images.promo1"
-        text="SS26 solar power"
-        custom-class="rounded-lg aspect-[1]"
+        custom-class="rounded-lg aspect-[1] cursor-default!"
         object-position="center"
-        link="/campaigns"
       />
       <BannerCard
         :image-url="images.promo2"
-        text="SS26 solar power"
+        text="Campaign"
         custom-class="rounded-lg aspect-[1]"
         object-position="center"
         link="/campaigns"
