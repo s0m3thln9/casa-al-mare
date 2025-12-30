@@ -367,17 +367,15 @@ export const useCatalogStore = defineStore("catalog", () => {
     const pathFilteredItems = getFilteredItemsForLevel(
       pendingFilters.value.parentsAliases.filter((seg) => seg.length > 0).length,
     )
-
-    const colors: { code: string; name: string; value: string; art?: string }[] = []
-    const colorsSet = new Set()
+    
+    const colorsMap = new Map<string, { code: string; name: string; value: string; art?: string }>()
+    
     pathFilteredItems.forEach((item) => {
       item.keys
         ?.filter((k) => k.type === "color")
         .forEach((k) => {
-          const colorKey = `${k.alias}-${k.name}`
-          if (!colorsSet.has(colorKey)) {
-            colorsSet.add(colorKey)
-            colors.push({
+          if (!colorsMap.has(k.alias)) {
+            colorsMap.set(k.alias, {
               code: k.alias,
               name: k.name,
               value: k.value || k.alias,
@@ -386,6 +384,8 @@ export const useCatalogStore = defineStore("catalog", () => {
           }
         })
     })
+    
+    const colors = Array.from(colorsMap.values())
 
     const materials: { name: string; alias: string }[] = []
     const matSet = new Set()
