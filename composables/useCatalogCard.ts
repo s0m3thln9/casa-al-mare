@@ -25,7 +25,7 @@ export function useCatalogCard(props: UseCatalogCardProps) {
   const starRef = ref<InstanceType<typeof NuxtImg> | null>(null)
   
   const availableSizes = computed(() => {
-    return Object.keys(item.value?.vector || {}).filter(key => key !== "NS")
+    return (item.value?.sizes || []).filter(key => key !== "NS")
   })
 
   const numImages = computed(() => {

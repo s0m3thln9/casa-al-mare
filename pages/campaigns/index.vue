@@ -122,12 +122,7 @@ useHead({
               v-model="setStore.items[product.id]"
               custom-image-class="aspect-[200/300] w-full"
               popup
-              :slider-images="product.image ? [`https://back.casaalmare.com/assets/images/${product.id}/${product.image}`] : []"
               variant="mini"
-              :price="product.price || 0"
-              :old-price="product.old_price"
-              color="Базовый"
-              :name="product.pagetitle"
               link
             />
           </div>
