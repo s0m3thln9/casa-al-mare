@@ -89,7 +89,7 @@ const images = {
         text="Одежда"
         custom-class="rounded-lg aspect-[167/284] sm:aspect-[1920/2462] md:col-span-2 lg:col-span-1"
         object-position="center"
-        link="/catalog?path=plyazhnaya-odezhda"
+        link="/catalog?path=odezhda"
       />
       <BannerCard
         :image-url="images.category4"
