@@ -603,34 +603,42 @@ useHead({
           />
         </div>
       </div>
-      <div
-        v-if="item"
-        class="hidden sm:grid grid-cols-1 gap-2 lg:grid-cols-2"
-      >
+       <div
+         v-if="item"
+         class="hidden sm:grid grid-cols-1 gap-2 lg:grid-cols-2"
+       >
         <template v-if="currentColorImages.length > 0">
-          <NuxtImg
+          <div
             v-for="(img, index) in currentColorImages"
             :key="index"
-            v-slot="{ src, isLoaded, imgAttrs }"
-            :src="img"
-            :custom="true"
-            class="rounded-2xl aspect-[726/1080]"
+            class="relative w-full rounded-2xl overflow-hidden bg-[#F9F6EC]"
+            style="aspect-ratio: 726/1080;"
           >
-            <div
-              v-if="!isLoaded"
-              class="aspect-[726/1080] bg-[#F9F6EC] rounded-2xl"
-            />
-            <img
-              v-else
-              v-bind="imgAttrs"
-              :src="src"
-              class="w-full h-full object-cover rounded-2xl aspect-[726/1080]"
-              alt="item"
+            <NuxtImg
+              v-slot="{ src, isLoaded, imgAttrs }"
+              :src="img"
+              :custom="true"
+              class="absolute inset-0 w-full h-full"
             >
-          </NuxtImg>
+              <div
+                v-if="!isLoaded"
+                class="w-full h-full bg-[#F9F6EC]"
+              />
+              <img
+                v-else
+                v-bind="imgAttrs"
+                :src="src"
+                class="w-full h-full object-cover"
+                alt="item"
+              >
+            </NuxtImg>
+          </div>
         </template>
         <template v-else>
-          <div class="aspect-[726/1080] bg-[#F9F6EC] rounded-2xl" />
+          <div
+            class="w-full bg-[#F9F6EC] rounded-2xl"
+            style="aspect-ratio: 726/1080;"
+          />
         </template>
       </div>
       <div
