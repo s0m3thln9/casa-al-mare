@@ -319,7 +319,7 @@ defineExpose({ validate, showError, setValue })
           :class="{ 'text-[#8C8785]': !selected }"
           type="text"
           @input="handleSearchInput"
-        />
+        >
         <button class="w-4 h-4 flex justify-center items-center cursor-pointer focus:outline-none">
           <div
             v-if="!isLoading"
@@ -334,7 +334,8 @@ defineExpose({ validate, showError, setValue })
       </div>
       <div
         class="flex flex-col gap-2 w-full pr-3 collapsible-div transition-max-height duration-300 ease-in-out overflow-y-scroll"
-        :class="[isDropdownOpen ? 'max-h-500 opacity-100 mt-2' : 'max-h-0 opacity-0']"
+        :class="[isDropdownOpen ? 'max-h-20 opacity-100 mt-2' :
+        'max-h-0 opacity-0']"
       >
         <div
           v-if="asyncSearch && searchQuery.length < 2 && !isLoading"

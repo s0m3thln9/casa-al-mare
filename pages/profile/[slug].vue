@@ -302,7 +302,7 @@ watch(
             type="text"
             disabled
           />
-          <div class="w-full flex gap-4">
+          <div class="w-full flex items-start gap-4">
             <AppTooltip
               text="Это поле обязательно для заполнения"
               type="error"
