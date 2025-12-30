@@ -126,7 +126,7 @@ onUnmounted(() => {
             placeholder="Введите запрос, например 'Лиф'..."
             class="w-full py-2 text-[#211D1D] font-[Manrope] text-base focus:outline-none"
             @keydown.enter="handleSubmit"
-          />
+          >
           <button
             class="cursor-pointer flex items-center justify-center w-6 h-6 ml-2"
             aria-label="Выполнить поиск"
@@ -167,12 +167,6 @@ onUnmounted(() => {
           class="text-[#211D1D]/60 text-sm font-[Manrope] text-center py-1"
         >
           Ничего не найдено. Попробуйте другой запрос.
-        </p>
-        <p
-          v-else-if="!searchText.trim()"
-          class="text-[#211D1D]/60 text-sm font-[Manrope] text-center py-1"
-        >
-          Начните вводить текст для поиска...
         </p>
       </div>
     </div>
