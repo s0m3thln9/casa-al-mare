@@ -92,7 +92,7 @@ const filteredOptions = computed(() => {
       : props.searchable && searchQuery.value
         ? props.options.filter((option) => option.toLowerCase().includes(searchQuery.value.toLowerCase()))
         : props.options
-
+  
   if (props.cityMode && typeof selected.value === "object" && selected.value) {
     const selectedCity = selected.value as CityData
     const isAlreadyInOptions = options.some((opt) => typeof opt === "object" && opt.kladr === selectedCity.kladr)
@@ -100,7 +100,7 @@ const filteredOptions = computed(() => {
       options = [selectedCity, ...options]
     }
   }
-
+  
   return options
 })
 
@@ -109,14 +109,14 @@ const searchCities = async () => {
     asyncOptions.value = []
     return
   }
-
+  
   isLoading.value = true
-
+  
   try {
     const response = await $fetch<{ success: boolean; data?: CityData[] }>(
       `${props.asyncSearchUrl}?query=${encodeURIComponent(searchQuery.value)}`,
     )
-
+    
     if (response.success && response.data) {
       asyncOptions.value = response.data
     } else {
@@ -194,22 +194,22 @@ const select = (item: CityData | string) => {
 const handleSearchInput = (event: Event) => {
   const target = event.target as HTMLInputElement
   searchQuery.value = target.value
-
+  
   if (props.searchable && !isDropdownOpen.value && searchQuery.value.trim().length > 0) {
     isDropdownOpen.value = true
     nextTick(() => inputRef.value?.focus())
   }
-
+  
   if (props.searchable && isDropdownOpen.value && searchQuery.value.trim() === "") {
     isDropdownOpen.value = false
     asyncOptions.value = []
   }
-
+  
   if (props.asyncSearch && searchQuery.value.length >= 2) {
     if (searchTimeout.value) {
       clearTimeout(searchTimeout.value)
     }
-
+    
     searchTimeout.value = setTimeout(() => {
       searchCities()
     }, 300)
@@ -264,29 +264,32 @@ defineExpose({ validate, showError, setValue })
   <div
     ref="dropdownRef"
     class="relative font-[Manrope] font-light text-sm text-[#211D1D] select-none cursor-pointer sm:text-xs"
-    :class="customClass"
+    :class="[customClass, { 'opacity-[0.99] z-50': isDropdownOpen }]"
   >
     <label
       v-if="!isDropdownOpen && !searchable"
-      class="absolute top-3.5 left-2.5 font-[Manrope] font-light text-sm text-[#8C8785] transition-all duration-200 pointer-events-none sm:text-xs"
+      class="absolute top-3.5 left-2.5 font-[Manrope] font-light text-sm text-[#8C8785] transition-all duration-200 pointer-events-none z-10 sm:text-xs"
       :class="{ '!top-[3px] text-[#8C8785]': isActive, 'text-[#5E5B58]': !isActive }"
     >
       {{ label }}
       <span
         v-if="props.required"
         class="text-[#E29650]"
-        >*</span
+      >*</span
       >
     </label>
     <div
-      class="relative h-[44px] w-full flex-col px-2.5 border-[0.7px] rounded-lg flex items-center justify-center"
+      class="relative h-[44px] w-full flex-col px-2.5 flex items-center justify-center overflow-visible bg-[#FFFFFA]"
       :class="{
         'border-[#E29650]': showError === true && !isDropdownOpen,
         'border-[#211D1D]': isActive || isDropdownOpen,
         'border-[#B8B8B6]': !isActive && !isDropdownOpen && showError === false,
         'pt-[21.5px] pb-1.5': isActive && !isDropdownOpen && !searchable,
-        'py-[8.75px] h-full max-h-[257.5px]': isDropdownOpen,
+        'border-t-[0.7px] border-l-[0.7px] border-r-[0.7px] rounded-t-lg':
+        isDropdownOpen,
+        'border-[0.7px] rounded-lg': !isDropdownOpen,
       }"
+      :style="{ paddingTop: isDropdownOpen ? '8.75px' : '', paddingBottom: isDropdownOpen ? '8.75px' : '' }"
       @click="toggleSelect"
     >
       <div
@@ -333,9 +336,9 @@ defineExpose({ validate, showError, setValue })
         </button>
       </div>
       <div
-        class="flex flex-col gap-2 w-full pr-3 collapsible-div transition-max-height duration-300 ease-in-out overflow-y-scroll"
-        :class="[isDropdownOpen ? 'max-h-20 opacity-100 mt-2' :
-        'max-h-0 opacity-0']"
+        class="absolute top-full left-0 right-0 flex flex-col gap-2 w-[calc(100%+2px)] -ml-[1px] px-2.5 pr-[22px] py-2 bg-[#FFFFFA] border-b-[0.7px] border-l-[0.7px] border-r-[0.7px] border-[#211D1D] rounded-b-lg shadow-md collapsible-div transition-all duration-300 ease-in-out overflow-y-scroll z-50"
+        :class="[isDropdownOpen ? 'max-h-[200px] opacity-100' : 'max-h-0 opacity-0 border-transparent py-0 shadow-none']"
+        :style="{ pointerEvents: isDropdownOpen ? 'auto' : 'none' }"
       >
         <div
           v-if="asyncSearch && searchQuery.length < 2 && !isLoading"
@@ -385,7 +388,7 @@ defineExpose({ validate, showError, setValue })
 
 <style scoped>
 .collapsible-div {
-  transition-property: max-height, opacity;
+  transition-property: max-height, opacity, padding, box-shadow;
 }
 
 @keyframes spin {
