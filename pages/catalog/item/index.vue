@@ -624,7 +624,7 @@ useHead({
               v-else
               v-bind="imgAttrs"
               :src="src"
-              class="w-full h-full object-cover rounded-2xl"
+              class="w-full h-full object-cover rounded-2xl aspect-[726/1080]"
               alt="item"
             >
           </NuxtImg>
