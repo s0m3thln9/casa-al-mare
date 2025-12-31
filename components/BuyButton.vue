@@ -114,7 +114,7 @@ const handleClick = async () => {
           body: {
             items: props.items.map((item) => ({
               id: item.id,
-              size: item.size,
+              size: item.size || "NS",
               count: 1,
             })),
             token: token,
@@ -149,7 +149,7 @@ const handleClick = async () => {
             items: [
               {
                 id: props.id!,
-                size: props.size!,
+                size: props.size || "NS",
                 count: 1,
               },
             ],

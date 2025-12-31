@@ -448,6 +448,7 @@ export const useOrderStore = defineStore("order", () => {
         recipientPhone: item.options?.recipientPhone,
         deliveryDetails: item.options?.deliveryDetails,
         options: item.options,
+        template: item.template,
       }
     })
   }
@@ -651,6 +652,7 @@ export const useOrderStore = defineStore("order", () => {
     return cartItems.value
       .map((cartItem) => {
         const isCertificate = cartItem.id === -1
+        const isGame = cartItem.template === 6
 
         if (isCertificate) {
           return {
@@ -669,7 +671,6 @@ export const useOrderStore = defineStore("order", () => {
             deliveryDetails: cartItem.deliveryDetails || cartItem.options?.deliveryDetails,
             vector: "certificate",
             isCertificate: true,
-            isGame: cartItem.template === 6
           }
         }
 
@@ -692,6 +693,7 @@ export const useOrderStore = defineStore("order", () => {
           price: cartItem.price,
           oldPrice: cartItem.oldPrice,
           isCertificate: false,
+          isGame: isGame
         }
       })
       .filter(Boolean)

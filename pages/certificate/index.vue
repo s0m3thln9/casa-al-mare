@@ -198,9 +198,6 @@ watch(certificateImages, () => {
   currentImageIndex.value = 0
 })
 
-watch(currentImageIndex, (newVal) => {
-  console.log("Current image index changed to:", newVal)
-})
 
 const handleTouchStart = (e: TouchEvent) => {
   const len = certificateImages.value.length

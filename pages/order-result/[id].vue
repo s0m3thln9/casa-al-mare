@@ -99,6 +99,7 @@ const localCartDetailed = computed(() => {
         price: cartItem.price,
         oldPrice: cartItem.oldPrice,
         isCertificate: false,
+        isGame: cartItem.variant === "NS"
       }
     })
     .filter(Boolean)
