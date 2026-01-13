@@ -52,7 +52,7 @@ const images = {
       v-if="data"
       :video-data="data"
       text="В каталог"
-      custom-class="sm:aspect-[375/607] md:aspect-[5/4] lg:aspect-[1920/962]"
+      custom-class="sm:aspect-[375/607] max-sm:h-[100dvh] md:aspect-[5/4] lg:aspect-[1920/962]"
       link="/catalog"
     />
     <div class="flex flex-col lg:flex-row gap-2 px-2 py-2 sm:gap-4 sm:px-4 sm:py-4">
