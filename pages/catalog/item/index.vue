@@ -1029,17 +1029,6 @@ v-if="!isNoSizeItem"
   background: transparent;
 }
 
-.html-content-wrapper :deep(tbody tr)::before {
-  content: "";
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  top: 0;
-  bottom: 0;
-  border-radius: 8px;
-  z-index: -1;
-}
-
 .html-content-wrapper :deep(tbody tr td) {
   padding: 2px 8px;
   border: 1px solid transparent;
@@ -1171,5 +1160,18 @@ v-if="!isNoSizeItem"
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
+}
+</style>
+<style>
+.html-content-wrapper tbody tr::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 0;
+  bottom: 0;
+  border-radius: 8px;
+  background-color: #f9f6ec;
+  z-index: -1;
 }
 </style>
