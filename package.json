@@ -11,7 +11,7 @@
     "caniuse-lite": "^1.0.30001759",
     "eslint": "^9.0.0",
     "libphonenumber-js": "^1.12.11",
-    "nuxt": "^3.17.5",
+    "nuxt": "4.1.0",
     "nuxt-viewport": "2.3.1",
     "pinia": "^3.0.3",
     "tailwind-merge": "^3.3.1",

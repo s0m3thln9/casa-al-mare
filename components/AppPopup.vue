@@ -44,8 +44,10 @@ const lockScroll = () => {
 }
 
 const unlockScroll = () => {
-  document.body.style.overflow = ""
-  document.body.style.paddingRight = ""
+  if (import.meta.client && document?.body) {
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = ""
+  }
 }
 
 onUnmounted(() => {
