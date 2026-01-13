@@ -1259,28 +1259,29 @@ useSmsAutoSubmit(
                   'max-h-500 opacity-100': orderStore.isExpandedPoints,
                   'max-h-0 opacity-0': !orderStore.isExpandedPoints,
                 }"
-              >
-                <span class="text-[13px]">Сумма баллов: {{ orderStore.availablePoints
-                                          }}</span>
+                            >
+                <span class="text-[13px]">Баланс: {{ userStore.user?.points ?? 0 }} (1 балл = 1 рубль)</span>
                 <AppInput
                   id="points"
                   v-model="orderStore.pendingPoints"
                   label="Введите сумму баллов для списания"
                   type="text"
                   :disabled="orderStore.isLoadingPoints"
-                />
-                <AppButton
-                  variant="primary"
                   custom-class="w-full"
-                  :content="`Списать ${Number(orderStore.pendingPoints) || 0} баллов`"
-                  :disabled="orderStore.isLoadingPoints || !orderStore.pendingPoints"
-                  @click="orderStore.applyPoints"
                 />
                 <span
-                  v-if="orderStore.pointsError"
+                  v-if="orderStore.pointsInputError"
                   class="font-light text-[13px] text-[#E57979]"
-                  >{{ orderStore.pointsError }}</span
-                >
+                >{{ orderStore.pointsInputError }}</span>
+                <AppCheckbox
+                  v-if="orderStore.pointsBenefit &&
+                  !orderStore.pointsInputError"
+                  v-model="orderStore.pointsCheckboxValue"
+                  size="S"
+                  value="apply"
+                  :label="`Выгода ${orderStore.priceFormatter(orderStore.pointsBenefit.benefit)} (${orderStore.priceFormatter(orderStore.pointsBenefit.newPrice)} ${orderStore.priceFormatter(orderStore.pointsBenefit.oldPrice)})`"
+                  :disabled="orderStore.isLoadingPoints"
+                />
               </div>
             </div>
           </template>
@@ -1526,27 +1527,29 @@ useSmsAutoSubmit(
                       'max-h-500 opacity-100': orderStore.isExpandedPoints,
                       'max-h-0 opacity-0': !orderStore.isExpandedPoints,
                     }"
-                  >
-                    <span class="text-[13px]">Сумма баллов: {{ userStore.user?.points ?? 0 }}</span>
+                                    >
+                    <span class="text-[13px]">Баланс: {{ userStore.user?.points ?? 0 }} (1 балл = 1 рубль)</span>
                     <AppInput
                       id="points"
                       v-model="orderStore.pendingPoints"
                       label="Введите сумму баллов для списания"
                       type="text"
                       :disabled="orderStore.isLoadingPoints"
-                    />
-                    <AppButton
-                      variant="primary"
-                      custom-class="w-full"
-                      :content="`Списать ${Number(orderStore.pendingPoints) || 0} баллов`"
-                      :disabled="orderStore.isLoadingPoints || !orderStore.pendingPoints"
-                      @click="orderStore.applyPoints"
+                      custom-class="min-w-full"
                     />
                     <span
-                      v-if="orderStore.pointsError"
+                      v-if="orderStore.pointsInputError"
                       class="font-light text-[13px] text-[#E57979]"
-                      >{{ orderStore.pointsError }}</span
-                    >
+                    >{{ orderStore.pointsInputError }}</span>
+                    <AppCheckbox
+                      v-if="orderStore.pointsBenefit &&
+                      !orderStore.pointsInputError"
+                      v-model="orderStore.pointsCheckboxValue"
+                      size="S"
+                      value="apply"
+                      :label="`Выгода ${orderStore.priceFormatter(orderStore.pointsBenefit.benefit)} (${orderStore.priceFormatter(orderStore.pointsBenefit.newPrice)} ${orderStore.priceFormatter(orderStore.pointsBenefit.oldPrice)})`"
+                      :disabled="orderStore.isLoadingPoints"
+                    />
                   </div>
                 </div>
                 <div

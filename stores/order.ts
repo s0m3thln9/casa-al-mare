@@ -1078,48 +1078,80 @@ export const useOrderStore = defineStore("order", () => {
     return null
   }
   
-  async function applyPoints() {
-    if (isLoadingPoints.value) return
-    
-    isLoadingPoints.value = true
-    pointsError.value = ""
-    
+  const loyaltyDiscountPercent = computed(() => {
+    const loyaltyLevel = userStore.user?.loyaltyLevel || 1
+    const rates: Record<number, number> = { 1: 0.1, 2: 0.15, 3: 0.2 }
+    return rates[loyaltyLevel] || 0.1
+  })
+
+  const maxAllowedPoints = computed(() => {
+    return Math.floor(goodsSum.value * loyaltyDiscountPercent.value)
+  })
+
+  const pointsInputError = computed(() => {
     const points = Number(pendingPoints.value)
     
+    if (!pendingPoints.value) return ""
+    
     if (isNaN(points) || points <= 0) {
-      pointsError.value = "Введите корректное количество баллов"
-      isLoadingPoints.value = false
-      return
+      return "Введите корректное количество баллов"
     }
     
-    let discountPercent = 0.1
-    const loyaltyLevel = userStore.user?.loyaltyLevel || 1
+    if (points > (userStore.user?.points || 0)) {
+      return "Недостаточно баллов на балансе"
+    }
     
-    if (loyaltyLevel === 1) {
-      discountPercent = 0.1
-    } else if (loyaltyLevel === 2) {
-      discountPercent = 0.15
-    } else if (loyaltyLevel === 3) {
-      discountPercent = 0.2
+    if (points > maxAllowedPoints.value) {
+      const percentText = Math.round(loyaltyDiscountPercent.value * 100)
+      return `Максимум: ${maxAllowedPoints.value} баллов (${percentText}% от суммы)`
+    }
+    
+    return ""
+  })
+  
+  const pointsCheckboxValue = ref<string | null>(null)
+  
+  const pointsBenefit = computed(() => {
+    const points = Number(pendingPoints.value)
+    if (isNaN(points) || points <= 0) return null
+    
+    const loyaltyLevel = userStore.user?.loyaltyLevel || 1
+    let discountPercent = 0.1
+    
+    switch (loyaltyLevel) {
+      case 1:
+        discountPercent = 0.1
+        break
+      case 2:
+        discountPercent = 0.15
+        break
+      case 3:
+        discountPercent = 0.2
+        break
     }
     
     const maxPoints = Math.floor(goodsSum.value * discountPercent)
     
-    if (points > (userStore.user?.points || 0)) {
-      pointsError.value = "Недостаточно баллов"
-      isLoadingPoints.value = false
+    if (points > (userStore.user?.points || 0) || points > maxPoints) {
+      return null
+    }
+    
+    const priceWithPoints = goodsSum.value - points
+    return {
+      benefit: points,
+      newPrice: priceWithPoints,
+      oldPrice: goodsSum.value
+    }
+  })
+  
+  async function applyPoints() {
+    if (isLoadingPoints.value || pointsInputError.value) {
+      pointsCheckboxValue.value = null
       return
     }
     
-    if (points > maxPoints) {
-      const percentText = Math.round(discountPercent * 100)
-      pointsError.value = `Нельзя списать больше ${maxPoints} баллов (${percentText}% от суммы заказа)`
-      isLoadingPoints.value = false
-      return
-    }
-    
-    pointsError.value = ""
-    
+    isLoadingPoints.value = true
+    const points = Number(pendingPoints.value)
     const previousPointsToUse = pointsToUse.value
     
     pointsToUse.value = points
@@ -1128,9 +1160,41 @@ export const useOrderStore = defineStore("order", () => {
       userStore.user.points = userStore.user.points - (points - previousPointsToUse)
     }
     
-    pendingPoints.value = ""
     isLoadingPoints.value = false
   }
+  
+  function cancelPoints() {
+    if (userStore.user) {
+      userStore.user.points = userStore.user.points + pointsToUse.value
+    }
+    pointsToUse.value = 0
+    pointsError.value = ""
+  }
+
+  watch(pointsCheckboxValue, (newValue) => {
+    if (newValue === 'apply') {
+      applyPoints()
+    } else if (newValue === null && pointsToUse.value > 0) {
+      cancelPoints()
+    }
+  })
+
+  watch(pendingPoints, () => {
+    if (pointsCheckboxValue.value === 'apply') {
+      pointsCheckboxValue.value = null
+    }
+  })
+  
+  const isPointsCheckboxChecked = computed({
+    get: () => pointsToUse.value > 0,
+    set: (value: boolean) => {
+      if (value) {
+        applyPoints()
+      } else {
+        cancelPoints()
+      }
+    }
+  })
 
   function togglePoints() {
     isExpandedPoints.value = !isExpandedPoints.value
@@ -1474,7 +1538,11 @@ export const useOrderStore = defineStore("order", () => {
     updateDeliveryDetails,
     isWidgetOpen,
     selectedPvz,
+    pointsCheckboxValue,
+    pointsBenefit,
     applyPoints,
+    pointsInputError,
+    isPointsCheckboxChecked,
     togglePoints,
     addCertificate,
     refreshCityForUI,
