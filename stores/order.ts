@@ -300,7 +300,7 @@ export const useOrderStore = defineStore("order", () => {
       if (loyaltyData.value) {
         if (userStore.user) {
           userStore.user.points = loyaltyData.value.balance
-          userStore.user.ordersumm = loyaltyData.value.ordersumm
+          userStore.user.orderSum = loyaltyData.value.ordersumm
           userStore.user.loyaltyLevel = loyaltyData.value.level
         }
       }

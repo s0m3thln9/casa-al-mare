@@ -410,6 +410,94 @@ watch(
             @click="handleSaveProfile"
           />
         </AppTooltip>
+        <div class="flex flex-col gap-4 mt-8">
+              <div
+                class="flex items-center justify-between cursor-pointer"
+                @click="orderStore.togglePoints"
+              >
+                <span class="font-light text-sm">Программа лояльности</span>
+                <button
+                  class="w-4 h-4 flex items-center justify-center cursor-pointer transition-transform duration-300"
+                  :class="orderStore.isExpandedPoints ? 'rotate-0' : 'rotate-180'"
+                >
+                  <div class="arrow-icon" />
+                </button>
+              </div>
+              <div
+                class="collapsible-div flex flex-col gap-4 transition-max-height duration-300 ease-in-out overflow-hidden"
+                :class="{
+                  'max-h-500 opacity-100': orderStore.isExpandedPoints,
+                  'max-h-0 opacity-0': !orderStore.isExpandedPoints,
+                }"
+              >
+                <span class="text-sm text-[#1A1A1A] font-light">Ваш баланс: {{
+                    userStore.user.points ?? 0
+                                          }}</span>
+                <div class="flex flex-col gap-2">
+                  <div
+                    class="p-6 border rounded-lg flex items-start gap-4 max-sm:flex-col"
+                    :class="userStore.user.loyaltyLevel === 1 ? 'border-[#211D1D]' : 'border-[#BBB8B6]'"
+                  >
+                    <div
+                      class="px-4 py-2 w-[100px] rounded-lg text-sm tracking-tighter"
+                      :class="userStore.user.loyaltyLevel === 1 ?
+                      'bg-[#F3A454] text-[#FFFFFA]' :
+                      'border border-[#8C8785] text-[#8C8785]'"
+                    >
+                      1 уровень:
+                    </div>
+                    <p
+class="text-sm"
+                       :class="userStore.user.loyaltyLevel === 1 ? 'text-[#181818]' : 'text-[#8C8785]'"
+                    >
+                      Общая сумма покупок с использованием карты: 0 - 100 000<br>
+  Процент начисления бонусов от суммы покупки: 5%<br>
+  Процент возможного списания бонусов: До 10%
+                    </p>
+                  </div>
+                  <div
+                    class="p-6 border rounded-lg flex items-start gap-4 max-sm:flex-col"
+                    :class="userStore.user.loyaltyLevel === 2 ?
+                    'border-[#211D1D]' : 'border-[#BBB8B6]'"
+                  >
+                    <div
+                      class="px-4 py-2 w-[100px] rounded-lg text-sm tracking-tighter"
+                      :class="userStore.user.loyaltyLevel === 2 ?
+                      'bg-[#F3A454] text-[#FFFFFA]' :
+                      'border border-[#8C8785] text-[#8C8785]'"
+                    >
+                      2 уровень:
+                    </div>
+                    <p class="text-sm" :class="userStore.user.loyaltyLevel === 1 ? 'text-[#181818]' : 'text-[#8C8785]'">
+                      Общая сумма покупок с использованием карты: 101 000 - 200
+                      000<br>
+  Процент начисления бонусов от суммы покупки: 5%<br>
+  Процент возможного списания бонусов: До 15%
+                    </p>
+                  </div>
+                  <div
+                    class="p-6 border rounded-lg flex items-start gap-4 max-sm:flex-col"
+                    :class="userStore.user.loyaltyLevel === 3 ?
+                    'border-[#211D1D]' : 'border-[#BBB8B6]'"
+                  >
+                    <div
+                      class="px-4 py-2 w-[100px] rounded-lg text-sm tracking-tighter"
+                      :class="userStore.user.loyaltyLevel === 3 ?
+                      'bg-[#F3A454] text-[#FFFFFA]' :
+                      'border border-[#8C8785] text-[#8C8785]'"
+                    >
+                      3 уровень:
+                    </div>
+                    <p class="text-sm" :class="userStore.user.loyaltyLevel === 1 ? 'text-[#181818]' : 'text-[#8C8785]'">
+                      Общая сумма покупок с использованием карты: 201 000 и
+                      выше<br>
+  Процент начисления бонусов от суммы покупки: 5%<br>
+  Процент возможного списания бонусов: До 20%
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
       </div>
       <div
         v-if="currentTab === 'Заказы'"
@@ -552,3 +640,17 @@ watch(
     </div>
   </main>
 </template>
+<style scoped>
+.arrow-icon {
+  background-image: url("/order-arrow.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 100%;
+  height: 100%;
+  background-position: center;
+}
+
+.arrow-icon.rotate-180 {
+  transform: rotate(180deg);
+}
+</style>
