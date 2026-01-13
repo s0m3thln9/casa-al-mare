@@ -12,6 +12,29 @@ const handleKeydown = (event: KeyboardEvent) => {
   }
 }
 
+let startX = 0
+let currentX = 0
+const SWIPE_CLOSE_THRESHOLD = 80
+
+const onTouchStart = (e: TouchEvent) => {
+  startX = e.touches[0].clientX
+}
+
+const onTouchMove = (e: TouchEvent) => {
+  currentX = e.touches[0].clientX
+}
+
+const onTouchEnd = () => {
+  const diff = currentX - startX
+  
+  if (diff > SWIPE_CLOSE_THRESHOLD) {
+    popupStore.close()
+  }
+  
+  startX = 0
+  currentX = 0
+}
+
 onMounted(() => {
   window.addEventListener("keydown", handleKeydown)
 })
@@ -20,6 +43,7 @@ onUnmounted(() => {
   window.removeEventListener("keydown", handleKeydown)
 })
 </script>
+
 
 <template>
   <div
@@ -36,6 +60,9 @@ onUnmounted(() => {
         'opacity-100 translate-x-0': popupStore.isOpen(popupId),
         'opacity-0 translate-x-[100%]': !popupStore.isOpen(popupId),
       }"
+      @touchstart="onTouchStart"
+      @touchmove="onTouchMove"
+      @touchend="onTouchEnd"
     >
       <div
         class="flex gap-4 items-center cursor-pointer"
@@ -45,8 +72,11 @@ onUnmounted(() => {
           class="cursor-pointer"
           aria-label="Закрыть"
         />
-        <span class="font-[Inter] text-[17px] uppercase sm:normal-case sm:text-2xl">{{ title }}</span>
+        <span class="font-[Inter] text-[17px] uppercase sm:normal-case sm:text-2xl">
+          {{ title }}
+        </span>
       </div>
+  
       <slot />
     </div>
   </div>
