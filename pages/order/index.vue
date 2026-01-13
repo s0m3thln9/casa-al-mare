@@ -1260,7 +1260,8 @@ useSmsAutoSubmit(
                   'max-h-0 opacity-0': !orderStore.isExpandedPoints,
                 }"
               >
-                <span class="text-[13px]">Сумма баллов: {{ userStore.user?.points ?? 0 }}</span>
+                <span class="text-[13px]">Сумма баллов: {{ orderStore.availablePoints
+                                          }}</span>
                 <AppInput
                   id="points"
                   v-model="orderStore.pendingPoints"

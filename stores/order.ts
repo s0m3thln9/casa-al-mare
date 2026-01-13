@@ -284,19 +284,24 @@ export const useOrderStore = defineStore("order", () => {
     if (!token) return
 
     try {
-      const { data: pointsData, error } = await useFetch<PointsResponse>("https://back.casaalmare.com/api/getPoints", {
-        method: "POST",
-        body: { token },
+      const { data: loyaltyData, error } = await useFetch<{
+        balance: number
+        ordersumm: number
+        level: number
+      }>(`https://back.casaalmare.com/api/getUserLoyality?user=${userStore.user?.uid}`, {
+        method: "GET",
       })
-
+      
       if (error.value) {
-        console.error("Network error loading points:", error.value)
+        console.error("Network error loading loyalty:", error.value)
         return
       }
-
-      if (pointsData.value?.success && pointsData.value.points !== undefined) {
+      
+      if (loyaltyData.value) {
         if (userStore.user) {
-          userStore.user.points = pointsData.value.points
+          userStore.user.points = loyaltyData.value.balance
+          userStore.user.ordersumm = loyaltyData.value.ordersumm
+          userStore.user.loyaltyLevel = loyaltyData.value.level
         }
       }
 
@@ -327,6 +332,10 @@ export const useOrderStore = defineStore("order", () => {
       console.error("Ошибка загрузки user data:", error)
     }
   }
+  
+  const availablePoints = computed(() => {
+    return (userStore.user?.points || 0) - pointsToUse.value
+  })
 
   function updateDeliveryType(id: number, term: { min: number; max: number }, cost: number) {
     const type = deliveryTypes.value.find((t) => t.id === id)
@@ -1068,42 +1077,46 @@ export const useOrderStore = defineStore("order", () => {
     }
     return null
   }
-
+  
   async function applyPoints() {
     if (isLoadingPoints.value) return
-
+    
     isLoadingPoints.value = true
     pointsError.value = ""
-
+    
     const points = Number(pendingPoints.value)
-
+    
     if (isNaN(points) || points <= 0) {
       pointsError.value = "Введите корректное количество баллов"
       isLoadingPoints.value = false
       return
     }
-
+    
     const maxPoints = Math.floor(goodsSum.value * 0.2)
-
+    
     if (points > (userStore.user?.points || 0)) {
       pointsError.value = "Недостаточно баллов"
       isLoadingPoints.value = false
       return
     }
-
+    
     if (points > maxPoints) {
       pointsError.value = `Нельзя списать больше ${maxPoints} баллов (20% от суммы заказа)`
       isLoadingPoints.value = false
       return
     }
-
+    
     pointsError.value = ""
+    
+    const previousPointsToUse = pointsToUse.value
+    
     pointsToUse.value = points
+    
     if (userStore.user) {
-      userStore.user.points -= points
+      userStore.user.points = userStore.user.points - (points - previousPointsToUse)
     }
+    
     pendingPoints.value = ""
-
     isLoadingPoints.value = false
   }
 
@@ -1457,5 +1470,6 @@ export const useOrderStore = defineStore("order", () => {
     priceFormatter,
     needsDelivery,
     parseCart,
+    availablePoints,
   }
 })
