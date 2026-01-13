@@ -413,12 +413,13 @@ watch(
         <div class="flex flex-col gap-4 mt-8">
               <div
                 class="flex items-center justify-between cursor-pointer"
-                @click="orderStore.togglePoints"
+                @click="orderStore.togglePoints2"
               >
                 <span class="font-light text-sm">Программа лояльности</span>
                 <button
                   class="w-4 h-4 flex items-center justify-center cursor-pointer transition-transform duration-300"
-                  :class="orderStore.isExpandedPoints ? 'rotate-0' : 'rotate-180'"
+                  :class="orderStore.isExpandedPoints2 ? 'rotate-0' :
+                  'rotate-180'"
                 >
                   <div class="arrow-icon" />
                 </button>
@@ -426,8 +427,8 @@ watch(
               <div
                 class="collapsible-div flex flex-col gap-4 transition-max-height duration-300 ease-in-out overflow-hidden"
                 :class="{
-                  'max-h-500 opacity-100': orderStore.isExpandedPoints,
-                  'max-h-0 opacity-0': !orderStore.isExpandedPoints,
+                  'max-h-500 opacity-100': orderStore.isExpandedPoints2,
+                  'max-h-0 opacity-0': !orderStore.isExpandedPoints2,
                 }"
               >
                 <span class="text-sm text-[#1A1A1A] font-light">Ваш баланс: {{

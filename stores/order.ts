@@ -973,6 +973,7 @@ export const useOrderStore = defineStore("order", () => {
     selectedPvz.value = null
 
     isExpandedPoints.value = false
+    isExpandedPoints2.value = true
     pendingPoints.value = ""
     pointsError.value = ""
     pointsToUse.value = 0
@@ -1198,6 +1199,10 @@ export const useOrderStore = defineStore("order", () => {
 
   function togglePoints() {
     isExpandedPoints.value = !isExpandedPoints.value
+  }
+  
+  function togglePoints2() {
+    isExpandedPoints2.value = !isExpandedPoints2.value
   }
 
   watch(goodsSum, () => {
