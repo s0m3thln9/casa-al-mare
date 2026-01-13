@@ -174,6 +174,7 @@ export const useOrderStore = defineStore("order", () => {
   const guestSmsButtonDisabled = ref(false)
 
   const isExpandedPoints = ref<boolean>(false)
+  const isExpandedPoints2 = ref<boolean>(true)
   const pendingPoints = ref<string>("")
   const pointsError = ref<string>("")
   const pointsToUse = ref<number>(0)
