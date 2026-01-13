@@ -968,22 +968,12 @@ v-if="!isNoSizeItem"
 .html-content-wrapper :deep(table) {
   font-size: 11px;
   border-collapse: collapse;
-  border-spacing: 0 4px;
   width: 100%;
   border: 1px solid #bbb8b6;
   border-radius: 8px;
   overflow: hidden;
   padding-bottom: 16px;
   margin-bottom: 8px;
-}
-
-.html-content-wrapper :deep(table):last-child {
-  margin-bottom: 0;
-}
-
-.html-content-wrapper :deep(table) td,
-.html-content-wrapper :deep(table) th {
-  box-sizing: border-box;
 }
 
 .html-content-wrapper :deep(thead tr) {
@@ -1008,19 +998,13 @@ v-if="!isNoSizeItem"
 }
 
 .html-content-wrapper :deep(thead tr th) {
-  border-bottom: 0.7px solid #8c8785;
+  border-bottom: 1px solid #8c8785;
+  background-clip: padding-box;
 }
 
 .html-content-wrapper :deep(tbody tr) {
   position: relative;
   background: transparent;
-}
-
-.html-content-wrapper :deep(tbody) {
-  border-left: 24px solid #FFFFFA;
-  border-right: 24px solid #FFFFFA;
-  border-top: 16px solid #FFFFFA;
-  background-clip: padding-box;
 }
 
 .html-content-wrapper :deep(tbody tr td) {
@@ -1033,21 +1017,27 @@ v-if="!isNoSizeItem"
   border-bottom: 2px solid #FFFFFA;
 }
 
-.html-content-wrapper :deep(tbody tr td:first-child) {
-  border: 2px solid #FFFFFA;
+.html-content-wrapper :deep(tbody tr td:nth-child(2)) {
   border-bottom-left-radius: 8px;
   border-top-left-radius: 8px;
   text-align: left;
 }
 
-.html-content-wrapper :deep(tbody tr td:last-child) {
-  border-bottom-right-radius: 8px;
-  border-top-right-radius: 8px;
-  border: 2px solid #FFFFFA;
+.html-content-wrapper :deep(td.csstd) {
+  opacity: 0;
+  border: none;
+  padding: 0;
 }
 
-.html-content-wrapper :deep(tbody tr:first-child) {
-  overflow: hidden;
+.html-content-wrapper :deep(tr.csstr td) {
+  opacity: 0;
+  border: none;
+  padding: 0;
+}
+
+.html-content-wrapper :deep(tbody tr td:nth-last-child(2)) {
+  border-bottom-right-radius: 8px;
+  border-top-right-radius: 8px;
 }
 
 .html-content-wrapper :deep(ol),
@@ -1115,8 +1105,7 @@ v-if="!isNoSizeItem"
   }
 
   .html-content-wrapper :deep(table) {
-    padding: 8px 0;
-    padding-bottom: 10px;
+    padding: 8px 0 10px;
   }
 
   .html-content-wrapper :deep(h1),
@@ -1134,10 +1123,6 @@ v-if="!isNoSizeItem"
 
   .html-content-wrapper :deep(tbody tr:first-child)::before {
     top: 8px;
-  }
-
-  .html-content-wrapper :deep(tbody tr:first-child td) {
-    border-top: 8px solid transparent;
   }
 }
 
