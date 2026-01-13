@@ -36,7 +36,10 @@ const isLoadingNominals = ref(true)
 
 const breadcrumbsItems: { name: string; path?: string }[] = [{ name: "Главная", path: "/" }, { name: "Сертификат" }]
 
-// Динамический массив способов доставки в зависимости от типа сертификата
+const totalSteps = computed(() =>
+  certificateStore.certificateType === "Физический" ? 3 : 4,
+)
+
 const ways = computed(() => {
   if (certificateStore.certificateType === "Физический") {
     return ["Доставка"]
@@ -76,15 +79,6 @@ const phoneOptions: PhoneOption[] = [
   { code: "+995", country: "Грузия", iso: "GE" },
 ]
 
-watch(
-  () => certificateStore.certificateType,
-  () => {
-    certificateStore.selectedWay = null
-    certificateStore.recipientEmail = ""
-    certificateStore.recipientPhone = null
-  },
-)
-
 const getCart = async () => {
   const token = await userStore.loadToken()
   if (!token) return
@@ -105,9 +99,16 @@ const getCart = async () => {
 }
 
 const handleSubmit = async () => {
-  if (certificateStore.step === 4) {
+  const isPhysical = certificateStore.certificateType === "Физический"
+  
+  if (isPhysical && certificateStore.step === 1) {
+    certificateStore.step = 2
+    return
+  }
+  
+  if (certificateStore.step === totalSteps.value) {
     const result = await certificateStore.submitCertificate()
-
+    
     if (result.success) {
       certificateStore.resetForm()
       await getCart()
@@ -118,6 +119,7 @@ const handleSubmit = async () => {
     certificateStore.nextStep()
   }
 }
+
 
 const imageStyles = computed(() => (index: number) => {
   const len = certificateImages.value.length
@@ -260,6 +262,21 @@ const handleTouchEnd = (e: TouchEvent) => {
 }
 
 const getStepDescription = computed(() => {
+  const isPhysical = certificateStore.certificateType === "Физический"
+  
+  if (isPhysical) {
+    switch (certificateStore.step) {
+      case 1:
+        return "Выберите номинал:"
+      case 2:
+        return "Как отправить получателю?"
+      case 3:
+        return "Кому отправить?"
+      default:
+        return ""
+    }
+  }
+  
   switch (certificateStore.step) {
     case 1:
       return "Выберите номинал:"
@@ -273,6 +290,7 @@ const getStepDescription = computed(() => {
       return ""
   }
 })
+
 </script>
 
 <template>
@@ -367,7 +385,10 @@ const getStepDescription = computed(() => {
         />
         <div class="mt-14 flex flex-col justify-center items-center">
           <div class="flex flex-col justify-center items-center gap-2 mb-8">
-            <h3 class="font-[Inter] text-2xl">{{ certificateStore.step }}/4</h3>
+            <h3 class="font-[Inter] text-2xl">
+  {{ certificateStore.step }}/{{ totalSteps }}
+</h3>
+
             <span class="font-light text-sm">
               {{ getStepDescription }}
             </span>
@@ -378,7 +399,9 @@ const getStepDescription = computed(() => {
               certificateStore.step === 4 ||
               certificateStore.step === 1 ||
               certificateStore.step === 2 ||
-              (certificateStore.step === 3 &&
+              certificateStore.step === 3 && certificateStore.certificateType
+               === 'Физический' ||
+              (certificateStore.step === 3 && certificateStore.certificateType !== 'Физический' &&
                 (certificateStore.selectedWay === 'Электронной почтой' || certificateStore.selectedWay === 'По SMS'))
                 ? 'flex-col'
                 : 'gap-3 sm:gap-4',
@@ -394,7 +417,7 @@ const getStepDescription = computed(() => {
             </div>
 
             <div
-              v-if="certificateStore.step === 2"
+              v-if="certificateStore.step === 2 && certificateStore.certificateType !== 'Физический'"
               class="w-full grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4"
             >
               <div
@@ -433,13 +456,19 @@ const getStepDescription = computed(() => {
 
             <div class="flex w-full justify-center items-center gap-3 sm:gap-4">
               <SingleSelectButton
-                v-if="certificateStore.step === 3"
+                v-if="
+  certificateStore.step ===
+  (certificateStore.certificateType === 'Физический' ? 2 : 3)
+"
                 v-model="certificateStore.selectedWay"
                 :content="ways"
               />
             </div>
             <div
-              v-if="certificateStore.step === 4"
+              v-if="
+  certificateStore.step ===
+  (certificateStore.certificateType === 'Физический' ? 3 : 4)
+"
               class="w-full flex flex-col gap-8"
             >
               <AppTooltip
@@ -468,19 +497,21 @@ const getStepDescription = computed(() => {
             <div
               class="flex justify-center items-center gap-3 font-light sm:gap-4 sm:font-normal mt-8"
               :class="
-                certificateStore.step === 3 &&
+                certificateStore.step === (certificateStore.certificateType === 'Физический' ? 2 : 3) &&
                 (certificateStore.selectedWay === 'Электронной почтой' || certificateStore.selectedWay === 'По SMS') &&
                 'w-full'
               "
             >
               <SingleSelectButton
-                v-if="certificateStore.step === 4"
+                v-if="certificateStore.step ===
+  (certificateStore.certificateType === 'Физический' ? 3 : 4)"
                 v-model="certificateStore.selectedDetails"
                 :content="details"
               />
               <div
                 v-if="
-                  certificateStore.step === 3 &&
+                  certificateStore.step ===
+  (certificateStore.certificateType === 'Физический' ? 2 : 3) &&
                   (certificateStore.selectedWay === 'Электронной почтой' || certificateStore.selectedWay === 'По SMS')
                 "
                 class="w-full flex flex-col"
@@ -536,13 +567,17 @@ const getStepDescription = computed(() => {
                   ? 'Отправка...'
                   : certificateStore.step === 1 && certificateStore.selectedSum === null
                     ? 'Сначала выберите номинал'
-                    : certificateStore.step === 2 && certificateStore.selectedDesign === null
+                    : certificateStore.step === 2 && certificateStore.certificateType !== 'Физический' && certificateStore.selectedDesign === null
                       ? 'Выберите дизайн'
-                      : certificateStore.step === 3 && certificateStore.selectedWay === null
+                      : certificateStore.step ===
+  (certificateStore.certificateType === 'Физический' ? 2 : 3) && certificateStore.selectedWay === null
                         ? 'Выберите способ отправки'
-                        : certificateStore.step === 4 && certificateStore.recipientName.trim() === ''
+                        : certificateStore.step ===
+  (certificateStore.certificateType === 'Физический' ? 3 : 4) &&
+  certificateStore.recipientName.trim() === ''
                           ? 'Укажите имя получателя'
-                          : certificateStore.step === 4
+                          : certificateStore.step ===
+  (certificateStore.certificateType === 'Физический' ? 3 : 4)
                             ? 'Оплатить'
                             : 'Далее'
               "
