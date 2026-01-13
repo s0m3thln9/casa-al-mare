@@ -61,7 +61,7 @@ onMounted(() => {
     <div class="py-2 sm:py-6">
       <AppBreadcrumbs :items="breadcrumsItems" />
     </div>
-    <div class="grid grid-cols-1 items-center my-6 gap-4 sm:gap-18 xl:grid-cols-2">
+    <div class="grid grid-cols-1 items-start my-6 xl:grid-cols-2">
       <div
         v-if="!areImagesLoaded"
         class="aspect-[909/692] w-full bg-[#F9F6EC] rounded-lg"
