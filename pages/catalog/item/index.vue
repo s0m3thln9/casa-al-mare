@@ -1036,9 +1036,7 @@ v-if="!isNoSizeItem"
   right: 16px;
   top: 0;
   bottom: 0;
-  background: rgba(249, 246, 236, 0.99);
-  -webkit-background-clip: padding-box;
-  background-clip: padding-box;
+  box-shadow: inset 0 0 0 1000px #f9f6ec;
   border-radius: 8px;
   z-index: -1;
 }
