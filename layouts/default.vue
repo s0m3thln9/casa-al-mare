@@ -193,7 +193,6 @@ onMounted(async () => {
           class="rounded-lg"
           loading="lazy"
         >
-        <h2 class="font-[Manrope] uppercase text-[#211D1D]">Текст</h2>
         <AppTooltip
           text="Это поле обязательно для заполнения"
           type="error"
