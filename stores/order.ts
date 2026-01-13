@@ -1092,7 +1092,18 @@ export const useOrderStore = defineStore("order", () => {
       return
     }
     
-    const maxPoints = Math.floor(goodsSum.value * 0.2)
+    let discountPercent = 0.1
+    const loyaltyLevel = userStore.user?.loyaltyLevel || 1
+    
+    if (loyaltyLevel === 1) {
+      discountPercent = 0.1
+    } else if (loyaltyLevel === 2) {
+      discountPercent = 0.15
+    } else if (loyaltyLevel === 3) {
+      discountPercent = 0.2
+    }
+    
+    const maxPoints = Math.floor(goodsSum.value * discountPercent)
     
     if (points > (userStore.user?.points || 0)) {
       pointsError.value = "Недостаточно баллов"
@@ -1101,7 +1112,8 @@ export const useOrderStore = defineStore("order", () => {
     }
     
     if (points > maxPoints) {
-      pointsError.value = `Нельзя списать больше ${maxPoints} баллов (20% от суммы заказа)`
+      const percentText = Math.round(discountPercent * 100)
+      pointsError.value = `Нельзя списать больше ${maxPoints} баллов (${percentText}% от суммы заказа)`
       isLoadingPoints.value = false
       return
     }
