@@ -966,8 +966,8 @@ v-if="!isNoSizeItem"
 }
 
 .html-content-wrapper :deep(table) {
-  font-size: 12px;
-  border-collapse: separate;
+  font-size: 11px;
+  border-collapse: collapse;
   border-spacing: 0 4px;
   width: 100%;
   border: 1px solid #bbb8b6;
@@ -989,19 +989,6 @@ v-if="!isNoSizeItem"
 .html-content-wrapper :deep(thead tr) {
   position: relative;
   background: transparent;
-}
-
-.html-content-wrapper :deep(thead tr)::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  background: transparent;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-  z-index: -1;
 }
 
 .html-content-wrapper :deep(thead tr th) {
@@ -1029,44 +1016,38 @@ v-if="!isNoSizeItem"
   background: transparent;
 }
 
-.html-content-wrapper :deep(tbody tr)::before {
-  content: "";
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  top: 0;
-  bottom: 0;
-  border-radius: 8px;
-  background-color: #f9f6ec;
-  z-index: 0;
+.html-content-wrapper :deep(tbody) {
+  border-left: 24px solid #FFFFFA;
+  border-right: 24px solid #FFFFFA;
+  border-top: 16px solid #FFFFFA;
+  background-clip: padding-box;
 }
 
 .html-content-wrapper :deep(tbody tr td) {
   padding: 2px 8px;
-  border: 1px solid transparent;
   vertical-align: top;
   text-align: center;
+  background-color: #f9f6ec;
+  background-clip: padding-box;
+  border-top: 2px solid #FFFFFA;
+  border-bottom: 2px solid #FFFFFA;
 }
 
 .html-content-wrapper :deep(tbody tr td:first-child) {
-  padding-left: 24px;
+  border: 2px solid #FFFFFA;
+  border-bottom-left-radius: 8px;
+  border-top-left-radius: 8px;
   text-align: left;
 }
 
 .html-content-wrapper :deep(tbody tr td:last-child) {
-  padding-right: 24px;
+  border-bottom-right-radius: 8px;
+  border-top-right-radius: 8px;
+  border: 2px solid #FFFFFA;
 }
 
 .html-content-wrapper :deep(tbody tr:first-child) {
   overflow: hidden;
-}
-
-.html-content-wrapper :deep(tbody tr:first-child)::before {
-  top: 16px;
-}
-
-.html-content-wrapper :deep(tbody tr:first-child td) {
-  border-top: 16px solid transparent;
 }
 
 .html-content-wrapper :deep(ol),
@@ -1173,7 +1154,4 @@ v-if="!isNoSizeItem"
   background-repeat: no-repeat;
   background-position: center;
 }
-</style>
-<style>
-
 </style>
