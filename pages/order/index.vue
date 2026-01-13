@@ -564,104 +564,195 @@ useSmsAutoSubmit(
       <div class="mt-8 flex max-w-[1264px] flex-col sm:flex-row h-fit w-full gap-6 sm:gap-12">
         <div
           class="sm:hidden"
-          :class="[isExpanded && 'p-4 rounded-2xl border-[0.7px] border-[#BBB8B6]']"
+          :class="[orderStore.cartDetailed.length > 3 && isExpanded && 'p-4 rounded-2xl border-[0.7px] border-[#BBB8B6]']"
         >
           <div class="flex flex-col">
             <div
-              class="overflow-hidden transition-all duration-300 ease-in-out"
-              :class="[isExpanded ? 'max-h-96 opacity-100 mb-6' : 'max-h-0 opacity-0']"
+              v-if="orderStore.cartDetailed.length <= 3"
+              class="flex flex-col gap-6"
             >
-              <div class="flex flex-col gap-6">
+              <div
+                v-for="(item, index) in orderStore.cartDetailed"
+                :key="index"
+                class="flex items-center justify-between w-full"
+              >
                 <div
-                  v-for="(item, index) in orderStore.cartDetailed"
-                  :key="index"
-                  class="flex items-center justify-between w-full"
+                  v-if="item"
+                  class="flex items-center gap-2"
                 >
-                  <div
-                    v-if="item"
-                    class="flex items-center gap-2"
+                  <img
+                    :src="(item?.images ? item?.images[0] : '') || ''"
+                    alt="order-img"
+                    width="57"
+                    height="72"
+                    class="rounded-2xl border-[0.5px] border-[#211D1D]"
                   >
-                    <img
-                      :src="(item?.images ? item?.images[0] : '') || ''"
-                      alt="order-img"
-                      width="57"
-                      height="72"
-                      class="rounded-2xl border-[0.5px] border-[#211D1D]"
+                  <div class="flex flex-col gap-1">
+                    <span
+                      class="font-light text-sm text-[#414141] cursor-pointer"
+                      @click="navigateToItem(item.id)"
                     >
-                    <div class="flex flex-col gap-1">
-                      <span
-                        class="font-light text-sm text-[#414141] cursor-pointer"
-                        @click="navigateToItem(item.id)"
+                      {{ item.name }}
+                    </span>
+                    <span class="font-light text-[13px]">
+                      <template v-if="!item.isCertificate && !item.isGame">
+                        Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
+                      </template>
+                      <template v-else-if="!item.isGame"
+                      >Кому: {{ item.recipientName }}
+                        <span class="ml-1">Тип: {{ item.certificateType }}</span></template
                       >
-                        {{ item.name }}
-                      </span>
-                      <span class="font-light text-[13px]">
-                        <template v-if="!item.isCertificate && !item.isGame">
-                          Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
-                        </template>
-                        <template v-else-if="!item.isGame"
-                          >Кому: {{ item.recipientName }}
-                          <span class="ml-1">Тип: {{ item.certificateType }}</span></template
-                        >
-                      </span>
-                      <span class="text-xs text-[#414141]">
-                        {{ orderStore.priceFormatter(item.price) }}
-                        <span class="font-light text-[#606060] ml-1">за шт.</span>
-                      </span>
-                    </div>
-                  </div>
-                  <div
-                    v-if="item"
-                    class="flex flex-col items-end gap-4"
-                  >
-                    <div class="flex items-center gap-2">
-                      <div
-                        class="py-1 px-2 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light"
-                        :class="item.isCertificate && 'px-2.5'"
-                      >
-                        <button
-                          v-if="!item.isCertificate"
-                          class="w-4 h-4 flex items-center justify-center cursor-pointer"
-                          :disabled="orderStore.isLoadingPayment"
-                          @click="orderStore.decrementQuantity(item.key)"
-                        >
-                          <div class="minus-icon" />
-                        </button>
-                        {{ item.count }}
-                        <button
-                          v-if="!item.isCertificate"
-                          class="w-4 h-4 flex items-center justify-center cursor-pointer"
-                          :disabled="orderStore.isLoadingPayment"
-                          @click="orderStore.incrementQuantity(item.key)"
-                        >
-                          <div class="plus-icon" />
-                        </button>
-                      </div>
-                      <button
-                        class="w-6 h-6 flex items-center justify-center cursor-pointer"
-                        :disabled="orderStore.isLoadingPayment"
-                        @click="orderStore.removeItemFromCart(item.key)"
-                      >
-                        <div class="x-icon" />
-                      </button>
-                    </div>
-                    <span class="text-xs font-light">
-                      {{ orderStore.priceFormatter(item.price * item.count) }}
-                      <span
-                        v-if="item.oldPrice > 0"
-                        class="line-through ml-1"
-                        >{{ orderStore.priceFormatter(item.oldPrice * item.count) }}</span
-                      >
+                    </span>
+                    <span class="text-xs text-[#414141]">
+                      {{ orderStore.priceFormatter(item.price) }}
+                      <span class="font-light text-[#606060] ml-1">за шт.</span>
                     </span>
                   </div>
                 </div>
+                <div
+                  v-if="item"
+                  class="flex flex-col items-end gap-4"
+                >
+                  <div class="flex items-center gap-2">
+                    <div
+                      class="py-1 px-2 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light"
+                      :class="item.isCertificate && 'px-2.5'"
+                    >
+                      <button
+                        v-if="!item.isCertificate"
+                        class="w-4 h-4 flex items-center justify-center cursor-pointer"
+                        :disabled="orderStore.isLoadingPayment"
+                        @click="orderStore.decrementQuantity(item.key)"
+                      >
+                        <div class="minus-icon" />
+                      </button>
+                      {{ item.count }}
+                      <button
+                        v-if="!item.isCertificate"
+                        class="w-4 h-4 flex items-center justify-center cursor-pointer"
+                        :disabled="orderStore.isLoadingPayment"
+                        @click="orderStore.incrementQuantity(item.key)"
+                      >
+                        <div class="plus-icon" />
+                      </button>
+                    </div>
+                    <button
+                      class="w-6 h-6 flex items-center justify-center cursor-pointer"
+                      :disabled="orderStore.isLoadingPayment"
+                      @click="orderStore.removeItemFromCart(item.key)"
+                    >
+                      <div class="x-icon" />
+                    </button>
+                  </div>
+                  <span class="text-xs font-light">
+                    {{ orderStore.priceFormatter(item.price * item.count) }}
+                    <span
+                      v-if="item.oldPrice > 0"
+                      class="line-through ml-1"
+                    >{{ orderStore.priceFormatter(item.oldPrice * item.count) }}</span
+                    >
+                  </span>
+                </div>
               </div>
             </div>
-            <AppButton
-              :content="isExpanded ? 'Скрыть все товары в корзине' : 'Показать все товары в корзине'"
-              custom-class="w-full"
-              @click="toggleExpanded"
-            />
+            <template v-else>
+              <div
+                class="overflow-y-auto transition-all duration-300 ease-in-out"
+                :class="[isExpanded ? 'max-h-auto opacity-100 mb-6' :
+                'max-h-0 opacity-0']"
+              >
+                <div class="flex flex-col gap-6">
+                  <div
+                    v-for="(item, index) in orderStore.cartDetailed"
+                    :key="index"
+                    class="flex items-center justify-between w-full"
+                  >
+                    <div
+                      v-if="item"
+                      class="flex items-center gap-2"
+                    >
+                      <img
+                        :src="(item?.images ? item?.images[0] : '') || ''"
+                        alt="order-img"
+                        width="57"
+                        height="72"
+                        class="rounded-2xl border-[0.5px] border-[#211D1D]"
+                      >
+                      <div class="flex flex-col gap-1">
+                        <span
+                          class="font-light text-sm text-[#414141] cursor-pointer"
+                          @click="navigateToItem(item.id)"
+                        >
+                          {{ item.name }}
+                        </span>
+                        <span class="font-light text-[13px]">
+                          <template v-if="!item.isCertificate && !item.isGame">
+                            Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
+                          </template>
+                          <template v-else-if="!item.isGame"
+                          >Кому: {{ item.recipientName }}
+                            <span class="ml-1">Тип: {{ item.certificateType }}</span></template
+                          >
+                        </span>
+                        <span class="text-xs text-[#414141]">
+                          {{ orderStore.priceFormatter(item.price) }}
+                          <span class="font-light text-[#606060] ml-1">за шт.</span>
+                        </span>
+                      </div>
+                    </div>
+                    <div
+                      v-if="item"
+                      class="flex flex-col items-end gap-4"
+                    >
+                      <div class="flex items-center gap-2">
+                        <div
+                          class="py-1 px-2 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light"
+                          :class="item.isCertificate && 'px-2.5'"
+                        >
+                          <button
+                            v-if="!item.isCertificate"
+                            class="w-4 h-4 flex items-center justify-center cursor-pointer"
+                            :disabled="orderStore.isLoadingPayment"
+                            @click="orderStore.decrementQuantity(item.key)"
+                          >
+                            <div class="minus-icon" />
+                          </button>
+                          {{ item.count }}
+                          <button
+                            v-if="!item.isCertificate"
+                            class="w-4 h-4 flex items-center justify-center cursor-pointer"
+                            :disabled="orderStore.isLoadingPayment"
+                            @click="orderStore.incrementQuantity(item.key)"
+                          >
+                            <div class="plus-icon" />
+                          </button>
+                        </div>
+                        <button
+                          class="w-6 h-6 flex items-center justify-center cursor-pointer"
+                          :disabled="orderStore.isLoadingPayment"
+                          @click="orderStore.removeItemFromCart(item.key)"
+                        >
+                          <div class="x-icon" />
+                        </button>
+                      </div>
+                      <span class="text-xs font-light">
+                        {{ orderStore.priceFormatter(item.price * item.count) }}
+                        <span
+                          v-if="item.oldPrice > 0"
+                          class="line-through ml-1"
+                        >{{ orderStore.priceFormatter(item.oldPrice * item.count) }}</span
+                        >
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <AppButton
+                :content="isExpanded ? 'Скрыть все товары в корзине' : 'Показать все товары в корзине'"
+                custom-class="w-full"
+                @click="toggleExpanded"
+              />
+            </template>
           </div>
         </div>
         <div
