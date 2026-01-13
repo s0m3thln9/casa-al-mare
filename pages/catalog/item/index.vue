@@ -220,8 +220,6 @@ const isNoSizeItem = computed(() => {
   return Object.keys(item.value?.vector)[0] === 'NS'
 })
 
-// Обновляем логику возможности добавления в корзину
-// Если это NS — добавлять можно сразу, если нет — проверяем выбор размера
 const canAddToCart = computed(() => isNoSizeItem.value || !!itemStore.size)
 
 const missingParams = computed<"size" | null>(() => {
@@ -229,13 +227,13 @@ const missingParams = computed<"size" | null>(() => {
   return "size"
 })
 
-// Если товар NS, то текущий размер передаем как пустую строку или специальный флаг
 const currentSize = computed(() => {
   if (isNoSizeItem.value) return ""
   return itemStore.size || item.value?.sizes?.[0] || ""
 })
 
 const currentColorCode = computed(() => item.value?.colorVal || "")
+const currentColorName = computed(() => item.value?.colorName || "")
 const currentColorImages = computed(() => {
   if (!item.value?.images) return []
   return Object.values(item.value.images || {})
@@ -667,7 +665,7 @@ useHead({
         >
           <span class="font-light text-xs">Скидка {{ discount }}%</span>
         </div>
-        <div class="flex flex-col justify-center items-center gap-6 mt-14">
+        <div class="flex flex-col justify-center items-center gap-2 mt-14">
           <div class="flex justify-center items-center gap-4">
             <div class="flex gap-4 flex-wrap">
               <NuxtLink
@@ -686,10 +684,10 @@ useHead({
                   ]"
                   :style="{ background: colorItem.colorVal }"
                 />
-                <span class="text-xs font-[Manrope] text-center hidden sm:block">{{ colorItem.colorName }}</span>
               </NuxtLink>
             </div>
           </div>
+          <span class="text-xs font-[Manrope] text-center">{{ currentColorName }}</span>
         </div>
         <div
 v-if="!isNoSizeItem"
@@ -706,7 +704,6 @@ v-if="!isNoSizeItem"
               >Размеры не указаны</span
             >
           </div>
-          <span class="text-xs">Размер</span>
         </div>
         <div
           v-if="sortedShapes.length > 0"
