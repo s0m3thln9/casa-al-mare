@@ -1036,7 +1036,6 @@ v-if="!isNoSizeItem"
   right: 16px;
   top: 0;
   bottom: 0;
-  box-shadow: inset 0 0 0 1000px #f9f6ec;
   border-radius: 8px;
   z-index: -1;
 }
