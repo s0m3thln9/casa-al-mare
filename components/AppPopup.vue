@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{
+const props = defineProps<{
   title: string
   popupId: string
 }>()
@@ -53,7 +53,7 @@ onUnmounted(() => {
 })
 
 watch(
-  () => popupStore.isOpen(popupId),
+  () => popupStore.isOpen(props.popupId),
   (isOpen) => {
     if (isOpen) {
       lockScroll()

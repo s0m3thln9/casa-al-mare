@@ -563,8 +563,7 @@ useSmsAutoSubmit(
       <h2 class="uppercase max-sm:font-[Inter] max-sm:text-[17px] msx-sm:self-start max-sm:w-full">Оформление</h2>
       <div class="mt-8 flex max-w-[1264px] flex-col sm:flex-row h-fit w-full gap-6 sm:gap-12">
         <div
-          class="sm:hidden"
-          :class="[orderStore.cartDetailed.length > 3 && isExpanded && 'p-4 rounded-2xl border-[0.7px] border-[#BBB8B6]']"
+          class="sm:hidden p-4 rounded-2xl border-[0.7px] border-[#BBB8B6]"
         >
           <div class="flex flex-col">
             <div
@@ -767,7 +766,7 @@ useSmsAutoSubmit(
               class="w-full"
               @update:show="(value) => (orderStore.showErrorAuth = value)"
             >
-              <div class="flex flex-col gap-4">
+              <div class="flex flex-col gap-4 w-full">
                 <span class="text-xs">
                   Есть аккаунт?
                   <span
@@ -788,7 +787,7 @@ useSmsAutoSubmit(
                     v-model="orderStore.name"
                     type="text"
                     label="Имя"
-                    custom-class="w-full"
+                    custom-class="min-w-full"
                     required
                   />
                 </AppTooltip>
@@ -804,7 +803,7 @@ useSmsAutoSubmit(
                     v-model="orderStore.surname"
                     type="text"
                     label="Фамилия"
-                    custom-class="w-full"
+                    custom-class="min-w-full"
                     required
                   />
                 </AppTooltip>
@@ -818,7 +817,7 @@ useSmsAutoSubmit(
                     id="phone"
                     ref="phoneRef"
                     v-model="orderStore.phone"
-                    custom-class="w-full"
+                    custom-class="min-w-full"
                     :options="phoneOptions"
                     label="Номер телефона"
                     required
@@ -836,7 +835,7 @@ useSmsAutoSubmit(
                     v-model="orderStore.email"
                     type="text"
                     label="E-mail"
-                    custom-class="w-full"
+                    custom-class="min-w-full"
                     required
                   />
                 </AppTooltip>
@@ -855,7 +854,7 @@ useSmsAutoSubmit(
                     variant="primary"
                     :content="orderStore.guestAuthButtonContent"
                     :disabled="orderStore.guestAuthButtonDisabled || !isGuestAuthEnabled"
-                    custom-class="w-full mt-4"
+                    custom-class="min-w-full mt-4"
                     @click="handleGuestAuth"
                   />
                 </AppTooltip>
