@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { type AppInput, SelectInput } from "#components"
+
 const isCookieAccepted = ref(true)
 const email = ref("")
 const emailReverse = ref("")
@@ -169,13 +171,13 @@ const handleProfileClick = () => {
     >
       <div class="flex flex-col items-stretch gap-6 mt-8 sm:mt-14">
         <img
-          src="/pop-up-sub.jpg"
+          src="/rassilka.webp"
           alt="sub"
           width="390"
           height="532"
           class="rounded-lg"
           loading="lazy"
-        />
+        >
         <AppTooltip
           text="Это поле обязательно для заполнения"
           type="error"
@@ -211,14 +213,13 @@ const handleProfileClick = () => {
     >
       <div class="flex flex-col items-stretch gap-6 mt-8 sm:mt-14">
         <img
-          src="/pop-up-sub.jpg"
+          src="/obratnaya_svyaz.webp"
           alt="sub"
           width="390"
           height="532"
-          class="rounded-lg"
+          class="rounded-lg mx-auto"
           loading="lazy"
-        />
-        <h2 class="font-[Manrope] uppercase text-[#211D1D]">Текст</h2>
+        >
         <AppTooltip
           text="Это поле обязательно для заполнения"
           type="error"
@@ -258,9 +259,9 @@ const handleProfileClick = () => {
             id="phone"
             ref="phoneRef"
             v-model="phone"
-            custom-class="w-full"
             :options="phoneOptions"
             label="Номер телефона"
+            custom-class="w-full"
             required
           />
         </AppTooltip>

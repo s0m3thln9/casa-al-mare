@@ -190,7 +190,7 @@ onMounted(async () => {
           alt="sub"
           width="390"
           height="532"
-          class="rounded-lg"
+          class="rounded-lg mx-auto"
           loading="lazy"
         >
         <AppTooltip

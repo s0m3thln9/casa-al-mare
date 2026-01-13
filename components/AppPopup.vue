@@ -35,6 +35,35 @@ const onTouchEnd = () => {
   currentX = 0
 }
 
+const lockScroll = () => {
+  const scrollBarWidth =
+    window.innerWidth - document.documentElement.clientWidth
+  
+  document.body.style.overflow = "hidden"
+  document.body.style.paddingRight = `${scrollBarWidth}px`
+}
+
+const unlockScroll = () => {
+  document.body.style.overflow = ""
+  document.body.style.paddingRight = ""
+}
+
+onUnmounted(() => {
+  unlockScroll()
+})
+
+watch(
+  () => popupStore.isOpen(popupId),
+  (isOpen) => {
+    if (isOpen) {
+      lockScroll()
+    } else {
+      unlockScroll()
+    }
+  },
+  { immediate: true },
+)
+
 onMounted(() => {
   window.addEventListener("keydown", handleKeydown)
 })
