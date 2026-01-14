@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue"
+import { computed, onMounted } from "vue"
 
 interface VideoSource {
   mp4: string
@@ -13,19 +13,37 @@ interface VideoData {
 }
 
 const docsStore = useDocsStore()
+const route = useRoute()
 
-const pageTitle = computed(() => docsStore.tree?.data?.index?.pagetitle)
-const description = computed(() => docsStore.tree?.data?.index?.description ?? "")
-const metatags = computed(() =>
-  docsStore.tree?.data?.index?.metatags?.map(tag => ({ property: tag.name,
-    content: tag.content, })) ?? [] )
-
-useHead({
-  title: pageTitle,
-  meta: computed(() => [
-    { name: "description", content: description.value },
-    ...metatags.value,
-  ]),
+onMounted(async () => {
+  if (!docsStore.tree) {
+    await docsStore.fetchTree()
+    const metaItm = computed(() => docsStore.tree?.data?.index)
+    
+    const metaobj: Record<string, string> = {
+      title: metaItm.value?.longtitle || metaItm.value?.pagetitle || '',
+      description: metaItm.value?.meta_descr
+        || metaItm.value?.description?.replace(/(<([^>]+)>)/gi, '')
+        || '',
+      'og:url': 'https://casaalmare.com' + route.fullPath,
+    }
+    
+    if (metaItm.value?.metatags) {
+      metaItm.value.metatags.forEach((e) => {
+        if (e.name === 'og:image') {
+          metaobj[e.name] = e.content
+        } else if (e.name === 'og:description') {
+          metaobj[e.name] = e.content
+            || metaItm.value.description?.replace(/(<([^>]+)>)/gi, '')
+            || ''
+        } else {
+          metaobj[e.name] = e.content
+        }
+      })
+    }
+    
+    useSeoMeta(metaobj)
+  }
 })
 
 const { data } = await useFetch<VideoData>("https://back.casaalmare.com/api/getMainVideo")
