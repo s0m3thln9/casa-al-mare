@@ -103,7 +103,7 @@ useHead({
         
         <BannerCard
           v-else
-          :image-url="item.image ? `https://back.casaalmare.com/assets/images/${item.id}/${item.image}` : ''"
+          :image-url="item.image ? item.image : ''"
           :plus="(item.set.filter(i => i !== '') || []).length > 0"
           :custom-class="getCardClass(index)"
           :object-position="index === 2 ? '50% 70%' : 'center'"
@@ -124,6 +124,7 @@ useHead({
               popup
               variant="mini"
               link
+              disable-size-navigation
             />
           </div>
         </div>

@@ -8,6 +8,7 @@ const props = defineProps<{
   variant: "mini" | "large"
   popup?: boolean
   link?: boolean
+  disableSizeNavigation?: boolean
   modelValue?: string
 }>()
 
@@ -54,6 +55,13 @@ const videoSource = computed(() => {
   }
   return null
 })
+
+const onSizeClick = (value: string) => {
+  if (props.disableSizeNavigation) return
+  if (props.link) {
+    handleSizeClick(value)
+  }
+}
 
 watch(
   () => props.modelValue,
@@ -178,7 +186,7 @@ if (props.modelValue) {
           v-model="selectedSize"
           :content="availableSizes"
           custom-class="text-xs"
-          @update:model-value="(val) => link ? handleSizeClick(val) : null"
+          @update:model-value="onSizeClick"
         />
       </div>
 
@@ -191,7 +199,7 @@ if (props.modelValue) {
           v-model="selectedSize"
           :content="availableSizes"
           custom-class="text-xs mt-1"
-          @update:model-value="(val) => link ? handleSizeClick(val) : null"
+          @update:model-value="onSizeClick"
         />
       </div>
       <div
