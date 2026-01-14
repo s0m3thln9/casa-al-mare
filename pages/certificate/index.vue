@@ -299,9 +299,13 @@ const getStepDescription = computed(() => {
       <AppBreadcrumbs :items="breadcrumbsItems" />
     </div>
     <div class="px-0 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-8 sm:px-4">
-      <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <div
+class="grid grid-cols-1 gap-2"
+           :class="certificateStore.certificateType === 'Физический' ? '' :
+           'sm:grid-cols-2 lg:grid-cols-3'">
         <template v-if="certificateImages.length > 0">
           <div
+            v-if="certificateStore.certificateType !== 'Физический'"
             class="block sm:hidden relative w-full aspect-[460/680] overflow-hidden"
             @touchstart="handleTouchStart"
             @touchmove="handleTouchMove"
@@ -325,12 +329,15 @@ const getStepDescription = computed(() => {
                 v-bind="imgAttrs"
                 :src="src"
                 :style="imageStyles(index)"
-                class="w-full object-cover"
+                class="w-full object-cover aspect-[460/680]"
                 alt="certificate"
               >
             </NuxtImg>
           </div>
-          <div class="flex sm:hidden justify-center items-center gap-1 px-4 mt-2">
+          <img v-else class="w-full sm:hidden" src="/cert.jpg" alt="cert" >
+          <div
+v-if="certificateStore.certificateType !== 'Физический'"
+            class="flex sm:hidden justify-center items-center gap-1 px-4 mt-2">
             <div
               v-for="(_, index) in numBars"
               :key="index"
@@ -338,26 +345,31 @@ const getStepDescription = computed(() => {
               :style="barStyles(index)"
             />
           </div>
-          <NuxtImg
-            v-for="(img, index) in certificateImages"
-            :key="index"
-            v-slot="{ src, isLoaded, imgAttrs }"
-            :src="img"
-            :custom="true"
-            class="rounded-2xl hidden sm:block aspect-[726/1080]"
-          >
-            <div
-              v-if="!isLoaded"
-              class="aspect-[726/1080] bg-[#F9F6EC] rounded-2xl"
-            />
-            <img
-              v-else
-              v-bind="imgAttrs"
-              :src="src"
-              class="w-full object-cover rounded-2xl"
-              alt="certificate"
+          <template v-if="certificateStore.certificateType !== 'Физический'">
+            <NuxtImg
+              v-for="(img, index) in certificateImages"
+              :key="index"
+              v-slot="{ src, isLoaded, imgAttrs }"
+              :src="img"
+              :custom="true"
+              class="rounded-2xl hidden sm:block aspect-[726/1080]"
             >
-          </NuxtImg>
+              <div
+                v-if="!isLoaded"
+                class="aspect-[726/1080] bg-[#F9F6EC] rounded-2xl"
+              />
+              <img
+                v-else
+                v-bind="imgAttrs"
+                :src="src"
+                class="w-full object-cover rounded-2xl"
+                alt="certificate"
+              >
+            </NuxtImg>
+          </template>
+          <img
+v-else class="w-full rounded-2xl hidden sm:block"
+               src="/cert.jpg" alt="cert">
         </template>
         <template v-else>
           <div class="block sm:hidden">
