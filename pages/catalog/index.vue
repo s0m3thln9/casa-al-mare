@@ -82,7 +82,6 @@ const currentCardCount = computed(() =>
 
 const route = useRoute()
 
-// Сохраняем позицию скролла перед уходом со страницы
 const scrollPosition = ref(0)
 
 const applyFiltersFromQuery = (q: any) => {
@@ -96,19 +95,15 @@ const applyFiltersFromQuery = (q: any) => {
       .split("/")
       .filter((p) => p.trim() !== "")
 
-    // Первый уровень
     parentsAliasesFromQuery = segments.slice(0, 1)
 
-    // ИЗМЕНИТЬ: второй уровень может содержать несколько значений через запятую
     if (segments.length > 1) {
       secondLevelAliases = segments[1].split(",").filter((s) => s.trim() !== "")
     }
 
-    // ИЗМЕНИТЬ: третий уровень для каждого родителя второго уровня
     if (segments.length > 2 && secondLevelAliases.length > 0) {
       const thirdLevelSegments = segments[2].split(",").filter((s) => s.trim() !== "")
 
-      // Связываем третий уровень с родителями второго
       thirdLevelSegments.forEach((thirdAlias) => {
         const itemWithThisChild = catalogStore.items.find(
           (item) =>
@@ -126,10 +121,9 @@ const applyFiltersFromQuery = (q: any) => {
   }
 
   catalogStore.currentFilters.parentsAliases = parentsAliasesFromQuery
-  catalogStore.currentFilters.secondLevelAliases = secondLevelAliases // ДОБАВИТЬ эту строку
+  catalogStore.currentFilters.secondLevelAliases = secondLevelAliases
   catalogStore.currentFilters.thirdLevelByParent = thirdLevelByParent
-
-  // Остальная логика остается без изменений
+  
   if (typeof q.color === "string" && q.color.trim() !== "") {
     const colorCode = q.color.trim()
     const colorKey = catalogStore.items.find((item) =>
