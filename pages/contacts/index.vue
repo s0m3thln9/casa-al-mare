@@ -38,16 +38,16 @@ useHead({
           height="692"
           class="rounded-lg"
         >
-        <div class="grid lg:grid-cols-5 w-fit gap-10 sm:gap-6 text-sm">
-          <a
-            class="grid grid-rows-2 text-center gap-1 sm:gap-2"
-            href="https://wa.me/79300360494"
-            target="_blank"
-            rel="noopener"
-          >
-            <span>Whatsapp</span>
-            <span class="font-light">+7 (930) 036-04-94</span>
-          </a>
+        <div class="grid lg:grid-cols-4 w-fit gap-10 sm:gap-6 text-sm">
+<!--          <a-->
+<!--            class="grid grid-rows-2 text-center gap-1 sm:gap-2"-->
+<!--            href="https://wa.me/79300360494"-->
+<!--            target="_blank"-->
+<!--            rel="noopener"-->
+<!--          >-->
+<!--            <span>Whatsapp</span>-->
+<!--            <span class="font-light">+7 (930) 036-04-94</span>-->
+<!--          </a>-->
           <a
             class="grid grid-rows-2 text-center gap-1 sm:gap-2"
             href="https://t.me/casaalmare_swim"

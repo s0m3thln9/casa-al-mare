@@ -85,15 +85,15 @@ const handleMenuButtonClick = () => {
             Telegram
           </a>
         </li>
-        <li class="hover:text-[#F3A454]">
-          <a
-            href="https://wa.me/79300360494"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            WhatsApp
-          </a>
-        </li>
+<!--        <li class="hover:text-[#F3A454]">-->
+<!--          <a-->
+<!--            href="https://wa.me/79300360494"-->
+<!--            target="_blank"-->
+<!--            rel="noopener noreferrer"-->
+<!--          >-->
+<!--            WhatsApp-->
+<!--          </a>-->
+<!--        </li>-->
       </ul>
     </nav>
     <nav>

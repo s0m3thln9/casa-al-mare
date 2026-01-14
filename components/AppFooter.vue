@@ -100,15 +100,15 @@ const handleOrdersClick = () => {
               Telegram
             </a>
           </li>
-          <li>
-            <a
-              href="https://wa.me/79300360494"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              WhatsApp
-            </a>
-          </li>
+<!--          <li>-->
+<!--            <a-->
+<!--              href="https://wa.me/79300360494"-->
+<!--              target="_blank"-->
+<!--              rel="noopener noreferrer"-->
+<!--            >-->
+<!--              WhatsApp-->
+<!--            </a>-->
+<!--          </li>-->
           <li><NuxtLink to="/">Pinterest</NuxtLink></li>
         </ul>
       </div>

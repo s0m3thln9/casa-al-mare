@@ -24,6 +24,9 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
+      script: [
+        { src: 'https://back.casaalmare.com/template/js/counters.js' },
+      ],
       htmlAttrs: {
         lang: "ru",
         prefix: "og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# article: http://ogp.me/ns/article#",
