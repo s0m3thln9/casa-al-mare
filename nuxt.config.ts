@@ -7,6 +7,11 @@ export default defineNuxtConfig({
       weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
     },
   },
+  nitro: {
+    externals: {
+      inline: ['vue']
+    }
+  },
   viewport: {
     breakpoints: {
       xs: 320,
