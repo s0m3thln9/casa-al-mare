@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from "vue"
+
 interface VideoSource {
   mp4: string
   ogv: string
@@ -10,26 +12,20 @@ interface VideoData {
   mob: VideoSource
 }
 
+const docsStore = useDocsStore()
+
+const pageTitle = computed(() => docsStore.tree?.data?.index?.pagetitle)
+const description = computed(() => docsStore.tree?.data?.index?.description ?? "")
+const metatags = computed(() =>
+  docsStore.tree?.data?.index?.metatags?.map(tag => ({ property: tag.name,
+    content: tag.content, })) ?? [] )
+
 useHead({
-  title: "CASA AL MARE — стильное бельё и купальники",
-  meta: [
-    {
-      name: "description",
-      content: "CASA AL MARE — бренд стильного белья и купальников, вдохновлённый природой и искусством.",
-    },
-    {
-      property: "og:title",
-      content: "CASA AL MARE",
-    },
-    {
-      property: "og:description",
-      content: "Выбирайте купальники и бельё CASA AL MARE — сочетание модных решений, комфорта и женственности.",
-    },
-    {
-      property: "og:image",
-      content: ""
-    }
-  ],
+  title: pageTitle,
+  meta: computed(() => [
+    { name: "description", content: description.value },
+    ...metatags.value,
+  ]),
 })
 
 const { data } = await useFetch<VideoData>("https://back.casaalmare.com/api/getMainVideo")

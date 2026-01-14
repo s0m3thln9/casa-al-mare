@@ -1,11 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted } from "vue"
 
-// Убираем пропс path полностью
-// const props = defineProps<{
-//   path: string
-// }>()
-
 interface VideoSource {
   mp4: string
   ogv: string
@@ -336,14 +331,71 @@ onMounted(async () => {
   }
 })
 
-const pageTitle = computed(() => docsStore.tree?.data?.catalog?.pagetitle)
-const description = computed(() => docsStore.tree?.data?.catalog?.description ?? "")
-const metatags = computed(() =>
-  docsStore.tree?.data?.catalog?.metatags?.map(tag => ({
+// Функция для получения данных категории по пути
+const getCurrentCategoryData = computed(() => {
+  if (!docsStore.tree?.data?.catalog?.subitems) {
+    return null
+  }
+  
+  const pathValue = currentPath.value
+  if (!pathValue || pathValue.trim() === "") {
+    // Если путь пустой, возвращаем данные корневого каталога
+    return docsStore.tree.data.catalog
+  }
+  
+  const segments = pathValue
+    .replace(/^\/+|\/+$/g, "")
+    .split("/")
+    .filter((p) => p.trim() !== "")
+  
+  let current: any = docsStore.tree.data.catalog.subitems
+  
+  // Проходим по сегментам пути и ищем соответствующую категорию
+  for (const segment of segments) {
+    if (current && current[segment]) {
+      current = current[segment]
+    } else {
+      return null
+    }
+    
+    // Если есть следующий уровень, переходим в subitems
+    if (current.subitems) {
+      current = current.subitems
+    }
+  }
+  
+  // Возвращаем последний найденный объект категории
+  // Нужно вернуться на один уровень назад, так как мы перешли в subitems
+  const lastSegment = segments[segments.length - 1]
+  let result: any = docsStore.tree.data.catalog.subitems
+  
+  for (let i = 0; i < segments.length - 1; i++) {
+    result = result[segments[i]].subitems
+  }
+  
+  return result[lastSegment]
+})
+
+// Динамические мета-теги на основе текущей категории
+const pageTitle = computed(() => {
+  const categoryData = getCurrentCategoryData.value
+  return categoryData?.pagetitle || docsStore.tree?.data?.catalog?.pagetitle || "Каталог"
+})
+
+const description = computed(() => {
+  const categoryData = getCurrentCategoryData.value
+  return categoryData?.description || docsStore.tree?.data?.catalog?.description || ""
+})
+
+const metatags = computed(() => {
+  const categoryData = getCurrentCategoryData.value
+  const tags = categoryData?.metatags || docsStore.tree?.data?.catalog?.metatags || []
+  
+  return tags.map((tag: any) => ({
     property: tag.name,
     content: tag.content,
-  })) ?? []
-)
+  }))
+})
 
 useHead({
   title: pageTitle,
