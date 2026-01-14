@@ -73,9 +73,9 @@ useHead({
     >
       <h2 class="uppercase mb-6 text-2xl font-bold">Страница не найдена</h2>
       <NuxtLink
-        to="/info"
+        to="/"
         class="text-blue-500 hover:underline"
-        >Вернуться к инфо</NuxtLink
+        >Вернуться на главную</NuxtLink
       >
     </div>
   </main>
