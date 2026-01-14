@@ -2,6 +2,10 @@
 import { computed } from "vue"
 import type { Item } from "~/stores/catalog"
 
+const props = defineProps<{
+  alias: string
+}>()
+
 const route = useRoute()
 const catalogStore = useCatalogStore()
 const popupStore = usePopupStore()
@@ -20,56 +24,55 @@ const loadItem = async () => {
   try {
     isLoading.value = true
     error.value = null
-
+    
     if (catalogStore.items.length === 0) {
       await catalogStore.loadItems()
     }
-
+    
     let foundItem: Item | null = null
-    const aliasFromQuery = route.query.alias as string
-    if (typeof aliasFromQuery === "string" && aliasFromQuery.trim() !== "") {
-      foundItem = catalogStore.items.find((i) => i.alias === aliasFromQuery) || null
-      if (foundItem && foundItem.colorVal && foundItem.colorName) {
-        itemStore.color = {
-          code: foundItem.colorVal,
-          name: foundItem.colorName,
-          value: foundItem.colorVal,
+    
+    const aliasValue = props.alias
+    
+    if (aliasValue && aliasValue.trim() !== "") {
+      foundItem = catalogStore.items.find((i) => i.alias === aliasValue) || null
+      
+      if (foundItem) {
+        // Установка цвета в стор
+        if (foundItem.colorVal && foundItem.colorName) {
+          itemStore.color = {
+            code: foundItem.colorVal,
+            name: foundItem.colorName,
+            value: foundItem.colorVal,
+          }
         }
-      }
-      if (!foundItem) {
-        error.value = "Товар не найден по указанному alias. Проверьте ссылку."
+      } else {
+        error.value = "Товар не найден. Проверьте адресную строку."
         item.value = null
         return
       }
     } else {
+      // Оставляем поиск по ID как запасной вариант из параметров пути
       const idFromParams = route.params.id
       if (typeof idFromParams === "string" && !isNaN(Number(idFromParams))) {
-        const id = Number(idFromParams)
-        foundItem = catalogStore.getItemById(id) || null
-        if (!foundItem) {
-          error.value = "Товар не найден по ID."
-          item.value = null
-          return
-        }
-      } else {
-        error.value = "Неверный идентификатор товара."
-        item.value = null
-        return
+        foundItem = catalogStore.getItemById(Number(idFromParams)) || null
       }
     }
-
+    
+    if (!foundItem) {
+      error.value = "Товар не найден."
+      return
+    }
+    
     item.value = foundItem
+    
     const sizeFromQuery = route.query.size as string
-    if (sizeFromQuery && typeof sizeFromQuery === "string" && sizeFromQuery.trim() !== "") {
-      if (foundItem.sizes && foundItem.sizes.includes(sizeFromQuery)) {
-        await nextTick()
-        itemStore.size = sizeFromQuery
-      }
+    if (sizeFromQuery && foundItem.sizes?.includes(sizeFromQuery)) {
+      await nextTick()
+      itemStore.size = sizeFromQuery
     }
   } catch (err) {
-    console.error("Ошибка загрузки страницы товара:", err)
-    error.value = err instanceof Error ? err.message : "Неизвестная ошибка"
-    item.value = null
+    console.error("Ошибка:", err)
+    error.value = "Произошла ошибка при загрузке данных."
   } finally {
     isLoading.value = false
   }
@@ -96,9 +99,9 @@ const availableColors = computed(() => {
 
 const sortedShapes = computed(() => {
   if (!item.value?.complex || item.value.complex.length === 0) return []
-
+  
   const allShapes = [...item.value.complex]
-
+  
   if (item.value.parents[2]) {
     const currentShapeInComplex = allShapes.find((s) => s.id === item.value?.parents[2].id)
     if (!currentShapeInComplex) {
@@ -111,18 +114,18 @@ const sortedShapes = computed(() => {
       })
     }
   }
-
+  
   return allShapes.sort((a, b) => a.id - b.id)
 })
 
 const breadcrumsItems = computed(() => {
   if (isLoading.value) {
-    return [{ name: "Главная", path: "/" }, { name: "Смотреть все", path: "/catalog" }, { name: "Название" }]
+    return [{ name: "Главная", path: "/" }, { name: "Смотреть все", path: "/catalog" }, { name: "Загрузка..." }]
   }
   return [
     { name: "Главная", path: "/" },
     { name: "Смотреть все", path: "/catalog" },
-    { name: item.value?.name || `Товар (alias: ${route.query.alias})` },
+    { name: item.value?.name || "Товар" },
   ]
 })
 
@@ -299,20 +302,20 @@ const handleTouchStart = (e: TouchEvent) => {
 const handleTouchMove = (e: TouchEvent) => {
   const len = currentColorImages.value.length
   if (len <= 1 || isTransitioning.value || !touchStartX.value || !touchStartY.value) return
-
+  
   const currentX = e.touches[0].clientX
   const currentY = e.touches[0].clientY
   const deltaX = Math.abs(currentX - touchStartX.value)
   const deltaY = Math.abs(currentY - touchStartY.value)
-
+  
   const directionThreshold = 10
-
+  
   if (deltaX > directionThreshold || deltaY > directionThreshold) {
     if (isHorizontalSwipe.value) {
       e.preventDefault()
       return
     }
-
+    
     if (deltaX > deltaY * 1.5 && deltaX > directionThreshold) {
       isHorizontalSwipe.value = true
       e.preventDefault()
@@ -325,13 +328,13 @@ const handleTouchMove = (e: TouchEvent) => {
 const handleTouchEnd = (e: TouchEvent) => {
   const len = currentColorImages.value.length
   if (len <= 1 || isTransitioning.value) return
-
+  
   if (!isHorizontalSwipe.value) {
     touchStartX.value = 0
     touchStartY.value = 0
     return
   }
-
+  
   const deltaX = e.changedTouches[0].clientX - touchStartX.value
   const threshold = 50
   if (Math.abs(deltaX) > threshold) {
@@ -342,7 +345,7 @@ const handleTouchEnd = (e: TouchEvent) => {
       isTransitioning.value = false
     }, 400)
   }
-
+  
   touchStartX.value = 0
   touchStartY.value = 0
   isHorizontalSwipe.value = false
@@ -381,7 +384,7 @@ watch(
       if (newItem.sizes?.[0]) {
         itemStore.size = newItem.sizes[0]
       }
-
+      
       // if (newItem.set && newItem.set.length > 0) {
       //   const types = newItem.set.map((s) => s.type)
       //   setStore.setRequiredTypes(types)
@@ -393,18 +396,20 @@ watch(
   { immediate: true },
 )
 
+// Следим за изменением пропса alias
 watch(
-  () => route.query.alias,
-  async () => {
-    itemStore.color = null
-    itemStore.size = null
-    // setStore.clear()
-    await loadItem()
-    
-    if (!error.value) {
-      scrollToTop()
+  () => props.alias,
+  async (newAlias) => {
+    if (newAlias) {
+      itemStore.color = null
+      itemStore.size = null
+      await loadItem()
+      
+      if (!error.value) {
+        scrollToTop()
+      }
     }
-  },
+  }
 )
 
 const scrollToTop = () => {
@@ -475,11 +480,11 @@ useHead({
           <div class="flex justify-center items-center gap-2 mt-4 sm:mt-6">
             <span
               class="font-[Inter] font-light text-[17px] text-[#8C8785] sm:font-[Manrope] sm:font-normal sm:text-base sm:text-[#211D1D]"
-              >Цена</span
+            >Цена</span
             >
             <span
               class="font-[Inter] line-through font-light text-[17px] text-[#8C8785] sm:font-[Manrope] sm:font-normal sm:text-base sm:text-[#211D1D]"
-              >Старая цена</span
+            >Старая цена</span
             >
           </div>
           <div class="flex justify-center items-center mt-1 sm:mt-2">
@@ -503,7 +508,7 @@ useHead({
           </div>
           <div class="flex flex-col justify-center items-stretch gap-4 mt-6">
             <div>Кнопка купить</div>
-<!--            <div>Собрать комплект</div>-->
+            <!--            <div>Собрать комплект</div>-->
           </div>
           <div class="flex justify-center items-center mt-4 sm:mt-6">
             <div>В избранное</div>
@@ -671,7 +676,7 @@ useHead({
               <NuxtLink
                 v-for="colorItem in availableColors"
                 :key="colorItem.alias"
-                :to="`/catalog/item/?alias=${colorItem.alias}`"
+                :to="`/catalog/item/${colorItem.alias}`"
                 class="flex flex-col justify-center gap-2 items-center cursor-pointer hover:opacity-80 transition-opacity"
               >
                 <div
@@ -690,7 +695,7 @@ useHead({
           <span class="text-xs font-[Manrope] text-center">{{ currentColorName }}</span>
         </div>
         <div
-v-if="!isNoSizeItem"
+          v-if="!isNoSizeItem"
           class="flex flex-col justify-center items-center gap-4 mt-12 sm:mt-10">
           <div class="flex justify-center items-center gap-3 font-light sm:gap-4 sm:font-normal">
             <SingleSelectButton
@@ -701,7 +706,7 @@ v-if="!isNoSizeItem"
             <span
               v-else
               class="text-xs text-gray-500"
-              >Размеры не указаны</span
+            >Размеры не указаны</span
             >
           </div>
         </div>
@@ -744,13 +749,13 @@ v-if="!isNoSizeItem"
             :is-parameters-selected="canAddToCart"
             :missing-params="missingParams"
           />
-<!--          <AppButton-->
-<!--            v-if="hasSetItems"-->
-<!--            variant="secondary"-->
-<!--            :content="setButtonText"-->
-<!--            custom-class="w-full py-4"-->
-<!--            @click="popupStore.open('set')"-->
-<!--          />-->
+          <!--          <AppButton-->
+          <!--            v-if="hasSetItems"-->
+          <!--            variant="secondary"-->
+          <!--            :content="setButtonText"-->
+          <!--            custom-class="w-full py-4"-->
+          <!--            @click="popupStore.open('set')"-->
+          <!--          />-->
         </div>
         <div class="flex justify-center items-center mt-4 sm:mt-6">
           <WishlistButton :item-id="item?.id" />
@@ -803,46 +808,46 @@ v-if="!isNoSizeItem"
         />
       </div>
     </div>
-<!--    <AppPopup-->
-<!--      v-if="hasSetItems"-->
-<!--      title="Собрать комплект"-->
-<!--      popup-id="set"-->
-<!--    >-->
-<!--      <div class="flex flex-col gap-6 mt-6">-->
-<!--        <div class="grid grid-cols-2 gap-y-6 gap-x-4 sm:gap-x-2">-->
-<!--          <div-->
-<!--            v-for="setItem in item?.set"-->
-<!--            :key="setItem.id"-->
-<!--            class="flex flex-col gap-2"-->
-<!--          >-->
-<!--            <span class="font-[Manrope] text-sm">{{ setItem.type }}</span>-->
-<!--            <CatalogCard-->
-<!--              v-if="catalogStore.items.length > 0"-->
-<!--              :id="setItem.id"-->
-<!--              :key="`${currentColorCode}-${setItem.type}`"-->
-<!--              :model-value="setStore.items[setItem.type]"-->
-<!--              :current-color-code="currentColorCode"-->
-<!--              custom-image-class="aspect-[200/300] w-full"-->
-<!--              popup-->
-<!--              variant="mini"-->
-<!--              link-->
-<!--              @update:model-value="(val) => setStore.setItem(setItem.type, val, setItem.id)"-->
-<!--            />-->
-<!--            <div-->
-<!--              v-else-->
-<!--              class="aspect-[200/300] w-full bg-[#F9F6EC]"-->
-<!--            />-->
-<!--          </div>-->
-<!--        </div>-->
-<!--        <BuyButton-->
-<!--          :items="setItems"-->
-<!--          available-quantity-->
-<!--          in-stock-->
-<!--          :is-parameters-selected="setStore.canAddToCart"-->
-<!--          :missing-params="setMissingParams"-->
-<!--        />-->
-<!--      </div>-->
-<!--    </AppPopup>-->
+    <!--    <AppPopup-->
+    <!--      v-if="hasSetItems"-->
+    <!--      title="Собрать комплект"-->
+    <!--      popup-id="set"-->
+    <!--    >-->
+    <!--      <div class="flex flex-col gap-6 mt-6">-->
+    <!--        <div class="grid grid-cols-2 gap-y-6 gap-x-4 sm:gap-x-2">-->
+    <!--          <div-->
+    <!--            v-for="setItem in item?.set"-->
+    <!--            :key="setItem.id"-->
+    <!--            class="flex flex-col gap-2"-->
+    <!--          >-->
+    <!--            <span class="font-[Manrope] text-sm">{{ setItem.type }}</span>-->
+    <!--            <CatalogCard-->
+    <!--              v-if="catalogStore.items.length > 0"-->
+    <!--              :id="setItem.id"-->
+    <!--              :key="`${currentColorCode}-${setItem.type}`"-->
+    <!--              :model-value="setStore.items[setItem.type]"-->
+    <!--              :current-color-code="currentColorCode"-->
+    <!--              custom-image-class="aspect-[200/300] w-full"-->
+    <!--              popup-->
+    <!--              variant="mini"-->
+    <!--              link-->
+    <!--              @update:model-value="(val) => setStore.setItem(setItem.type, val, setItem.id)"-->
+    <!--            />-->
+    <!--            <div-->
+    <!--              v-else-->
+    <!--              class="aspect-[200/300] w-full bg-[#F9F6EC]"-->
+    <!--            />-->
+    <!--          </div>-->
+    <!--        </div>-->
+    <!--        <BuyButton-->
+    <!--          :items="setItems"-->
+    <!--          available-quantity-->
+    <!--          in-stock-->
+    <!--          :is-parameters-selected="setStore.canAddToCart"-->
+    <!--          :missing-params="setMissingParams"-->
+    <!--        />-->
+    <!--      </div>-->
+    <!--    </AppPopup>-->
     <template
       v-for="section in tabSections"
       :key="section.header"
@@ -1105,15 +1110,15 @@ v-if="!isNoSizeItem"
     border: 0.5px solid #bbb8b6;
     margin-bottom: 8px;
   }
-
+  
   .custom-text-content {
     border: 0.5px solid #bbb8b6;
   }
-
+  
   .html-content-wrapper :deep(table) {
     padding: 8px 0 10px;
   }
-
+  
   .html-content-wrapper :deep(h1),
   .html-content-wrapper :deep(h2),
   .html-content-wrapper :deep(h3),
@@ -1122,11 +1127,11 @@ v-if="!isNoSizeItem"
   .html-content-wrapper :deep(h6) {
     margin-bottom: 4px;
   }
-
+  
   .html-content-wrapper :deep(p) {
     margin-bottom: 4px;
   }
-
+  
   .html-content-wrapper :deep(tbody tr:first-child)::before {
     top: 8px;
   }

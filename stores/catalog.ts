@@ -134,37 +134,44 @@ export const useCatalogStore = defineStore("catalog", () => {
       isLoading.value = false
     }
   }
-
+  
   const getLinkFromFilters = (filters: Partial<SortAndFilter>): string => {
+    const pathSegments: string[] = []
     const params = new URLSearchParams()
+    
+    // Строим путь из фильтров
     if (filters.parentsAliases && filters.parentsAliases.length > 0) {
       const filteredSegments = filters.parentsAliases.filter((segment) => segment && segment.trim() !== "")
-
-      // ИЗМЕНИТЬ: добавляем второй уровень из secondLevelAliases
-      if (filters.secondLevelAliases && filters.secondLevelAliases.length > 0) {
-        filteredSegments.push(filters.secondLevelAliases.join(","))
+      
+      // Добавляем первый уровень
+      if (filteredSegments.length > 0) {
+        pathSegments.push(filteredSegments[0])
       }
-
+      
+      // Добавляем второй уровень из secondLevelAliases
+      if (filters.secondLevelAliases && filters.secondLevelAliases.length > 0) {
+        pathSegments.push(filters.secondLevelAliases.join(","))
+      }
+      
+      // Добавляем третий уровень
       if (filters.thirdLevelByParent && Object.keys(filters.thirdLevelByParent).length > 0) {
         const thirdLevelSegments: string[] = []
-
-        // ИЗМЕНИТЬ: проверяем все выбранные второго уровня
+        
+        // Проверяем все выбранные второго уровня
         filters.secondLevelAliases?.forEach((parentAlias) => {
           const child = filters.thirdLevelByParent![parentAlias]
           if (child && child.trim() !== "") {
             thirdLevelSegments.push(child)
           }
         })
-
+        
         if (thirdLevelSegments.length > 0) {
-          filteredSegments.push(thirdLevelSegments.join(","))
+          pathSegments.push(thirdLevelSegments.join(","))
         }
       }
-
-      if (filteredSegments.length > 0) {
-        params.set("path", filteredSegments.join("/"))
-      }
     }
+    
+    // Остальные фильтры добавляем как query параметры
     if (filters.colors && filters.colors.length > 0) {
       params.set("color", filters.colors[0].code)
     }
@@ -177,8 +184,12 @@ export const useCatalogStore = defineStore("catalog", () => {
     if (filters.sortType) {
       params.set("sortType", filters.sortType)
     }
+    
+    // Формируем финальный URL
+    const basePath = pathSegments.length > 0 ? `/catalog/${pathSegments.join("/")}` : "/catalog"
     const queryString = params.toString()
-    return queryString ? `/catalog?${queryString}` : "/catalog"
+    
+    return queryString ? `${basePath}?${queryString}` : basePath
   }
 
   const isSyncing = ref(false)

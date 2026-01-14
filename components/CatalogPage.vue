@@ -1,6 +1,10 @@
 <script setup lang="ts">
-
 import { computed, onMounted } from "vue"
+
+// Убираем пропс path полностью
+// const props = defineProps<{
+//   path: string
+// }>()
 
 interface VideoSource {
   mp4: string
@@ -20,6 +24,17 @@ interface VideoAPIItem {
   ogv: string
   webm: string
 }
+
+const route = useRoute()
+const popupStore = usePopupStore()
+const catalogStore = useCatalogStore()
+const viewport = useViewport()
+const isMobile = computed(() => viewport.isLessThan("sm"))
+
+// Получаем path из параметров роута
+const currentPath = computed(() =>
+  Array.isArray(route.params.path) ? route.params.path.join('/') : (route.params.path || '')
+)
 
 const isAnyFilterActive = computed(() => {
   const filters = catalogStore.currentFilters
@@ -71,39 +86,32 @@ const videoData2 = computed<VideoData | null>(() => {
   return { pc: source, mob: source }
 })
 
-const popupStore = usePopupStore()
-const catalogStore = useCatalogStore()
-const viewport = useViewport()
-const isMobile = computed(() => viewport.isLessThan("sm"))
-
 const currentCardCount = computed(() =>
   isMobile.value ? catalogStore.mobileStrokeCardCount : catalogStore.desktopStrokeCardCount,
 )
 
-const route = useRoute()
-
 const scrollPosition = ref(0)
 
-const applyFiltersFromQuery = (q: any) => {
+const applyFiltersFromPath = (pathString: string, q: any) => {
   let parentsAliasesFromQuery: string[] = []
   let secondLevelAliases: string[] = []
   const thirdLevelByParent: Record<string, string> = {}
-
-  if (typeof q.path === "string" && q.path.trim() !== "") {
-    const segments = q.path
+  
+  if (pathString && pathString.trim() !== "") {
+    const segments = pathString
       .replace(/^\/+|\/+$/g, "")
       .split("/")
       .filter((p) => p.trim() !== "")
-
+    
     parentsAliasesFromQuery = segments.slice(0, 1)
-
+    
     if (segments.length > 1) {
       secondLevelAliases = segments[1].split(",").filter((s) => s.trim() !== "")
     }
-
+    
     if (segments.length > 2 && secondLevelAliases.length > 0) {
       const thirdLevelSegments = segments[2].split(",").filter((s) => s.trim() !== "")
-
+      
       thirdLevelSegments.forEach((thirdAlias) => {
         const itemWithThisChild = catalogStore.items.find(
           (item) =>
@@ -111,7 +119,7 @@ const applyFiltersFromQuery = (q: any) => {
             item.parents[2]?.alias === thirdAlias &&
             secondLevelAliases.includes(item.parents[1]?.alias),
         )
-
+        
         if (itemWithThisChild && itemWithThisChild.parents[1]) {
           const parentAlias = itemWithThisChild.parents[1].alias
           thirdLevelByParent[parentAlias] = thirdAlias
@@ -119,7 +127,7 @@ const applyFiltersFromQuery = (q: any) => {
       })
     }
   }
-
+  
   catalogStore.currentFilters.parentsAliases = parentsAliasesFromQuery
   catalogStore.currentFilters.secondLevelAliases = secondLevelAliases
   catalogStore.currentFilters.thirdLevelByParent = thirdLevelByParent
@@ -138,7 +146,7 @@ const applyFiltersFromQuery = (q: any) => {
   } else {
     catalogStore.currentFilters.colors = []
   }
-
+  
   if (typeof q.material === "string" && q.material.trim() !== "") {
     catalogStore.currentFilters.materials = q.material
       .split(",")
@@ -147,23 +155,22 @@ const applyFiltersFromQuery = (q: any) => {
   } else {
     catalogStore.currentFilters.materials = []
   }
-
+  
   if (typeof q.query === "string") {
     catalogStore.currentFilters.searchQuery = q.query.trim()
   } else {
     catalogStore.currentFilters.searchQuery = ""
   }
-
+  
   if (typeof q.sortType === "string" && q.sortType.trim() !== "") {
     catalogStore.currentFilters.sortType = q.sortType.trim()
   } else {
     catalogStore.currentFilters.sortType = null
   }
-
+  
   catalogStore.currentFilters.extra = {}
 }
 
-// Инициализация скролла
 const loadMoreObserver = ref<IntersectionObserver | null>(null)
 const loadMoreTrigger = ref<HTMLElement | null>(null)
 
@@ -171,7 +178,7 @@ const setupInfiniteScroll = () => {
   if (loadMoreObserver.value) {
     loadMoreObserver.value.disconnect()
   }
-
+  
   loadMoreObserver.value = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
@@ -181,25 +188,22 @@ const setupInfiniteScroll = () => {
       })
     },
     {
-      rootMargin: "200px", // Начинаем загрузку за 200px до конца
+      rootMargin: "200px",
       threshold: 0.1,
     },
   )
-
+  
   if (loadMoreTrigger.value) {
     loadMoreObserver.value.observe(loadMoreTrigger.value)
   }
 }
 
 onMounted(async () => {
-  // Загружаем товары и применяем фильтры после загрузки
   await catalogStore.loadItems()
-  applyFiltersFromQuery(route.query)
-
-  // Сбрасываем флаг, если он был установлен
-  catalogStore.shouldResetCount = false // <- ДОБАВИТЬ ЭТУ СТРОКУ
-
-  // Восстанавливаем позицию скролла, если возвращаемся на страницу
+  applyFiltersFromPath(currentPath.value, route.query)
+  
+  catalogStore.shouldResetCount = false
+  
   nextTick(() => {
     if (scrollPosition.value > 0) {
       window.scrollTo(0, scrollPosition.value)
@@ -209,36 +213,28 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
-  // Сохраняем текущую позицию скролла
   scrollPosition.value = window.scrollY
-
+  
   if (loadMoreObserver.value) {
     loadMoreObserver.value.disconnect()
   }
 })
 
-// Следим за изменениями query параметров
 watch(
-  () => route.query,
-  (q) => {
-    // Применяем фильтры только если товары уже загружены
+  [() => route.query, currentPath],
+  ([newQuery, newPath]) => {
     if (catalogStore.items.length > 0) {
-      applyFiltersFromQuery(q)
-      // Сбрасываем счетчик только если был установлен флаг
+      applyFiltersFromPath(newPath, newQuery)
+      
       if (catalogStore.shouldResetCount) {
-        // <- ИЗМЕНИТЬ ЭТИ СТРОКИ
         catalogStore.currentVisibleCardCount = 12
         catalogStore.shouldResetCount = false
       }
-      nextTick(() => {
-        setupInfiniteScroll()
-      })
+      nextTick(() => setupInfiniteScroll())
     }
-  },
-  { immediate: false },
+  }
 )
 
-// Пересоздаем observer при изменении количества отображаемых карточек
 watch(
   () => catalogStore.currentVisibleCardCount,
   () => {
@@ -253,60 +249,57 @@ const breadcrumsItems = computed(() => {
     { name: "Главная", path: "/" },
     { name: "Смотреть все", path: "/catalog" },
   ]
-
-  const pathFromQuery = route.query.path
-  if (typeof pathFromQuery === "string" && pathFromQuery.trim() !== "") {
-    const segments = pathFromQuery
+  
+  const pathValue = currentPath.value
+  if (typeof pathValue === "string" && pathValue.trim() !== "") {
+    const segments = pathValue
       .replace(/^\/+|\/+$/g, "")
       .split("/")
       .filter((p) => p.trim() !== "")
-
-    // Первый уровень
+    
     if (segments.length > 0) {
       const firstLevelAlias = segments[0]
       const category = catalogStore.items
         .flatMap((item) => item.parents || [])
         .find((parent) => parent.alias === firstLevelAlias)
-
+      
       items.push({
         name: category?.name || firstLevelAlias.charAt(0).toUpperCase() + firstLevelAlias.slice(1).replace(/-/g, " "),
         path: `/catalog/${firstLevelAlias}`,
       })
     }
-
-    // ИЗМЕНИТЬ: Второй уровень (все элементы в одном breadcrumb через запятую)
+    
     if (segments.length > 1) {
       const secondLevelAliases = segments[1].split(",").filter((s) => s.trim() !== "")
-
+      
       if (secondLevelAliases.length > 0) {
         const names = secondLevelAliases.map((secondAlias) => {
           const category = catalogStore.items
             .flatMap((item) => item.parents || [])
             .find((parent) => parent.alias === secondAlias)
-
+          
           return category?.name || secondAlias.charAt(0).toUpperCase() + secondAlias.slice(1).replace(/-/g, " ")
         })
-
+        
         items.push({
           name: names.join(", "),
           path: `/catalog/${segments[0]}/${segments[1]}`,
         })
       }
     }
-
-    // ИЗМЕНИТЬ: Третий уровень (все элементы в одном breadcrumb через запятую)
+    
     if (segments.length > 2) {
       const thirdLevelAliases = segments[2].split(",").filter((s) => s.trim() !== "")
-
+      
       if (thirdLevelAliases.length > 0) {
         const names = thirdLevelAliases.map((thirdAlias) => {
           const category = catalogStore.items
             .flatMap((item) => item.parents || [])
             .find((parent) => parent.alias === thirdAlias)
-
+          
           return category?.name || thirdAlias.charAt(0).toUpperCase() + thirdAlias.slice(1).replace(/-/g, " ")
         })
-
+        
         items.push({
           name: names.join(", "),
           path: `/catalog/${segments[0]}/${segments[1]}/${segments[2]}`,
@@ -314,7 +307,7 @@ const breadcrumsItems = computed(() => {
       }
     }
   }
-
+  
   return items
 })
 
@@ -346,8 +339,11 @@ onMounted(async () => {
 const pageTitle = computed(() => docsStore.tree?.data?.catalog?.pagetitle)
 const description = computed(() => docsStore.tree?.data?.catalog?.description ?? "")
 const metatags = computed(() =>
-  docsStore.tree?.data?.catalog?.metatags?.map(tag => ({ property: tag.name,
-    content: tag.content, })) ?? [] )
+  docsStore.tree?.data?.catalog?.metatags?.map(tag => ({
+    property: tag.name,
+    content: tag.content,
+  })) ?? []
+)
 
 useHead({
   title: pageTitle,
@@ -356,10 +352,9 @@ useHead({
     ...metatags.value,
   ]),
 })
-
 </script>
 
-<template>
+ <template>
   <main class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D]">
     <div
       v-if="!isMobile"
@@ -488,22 +483,7 @@ useHead({
       v-else-if="!catalogStore.isLoading && catalogStore.filteredItems.length > 0"
       class="pt-4 pb-2 sm:py-10"
     />
-
-<!--    <AppSEO-->
-<!--      :paragraphs="[-->
-<!--        'CASA AL MARE — эстетика тела, свобода выбора. Каталог CASA AL MARE создан для женщин, которые ищут не просто купальник или комплект белья, а выражение своей индивидуальности.\n' +-->
-<!--          'Мы создаём коллекции, вдохновлённые побережьями, архитектурой юга и непринуждённой элегантностью.',-->
-<!--        'В каталоге CASA AL MARE вы найдете:\n' +-->
-<!--          'купальники: раздельные и слитные;\n' +-->
-<!--          'комплекты нижнего белья: браллеты, трусики, боди;\n' +-->
-<!--          'аксессуары: пляжные полотенца, сумки, косметички.\n' +-->
-<!--          'мы используем премиальные материалы, адаптированные к разным типам фигуры и формам.\n' +-->
-<!--          'каждое изделие проходит ручную проверку, а дизайн продуман до мелочей.',-->
-<!--        'Быстрая доставка по всей России и миру. Поддержка клиентов работает ежедневно. Вся продукция произведена с заботой об экологии.\n' +-->
-<!--          'Выбирайте купальники и бельё CASA AL MARE — сочетание модных решений, комфорта и женственности.\n' +-->
-<!--          'Следите за новыми коллекциями, подписывайтесь на наш telegram, vk и открывайте красоту каждый день.',-->
-<!--      ]"-->
-<!--    />-->
+    
     <AppPopup
       title="Фильтр и сортировка"
       popup-id="filter"
@@ -529,8 +509,7 @@ useHead({
               >
                 {{ catalogStore.popupDynamicFilters.pathLevelNames[levelIndex] }}
               </h3>
-
-              <!-- ИЗМЕНИТЬ: для первого уровня (levelIndex === 0) используем SingleSelectButton -->
+              
               <template v-if="levelIndex === 0">
                 <div
                   v-if="levelOptions.some((opt) => opt.image && opt.image.trim() !== '')"
@@ -568,8 +547,7 @@ useHead({
                   />
                 </div>
               </template>
-
-              <!-- ИЗМЕНИТЬ: для второго уровня (levelIndex === 1) используем MultiSelectButton -->
+              
               <template v-else-if="levelIndex === 1">
                 <div
                   v-if="levelOptions.some((opt) => opt.image && opt.image.trim() !== '')"

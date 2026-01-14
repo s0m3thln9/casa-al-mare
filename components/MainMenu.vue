@@ -86,11 +86,9 @@ const menuItems = computed<MenuItem[]>(() => {
 
   const items: MenuItem[] = [{ label: "Смотреть все", link: "/catalog", customClass2: "mb-4" }]
 
-  // Добавляем динамически сгенерированные пункты из дерева
   const dynamicItems = buildMenuFromTree(tree.catalog)
   items.push(...dynamicItems)
 
-  // Добавляем статичный пункт "Сертификаты"
   items.push({
     label: "Сертификаты",
     link: "/certificate",
@@ -171,7 +169,6 @@ const secondMenuItems: MenuItem[] = [
 
 const handleMenuClick = (item: MenuItem) => {
   if (item.submenu) {
-    // Toggle логика для подменю
     if (selectedSubmenu.value !== null) {
       if (selectedSubmenuLabel.value === item.label) {
         selectedSubmenu.value = null
@@ -191,7 +188,6 @@ const handleMenuClick = (item: MenuItem) => {
     return
   }
 
-  // Логика для клика на пункте без submenu
   if (selectedSubmenu.value !== null) {
     selectedSubmenu.value = null
     selectedSubmenuLabel.value = null
@@ -228,11 +224,9 @@ const proceedWithNavigationAndClose = (item: MenuItem) => {
       return
     }
 
-    // Навигация с path для категорий
     if (item.path) {
       navigateTo({
-        path: item.link,
-        query: { path: item.path },
+        path: item.link + '/' + item.path,
       })
       return
     }

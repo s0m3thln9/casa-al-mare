@@ -120,7 +120,7 @@ const handleProfileClick = () => {
           </div>
           <div
             class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
-            @click="navigateTo('/catalog?path=kupalniki/niz')"
+            @click="navigateTo('/catalog/kupalniki/niz')"
           >
             Нижняя часть купальника
           </div>
@@ -138,13 +138,13 @@ const handleProfileClick = () => {
           </div>
           <div
             class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
-            @click="navigateTo('/catalog?path=kupalniki')"
+            @click="navigateTo('/catalog/kupalniki')"
           >
             Купальники
           </div>
           <div
             class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
-            @click="navigateTo('/catalog?path=kupalniki/verx')"
+            @click="navigateTo('/catalog/kupalniki/verx')"
           >
             Верхняя часть купальника
           </div>

@@ -132,11 +132,11 @@ export function useCatalogCard(props: UseCatalogCardProps) {
   const handleClick = async (forceSize?: string | null) => {
     if (props.link && item.value && item.value.alias) {
       const fullAlias = item.value.alias
-      let itemLink = `/catalog/item/?alias=${fullAlias}`
+      let itemLink = `/catalog/item/${fullAlias}`
       
       const sizeToUse = forceSize ?? selectedSize.value
       if (sizeToUse) {
-        itemLink += `&size=${encodeURIComponent(sizeToUse)}`
+        itemLink += `?size=${encodeURIComponent(sizeToUse)}`
       }
       
       try {

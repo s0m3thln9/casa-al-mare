@@ -63,10 +63,12 @@ const handleOrdersClick = () => {
       <div class="flex flex-col gap-4">
         <h3 class="font-normal text-base uppercase">Каталог</h3>
         <ul class="flex flex-col gap-4">
-          <li><NuxtLink to="/catalog?path=kupalniki">Купальники</NuxtLink></li>
-          <li><NuxtLink to="/catalog?path=kupalniki%2Fniz">Нижняя часть купальника</NuxtLink></li>
-          <li><NuxtLink to="/catalog?path=kupalniki%2Fverx">Верхняя часть купальника</NuxtLink></li>
-          <li><NuxtLink to="/catalog?path=odezhda">Одежда
+          <li><NuxtLink to="/catalog/kupalniki">Купальники</NuxtLink></li>
+          <li><NuxtLink to="/catalog/kupalniki/niz">Нижняя часть
+                                                      купальника</NuxtLink></li>
+          <li><NuxtLink to="/catalog/kupalniki/verx">Верхняя часть
+                                                          купальника</NuxtLink></li>
+          <li><NuxtLink to="/catalog/odezhda">Одежда
           </NuxtLink></li>
           <li><NuxtLink to="/certificate">Сертификаты</NuxtLink></li>
         </ul>
