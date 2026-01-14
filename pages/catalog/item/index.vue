@@ -969,11 +969,13 @@ v-if="!isNoSizeItem"
   font-size: 11px;
   border-collapse: collapse;
   width: 100%;
-  border: 1px solid #bbb8b6;
-  border-radius: 8px;
   overflow: hidden;
   padding-bottom: 16px;
-  margin-bottom: 8px;
+}
+
+.html-content-wrapper :deep(.roundtable) {
+  border: 1px solid #bbb8b6;
+  border-radius: 8px;
 }
 
 .html-content-wrapper :deep(thead tr) {
@@ -986,6 +988,10 @@ v-if="!isNoSizeItem"
   vertical-align: top;
   text-align: center;
   font-weight: 400;
+}
+
+.html-content-wrapper :deep(thead tr th.cssth) {
+  width: 30px;
 }
 
 .html-content-wrapper :deep(thead tr th:first-child) {
