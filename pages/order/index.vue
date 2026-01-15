@@ -1118,6 +1118,7 @@ useSmsAutoSubmit(
                 :text="orderStore.errorDeliveryMethod ? orderStore.errorDeliveryMethod : 'Выберите способ доставки'"
                 type="error"
                 :show="orderStore.showErrorDeliveryMethod"
+                position="lefttop"
                 @update:show="(value) => (orderStore.showErrorDeliveryMethod = value)"
               >
                 <div class="relative flex flex-col gap-6 w-full">

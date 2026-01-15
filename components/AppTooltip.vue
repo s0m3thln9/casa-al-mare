@@ -4,7 +4,7 @@ const props = withDefaults(
     icon?: boolean
     text: string
     type?: "error" | "info"
-    position?: "top" | "bottom" | "left" | "right"
+    position?: "top" | "bottom" | "left" | "right" | "lefttop"
     show?: boolean
     autoHide?: boolean
     hideDelay?: number
@@ -83,6 +83,12 @@ watch(
             type === 'info' ? 'before:border-r-[#211D1D]' : 'before:border-r-[#FFF4A4]'
           }`,
         ],
+        position === 'lefttop' && [
+          'bottom-full left-0 -translate-x-1/2 mb-2',
+          `before:top-full before:left-1/2 before:-translate-x-1/2 before:border-x-8 before:border-x-transparent before:border-t-8 ${
+            type === 'info' ? 'before:border-t-[#211D1D]' : 'before:border-t-[#FFF4A4]'
+          }`,
+         ],
       ]"
     >
       <div
