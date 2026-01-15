@@ -443,7 +443,7 @@ async function handleGuestAuth(): Promise<void> {
 
   let smsData: any = null
   try {
-    const smsBody = { phone: orderStore.phone }
+    const smsBody = { phone: orderStore.phone, register: loginType === 2 ? 1 : 0 }
     smsData = await $fetch("https://back.casaalmare.com/api/createSmsCode", {
       method: "POST",
       body: smsBody,
