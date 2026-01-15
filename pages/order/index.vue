@@ -1227,6 +1227,7 @@ useSmsAutoSubmit(
             <AppTooltip
               text="Выберите способ оплаты"
               type="error"
+              class="max-sm:hidden"
               :show="orderStore.showErrorPaymentMethod"
               @update:show="(value) => (orderStore.showErrorPaymentMethod = value)"
             >
