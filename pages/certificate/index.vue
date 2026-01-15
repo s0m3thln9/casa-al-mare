@@ -25,6 +25,7 @@ useHead({
 const certificateStore = useCertificateStore()
 const userStore = useUserStore()
 const orderStore = useOrderStore()
+const router = useRouter()
 
 interface Nominal {
   id: number
@@ -82,13 +83,13 @@ const phoneOptions: PhoneOption[] = [
 const getCart = async () => {
   const token = await userStore.loadToken()
   if (!token) return
-
+  
   try {
     const data = await $fetch("https://back.casaalmare.com/api/getCart", {
       method: "POST",
       body: { token },
     })
-
+    
     if (data?.success && data.cart) {
       const parsedCart = orderStore.parseCart(data.cart)
       orderStore.setCartItems(parsedCart)
@@ -112,6 +113,8 @@ const handleSubmit = async () => {
     if (result.success) {
       certificateStore.resetForm()
       await getCart()
+      // Переход на страницу корзины
+      router.push('/order')
     } else {
       console.error(`Ошибка: ${result.error}`)
     }
@@ -182,7 +185,7 @@ onMounted(async () => {
   } finally {
     isLoadingImages.value = false
   }
-
+  
   try {
     isLoadingNominals.value = true
     const nominalsResponse = await $fetch<Nominal[]>("https://back.casaalmare.com/api/getCertNominals")
@@ -212,20 +215,20 @@ const handleTouchStart = (e: TouchEvent) => {
 const handleTouchMove = (e: TouchEvent) => {
   const len = certificateImages.value.length
   if (len <= 1 || isTransitioning.value || !touchStartX.value || !touchStartY.value) return
-
+  
   const currentX = e.touches[0].clientX
   const currentY = e.touches[0].clientY
   const deltaX = Math.abs(currentX - touchStartX.value)
   const deltaY = Math.abs(currentY - touchStartY.value)
-
+  
   const directionThreshold = 10
-
+  
   if (deltaX > directionThreshold || deltaY > directionThreshold) {
     if (isHorizontalSwipe.value) {
       e.preventDefault()
       return
     }
-
+    
     if (deltaX > deltaY * 1.5 && deltaX > directionThreshold) {
       isHorizontalSwipe.value = true
       e.preventDefault()
@@ -238,13 +241,13 @@ const handleTouchMove = (e: TouchEvent) => {
 const handleTouchEnd = (e: TouchEvent) => {
   const len = certificateImages.value.length
   if (len <= 1 || isTransitioning.value) return
-
+  
   if (!isHorizontalSwipe.value) {
     touchStartX.value = 0
     touchStartY.value = 0
     return
   }
-
+  
   const deltaX = e.changedTouches[0].clientX - touchStartX.value
   const threshold = 50
   if (Math.abs(deltaX) > threshold) {
@@ -255,7 +258,7 @@ const handleTouchEnd = (e: TouchEvent) => {
       isTransitioning.value = false
     }, 400)
   }
-
+  
   touchStartX.value = 0
   touchStartY.value = 0
   isHorizontalSwipe.value = false
@@ -300,8 +303,8 @@ const getStepDescription = computed(() => {
     </div>
     <div class="px-0 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-8 sm:px-4">
       <div
-class="grid grid-cols-1 gap-2"
-           :class="certificateStore.certificateType === 'Физический' ? '' :
+        class="grid grid-cols-1 gap-2"
+        :class="certificateStore.certificateType === 'Физический' ? '' :
            'sm:grid-cols-2 lg:grid-cols-3'">
         <template v-if="certificateImages.length > 0">
           <div
@@ -336,7 +339,7 @@ class="grid grid-cols-1 gap-2"
           </div>
           <img v-else class="w-full sm:hidden" src="/cert.jpg" alt="cert" >
           <div
-v-if="certificateStore.certificateType !== 'Физический'"
+            v-if="certificateStore.certificateType !== 'Физический'"
             class="flex sm:hidden justify-center items-center gap-1 px-4 mt-2">
             <div
               v-for="(_, index) in numBars"
@@ -368,8 +371,8 @@ v-if="certificateStore.certificateType !== 'Физический'"
             </NuxtImg>
           </template>
           <img
-v-else class="w-full rounded-2xl hidden sm:block"
-               src="/cert.jpg" alt="cert">
+            v-else class="w-full rounded-2xl hidden sm:block"
+            src="/cert.jpg" alt="cert">
         </template>
         <template v-else>
           <div class="block sm:hidden">
@@ -590,7 +593,7 @@ v-else class="w-full rounded-2xl hidden sm:block"
                           ? 'Укажите имя получателя'
                           : certificateStore.step ===
   (certificateStore.certificateType === 'Физический' ? 3 : 4)
-                            ? 'Оплатить'
+                            ? 'Положить в корзину'
                             : 'Далее'
               "
               custom-class="w-full"
