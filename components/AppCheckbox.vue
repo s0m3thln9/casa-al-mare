@@ -3,10 +3,13 @@ const props = defineProps<{
   size: "S" | "M" | "L" | "XL"
   modelValue: string | string[] | number | null
   label: string
+  labelHtml?: boolean
   disabled?: boolean
   value: string | number
   multiple?: boolean
 }>()
+
+const orderStore = useOrderStore()
 
 const emit = defineEmits<{
   (e: "update:modelValue", value: string | number | string[] | null): void
@@ -68,7 +71,21 @@ const toggle = () => {
         class="check-icon"
       />
     </button>
-    <span class="text-sm font-light">{{ label }}</span>
+    <span
+      v-if="label"
+      class="text-sm font-light"
+    >
+      {{ label }}
+    </span>
+    <span
+      v-else-if="labelHtml"
+      class="text-sm font-light"
+    >
+      Выгода {{orderStore.priceFormatter(orderStore.pointsBenefit.benefit)}}
+      ({{orderStore.priceFormatter(orderStore.pointsBenefit.newPrice)}} <span
+      class='line-through'>{{orderStore.priceFormatter(orderStore
+      .pointsBenefit.oldPrice)}}</span>)
+    </span>
   </div>
 </template>
 

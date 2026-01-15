@@ -63,6 +63,8 @@ const catalogStore = useCatalogStore()
 
 const isExpanded = ref(false)
 
+const isLoadingCart = ref(true)
+
 const handleProfileClick = () => {
   if (authStore.isAuth) {
     navigateTo("/profile/profile")
@@ -139,42 +141,72 @@ onMounted(async () => {
   } catch (error) {
     console.error("Error loading CloudPayments:", error)
   }
-
-  const getCart = async (): Promise<void> => {
-    const token = await userStore.loadToken()
-    if (!token) return
-
-    try {
-      const { data, error } = await useFetch<CartResponseData>("https://back.casaalmare.com/api/getCart", {
-        method: "POST",
-        body: {
-          token: token,
-        },
-      })
-
-      if (error.value) {
-        console.error("Network error fetching cart:", error.value)
-        return
-      }
-
-      if (data.value?.success && data.value?.cart) {
-        const rawCart = data.value.cart
-        const parsedCart = orderStore.parseCart(rawCart)
-        orderStore.setCartItems(parsedCart)
-      }
-    } catch (error) {
-      console.error("Ошибка при получении корзины:", error)
-    }
-  }
-
-  await getCart()
+  
+  // Загрузка корзины вынесена в отдельную функцию
+  await loadCart()
+  
   await orderStore.loadPaymentMethods()
   await orderStore.loadUserData()
   await orderStore.loadOrderState()
-
+  
   await nextTick()
   await orderStore.refreshCityForUI()
   await nextTick()
+})
+
+const loadCart = async (): Promise<void> => {
+  const token = await userStore.loadToken()
+  if (!token) {
+    console.warn("Token not found")
+    isLoadingCart.value = false
+    return
+  }
+  
+  isLoadingCart.value = true
+  
+  try {
+    const data = await $fetch<CartResponseData>("https://back.casaalmare.com/api/getCart", {
+      method: "POST",
+      body: {
+        token: token,
+      },
+      params: { t: Date.now() }
+    })
+    
+    if (data?.success && data?.cart) {
+      const rawCart = data.cart
+      const parsedCart = orderStore.parseCart(rawCart)
+      orderStore.setCartItems(parsedCart)
+      console.log("Cart updated successfully")
+    }
+  } catch (error: any) {
+    console.error("Ошибка при получении корзины:", error.data || error.message)
+  } finally {
+    isLoadingCart.value = false
+  }
+}
+
+const isLoading = computed(() => isLoadingCart.value || !orderStore.isLoaded)
+
+// Добавьте watcher для отслеживания изменений корзины:
+watch(
+  () => authStore.isAuth,
+  async (isAuth) => {
+    if (isAuth) {
+      await loadCart()
+    }
+  },
+  { immediate: true }
+)
+
+// Также добавьте onActivated для обновления при возврате на страницу:
+onActivated(async () => {
+  await loadCart()
+})
+
+// И используйте onBeforeMount для ранней загрузки:
+onBeforeMount(async () => {
+  await loadCart()
 })
 
 async function handlePay(): Promise<void> {
@@ -546,13 +578,25 @@ useSmsAutoSubmit(
   handleGuestSmsConfirm,
   isGuestSmsSubmitting,
 )
+
+
+
 </script>
 
 <template>
   <main
     class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D] flex justify-start items-center pt-8 pb-8 flex-col max-sm:px-2"
   >
-    <template v-if="hasItemsInCart">
+    <template v-if="isLoading">
+      <h2 class="uppercase max-sm:font-[Inter] max-sm:text-[17px] max-sm:self-start max-sm:w-full">Загрузка...</h2>
+      <div class="mt-8 flex items-center justify-center w-full h-64">
+        <div class="text-center">
+          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#211D1D]"/>
+          <p class="mt-4 text-sm text-[#414141]">Загружаем ваш заказ...</p>
+        </div>
+      </div>
+    </template>
+    <template v-else-if="hasItemsInCart">
       <h2 class="uppercase max-sm:font-[Inter] max-sm:text-[17px] msx-sm:self-start max-sm:w-full">Оформление</h2>
       <div class="mt-8 flex max-w-[1264px] flex-col sm:flex-row h-fit w-full gap-6 sm:gap-12">
         <div
@@ -1266,12 +1310,11 @@ useSmsAutoSubmit(
                   class="font-light text-[13px] text-[#E57979]"
                 >{{ orderStore.pointsInputError }}</span>
                 <AppCheckbox
-                  v-if="orderStore.pointsBenefit &&
-                  !orderStore.pointsInputError"
+                  v-if="orderStore.pointsBenefit && !orderStore.pointsInputError"
                   v-model="orderStore.pointsCheckboxValue"
                   size="S"
                   value="apply"
-                  :label="`Выгода ${orderStore.priceFormatter(orderStore.pointsBenefit.benefit)} (${orderStore.priceFormatter(orderStore.pointsBenefit.newPrice)} ${orderStore.priceFormatter(orderStore.pointsBenefit.oldPrice)})`"
+                  :label-html="true"
                   :disabled="orderStore.isLoadingPoints"
                 />
               </div>
@@ -1534,12 +1577,11 @@ useSmsAutoSubmit(
                       class="font-light text-[13px] text-[#E57979]"
                     >{{ orderStore.pointsInputError }}</span>
                     <AppCheckbox
-                      v-if="orderStore.pointsBenefit &&
-                      !orderStore.pointsInputError"
+                      v-if="orderStore.pointsBenefit && !orderStore.pointsInputError"
                       v-model="orderStore.pointsCheckboxValue"
                       size="S"
                       value="apply"
-                      :label="`Выгода ${orderStore.priceFormatter(orderStore.pointsBenefit.benefit)} (${orderStore.priceFormatter(orderStore.pointsBenefit.newPrice)} ${orderStore.priceFormatter(orderStore.pointsBenefit.oldPrice)})`"
+                      :label-html="true"
                       :disabled="orderStore.isLoadingPoints"
                     />
                   </div>

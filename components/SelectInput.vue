@@ -253,7 +253,6 @@ const validate = (): boolean => {
       const parsed = parsePhoneNumberFromString(fullNumber)
 
       if (!parsed || !parsed.isValid()) {
-        triggerError()
         return false
       }
     } catch (e) {
@@ -382,7 +381,7 @@ defineExpose({ validate, showError })
             @input="handleInput"
             @focus="onFocus"
             @blur="onBlur"
-          />
+          >
         </div>
       </div>
 
@@ -398,7 +397,7 @@ defineExpose({ validate, showError })
           v-model="search"
           placeholder="Поиск"
           class="h-[32px] w-full px-2.5 py-2 border-[0.5px] border-[#BBB8B6] rounded-lg text-[#211D1D] font-[Manrope] outline-none text-xs"
-        />
+        >
         <div class="flex flex-col gap-2 w-full pr-3 max-h-[140px] overflow-y-scroll">
           <div
             v-for="(item, index) in filteredOptions"

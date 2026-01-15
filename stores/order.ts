@@ -1417,6 +1417,7 @@ export const useOrderStore = defineStore("order", () => {
     email,
     name,
     goodsSum,
+    isLoaded,
     certsInCartSum,
     resetOrder,
     phone,
