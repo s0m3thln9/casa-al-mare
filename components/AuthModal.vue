@@ -68,34 +68,28 @@ const remainingSeconds = ref(0)
 const intervalId = ref<number | null>(null)
 
 const sendSmsCode = async (
-  phoneData: {
-    code: string
-    phone: string
-  },
+  phoneData: { code: string; phone: string },
   isReg: boolean = false,
   isResend: boolean = false,
 ): Promise<void> => {
+  const endpoint = isReg
+    ? "https://back.casaalmare.com/api/createSmsCodeReg"
+    : "https://back.casaalmare.com/api/createSmsCode"
+  
   try {
-    const endpoint = isReg
-      ? "https://back.casaalmare.com/api/createSmsCodeReg"
-      : "https://back.casaalmare.com/api/createSmsCode"
-
-    const { data } = await useFetch<SmsResponse>(endpoint, {
+    const response = await $fetch<SmsResponse>(endpoint, {
       method: "POST",
-      body: {
-        phone: phoneData,
-      },
+      body: { phone: phoneData },
     })
-
-    if (data.value?.success) {
+    
+    if (response.success) {
       if (!isReg) {
         authStore.smsError = ""
         if (isResend) authStore.smsError2 = ""
       } else {
         authStore.regError = ""
-        if (isResend) authStore.regError = ""
       }
-    } else if (data.value?.errorCode === "USER_NOT_FOUND" && !isReg) {
+    } else if (response.errorCode === "USER_NOT_FOUND" && !isReg) {
       authStore.type = "Регистрация"
       authStore.phoneReg = {
         code: phoneData.code,
@@ -108,7 +102,7 @@ const sendSmsCode = async (
       authStore.phoneButtonDisabled = false
       authStore.smsStep = false
       return
-    } else if (data.value?.errorCode === "USER_ALREADY_EXISTS" && isReg) {
+    } else if (response.errorCode === "USER_ALREADY_EXISTS" && isReg) {
       authStore.type = "Авторизация"
       authStore.method = "По телефону"
       authStore.phone = {
@@ -123,24 +117,10 @@ const sendSmsCode = async (
       authStore.smsError = "Пользователь уже зарегистрирован. Войдите в систему."
       return
     } else {
-      const errorMsg = data.value?.error ?? "Неизвестная ошибка"
-      if (!isReg) {
-        if (isResend) {
-          authStore.smsError2 = errorMsg
-        } else {
-          authStore.smsError = errorMsg
-        }
-      } else {
-        if (isResend) {
-          authStore.regError = errorMsg
-        } else {
-          authStore.regError = errorMsg
-        }
-      }
+      throw new Error(response.error || "Неизвестная ошибка")
     }
-  } catch (error) {
-    console.error(error)
-    const errorMsg = "Ошибка сети или сервера"
+  } catch (error: any) {
+    const errorMsg = error.data?.error || error.message || "Ошибка сети или сервера"
     if (!isReg) {
       if (isResend) {
         authStore.smsError2 = errorMsg
@@ -205,12 +185,14 @@ const handleClick = async (login: "phone" | "email"): Promise<void> => {
     authStore.emailButtonDisabled = true
     authStore.emailButtonContent = "Вход..."
   }
-
+  
   if (login === "phone") {
-    await sendSmsCode({ code, phone }, false, false)
-
+    authStore.phoneButtonDisabled = true
+    authStore.phoneButtonContent = "Отправка..."
+    await sendSmsCode({ code: authStore.phone!.code, phone: authStore.phone!.phone }, false, false)
+    
     if (authStore.type === "Регистрация") return
-
+    
     if (!authStore.smsError) {
       authStore.phoneButtonContent = "Код отправлен"
       authStore.phoneButtonDisabled = false
@@ -220,44 +202,35 @@ const handleClick = async (login: "phone" | "email"): Promise<void> => {
       authStore.phoneButtonDisabled = false
     }
   } else {
+    authStore.emailButtonDisabled = true
+    authStore.emailButtonContent = "Вход..."
     try {
-      const { data } = await useFetch<LoginResponse>("https://back.casaalmare.com/api/login", {
+      const response = await $fetch<LoginResponse>("https://back.casaalmare.com/api/login", {
         method: "POST",
-        body: {
-          email,
-          password,
-          loginType: 1,
-        },
+        body: { email: authStore.email, password: authStore.password, loginType: 1 },
       })
-
-      if (data.value?.success) {
+      
+      if (response.success) {
         authStore.smsError = ""
         authStore.emailButtonContent = "Успешно"
-        authStore.emailButtonDisabled = false
-        if (data.value.token) {
-          await userStore.saveToken(data.value.token)
-          await userStore.loadToken()
+        if (response.token) {
+          await userStore.saveToken(response.token)
           await userStore.fetchUser()
         }
         authModalStore.close()
-      } else if (data.value?.errorCode === "USER_NOT_FOUND") {
+      } else if (response.errorCode === "USER_NOT_FOUND") {
         authStore.type = "Регистрация"
-        authStore.emailReg = email
+        authStore.emailReg = authStore.email
         authStore.smsError = ""
         authStore.emailButtonContent = "Войти"
-        authStore.emailButtonDisabled = false
-        return
       } else {
-        console.error(data.value?.error)
-        authStore.smsError =
-          typeof data.value?.error === "string" ? data.value.error : (data.value?.error ?? "Неизвестная ошибка")
+        authStore.smsError = typeof response.error === "string" ? response.error : "Неизвестная ошибка"
         authStore.emailButtonContent = "Попробовать снова"
-        authStore.emailButtonDisabled = false
       }
-    } catch (error) {
-      console.error(error)
+    } catch (error: any) {
       authStore.smsError = "Ошибка сети или сервера"
       authStore.emailButtonContent = "Попробовать снова"
+    } finally {
       authStore.emailButtonDisabled = false
     }
   }
@@ -274,46 +247,32 @@ const handleSmsClick = async (): Promise<void> => {
 
   authStore.smsButtonDisabled = true
   authStore.smsButtonContent = "Проверка..."
-
+  
   try {
     const token = await userStore.loadToken()
-    const { data } = await useFetch<LoginResponse>("https://back.casaalmare.com/api/login", {
+    const response = await $fetch<LoginResponse>("https://back.casaalmare.com/api/login", {
       method: "POST",
       body: {
-        phone: {
-          code,
-          phone,
-        },
-        code: smsCode,
+        phone: { code: authStore.phone!.code, phone: authStore.phone!.phone },
+        code: authStore.sms,
         loginType: 1,
         token,
       },
     })
-
-    const response = data.value
-
-    if (response?.success) {
+    
+    if (response.success) {
       authStore.smsError2 = ""
       authStore.smsButtonContent = "Успешно"
-      authStore.smsButtonDisabled = false
-      authStore.smsStep = false
       if (response.token) {
         await userStore.saveToken(response.token)
-        await userStore.loadToken()
         await userStore.fetchUser()
       }
       authModalStore.close()
     } else {
-      const errorMsg =
-        typeof response?.error === "object" && response.error?.code
-          ? response.error.code
-          : "Неверный код или ошибка сервера"
-      authStore.smsError2 = errorMsg
+      authStore.smsError2 = typeof response.error === 'object' ? response.error?.code : "Неверный код"
       authStore.smsButtonContent = "Попробовать снова"
-      authStore.smsButtonDisabled = false
     }
   } catch (err) {
-    console.error("SMS verification error:", err)
     authStore.smsError2 = "Ошибка сети или сервера"
     authStore.smsButtonContent = "Попробовать снова"
   } finally {
@@ -385,50 +344,36 @@ const handleRegSmsClick = async (): Promise<void> => {
 
   authStore.smsButtonDisabled = true
   authStore.smsButtonContent = "Регистрация..."
-
+  
   try {
     const token = await userStore.loadToken()
-    const { data } = await useFetch<LoginResponse>("https://back.casaalmare.com/api/login", {
+    const response = await $fetch<LoginResponse>("https://back.casaalmare.com/api/login", {
       method: "POST",
       body: {
-        email,
-        firstname: name,
-        lastname: surname,
-        phone: {
-          code,
-          phone,
-        },
-        code: smsCode,
+        email: authStore.emailReg,
+        firstname: authStore.name,
+        lastname: authStore.surname,
+        phone: { code: authStore.phoneReg!.code, phone: authStore.phoneReg!.phone },
+        code: authStore.sms,
         loginType: 2,
         token,
       },
     })
-
-    const response = data.value
-
-    if (response?.success) {
+    
+    if (response.success) {
       authStore.regError = ""
-      authStore.smsButtonContent = "Успешно"
-      authStore.regStep = false
       if (response.token) {
         await userStore.saveToken(response.token)
-        await userStore.loadToken()
         await userStore.fetchUser()
       }
       authStore.type = "Авторизация"
       authModalStore.close()
     } else {
-      const errorMsg =
-        typeof response?.error === "object" && response.error?.code
-          ? response.error.code
-          : "Неверный код или ошибка сервера"
-      authStore.regError = errorMsg
+      authStore.regError = typeof response.error === 'object' ? response.error?.code : "Ошибка регистрации"
       authStore.smsButtonContent = "Попробовать снова"
     }
   } catch (err) {
-    console.error("Registration error:", err)
-    authStore.regError = "Ошибка сети или сервера"
-    authStore.smsButtonContent = "Попробовать снова"
+    authStore.regError = "Ошибка сети"
   } finally {
     authStore.smsButtonDisabled = false
   }
@@ -458,28 +403,23 @@ const handleResetPassword = async (): Promise<void> => {
 
   authStore.resetButtonDisabled = true
   authStore.resetButtonContent = "Отправка..."
-
+  
   try {
-    const { data } = await useFetch<ResetPasswordResponse>("https://back.casaalmare.com/api/resetPassword", {
+    const response = await $fetch<ResetPasswordResponse>("https://back.casaalmare.com/api/resetPassword", {
       method: "POST",
-      body: {
-        email,
-      },
+      body: { email: authStore.resetEmail },
     })
-
-    if (data.value?.success) {
+    
+    if (response.success) {
       authStore.resetError = ""
-      authStore.resetButtonContent = "Письмо отправлено"
       authStore.type = "Успех восстановления"
     } else {
-      authStore.resetError = data.value?.error ?? "Неизвестная ошибка"
+      authStore.resetError = response.error ?? "Неизвестная ошибка"
       authStore.resetButtonContent = "Попробовать снова"
       authStore.resetButtonDisabled = false
     }
   } catch (error) {
-    console.error("Reset password error:", error)
-    authStore.resetError = "Ошибка сети или сервера"
-    authStore.resetButtonContent = "Попробовать снова"
+    authStore.resetError = "Ошибка сети"
     authStore.resetButtonDisabled = false
   }
 }
@@ -686,7 +626,7 @@ useSmsAutoSubmit(
               v-if="remainingSeconds > 0"
               class="font-[Manrope] text-xs font-light text-[#211D1D] mt-8 self-center text-center"
             >
-              Запросить код повторно <br />
+              Запросить код повторно <br >
               можно через <span class="font-normal">{{ remainingSeconds }} секунд</span>
             </span>
             <span
@@ -894,7 +834,7 @@ useSmsAutoSubmit(
               v-if="remainingSeconds > 0"
               class="font-[Manrope] text-xs font-light text-[#211D1D] mt-8 self-center text-center"
             >
-              Запросить код повторно <br />
+              Запросить код повторно <br >
               можно через <span class="font-normal">{{ remainingSeconds }} секунд</span>
             </span>
             <span

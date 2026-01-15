@@ -175,13 +175,6 @@ onMounted(async () => {
   await nextTick()
   await orderStore.refreshCityForUI()
   await nextTick()
-
-  if (cityRef.value) {
-    if (orderStore.city && orderStore.city.label) {
-    } else {
-      cityRef.value.clear()
-    }
-  }
 })
 
 async function handlePay(): Promise<void> {

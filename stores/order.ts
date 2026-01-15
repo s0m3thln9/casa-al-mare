@@ -294,7 +294,6 @@ export const useOrderStore = defineStore("order", () => {
       })
       
       if (error.value) {
-        console.error("Network error loading loyalty:", error.value)
         return
       }
       
@@ -316,7 +315,7 @@ export const useOrderStore = defineStore("order", () => {
         }
       }
 
-      if (userStore.user?.profile.extended.addresses && Array.isArray(userStore.user.profile.extended.addresses)) {
+      if (userStore.user?.profile && userStore.user?.profile.extended && userStore.user?.profile.extended.addresses && Array.isArray(userStore.user.profile.extended.addresses)) {
         const extendedAddresses = userStore.user.profile.extended.addresses
           .filter((addr) => Array.isArray(addr) && addr[0]?.trim())
           .map((addr) => {
@@ -372,7 +371,7 @@ export const useOrderStore = defineStore("order", () => {
           updateDeliveryType(4, data.pvz.term, data.pvz.price)
         }
 
-        isMoscow.value = city.value.name.toLowerCase().includes("москва")
+        isMoscow.value = city.value.name ? city.value.name.toLowerCase().includes("москва") : false
         if (!isMoscow.value) {
           deliveryTypes.value = deliveryTypes.value.filter((type) => type.id !== 3)
         }
@@ -765,128 +764,48 @@ export const useOrderStore = defineStore("order", () => {
     const result = Math.max(price, 0.01)
     return result
   })
+  
+  const findItem = (keyOrId: string): CartItem | undefined => {
+    return cartItems.value.find((i) => i.key === keyOrId || i.id === Number(keyOrId))
+  }
 
+  async function updateCartApi(key: string, change: number) {
+    const token = await userStore.loadToken()
+    if (!token) return
+    
+    try {
+      const response = await $fetch<UpdateCartResponse>("https://back.casaalmare.com/api/updateCart", {
+        method: "POST",
+        body: { token, key, change },
+      })
+      
+      if (response.success && response.cart) {
+        const parsedCart = parseCart(response.cart)
+        setCartItems(parsedCart)
+      } else {
+        console.error("Server error updating cart:", response.error)
+      }
+    } catch (err: any) {
+      console.error("Network or execution error:", err.data || err.message)
+    }
+  }
+  
   async function decrementQuantity(keyOrId: string) {
-    let item: CartItem | undefined
-    if (cartItems.value.some((i) => i.key === keyOrId)) {
-      item = cartItems.value.find((i) => i.key === keyOrId)
-    } else {
-      item = cartItems.value.find((i) => i.id === Number(keyOrId))
-    }
-    if (!item || item.count <= 1) return
-
-    const token = await userStore.loadToken()
-    if (!token) return
-
-    const key = item.key
-
-    try {
-      const { data, error } = await useFetch<UpdateCartResponse>("https://back.casaalmare.com/api/updateCart", {
-        method: "POST",
-        body: {
-          token,
-          key,
-          change: -1,
-        },
-      })
-
-      if (error.value) {
-        console.error("Network error updating cart:", error.value)
-        return
-      }
-
-      if (data.value?.success && data.value?.cart) {
-        const rawCart = data.value.cart
-        const parsedCart = parseCart(rawCart)
-        setCartItems(parsedCart)
-      } else {
-        console.error("Server error updating cart:", data.value?.error)
-      }
-    } catch (error) {
-      console.error("Ошибка изменения количества:", error)
-    }
+    const item = findItem(keyOrId);
+    if (!item || item.count <= 1) return;
+    await updateCartApi(item.key, -1);
   }
-
+  
   async function incrementQuantity(keyOrId: string) {
-    let item: CartItem | undefined
-    if (cartItems.value.some((i) => i.key === keyOrId)) {
-      item = cartItems.value.find((i) => i.key === keyOrId)
-    } else {
-      item = cartItems.value.find((i) => i.id === Number(keyOrId))
-    }
-    if (!item) return
-
-    const token = await userStore.loadToken()
-    if (!token) return
-
-    const key = item.key
-
-    try {
-      const { data, error } = await useFetch<UpdateCartResponse>("https://back.casaalmare.com/api/updateCart", {
-        method: "POST",
-        body: {
-          token,
-          key,
-          change: 1,
-        },
-      })
-
-      if (error.value) {
-        console.error("Network error updating cart:", error.value)
-        return
-      }
-
-      if (data.value?.success && data.value?.cart) {
-        const rawCart = data.value.cart
-        const parsedCart = parseCart(rawCart)
-        setCartItems(parsedCart)
-      } else {
-        console.error("Server error updating cart:", data.value?.error)
-      }
-    } catch (error) {
-      console.error("Ошибка изменения количества:", error)
-    }
+    const item = findItem(keyOrId);
+    if (!item) return;
+    await updateCartApi(item.key, 1);
   }
-
+  
   async function removeItemFromCart(keyOrId: string) {
-    let item: CartItem | undefined
-    if (cartItems.value.some((i) => i.key === keyOrId)) {
-      item = cartItems.value.find((i) => i.key === keyOrId)
-    } else {
-      item = cartItems.value.find((i) => i.id === Number(keyOrId))
-    }
-    if (!item) return
-
-    const token = await userStore.loadToken()
-    if (!token) return
-
-    const key = item.key
-
-    try {
-      const { data, error } = await useFetch<UpdateCartResponse>("https://back.casaalmare.com/api/updateCart", {
-        method: "POST",
-        body: {
-          token,
-          key,
-          change: -item.count,
-        },
-      })
-
-      if (error.value) {
-        console.error("Network error removing item:", error.value)
-        return
-      }
-
-      if (data.value?.success && data.value?.cart) {
-        const rawCart = data.value.cart
-        const parsedCart = parseCart(rawCart)
-        setCartItems(parsedCart)
-      } else {
-        console.error("Server error removing item:", data.value?.error)
-      }
-    } catch (error) {
-      console.error("Ошибка удаления товара:", error)
-    }
+    const item = findItem(keyOrId);
+    if (!item) return;
+    await updateCartApi(item.key, -item.count);
   }
 
   function setCartItems(items: CartItem[] | null | undefined) {
@@ -1314,7 +1233,7 @@ export const useOrderStore = defineStore("order", () => {
       }
     }
 
-    if (userStore?.user?.profile.extended.addresses && Array.isArray(userStore.user.profile.extended.addresses)) {
+    if (userStore?.user?.profile && userStore?.user?.profile.extended && userStore?.user?.profile.extended.addresses && Array.isArray(userStore.user.profile.extended.addresses)) {
       const extendedAddresses = userStore.user.profile.extended.addresses
         .filter((addr) => Array.isArray(addr) && addr[0]?.trim())
         .map((addr) => {

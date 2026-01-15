@@ -46,7 +46,7 @@ onMounted(async () => {
   }
 })
 
-const { data } = await useFetch<VideoData>("https://back.casaalmare.com/api/getMainVideo")
+const data = await $fetch<VideoData>("https://back.casaalmare.com/api/getMainVideo")
 const images = {
   promo1: "/2_camp.webp",
   promo2: "/1_camp.webp",

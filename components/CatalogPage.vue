@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { computed, onMounted } from "vue"
-
 interface VideoSource {
   mp4: string
   ogv: string
@@ -26,7 +24,6 @@ const catalogStore = useCatalogStore()
 const viewport = useViewport()
 const isMobile = computed(() => viewport.isLessThan("sm"))
 
-// Получаем path из параметров роута
 const currentPath = computed(() =>
   Array.isArray(route.params.path) ? route.params.path.join('/') : (route.params.path || '')
 )
@@ -57,15 +54,13 @@ const isAnyFilterActive = computed(() => {
   )
 })
 
-const { data: videoData } = await useFetch<VideoAPIItem[]>("https://back.casaalmare.com/api/getVideoByID?id=3", {
-  immediate: true,
-  transform: (response) => {
-    if (!response || !Array.isArray(response) || response.length === 0) {
-      return []
-    }
-    return response.slice(0, 2)
-  },
-})
+const { data: videoData } = await useAsyncData('catalog-videos', () =>
+  $fetch<VideoAPIItem[]>("https://back.casaalmare.com/api/getVideoByID", {
+    method: "GET",
+    params: { id: 3 },
+  }).then(response => Array.isArray(response) ? response.slice(0, 2) : [])
+    .catch(() => [])
+)
 
 const videoData1 = computed<VideoData | null>(() => {
   const item = videoData.value?.[0]
@@ -172,6 +167,7 @@ const loadMoreTrigger = ref<HTMLElement | null>(null)
 const setupInfiniteScroll = () => {
   if (loadMoreObserver.value) {
     loadMoreObserver.value.disconnect()
+    loadMoreObserver.value = null
   }
   
   loadMoreObserver.value = new IntersectionObserver(
@@ -194,12 +190,15 @@ const setupInfiniteScroll = () => {
 }
 
 onMounted(async () => {
-  await catalogStore.loadItems()
-  applyFiltersFromPath(currentPath.value, route.query)
+  await Promise.all([
+    catalogStore.loadItems(),
+    !docsStore.tree ? docsStore.fetchTree() : Promise.resolve()
+  ])
   
+  applyFiltersFromPath(currentPath.value, route.query)
   catalogStore.shouldResetCount = false
   
-  nextTick(() => {
+  void nextTick(() => {
     if (scrollPosition.value > 0) {
       window.scrollTo(0, scrollPosition.value)
     }
@@ -325,32 +324,20 @@ const hasMoreItems = computed(() => {
 
 const docsStore = useDocsStore()
 
-onMounted(async () => {
-  if (!docsStore.tree) {
-    await docsStore.fetchTree()
-  }
-})
-
-// Функция для получения данных категории по пути
 const getCurrentCategoryData = computed(() => {
-  if (!docsStore.tree?.data?.catalog?.subitems) {
-    return null
-  }
+  const catalogData = docsStore.tree?.data?.catalog
+  if (!catalogData?.subitems) return null
   
-  const pathValue = currentPath.value
-  if (!pathValue || pathValue.trim() === "") {
-    // Если путь пустой, возвращаем данные корневого каталога
-    return docsStore.tree.data.catalog
-  }
+  const pathValue = currentPath.value?.trim()
+  if (!pathValue) return catalogData
   
   const segments = pathValue
     .replace(/^\/+|\/+$/g, "")
     .split("/")
     .filter((p) => p.trim() !== "")
   
-  let current: any = docsStore.tree.data.catalog.subitems
+  let current: any = catalogData.subitems
   
-  // Проходим по сегментам пути и ищем соответствующую категорию
   for (const segment of segments) {
     if (current && current[segment]) {
       current = current[segment]
@@ -358,14 +345,11 @@ const getCurrentCategoryData = computed(() => {
       return null
     }
     
-    // Если есть следующий уровень, переходим в subitems
     if (current.subitems) {
       current = current.subitems
     }
   }
-  
-  // Возвращаем последний найденный объект категории
-  // Нужно вернуться на один уровень назад, так как мы перешли в subitems
+
   const lastSegment = segments[segments.length - 1]
   let result: any = docsStore.tree.data.catalog.subitems
   
@@ -376,7 +360,6 @@ const getCurrentCategoryData = computed(() => {
   return result[lastSegment]
 })
 
-// Динамические мета-теги на основе текущей категории
 const pageTitle = computed(() => {
   const categoryData = getCurrentCategoryData.value
   return categoryData?.pagetitle || docsStore.tree?.data?.catalog?.pagetitle || "Каталог"
