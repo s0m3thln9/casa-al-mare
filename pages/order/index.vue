@@ -1275,10 +1275,10 @@ useSmsAutoSubmit(
         </div>
         <div
           v-if="authStore.isAuth"
-          class="sm:hidden p-4 pb-6 flex flex-col gap-6 w-full max-w-[652px] rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
+          class="sm:hidden p-4 flex flex-col gap-6 w-full max-w-[652px] rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
         >
           <template v-if="orderStore.isPaymentSuccessful === null">
-            <div class="flex flex-col gap-4">
+            <div class="flex flex-col" :class="orderStore.isExpandedPoints ? 'gap-4' : ''">
               <div
                 class="flex items-center justify-between cursor-pointer"
                 @click="orderStore.togglePoints"
@@ -1325,10 +1325,10 @@ useSmsAutoSubmit(
         </div>
         <div
           v-if="authStore.isAuth"
-          class="sm:hidden p-4 pb-6 flex flex-col gap-6 w-full max-w-[652px] rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
+          class="sm:hidden p-4 flex flex-col gap-6 w-full max-w-[652px] rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
         >
           <template v-if="orderStore.isPaymentSuccessful === null">
-            <div class="flex flex-col gap-4">
+            <div class="flex flex-col" :class="orderStore.isExpandedCert ? 'gap-4' : ''">
               <div
                 class="flex items-center justify-between cursor-pointer"
                 @click="orderStore.toggleCert"
