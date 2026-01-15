@@ -24,13 +24,44 @@ const emit = defineEmits<{
 }>()
 
 const visible = ref(false)
+const tooltipRef = ref<HTMLElement | null>(null)
+const containerRef = ref<HTMLElement | null>(null)
 let hideTimer: ReturnType<typeof setTimeout> | null = null
+
+// Функция для прокрутки к тултипу на мобильных устройствах
+const scrollToTooltip = () => {
+  if (!tooltipRef.value || !containerRef.value) return
+  
+  const isMobile = window.innerWidth < 640 // sm breakpoint
+  if (!isMobile) return
+  
+  // Небольшая задержка для рендеринга тултипа
+  setTimeout(() => {
+    const tooltip = tooltipRef.value
+    const rect = tooltip?.getBoundingClientRect()
+    
+    if (rect) {
+      const isOutOfView = rect.top < 0 || rect.bottom > window.innerHeight
+      
+      if (isOutOfView) {
+        // Прокручиваем к тултипу с отступом
+        const scrollOffset = window.pageYOffset + rect.top - 100
+        window.scrollTo({
+          top: scrollOffset,
+          behavior: 'smooth'
+        })
+      }
+    }
+  }, 100)
+}
 
 watch(
   () => props.show,
   (val) => {
     if (val) {
       visible.value = true
+      scrollToTooltip()
+      
       if (props.autoHide) {
         if (hideTimer) clearTimeout(hideTimer)
         hideTimer = setTimeout(() => {
@@ -47,12 +78,22 @@ watch(
     }
   },
 )
+
+onBeforeUnmount(() => {
+  if (hideTimer) {
+    clearTimeout(hideTimer)
+  }
+})
 </script>
 
 <template>
-  <div class="relative flex items-center">
+  <div
+    ref="containerRef"
+    class="relative flex items-center"
+  >
     <slot />
     <div
+      ref="tooltipRef"
       :class="[
         'pointer-events-none absolute z-50 flex items-center gap-4 px-4 py-2 font-[Rubik] text-sm leading-[1] rounded-lg w-full max-w-2xs sm:max-w-xs break-words transition-opacity duration-200',
         'before:content-[\'\'] before:absolute before:border-solid',
