@@ -483,7 +483,7 @@ async function handleRetryPay(): Promise<void> {
           </p>
           <p class="font-[Manrope] text-sm text-[#211D1D] font-light">
             В случае возникновения вопросов свяжитесь с нами, пожалуйста, написав на почту clients@casaalmare.com или по
-            телефону +7 (495) 004-04-94
+            телефону <a href="tel:+74950040494">+7 (495) 004-04-94</a>
           </p>
         </div>
         <div v-else>
