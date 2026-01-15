@@ -101,7 +101,7 @@ const breadcrumsItems = computed(() => [
       v-for="item in randomOtherArticles"
       :key="item.id"
       :text="item.pagetitle"
-      custom-class="rounded-lg aspect-[618/570] min-w-[300px]"
+      custom-class="rounded-lg aspect-[618/570] max-w-[33%]"
       :link="`/blog/${item.alias}`"
       :image-url="item.image"
     />
