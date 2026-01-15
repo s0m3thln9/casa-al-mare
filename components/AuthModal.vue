@@ -468,10 +468,10 @@ useSmsAutoSubmit(
           class="p-2 cursor-pointer"
           @click="authModalStore.close"
         >
-          <NuxtImg
+          <img
             src="/x.svg"
             width="24"
-          />
+          >
         </button>
       </div>
       <div class="px-6 pb-6 flex flex-col items-stretch">
