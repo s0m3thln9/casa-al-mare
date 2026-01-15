@@ -146,52 +146,75 @@ const handleOrdersClick = () => {
           </li>
         </ul>
       </div>
-      <div class="flex flex-col gap-4 w-full mt-4 lg:w-auto lg:mt-0">
-        <h3 class="font-normal text-base uppercase">Аккаунт</h3>
-        <div class="flex flex-col items-start gap-4 xl:flex-row">
-          <AppTooltip
-            text="Это поле обязательно для заполнения"
-            type="error"
-            :show="emailFooterRef?.showError"
-          >
-            <AppInput
-              id="email"
-              ref="emailFooterRef"
-              v-model="email"
-              label="Введите e-mail для получения новостей"
-              type="email"
-              custom-class="min-w-[245px]"
-              required
-            />
-          </AppTooltip>
-          <AppButton
-            :content="buttonStateFooter.content"
-            :is-loading="buttonStateFooter.isLoading"
-            :show-success="buttonStateFooter.showSuccess"
-            variant="primary"
-            custom-class="w-full px-0 max-xl:w-[245px]"
-            @click="handleSubscribeFooter"
-          />
-        </div>
-        <p class="max-w-[300px] text-[10px] font-[Commissioner] xl:max-w-[416px]">
-          Нажимая на кнопку «Подписаться», я соглашаюсь на обработку моих персональных данных и ознакомлен(а) с
-          условиями конфиденциальности.
-        </p>
-        <span class="text-xs"
-          ><NuxtLink
-            class="underline"
-            to="/info/confidence"
-            >Политика конфиденциальности</NuxtLink
-          >
+      <div class="flex flex-col gap-1">
+        <img
+          src="/logo-3.svg"
+          alt="CASA AL MARE"
+          width="156"
+          height="174"
+          class="self-center"
+        >
+        <span class="text-xs text-[#BBB8B6]"
+        ><NuxtLink
+          class="hover:underline"
+          to="/info/confidence"
+        >Политика конфиденциальности</NuxtLink
+        >
           и
           <NuxtLink
-            class="underline"
+            class="hover:underline"
             to="/info/oferta"
-            >оферта</NuxtLink
+          >оферта</NuxtLink
           ></span
         >
-        <span class="text-xs">CASA AL MARE © 2025</span>
+        <span class="text-xs text-[#BBB8B6]">CASA AL MARE © 2025</span>
       </div>
+<!--      <div class="flex flex-col gap-4 w-full mt-4 lg:w-auto lg:mt-0">-->
+<!--        <h3 class="font-normal text-base uppercase">Аккаунт</h3>-->
+<!--        <div class="flex flex-col items-start gap-4 xl:flex-row">-->
+<!--          <AppTooltip-->
+<!--            text="Это поле обязательно для заполнения"-->
+<!--            type="error"-->
+<!--            :show="emailFooterRef?.showError"-->
+<!--          >-->
+<!--            <AppInput-->
+<!--              id="email"-->
+<!--              ref="emailFooterRef"-->
+<!--              v-model="email"-->
+<!--              label="Введите e-mail для получения новостей"-->
+<!--              type="email"-->
+<!--              custom-class="min-w-[245px]"-->
+<!--              required-->
+<!--            />-->
+<!--          </AppTooltip>-->
+<!--          <AppButton-->
+<!--            :content="buttonStateFooter.content"-->
+<!--            :is-loading="buttonStateFooter.isLoading"-->
+<!--            :show-success="buttonStateFooter.showSuccess"-->
+<!--            variant="primary"-->
+<!--            custom-class="w-full px-0 max-xl:w-[245px]"-->
+<!--            @click="handleSubscribeFooter"-->
+<!--          />-->
+<!--        </div>-->
+<!--        <p class="max-w-[300px] text-[10px] font-[Commissioner] xl:max-w-[416px]">-->
+<!--          Нажимая на кнопку «Подписаться», я соглашаюсь на обработку моих персональных данных и ознакомлен(а) с-->
+<!--          условиями конфиденциальности.-->
+<!--        </p>-->
+<!--        <span class="text-xs"-->
+<!--          ><NuxtLink-->
+<!--            class="underline"-->
+<!--            to="/info/confidence"-->
+<!--            >Политика конфиденциальности</NuxtLink-->
+<!--          >-->
+<!--          и-->
+<!--          <NuxtLink-->
+<!--            class="underline"-->
+<!--            to="/info/oferta"-->
+<!--            >оферта</NuxtLink-->
+<!--          ></span-->
+<!--        >-->
+<!--        <span class="text-xs">CASA AL MARE © 2025</span>-->
+<!--      </div>-->
     </div>
     <div class="flex flex-col items-center gap-12 sm:hidden">
       <div class="w-full flex flex-col gap-2">
@@ -222,13 +245,13 @@ const handleOrdersClick = () => {
               Telegram
             </button>
           </a>
-          <button
-            aria-label="Рассылка"
-            class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]"
-            @click="popupStore.open('subscription')"
-          >
-            Рассылка
-          </button>
+<!--          <button-->
+<!--            aria-label="Рассылка"-->
+<!--            class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]"-->
+<!--            @click="popupStore.open('subscription')"-->
+<!--          >-->
+<!--            Рассылка-->
+<!--          </button>-->
         </div>
         <button
           aria-label="Обратная связь"
