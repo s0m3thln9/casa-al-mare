@@ -11,6 +11,7 @@ const props = defineProps<{
     finalPrice: number
     deliveryCost: number
     usedCertificates: Record<string, number>
+    points: number
     items?: {
       id: number
       alias?: string
@@ -191,6 +192,12 @@ const formatDate = (timestamp: number): string => {
         >
         <span class="text-xs font-light"
           >Сумма заказа: <span class="font-normal">{{ priceFormatter(state.finalPrice) }}</span></span
+        >
+        <span class="text-xs font-light"
+        >Оплачено баллами:
+          <span class="font-normal">{{
+              priceFormatter(state.points)
+                                    }}</span></span
         >
         <span class="text-xs font-light"
           >Оплачено сертификатом:

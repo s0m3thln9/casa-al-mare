@@ -533,6 +533,7 @@ class="text-sm"
               finalPrice: order.order.orderCost || 0,
               deliveryCost: order.order.deliveryCost || 0,
               usedCertificates: order.order.used_certificates || [],
+              points: order.order.points || 0,
               items: Object.values(order.cart).map((item) => ({
                 id: item.id,
                 alias: item.alias,
