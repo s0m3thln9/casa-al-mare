@@ -1395,6 +1395,8 @@ export const useOrderStore = defineStore("order", () => {
     commentForCourier,
     currentAddress,
     deliveryMethod,
+    togglePoints2,
+    isExpandedPoints2,
     newAddressFirstLine,
     newAddressSecondLine,
     showErrorDeliveryMethod,
