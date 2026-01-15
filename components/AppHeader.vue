@@ -104,8 +104,8 @@ const handleMenuButtonClick = () => {
             >Избранное
             <span
               v-if="favoritesCount > 0"
-              class="absolute top-0 -right-2 text-[#211D1D] text-[10px]"
-              :class="favoritesCount > 9 && '-right-2.5'"
+              class="absolute top-0 -right-1.5 text-[#211D1D] text-[9px]"
+              :class="favoritesCount > 9 && '-right-2'"
             >
               {{ badgeText(favoritesCount) }}
             </span>
@@ -115,8 +115,8 @@ const handleMenuButtonClick = () => {
           <NuxtLink to="/order">Корзина</NuxtLink>
           <span
             v-if="cartCount > 0"
-            class="absolute top-0 -right-2 text-[#211D1D] text-[10px]"
-            :class="cartCount > 9 && '-right-2.5'"
+            class="absolute top-0 -right-1.5 text-[#211D1D] text-[9px]"
+            :class="cartCount > 9 && '-right-2'"
           >
             {{ badgeText(cartCount) }}
           </span>
