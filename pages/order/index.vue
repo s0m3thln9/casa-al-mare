@@ -386,6 +386,10 @@ async function handleSave(): Promise<void> {
   await orderStore.saveNewAddress()
 }
 
+const hasNonCertificateItems = computed(() => {
+  return orderStore.cartItems.some(item => item.id !== -1)
+})
+
 async function handleGuestAuth(): Promise<void> {
   const inputs = [nameRef.value, surnameRef.value, phoneRef.value, emailRef.value]
   const isValid = inputs.every((input): input is NonNullable<typeof input> => input?.validate?.() ?? false)
@@ -1274,7 +1278,7 @@ useSmsAutoSubmit(
           </template>
         </div>
         <div
-          v-if="authStore.isAuth"
+          v-if="authStore.isAuth && hasNonCertificateItems"
           class="sm:hidden p-4 flex flex-col gap-6 w-full max-w-[652px] rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
         >
           <template v-if="orderStore.isPaymentSuccessful === null">
@@ -1324,7 +1328,7 @@ useSmsAutoSubmit(
           </template>
         </div>
         <div
-          v-if="authStore.isAuth"
+          v-if="authStore.isAuth && hasNonCertificateItems"
           class="sm:hidden p-4 flex flex-col gap-6 w-full max-w-[652px] rounded-2xl border-[0.7px] border-[#BBB8B6] h-fit"
         >
           <template v-if="orderStore.isPaymentSuccessful === null">
@@ -1543,7 +1547,7 @@ useSmsAutoSubmit(
                   </div>
                 </div>
                 <div
-                  v-if="authStore.isAuth"
+                  v-if="authStore.isAuth && hasNonCertificateItems"
                   class="flex flex-col gap-4"
                 >
                   <div
@@ -1589,7 +1593,7 @@ useSmsAutoSubmit(
                   </div>
                 </div>
                 <div
-                  v-if="authStore.isAuth"
+                  v-if="authStore.isAuth && hasNonCertificateItems"
                   class="flex flex-col gap-4"
                 >
                   <div
