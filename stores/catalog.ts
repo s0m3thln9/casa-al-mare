@@ -88,7 +88,7 @@ export const useCatalogStore = defineStore("catalog", () => {
   const mobileStrokeCardCount = ref("2")
   const currentVisibleCardCount = ref(12)
   const items = ref<Item[]>([])
-  const isLoading = ref(true)
+  const isLoading = ref(false)
   const pendingFilters = ref<SortAndFilter>({
     parentsAliases: [],
     secondLevelAliases: [], // ДОБАВИТЬ эту строку

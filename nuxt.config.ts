@@ -2,16 +2,68 @@
 export default defineNuxtConfig({
   compatibilityDate: "2025-05-15",
   modules: ["@nuxt/eslint", "@nuxt/fonts", "@nuxt/image", "@nuxtjs/tailwindcss", "@pinia/nuxt", "nuxt-viewport"],
+
+  hooks: {
+    'nitro:config': async (nitroConfig) => {
+      try {
+        console.log('Fetching routes from API for prerendering...');
+        
+        const response = await fetch('https://back.casaalmare.com/api/getNuxtLinks');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const links = await response.json();
+        console.log('Links received from API:', links);
+        
+        // Инициализируем routes как массив, если он еще не существует
+        nitroConfig.prerender = nitroConfig.prerender || {};
+        nitroConfig.prerender.routes = nitroConfig.prerender.routes || [];
+        
+        // Если API возвращает массив, добавляем все пути
+        if (Array.isArray(links)) {
+          const allRoutes = links.includes('/') ? links : ['/', ...links];
+          allRoutes.forEach(link => {
+            const cleanLink = link.startsWith('/') ? link : `/${link}`;
+            if (!nitroConfig.prerender.routes.includes(cleanLink)) {
+              nitroConfig.prerender.routes.push(cleanLink);
+            }
+          });
+        } else if (links && typeof links === 'object') {
+          // Если API возвращает объект, возможно нужно извлечь пути
+          // Например: { pages: ['/about', '/contact'] }
+          // Адаптируйте этот блок под структуру вашего API
+          console.warn('API returned object, not array. Structure:', links);
+          
+          // Добавляем корневой путь
+          if (!nitroConfig.prerender.routes.includes('/')) {
+            nitroConfig.prerender.routes.push('/');
+          }
+        }
+        
+        console.log('Final prerender routes:', nitroConfig.prerender.routes);
+      } catch (error) {
+        console.error('Failed to fetch links for prerendering:', error);
+        // Гарантируем, что есть хотя бы корневой путь
+        nitroConfig.prerender = nitroConfig.prerender || {};
+        nitroConfig.prerender.routes = ['/'];
+      }
+    }
+  },
+
   fonts: {
     defaults: {
       weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
     },
   },
+
   nitro: {
     externals: {
       inline: ['vue']
     }
   },
+
   viewport: {
     breakpoints: {
       xs: 320,
@@ -22,6 +74,7 @@ export default defineNuxtConfig({
       "2xl": 1536,
     },
   },
+
   app: {
     head: {
       script: [
