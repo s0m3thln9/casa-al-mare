@@ -290,7 +290,9 @@ async function handlePay(): Promise<void> {
   orderStore.isLoadingPayment = true
 
   try {
+    console.log("before")
     const paymentData = await orderStore.getPaymentData()
+    console.log("after")
     if (!paymentData || !paymentData.success) {
       console.error("Ошибка получения данных для оплаты")
       orderStore.isLoadingPayment = false
@@ -621,7 +623,10 @@ useSmsAutoSubmit(
                   class="flex items-center gap-2"
                 >
                   <img
-                    :src="(item?.images ? item?.images[0] : '') || ''"
+                    :src="(item.certificateType === 'Физический' ?
+                      '/cert.jpg' :
+                      item?.images ?
+                      item?.images[0] : '') || ''"
                     alt="order-img"
                     width="57"
                     height="72"
@@ -712,7 +717,10 @@ useSmsAutoSubmit(
                       class="flex items-center gap-2"
                     >
                       <img
-                        :src="(item?.images ? item?.images[0] : '') || ''"
+                        :src="(item.certificateType === 'Физический' ?
+                      '/cert.jpg' :
+                      item?.images ?
+                      item?.images[0] : '') || ''"
                         alt="order-img"
                         width="57"
                         height="72"
@@ -1122,7 +1130,6 @@ useSmsAutoSubmit(
                 :text="orderStore.errorDeliveryMethod ? orderStore.errorDeliveryMethod : 'Выберите способ доставки'"
                 type="error"
                 :show="orderStore.showErrorDeliveryMethod"
-                position="lefttop"
                 @update:show="(value) => (orderStore.showErrorDeliveryMethod = value)"
               >
                 <div class="relative flex flex-col gap-6 w-full">
@@ -1316,7 +1323,7 @@ useSmsAutoSubmit(
                   class="font-light text-[13px] text-[#E57979]"
                 >{{ orderStore.pointsInputError }}</span>
                 <AppCheckbox
-                  v-if="orderStore.pointsBenefit && !orderStore.pointsInputError"
+                  v-if="(orderStore.pointsBenefit || orderStore.pointsToUse > 0) && !orderStore.pointsInputError"
                   v-model="orderStore.pointsCheckboxValue"
                   size="S"
                   value="apply"
@@ -1473,7 +1480,10 @@ useSmsAutoSubmit(
                     class="flex items-center gap-2"
                   >
                     <img
-                      :src="(item?.images ? item?.images[0] : '') || ''"
+                      :src="(item.certificateType === 'Физический' ?
+                      '/cert.jpg' :
+                      item?.images ?
+                      item?.images[0] : '') || ''"
                       alt="order-img"
                       width="57"
                       height="72"
@@ -1583,7 +1593,7 @@ useSmsAutoSubmit(
                       class="font-light text-[13px] text-[#E57979]"
                     >{{ orderStore.pointsInputError }}</span>
                     <AppCheckbox
-                      v-if="orderStore.pointsBenefit && !orderStore.pointsInputError"
+                      v-if="(orderStore.pointsBenefit || orderStore.pointsToUse > 0) && !orderStore.pointsInputError"
                       v-model="orderStore.pointsCheckboxValue"
                       size="S"
                       value="apply"

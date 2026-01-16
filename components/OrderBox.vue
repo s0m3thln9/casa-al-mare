@@ -26,6 +26,9 @@ const props = defineProps<{
       recipientName?: string | null
       deliveryDetails?: string | null
       certificateType?: string | null
+      deliveryMethod?: string | null
+      recipientEmail?: string | null
+      recipientPhone?: string | null
     }[]
   }
 }>()
@@ -122,8 +125,10 @@ const formatDate = (timestamp: number): string => {
         >
           <div class="flex items-center gap-2">
             <img
-              v-if="item?.images && item.images.length > 0"
-              :src="item.images[0]"
+              v-if="(item?.images && item.images.length > 0) ||
+              item.certificateType === 'Физический'"
+              :src="item.certificateType === 'Физический' ? '/cert.jpg' :
+              item.images[0]"
               alt="order-img"
               width="57"
               height="72"
@@ -141,8 +146,19 @@ const formatDate = (timestamp: number): string => {
                   Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
                 </template>
                 <template v-else-if="!item.isGame">
-                  Кому: {{ item.recipientName }} <span class="ml-1">Тип: {{ item.certificateType }}</span></template
-                >
+                  <div class="flex flex-col gap-1">
+                    <span>Кому: {{ item.recipientName }} <span class="ml-1">Тип: {{
+                        item.certificateType }}</span></span>
+                  <span
+v-if="item?.deliveryMethod === 'Электронной почтой' || item?.deliveryMethod ===
+                  'По SMS'">Способ
+                                                                получения: {{item.deliveryMethod}}
+                  ({{ item?.deliveryMethod === 'Электронной почтой' ?
+                      item?.recipientEmail : item?.recipientPhone.code +
+                      item?.recipientPhone.phone
+                            }})</span>
+                  </div>
+                </template>
               </span>
               <span class="text-xs text-[#414141]">
                 {{ priceFormatter(item.price) }}
@@ -183,6 +199,12 @@ const formatDate = (timestamp: number): string => {
           v-if="state.deliveryMethod"
           class="text-xs font-light"
           >Способ доставки: <span class="font-normal">{{ state.deliveryMethod }}</span></span
+        >
+        <span
+          v-if="state.recieveMethod"
+          class="text-xs font-light"
+        >Способ получения: <span class="font-normal">{{ state.recieveMethod
+                                             }} ({{ state.deliveryMethod }})</span></span
         >
         <span class="text-xs font-light"
           >Способ оплаты: <span class="font-normal">{{ state.paymentMethod }}</span></span

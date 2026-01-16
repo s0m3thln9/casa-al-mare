@@ -549,6 +549,9 @@ class="text-sm"
                 recipientName: item.options?.recipientName,
                 deliveryDetails: item.options?.deliveryDetails,
                 certificateType: item.options?.certificateType,
+                deliveryMethod: item.options?.deliveryMethod,
+                recipientEmail: item.options?.recipientEmail,
+                recipientPhone: item.options?.recipientPhone,
               })),
             }"
           />

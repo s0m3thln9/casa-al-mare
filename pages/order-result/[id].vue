@@ -229,63 +229,62 @@ onMounted(async () => {
     await navigateTo("/order")
     return
   }
-
+  
   await orderStore.loadPaymentMethods()
   await orderStore.loadUserData()
   await orderStore.loadOrderState()
   await userStore.fetchUser()
-
+  
   const token = await userStore.loadToken()
   if (!token) {
     localIsPaymentSuccessful.value = false
     orderStore.resetOrder()
     return
   }
-
+  
   try {
-    const { data, error } = await useFetch<CheckOrderStatusResponse>(
+    const data = await $fetch<CheckOrderStatusResponse>(
       "https://back.casaalmare.com/api/checkOrderStatus",
       {
         method: "POST",
         body: { token, orderId },
-      },
+      }
     )
-
-    if (error.value) {
-      console.error("Network error checking order status:", error.value)
-      localIsPaymentSuccessful.value = false
-      orderStore.resetOrder()
-      return
-    }
-
-    if (data.value) {
-      localIsPaymentSuccessful.value = data.value.status === 2
-
-      if (data.value.status === 1 || data.value.status === 2) {
+    
+    if (data) {
+      localIsPaymentSuccessful.value = data.status === 2
+      
+      if (data.status === 1 || data.status === 2) {
         orderStore.resetOrder()
       }
-
-      let cartData = data.value.cart
-      if (!cartData && data.value.order?.cart) {
-        cartData = data.value.order.cart
+      
+      let cartData = data.cart
+      if (!cartData && data.order?.cart) {
+        cartData = data.order.cart
       }
+      
       if (cartData) {
         localCartItems.value = orderStore.parseCart(cartData)
       }
-
-      if (data.value.order) {
-        loadedOrder.value = data.value.order
-        localDeliveryMethod.value = data.value.order.deliveryMethod || null
-        localCity.value = data.value.order.city || null
-        localCurrentAddress.value = normalizeAddress(data.value.order.currentAddress)
-        localCommentForCourier.value = data.value.order.commentForCourier || ""
-        localPaymentMethod.value = data.value.order.paymentMethod || null
-        localSelectedPvz.value = data.value.order.pvz || null
-        localDeliveryCost.value = data.value.order.deliveryCost || 0
-        localDeliveryTime.value = data.value.order.deliveryTime || null
-        localPointsToUse.value = data.value.order.points || 0
-        localSelectedCertificates.value = data.value.order.certificates || []
-
+      
+      if (data.order) {
+        loadedOrder.value = data.order
+        localDeliveryMethod.value = data.order.deliveryMethod || null
+        localCity.value = data.order.city || null
+        localCurrentAddress.value = normalizeAddress(
+          data.order.currentAddress
+        )
+        localCommentForCourier.value =
+          data.order.commentForCourier || ""
+        localPaymentMethod.value =
+          data.order.paymentMethod || null
+        localSelectedPvz.value = data.order.pvz || null
+        localDeliveryCost.value = data.order.deliveryCost || 0
+        localDeliveryTime.value = data.order.deliveryTime || null
+        localPointsToUse.value = data.order.points || 0
+        localSelectedCertificates.value =
+          data.order.certificates || []
+        
         updateLocalDeliveryDetails()
       } else {
         localIsPaymentSuccessful.value = false
@@ -302,11 +301,14 @@ onMounted(async () => {
   } finally {
     await userStore.fetchUser()
   }
-
+  
   if (localCartItems.value.length === 0 && loadedOrder.value) {
-    console.warn("Корзина пуста, но заказ существует - возможно, данные в order.cart")
+    console.warn(
+      "Корзина пуста, но заказ существует - возможно, данные в order.cart"
+    )
   }
 })
+
 
 watch(
   () => localPaymentMethod.value,
@@ -515,7 +517,10 @@ async function handleRetryPay(): Promise<void> {
                 class="flex items-center gap-2"
               >
                 <img
-                  :src="item.images[0] || '/placeholder.jpg'"
+                  :src="(item.certificateType === 'Физический' ?
+                      '/cert.jpg' :
+                      item?.images ?
+                      item?.images[0] : '') || ''"
                   alt="order-img"
                   width="57"
                   height="72"
@@ -596,7 +601,10 @@ async function handleRetryPay(): Promise<void> {
                 class="flex items-center gap-2"
               >
                 <img
-                  :src="item.images[0] || '/placeholder.jpg'"
+                  :src="(item.certificateType === 'Физический' ?
+                      '/cert.jpg' :
+                      item?.images ?
+                      item?.images[0] : '') || ''"
                   alt="order-img"
                   width="57"
                   height="72"

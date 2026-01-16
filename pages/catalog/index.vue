@@ -47,25 +47,25 @@ const isAnyFilterActive = computed(() => {
   )
 })
 
-const { data: videoData } = await useFetch<VideoAPIItem[]>("https://back.casaalmare.com/api/getVideoByID?id=3", {
-  immediate: true,
-  transform: (response) => {
-    if (!response || !Array.isArray(response) || response.length === 0) {
-      return []
-    }
-    return response.slice(0, 2)
-  },
+const videoData = await $fetch<VideoAPIItem[]>(
+  "https://back.casaalmare.com/api/getVideoByID?id=3"
+).then((response) => {
+  if (!Array.isArray(response) || response.length === 0) {
+    return []
+  }
+  return response.slice(0, 2)
 })
 
+
 const videoData1 = computed<VideoData | null>(() => {
-  const item = videoData.value?.[0]
+  const item = videoData?.[0]
   if (!item) return null
   const source: VideoSource = { mp4: item.mp4, ogv: item.ogv, webm: item.webm }
   return { pc: source, mob: source }
 })
 
 const videoData2 = computed<VideoData | null>(() => {
-  const item = videoData.value?.[1]
+  const item = videoData?.[1]
   if (!item) return null
   const source: VideoSource = { mp4: item.mp4, ogv: item.ogv, webm: item.webm }
   return { pc: source, mob: source }

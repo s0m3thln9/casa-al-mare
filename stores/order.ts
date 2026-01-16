@@ -138,6 +138,7 @@ export const useOrderStore = defineStore("order", () => {
   const authStore = useAuthStore()
 
   const cartItems = ref<CartItem[]>([])
+  const isCheckingOrderStatus = ref(false)
 
   const addresses = ref<string[]>([])
   const city = ref<CityData | null>(null)
@@ -214,26 +215,29 @@ export const useOrderStore = defineStore("order", () => {
   const deliveryTime = ref<string | null>(null)
   const deliveryCost = ref<number>(0)
   const isMoscow = ref<boolean>(false)
-
+  
   async function loadPaymentMethods() {
     try {
-      const { data, error } = await useFetch<PaymentMethodsResponse>("https://back.casaalmare.com/api/getPayments", {
-        method: "GET",
-      })
-
-      if (error.value) {
-        console.error("Network error loading payment methods:", error.value)
-        return
-      }
-
-      if (data.value?.success && data.value.data) {
-        paymentMethods.value = Object.entries(data.value.data).map(([id, name]) => ({ id, name }))
+      const data = await $fetch<PaymentMethodsResponse>(
+        "https://back.casaalmare.com/api/getPayments",
+        {
+          method: "GET",
+        }
+      )
+      
+      if (data?.success && data.data) {
+        paymentMethods.value = Object.entries(data.data).map(
+          ([id, name]) => ({ id, name })
+        )
+      } else {
+        console.error("Server error loading payment methods:", data)
       }
     } catch (error) {
-      console.error("Ошибка загрузки методов оплаты:", error)
+      console.error("Network error loading payment methods:", error)
     }
   }
-
+  
+  
   function debounce<T extends (...args: unknown[]) => unknown>(
     func: T,
     wait: number,
@@ -249,89 +253,99 @@ export const useOrderStore = defineStore("order", () => {
       }, wait)
     } as (...args: Parameters<T>) => ReturnType<T>
   }
-
+  
   async function getPaymentData(): Promise<PaymentDataResponse | null> {
     const token = await userStore.loadToken()
     if (!token) {
       console.error("Нет токена для получения данных оплаты")
       return null
     }
-
+    
     try {
-      const { data, error } = await useFetch<PaymentDataResponse>("https://back.casaalmare.com/api/getPayData", {
-        method: "POST",
-        body: { token },
-      })
-
-      if (error.value) {
-        console.error("Network error getting payment data:", error.value)
+      const data = await $fetch<PaymentDataResponse>(
+        "https://back.casaalmare.com/api/getPayData",
+        {
+          method: "POST",
+          body: { token },
+        }
+      )
+      
+      if (!data?.success) {
+        console.error("Server error getting payment data:", data?.error)
         return null
       }
-
-      if (!data.value?.success) {
-        console.error("Server error getting payment data:", data.value?.error)
-        return null
-      }
-
-      return data.value
+      
+      return data
     } catch (error) {
-      console.error("Ошибка получения данных для оплаты:", error)
+      console.error("Network error getting payment data:", error)
       return null
     }
   }
-
+  
+  
   async function loadUserData() {
     const token = await userStore.loadToken()
     if (!token) return
-
+    
     try {
-      const { data: loyaltyData, error } = await useFetch<{
+      const loyaltyData = await $fetch<{
         balance: number
         ordersumm: number
         level: number
-      }>(`https://back.casaalmare.com/api/getUserLoyality?user=${userStore.user?.uid}`, {
-        method: "GET",
-      })
+      }>(
+        `https://back.casaalmare.com/api/getUserLoyality?user=${userStore.user?.uid}`,
+        {
+          method: "GET",
+        }
+      )
       
-      if (error.value) {
-        return
-      }
-      
-      if (loyaltyData.value) {
+      if (loyaltyData) {
         if (userStore.user) {
-          userStore.user.points = loyaltyData.value.balance
-          userStore.user.orderSum = loyaltyData.value.ordersumm
-          userStore.user.loyaltyLevel = loyaltyData.value.level
+          userStore.user.points = loyaltyData.balance
+          userStore.user.orderSum = loyaltyData.ordersumm
+          userStore.user.loyaltyLevel = loyaltyData.level
         }
       }
-
+      
       let allAddresses: string[] = []
-
-      if (userStore.user?.profile?.address && Array.isArray(userStore.user.profile.address)) {
+      
+      if (
+        userStore.user?.profile?.address &&
+        Array.isArray(userStore.user.profile.address)
+      ) {
         const [adr1, adr2] = userStore.user.profile.address
         if (adr1?.trim()) {
-          const mainAddress = adr2?.trim() ? `${adr1.trim()}, ${adr2.trim()}` : adr1.trim()
+          const mainAddress = adr2?.trim()
+            ? `${adr1.trim()}, ${adr2.trim()}`
+            : adr1.trim()
           allAddresses = [mainAddress]
         }
       }
-
-      if (userStore.user?.profile && userStore.user?.profile.extended && userStore.user?.profile.extended.addresses && Array.isArray(userStore.user.profile.extended.addresses)) {
-        const extendedAddresses = userStore.user.profile.extended.addresses
-          .filter((addr) => Array.isArray(addr) && addr[0]?.trim())
-          .map((addr) => {
-            const [adr1, adr2] = addr
-            return adr2?.trim() ? `${adr1.trim()}, ${adr2.trim()}` : adr1.trim()
-          })
-          .filter((addr) => !allAddresses.includes(addr))
-
+      
+      if (
+        userStore.user?.profile?.extended?.addresses &&
+        Array.isArray(userStore.user.profile.extended.addresses)
+      ) {
+        const extendedAddresses =
+          userStore.user.profile.extended.addresses
+            .filter((addr) => Array.isArray(addr) && addr[0]?.trim())
+            .map((addr) => {
+              const [adr1, adr2] = addr
+              return adr2?.trim()
+                ? `${adr1.trim()}, ${adr2.trim()}`
+                : adr1.trim()
+            })
+            .filter((addr) => !allAddresses.includes(addr))
+        
         allAddresses = [...allAddresses, ...extendedAddresses]
       }
-
+      
       addresses.value = allAddresses
     } catch (error) {
       console.error("Ошибка загрузки user data:", error)
     }
   }
+  
   
   const availablePoints = computed(() => {
     return (userStore.user?.points || 0) - pointsToUse.value
@@ -371,7 +385,7 @@ export const useOrderStore = defineStore("order", () => {
           updateDeliveryType(4, data.pvz.term, data.pvz.price)
         }
 
-        isMoscow.value = city.value.name ? city.value.name.toLowerCase().includes("москва") : false
+        isMoscow.value = city.value?.name ? city.value.name.toLowerCase().includes("москва") : false
         if (!isMoscow.value) {
           deliveryTypes.value = deliveryTypes.value.filter((type) => type.id !== 3)
         }
@@ -467,38 +481,43 @@ export const useOrderStore = defineStore("order", () => {
     if (items.length === 0) return false
     return items.some((item) => item.id !== -1 || (item.id === -1 && item.certificateType === "Физический"))
   })
-
+  
   async function loadOrderState() {
     const token = await userStore.loadToken()
     if (!token) return
-
+    
     try {
-      const { data, error } = await useFetch<ApiResponse & GetOrderResponse>(
+      const data = await $fetch<ApiResponse & GetOrderResponse>(
         "https://back.casaalmare.com/api/getOrderState",
         {
           method: "POST",
           body: { token },
-        },
+        }
       )
-
-      if (error.value) {
-        console.error("Network error loading order state:", error.value)
-        return
-      }
-
-      if (data.value?.success && data.value?.order) {
-        const loadedOrder: OrderState = data.value.order
-
-        if (data.value.orderId) orderId.value = data.value.orderId
-
-        if (loadedOrder.deliveryMethod) deliveryMethod.value = loadedOrder.deliveryMethod
-        if (loadedOrder.deliveryTime !== undefined) deliveryTime.value = loadedOrder.deliveryTime
-        if (loadedOrder.deliveryCost !== undefined) deliveryCost.value = loadedOrder.deliveryCost
+      
+      if (data?.success && data?.order) {
+        const loadedOrder: OrderState = data.order
+        
+        if (data.orderId) orderId.value = data.orderId
+        
+        if (loadedOrder.deliveryMethod) {
+          deliveryMethod.value = loadedOrder.deliveryMethod
+        }
+        
+        if (loadedOrder.deliveryTime !== undefined) {
+          deliveryTime.value = loadedOrder.deliveryTime
+        }
+        
+        if (loadedOrder.deliveryCost !== undefined) {
+          deliveryCost.value = loadedOrder.deliveryCost
+        }
+        
         if (loadedOrder.pvz) {
           selectedPvz.value = loadedOrder.pvz
         }
-
+        
         let targetCity: CityData | null = null
+        
         if (loadedOrder.city) {
           targetCity = loadedOrder.city
         } else if (userStore.user?.profile?.extended?.city) {
@@ -506,53 +525,69 @@ export const useOrderStore = defineStore("order", () => {
         } else if (userStore.user?.city) {
           targetCity = userStore.user.city
         }
-
+        
         if (!targetCity || targetCity.label === "" || targetCity === false) {
           city.value = null
-        } else if (targetCity && targetCity !== city.value) {
+        } else if (targetCity !== city.value) {
           city.value = targetCity
         }
-
+        
         await nextTick()
-
+        
         if (loadedOrder.currentAddress) {
           if (Array.isArray(loadedOrder.currentAddress)) {
             const [adr1, adr2] = loadedOrder.currentAddress
-            currentAddress.value = adr2?.trim() ? `${adr1.trim()}, ${adr2.trim()}` : adr1.trim()
+            currentAddress.value = adr2?.trim()
+              ? `${adr1.trim()}, ${adr2.trim()}`
+              : adr1.trim()
           } else {
             currentAddress.value = loadedOrder.currentAddress
           }
         }
-
-        if (loadedOrder.commentForCourier) commentForCourier.value = loadedOrder.commentForCourier
-        if (loadedOrder.paymentMethod) paymentMethod.value = loadedOrder.paymentMethod
+        
+        if (loadedOrder.commentForCourier) {
+          commentForCourier.value = loadedOrder.commentForCourier
+        }
+        
+        if (loadedOrder.paymentMethod) {
+          paymentMethod.value = loadedOrder.paymentMethod
+        }
+        
         if (loadedOrder.points !== undefined) {
           pointsToUse.value = loadedOrder.points
-          if (userStore.user) userStore.user.points += usedPointsBackup.value - loadedOrder.points
+          pendingPoints.value = String(loadedOrder.points)
         }
+        
         if (loadedOrder.certificates) {
-          selectedCertificates.value = Array.isArray(loadedOrder.certificates) ? loadedOrder.certificates : []
+          selectedCertificates.value = Array.isArray(loadedOrder.certificates)
+            ? loadedOrder.certificates
+            : []
         } else {
           selectedCertificates.value = []
         }
-
+        
         if (!authStore.isAuth && loadedOrder.userInfo) {
-          if (loadedOrder.userInfo.name) name.value = loadedOrder.userInfo.name
-          if (loadedOrder.userInfo.surname) surname.value = loadedOrder.userInfo.surname
-          if (loadedOrder.userInfo.phone) phone.value = loadedOrder.userInfo.phone
-          if (loadedOrder.userInfo.email) email.value = loadedOrder.userInfo.email
-
-          if (loadedOrder.userInfo.addresses && Array.isArray(loadedOrder.userInfo.addresses)) {
-            addresses.value = loadedOrder.userInfo.addresses
+          const info = loadedOrder.userInfo
+          
+          if (info.name) name.value = info.name
+          if (info.surname) surname.value = info.surname
+          if (info.phone) phone.value = info.phone
+          if (info.email) email.value = info.email
+          
+          if (Array.isArray(info.addresses)) {
+            addresses.value = info.addresses
               .filter((addr) => Array.isArray(addr) && addr[0]?.trim())
               .map((addr) => {
                 const [adr1, adr2] = addr
-                return adr2?.trim() ? `${adr1.trim()}, ${adr2.trim()}` : adr1.trim()
+                return adr2?.trim()
+                  ? `${adr1.trim()}, ${adr2.trim()}`
+                  : adr1.trim()
               })
           }
         }
-
+        
         orderState.value = loadedOrder
+        
         if (!needsDelivery.value) {
           deliveryMethod.value = null
           city.value = null
@@ -563,12 +598,13 @@ export const useOrderStore = defineStore("order", () => {
           commentForCourier.value = ""
         }
       } else {
-        console.error("Server error loading order state:", data.value?.error)
+        console.error("Server error loading order state:", data?.error)
       }
     } catch (error) {
       console.error("Ошибка загрузки состояния заказа:", error)
     } finally {
       isLoaded.value = true
+      
       if (city.value) {
         await loadCdekData()
         await nextTick()
@@ -578,10 +614,15 @@ export const useOrderStore = defineStore("order", () => {
       }
     }
   }
-
+  
   const updateOrderState = async () => {
+    if (isCheckingOrderStatus.value) {
+      console.log("Skipping updateOrderState: order status check in progress")
+      return
+    }
+    
     if (isPaymentSuccessful.value !== null) return
-
+    
     if (!needsDelivery.value) {
       deliveryMethod.value = null
       city.value = null
@@ -589,10 +630,10 @@ export const useOrderStore = defineStore("order", () => {
       selectedPvz.value = null
       commentForCourier.value = ""
     }
-
+    
     const token = await userStore.loadToken()
     if (!token) return
-
+    
     const orderStateObj: Partial<OrderState> = {
       deliveryMethod: deliveryMethod.value,
       deliveryTime: deliveryTime.value,
@@ -606,55 +647,51 @@ export const useOrderStore = defineStore("order", () => {
       certificates: selectedCertificates.value,
       userInfo: !authStore.isAuth
         ? {
-            name: name.value,
-            surname: surname.value,
-            phone: phone.value,
-            email: email.value,
-            addresses: addresses.value,
-          }
+          name: name.value,
+          surname: surname.value,
+          phone: phone.value,
+          email: email.value,
+          addresses: addresses.value,
+        }
         : null,
     }
-
+    
     const lastUpdate = Math.floor(Date.now() / 1000)
-
+    
     try {
-      const { data, error } = await useFetch<ApiResponse & UpdateOrderResponse>(
+      const data = await $fetch<ApiResponse & UpdateOrderResponse>(
         "https://back.casaalmare.com/api/updateOrderState",
         {
           method: "POST",
           body: {
-            token: token,
+            token,
             orderState: orderStateObj,
             last_update: lastUpdate,
           },
-        },
+        }
       )
-
-      if (error.value) {
-        console.error("Network error updating order state:", error.value)
+      
+      if (!data?.success) {
+        console.error("Server error updating order state:", data?.error)
         return
       }
-
-      if (!data.value?.success) {
-        console.error("Server error updating order state:", data.value?.error)
-        return
+      
+      if (data.orderId) {
+        orderId.value = data.orderId
       }
-
-      if (data.value?.orderId) {
-        orderId.value = data.value.orderId
-      }
-
-      if (data.value?.updated === false) {
+      
+      if (data.updated === false) {
         console.warn("Order state update ignored: timestamp too old", {
           lastUpdate,
-          serverLastUpdate: data.value.last_update,
+          serverLastUpdate: data.last_update,
         })
       }
     } catch (error) {
       console.error("Ошибка обновления состояния заказа:", error)
     }
   }
-
+  
+  
   const debouncedUpdateOrderState = debounce(updateOrderState, 500)
 
   const cartDetailed = computed(() => {
@@ -811,69 +848,82 @@ export const useOrderStore = defineStore("order", () => {
   function setCartItems(items: CartItem[] | null | undefined) {
     cartItems.value = Array.isArray(items) ? items : []
   }
-
+  
   async function saveNewAddress() {
     const firstLine = newAddressFirstLine.value.trim()
     const secondLine = newAddressSecondLine.value.trim()
-
+    
     if (!firstLine) return
-
+    
     const newAddress = [firstLine, secondLine]
-
+    
     if (authStore.isAuth) {
       const token = await userStore.loadToken()
       if (!token) return
-
+      
       try {
-        const { data, error } = await useFetch<ApiResponse>("https://back.casaalmare.com/api/saveAddress", {
-          method: "POST",
-          body: { token, address: newAddress },
-        })
-
-        if (error.value) {
-          console.error("Network error saving address:", error.value)
-          return
-        }
-
-        if (data.value?.success) {
-          const addressString = secondLine ? `${firstLine}, ${secondLine}` : firstLine
+        const data = await $fetch<ApiResponse>(
+          "https://back.casaalmare.com/api/saveAddress",
+          {
+            method: "POST",
+            body: { token, address: newAddress },
+          }
+        )
+        
+        if (data?.success) {
+          const addressString = secondLine
+            ? `${firstLine}, ${secondLine}`
+            : firstLine
+          
           if (!addresses.value.includes(addressString)) {
             addresses.value.push(addressString)
           }
-
+          
           currentAddress.value = addressString
           newAddressFirstLine.value = ""
           newAddressSecondLine.value = ""
-
+          
           if (userStore.user) {
             if (!userStore.user.profile.extended.addresses) {
               userStore.user.profile.extended.addresses = []
             }
-            const addressExists = userStore.user.profile.extended.addresses.some(
-              (addr) => Array.isArray(addr) && addr[0] === firstLine && addr[1] === secondLine,
-            )
+            
+            const addressExists =
+              userStore.user.profile.extended.addresses.some(
+                (addr) =>
+                  Array.isArray(addr) &&
+                  addr[0] === firstLine &&
+                  addr[1] === secondLine
+              )
+            
             if (!addressExists) {
               userStore.user.profile.extended.addresses.push(newAddress)
             }
           }
         } else {
-          console.error("Ошибка сохранения адреса:", data.value?.error)
+          console.error("Ошибка сохранения адреса:", data?.error)
         }
       } catch (error) {
         console.error("Ошибка API saveAddress:", error)
       }
     } else {
-      const addressString = secondLine ? `${firstLine}, ${secondLine}` : firstLine
+      const addressString = secondLine
+        ? `${firstLine}, ${secondLine}`
+        : firstLine
+      
       if (!addresses.value.includes(addressString)) {
         addresses.value.push(addressString)
       }
+      
       currentAddress.value = addressString
       newAddressFirstLine.value = ""
       newAddressSecondLine.value = ""
+      
       debouncedUpdateOrderState()
     }
   }
-
+  
+  
   function resetOrder() {
     cartItems.value = []
     addresses.value = []
@@ -912,73 +962,89 @@ export const useOrderStore = defineStore("order", () => {
   async function checkOrderStatus(id: number) {
     const token = await userStore.loadToken()
     if (!token) return null
-
+    isCheckingOrderStatus.value = true
+    
     try {
-      const { data, error } = await useFetch<CheckOrderStatusResponse>(
+      const data = await $fetch<CheckOrderStatusResponse>(
         "https://back.casaalmare.com/api/checkOrderStatus",
         {
           method: "POST",
           body: { token, orderId: id },
-        },
+        }
       )
-
-      if (error.value) {
-        console.error("Network error checking order status:", error.value)
-        return null
-      }
-
-      if (data.value?.success !== undefined) {
-        isPaymentSuccessful.value = data.value.success
-
-        if (data.value?.status === 1 || data.value?.status === 2) {
+      
+      if (data?.success !== undefined) {
+        isPaymentSuccessful.value = data.success
+        
+        if (data.status === 1 || data.status === 2) {
           resetOrder()
         }
-
-        if (data.value.success && data.value.order) {
-          const loadedOrder = data.value.order
+        
+        if (data.success && data.order) {
+          const loadedOrder = data.order
+          
           if (loadedOrder.deliveryMethod) deliveryMethod.value = loadedOrder.deliveryMethod
           if (loadedOrder.city) city.value = loadedOrder.city
-
+          
           if (loadedOrder.currentAddress) {
             if (Array.isArray(loadedOrder.currentAddress)) {
               const [adr1, adr2] = loadedOrder.currentAddress
-              currentAddress.value = adr2?.trim() ? `${adr1.trim()}, ${adr2.trim()}` : adr1.trim()
+              currentAddress.value = adr2?.trim()
+                ? `${adr1.trim()}, ${adr2.trim()}`
+                : adr1.trim()
             } else {
               currentAddress.value = loadedOrder.currentAddress
             }
           }
-
-          if (loadedOrder.commentForCourier) commentForCourier.value = loadedOrder.commentForCourier
-          if (loadedOrder.paymentMethod) paymentMethod.value = loadedOrder.paymentMethod
+          
+          if (loadedOrder.commentForCourier) {
+            commentForCourier.value = loadedOrder.commentForCourier
+          }
+          
+          if (loadedOrder.paymentMethod) {
+            paymentMethod.value = loadedOrder.paymentMethod
+          }
+          
           if (loadedOrder.points !== undefined) {
             pointsToUse.value = loadedOrder.points
-            if (userStore.user) userStore.user.points += usedPointsBackup.value - loadedOrder.points
+            if (userStore.user) {
+              userStore.user.points += usedPointsBackup.value - loadedOrder.points
+            }
           }
-          if (loadedOrder.certificates) selectedCertificates.value = loadedOrder.certificates
-
+          
+          if (loadedOrder.certificates) {
+            selectedCertificates.value = loadedOrder.certificates
+          }
+          
           if (!authStore.isAuth && loadedOrder.userInfo) {
-            if (loadedOrder.userInfo.name) name.value = loadedOrder.userInfo.name
-            if (loadedOrder.userInfo.surname) surname.value = loadedOrder.userInfo.surname
-            if (loadedOrder.userInfo.phone) phone.value = loadedOrder.userInfo.phone
-            if (loadedOrder.userInfo.email) email.value = loadedOrder.userInfo.email
-
-            if (loadedOrder.userInfo.addresses && Array.isArray(loadedOrder.userInfo.addresses)) {
-              addresses.value = loadedOrder.userInfo.addresses
+            const info = loadedOrder.userInfo
+            
+            if (info.name) name.value = info.name
+            if (info.surname) surname.value = info.surname
+            if (info.phone) phone.value = info.phone
+            if (info.email) email.value = info.email
+            
+            if (Array.isArray(info.addresses)) {
+              addresses.value = info.addresses
                 .filter((addr) => Array.isArray(addr) && addr[0]?.trim())
                 .map((addr) => {
                   const [adr1, adr2] = addr
-                  return adr2?.trim() ? `${adr1.trim()}, ${adr2.trim()}` : adr1.trim()
+                  return adr2?.trim()
+                    ? `${adr1.trim()}, ${adr2.trim()}`
+                    : adr1.trim()
                 })
             }
           }
-
-          if (data.value.cart) {
-            const parsedCart = parseCart(data.value.cart)
+          
+          if (data.cart) {
+            const parsedCart = parseCart(data.cart)
             setCartItems(parsedCart)
           }
-          if (!data.value.success) {
+          
+          if (!data.success) {
             isWidgetOpen.value = false
           }
+          
           if (!needsDelivery.value) {
             deliveryMethod.value = null
             city.value = null
@@ -989,13 +1055,16 @@ export const useOrderStore = defineStore("order", () => {
             commentForCourier.value = ""
           }
         }
-        return data.value
+        
+        return data
       }
     } catch (error) {
       console.error("Ошибка проверки статуса заказа:", error)
     } finally {
       await userStore.fetchUser()
+      isCheckingOrderStatus.value = false
     }
+    
     return null
   }
   
@@ -1073,21 +1142,13 @@ export const useOrderStore = defineStore("order", () => {
     
     isLoadingPoints.value = true
     const points = Number(pendingPoints.value)
-    const previousPointsToUse = pointsToUse.value
     
     pointsToUse.value = points
-    
-    if (userStore.user) {
-      userStore.user.points = userStore.user.points - (points - previousPointsToUse)
-    }
     
     isLoadingPoints.value = false
   }
   
   function cancelPoints() {
-    if (userStore.user) {
-      userStore.user.points = userStore.user.points + pointsToUse.value
-    }
     pointsToUse.value = 0
     pointsError.value = ""
   }
@@ -1105,6 +1166,24 @@ export const useOrderStore = defineStore("order", () => {
       pointsCheckboxValue.value = null
     }
   })
+  
+  watch(pointsToUse, (newValue) => {
+    if (newValue > 0 && !pointsCheckboxValue.value) {
+      pointsCheckboxValue.value = 'apply'
+    }
+  })
+  
+  watch(
+    () => isLoaded.value,
+    (loaded) => {
+      if (loaded && pointsToUse.value > 0) {
+        nextTick(() => {
+          pointsCheckboxValue.value = 'apply'
+        })
+      }
+    },
+    { immediate: true }
+  )
   
   const isPointsCheckboxChecked = computed({
     get: () => pointsToUse.value > 0,
@@ -1479,5 +1558,6 @@ export const useOrderStore = defineStore("order", () => {
     needsDelivery,
     parseCart,
     availablePoints,
+    isCheckingOrderStatus,
   }
 })

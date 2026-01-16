@@ -176,10 +176,15 @@ const handleClickOutside = (event: MouseEvent) => {
 const handleInput = (event: Event) => {
   const target = event.target as HTMLInputElement
   const value = target.value
-  const digits = digitsOnly(value)
-
+  let digits = digitsOnly(value)
+  
+  const maxLength = getMaskLengthByCountry(selectedCountry.value?.code || "+7")
+  if (digits.length > maxLength) {
+    digits = digits.slice(0, maxLength)
+  }
+  
   nationalNumber.value = digits
-
+  
   const mask = getPhoneMask(selectedCountry.value?.code || null)
   if (mask) {
     maskedNumber.value = applyMask(digits, mask)
@@ -189,7 +194,7 @@ const handleInput = (event: Event) => {
   } else {
     maskedNumber.value = digits
   }
-
+  
   clearError()
 }
 
