@@ -12,29 +12,47 @@ interface VideoData {
   mob: VideoSource
 }
 
-const docsStore = useDocsStore()
+const { data: treeData } = await useFetch(
+  "https://back.casaalmare.com/api/getdocTree"
+)
 
-const pageTitle = computed(() => docsStore.tree?.data?.index?.pagetitle ?? "")
-const description = computed(() => docsStore.tree?.data?.index?.description ??
-  "")
+const indexData = treeData.value?.data?.index
 
-useServerSeoMeta({
-  title: () => pageTitle.value,
-  description: () => description.value,
-  ...(() => {
-    const tags: Record<string, any> = {}
-    docsStore.tree?.data?.index?.metatags?.forEach(tag => {
-      if (tag.name.startsWith('og:')) {
-        const key = tag.name.replace('og:', 'og') + (tag.name === 'og:title' ? 'Title' :
-          tag.name === 'og:description' ? 'Description' : '')
-        tags[key] = tag.content
-      } else {
-        tags[tag.name] = tag.content
-      }
-    })
-    return tags
-  })()
+const pageTitle = indexData?.pagetitle ?? ""
+const description = indexData?.description ?? ""
+
+const metaTags: Record<string, any> = {}
+
+if (import.meta.server) {
+  console.log('Index data:', indexData)
+  console.log('Metatags:', indexData?.metatags)
+}
+
+indexData?.metatags?.forEach(tag => {
+  if (tag.name.startsWith('og:')) {
+    const ogKey = tag.name.replace('og:', '')
+    const camelCaseKey = 'og' + ogKey.charAt(0).toUpperCase() + ogKey.slice(1)
+    metaTags[camelCaseKey] = tag.content
+  } else if (tag.name.startsWith('twitter:')) {
+    const twitterKey = tag.name.replace('twitter:', '')
+    const camelCaseKey = 'twitter' + twitterKey.charAt(0).toUpperCase() + twitterKey.slice(1)
+    metaTags[camelCaseKey] = tag.content
+  } else {
+    metaTags[tag.name] = tag.content
+  }
 })
+
+if (import.meta.server) {
+  const seoData = {
+    title: pageTitle,
+    description: description,
+    ...metaTags
+  }
+  
+  console.log('SEO Data to apply:', seoData)
+  
+  useSeoMeta(seoData)
+}
 
 
 const data = await $fetch<VideoData>("https://back.casaalmare.com/api/getMainVideo")
