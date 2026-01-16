@@ -13,38 +13,29 @@ interface VideoData {
 }
 
 const docsStore = useDocsStore()
-const route = useRoute()
 
-onMounted(async () => {
-  if (!docsStore.tree) {
-    await docsStore.fetchTree()
-    const metaItm = computed(() => docsStore.tree?.data?.index)
-    
-    const metaobj: Record<string, string> = {
-      title: metaItm.value?.longtitle || metaItm.value?.pagetitle || '',
-      description: metaItm.value?.meta_descr
-        || metaItm.value?.description?.replace(/(<([^>]+)>)/gi, '')
-        || '',
-      'og:url': 'https://casaalmare.com' + route.fullPath,
-    }
-    
-    if (metaItm.value?.metatags) {
-      metaItm.value.metatags.forEach((e) => {
-        if (e.name === 'og:image') {
-          metaobj[e.name] = e.content
-        } else if (e.name === 'og:description') {
-          metaobj[e.name] = e.content
-            || metaItm.value.description?.replace(/(<([^>]+)>)/gi, '')
-            || ''
-        } else {
-          metaobj[e.name] = e.content
-        }
-      })
-    }
-    
-    useSeoMeta(metaobj)
-  }
+const pageTitle = computed(() => docsStore.tree?.data?.index?.pagetitle ?? "")
+const description = computed(() => docsStore.tree?.data?.index?.description ??
+  "")
+
+useServerSeoMeta({
+  title: () => pageTitle.value,
+  description: () => description.value,
+  ...(() => {
+    const tags: Record<string, any> = {}
+    docsStore.tree?.data?.index?.metatags?.forEach(tag => {
+      if (tag.name.startsWith('og:')) {
+        const key = tag.name.replace('og:', 'og') + (tag.name === 'og:title' ? 'Title' :
+          tag.name === 'og:description' ? 'Description' : '')
+        tags[key] = tag.content
+      } else {
+        tags[tag.name] = tag.content
+      }
+    })
+    return tags
+  })()
 })
+
 
 const data = await $fetch<VideoData>("https://back.casaalmare.com/api/getMainVideo")
 const images = {
