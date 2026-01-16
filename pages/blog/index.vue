@@ -1,27 +1,51 @@
 <script setup lang="ts">
-import { onMounted } from "vue"
 
 const docsStore = useDocsStore()
 
-const pageTitle = computed(() => docsStore.tree?.data?.blog?.pagetitle)
-const description = computed(() => docsStore.tree?.data?.blog?.description ?? "")
-const metatags = computed(() =>
-  docsStore.tree?.data?.blog?.metatags?.map(tag => ({ property: tag.name,
-    content: tag.content, })) ?? [] )
+const { data: treeData } = await useFetch(
+  "https://back.casaalmare.com/api/getdocTree"
+)
 
-useHead({
-  title: pageTitle,
-  meta: computed(() => [
-    { name: "description", content: description.value },
-    ...metatags.value,
-  ]),
+const blogData = computed(() => treeData.value?.data?.blog)
+
+const pageTitle = computed(() => blogData.value?.pagetitle ?? "")
+const description = computed(() => blogData.value?.description ?? "")
+
+const metaTags = computed(() => {
+  const tags: Record<string, any> = {}
+  
+  blogData.value?.metatags?.forEach(tag => {
+    if (tag.name.startsWith('og:')) {
+      const ogKey = tag.name.replace('og:', '')
+      const camelCaseKey = 'og' + ogKey.charAt(0).toUpperCase() + ogKey.slice(1)
+      tags[camelCaseKey] = tag.content
+    } else if (tag.name.startsWith('twitter:')) {
+      const twitterKey = tag.name.replace('twitter:', '')
+      const camelCaseKey = 'twitter' + twitterKey.charAt(0).toUpperCase() + twitterKey.slice(1)
+      tags[camelCaseKey] = tag.content
+    } else {
+      tags[tag.name] = tag.content
+    }
+  })
+  
+  return tags
 })
 
-onMounted(async () => {
-  if (!docsStore.tree) {
-    await docsStore.fetchTree()
-  }
-})
+// Функция для обновления SEO
+const updateSeo = () => {
+  useSeoMeta({
+    title: pageTitle.value,
+    description: description.value,
+    ...metaTags.value
+  })
+}
+
+// Обновляем SEO при монтировании и при изменении данных
+updateSeo()
+
+watch([pageTitle, description, metaTags], () => {
+  updateSeo()
+}, { deep: true })
 
 const subitemsArray = computed(() => {
   const data = docsStore.tree?.data?.blog?.subitems;

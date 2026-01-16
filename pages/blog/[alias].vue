@@ -4,6 +4,10 @@ const docsStore = useDocsStore()
 
 const articleAlias = computed(() => route.params.alias as string)
 
+const { data: treeData } = await useFetch(
+  "https://back.casaalmare.com/api/getdocTree"
+)
+
 const subitems = computed(() =>
   Object.values(docsStore.tree?.data?.blog?.subitems ?? {})
 )
@@ -12,7 +16,7 @@ const article = computed(() => {
   const alias = articleAlias.value
   if (!alias) return null
   
-  return docsStore.tree?.data?.blog?.subitems?.[alias] ?? null
+  return treeData.value?.data?.blog?.subitems?.[alias] ?? null
 })
 
 const pageTitle = computed(() => article.value?.pagetitle ?? "")
@@ -31,12 +35,41 @@ const randomOtherArticles = computed(() => {
   return shuffled.slice(0, 3)
 })
 
-const metatags = computed(() =>
-  article.value?.metatags?.map(tag => ({
-    property: tag.name,
-    content: tag.content,
-  })) ?? []
-)
+const metaTags = computed(() => {
+  const tags: Record<string, any> = {}
+  
+  article.value?.metatags?.forEach(tag => {
+    if (tag.name.startsWith('og:')) {
+      const ogKey = tag.name.replace('og:', '')
+      const camelCaseKey = 'og' + ogKey.charAt(0).toUpperCase() + ogKey.slice(1)
+      tags[camelCaseKey] = tag.content
+    } else if (tag.name.startsWith('twitter:')) {
+      const twitterKey = tag.name.replace('twitter:', '')
+      const camelCaseKey = 'twitter' + twitterKey.charAt(0).toUpperCase() + twitterKey.slice(1)
+      tags[camelCaseKey] = tag.content
+    } else {
+      tags[tag.name] = tag.content
+    }
+  })
+  
+  return tags
+})
+
+// Функция для обновления SEO
+const updateSeo = () => {
+  useSeoMeta({
+    title: pageTitle.value,
+    description: description.value,
+    ...metaTags.value
+  })
+}
+
+// Обновляем SEO при монтировании и при изменении статьи
+updateSeo()
+
+watch(article, () => {
+  updateSeo()
+}, { immediate: true })
 
 const formatDate = (dateString: string | undefined) => {
   if (!dateString) return ''
@@ -47,14 +80,6 @@ const formatDate = (dateString: string | undefined) => {
     year: 'numeric'
   })
 }
-
-useHead({
-  title: pageTitle,
-  meta: computed(() => [
-    { name: "description", content: description.value },
-    ...metatags.value,
-  ]),
-})
 
 const breadcrumsItems = computed(() => [
   { name: "Главная", path: "/" },
@@ -95,18 +120,18 @@ const breadcrumsItems = computed(() => [
     </div>
 
     <div v-if="randomOtherArticles.length" class="mt-30 mb-8 hidden lg:block">
-  <h2 class="font-[Inter] text-4xl text-center">Другие статьи</h2>
-  <div class="flex px-4 mt-8 gap-4 overflow-x-auto">
-    <BannerCard
-      v-for="item in randomOtherArticles"
-      :key="item.id"
-      :text="item.pagetitle"
-      custom-class="rounded-lg aspect-[618/570] max-w-[33%]"
-      :link="`/blog/${item.alias}`"
-      :image-url="item.image"
-    />
-  </div>
-</div>
+      <h2 class="font-[Inter] text-4xl text-center">Другие статьи</h2>
+      <div class="flex px-4 mt-8 gap-4 overflow-x-auto">
+        <BannerCard
+          v-for="item in randomOtherArticles"
+          :key="item.id"
+          :text="item.pagetitle"
+          custom-class="rounded-lg aspect-[618/570] max-w-[33%]"
+          :link="`/blog/${item.alias}`"
+          :image-url="item.image"
+        />
+      </div>
+    </div>
   </main>
 </template>
 
@@ -170,5 +195,4 @@ const breadcrumsItems = computed(() => [
   font-weight: 300;
   color: #211D1D;
 }
-
 </style>

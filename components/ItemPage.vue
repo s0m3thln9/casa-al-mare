@@ -2,11 +2,14 @@
 import { computed } from "vue"
 import type { Item } from "~/stores/catalog"
 
-const props = defineProps<{
-  alias: string
-}>()
-
 const route = useRoute()
+const alias = computed(() => {
+  const param = route.params.alias
+  if (Array.isArray(param)) {
+    return param.join('/') || ''
+  }
+  return param || ''
+})
 const catalogStore = useCatalogStore()
 const popupStore = usePopupStore()
 const itemStore = useItemStore()
@@ -30,11 +33,9 @@ const loadItem = async () => {
     }
     
     let foundItem: Item | null = null
-    
-    const aliasValue = props.alias
-    
-    if (aliasValue && aliasValue.trim() !== "") {
-      foundItem = catalogStore.items.find((i) => i.alias === aliasValue) || null
+    console.log(alias.value)
+    if (alias.value && alias.value.trim() !== "") {
+      foundItem = catalogStore.items.find((i) => i.alias === alias.value) || null
       
       if (foundItem) {
         // Установка цвета в стор
@@ -398,7 +399,7 @@ watch(
 
 // Следим за изменением пропса alias
 watch(
-  () => props.alias,
+  () => alias.value,
   async (newAlias) => {
     if (newAlias) {
       itemStore.color = null
@@ -421,24 +422,71 @@ const scrollToTop = () => {
   }
 }
 
-const pageTitle = computed(() => item.value?.name ?? "")
-const description = computed(() => item.value?.description ?? "")
-
-const metatags = computed(() =>
-  item.value?.metatags?.map(tag => {
-    if (tag.name.startsWith("og:")) {
-      return { property: tag.name, content: tag.content }
-    }
-  }) ?? []
+const { data: treeData } = await useFetch(
+  "https://back.casaalmare.com/api/getdocTree"
 )
 
-useHead({
-  title: pageTitle,
-  meta: computed(() => [
-    { name: "description", content: description.value },
-    ...metatags.value,
-  ]),
+
+const doc = computed(() => {
+  const slugValue = alias.value
+  if (!slugValue || !treeData.value?.data) return null
+  
+  // Ищем документ по slug во всех ветках
+  const findDoc = (obj: any): any => {
+    if (!obj) return null
+    
+    for (const key in obj) {
+      const item = obj[key]
+      if (item && typeof item === 'object') {
+        if (item.alias === slugValue) return item
+        if (item.subitems) {
+          const found = findDoc(item.subitems)
+          if (found) return found
+        }
+      }
+    }
+    return null
+  }
+  
+  return findDoc(treeData.value.data)
 })
+
+const pageTitle = computed(() => doc.value?.pagetitle ?? "")
+const description = computed(() => doc.value?.description ?? "")
+
+const metaTags = computed(() => {
+  const tags: Record<string, any> = {}
+  
+  doc.value?.metatags?.forEach(tag => {
+    if (tag.name.startsWith('og:')) {
+      const ogKey = tag.name.replace('og:', '')
+      const camelCaseKey = 'og' + ogKey.charAt(0).toUpperCase() + ogKey.slice(1)
+      tags[camelCaseKey] = tag.content
+    } else if (tag.name.startsWith('twitter:')) {
+      const twitterKey = tag.name.replace('twitter:', '')
+      const camelCaseKey = 'twitter' + twitterKey.charAt(0).toUpperCase() + twitterKey.slice(1)
+      tags[camelCaseKey] = tag.content
+    } else {
+      tags[tag.name] = tag.content
+    }
+  })
+  
+  return tags
+})
+
+const updateSeo = () => {
+  useSeoMeta({
+    title: pageTitle.value,
+    description: description.value,
+    ...metaTags.value
+  })
+}
+
+updateSeo()
+
+watch(doc, () => {
+  updateSeo()
+}, { immediate: true })
 
 
 </script>

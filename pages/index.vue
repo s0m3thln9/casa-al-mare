@@ -16,44 +16,46 @@ const { data: treeData } = await useFetch(
   "https://back.casaalmare.com/api/getdocTree"
 )
 
-const indexData = treeData.value?.data?.index
+const indexData = computed(() => treeData.value?.data?.index)
 
-const pageTitle = indexData?.pagetitle ?? ""
-const description = indexData?.description ?? ""
+const pageTitle = computed(() => indexData.value?.pagetitle ?? "")
+const description = computed(() => indexData.value?.description ?? "")
 
-const metaTags: Record<string, any> = {}
-
-if (import.meta.server) {
-  console.log('Index data:', indexData)
-  console.log('Metatags:', indexData?.metatags)
-}
-
-indexData?.metatags?.forEach(tag => {
-  if (tag.name.startsWith('og:')) {
-    const ogKey = tag.name.replace('og:', '')
-    const camelCaseKey = 'og' + ogKey.charAt(0).toUpperCase() + ogKey.slice(1)
-    metaTags[camelCaseKey] = tag.content
-  } else if (tag.name.startsWith('twitter:')) {
-    const twitterKey = tag.name.replace('twitter:', '')
-    const camelCaseKey = 'twitter' + twitterKey.charAt(0).toUpperCase() + twitterKey.slice(1)
-    metaTags[camelCaseKey] = tag.content
-  } else {
-    metaTags[tag.name] = tag.content
-  }
+const metaTags = computed(() => {
+  const tags: Record<string, any> = {}
+  
+  indexData.value?.metatags?.forEach(tag => {
+    if (tag.name.startsWith('og:')) {
+      const ogKey = tag.name.replace('og:', '')
+      const camelCaseKey = 'og' + ogKey.charAt(0).toUpperCase() + ogKey.slice(1)
+      tags[camelCaseKey] = tag.content
+    } else if (tag.name.startsWith('twitter:')) {
+      const twitterKey = tag.name.replace('twitter:', '')
+      const camelCaseKey = 'twitter' + twitterKey.charAt(0).toUpperCase() + twitterKey.slice(1)
+      tags[camelCaseKey] = tag.content
+    } else {
+      tags[tag.name] = tag.content
+    }
+  })
+  
+  return tags
 })
 
-if (import.meta.server) {
-  const seoData = {
-    title: pageTitle,
-    description: description,
-    ...metaTags
-  }
-  
-  console.log('SEO Data to apply:', seoData)
-  
-  useSeoMeta(seoData)
+// Функция для обновления SEO
+const updateSeo = () => {
+  useSeoMeta({
+    title: pageTitle.value,
+    description: description.value,
+    ...metaTags.value
+  })
 }
 
+// Обновляем SEO при монтировании и при изменении данных
+updateSeo()
+
+watch([pageTitle, description, metaTags], () => {
+  updateSeo()
+}, { deep: true })
 
 const data = await $fetch<VideoData>("https://back.casaalmare.com/api/getMainVideo")
 const images = {
@@ -129,36 +131,5 @@ const images = {
         link="/catalog/nastolnyie-igryi"
       />
     </div>
-<!--    <div class="flex flex-col lg:flex-row gap-2 px-2 py-2 sm:gap-4 sm:px-4 sm:py-4">-->
-<!--      <BannerCard-->
-<!--        :image-url="images.promo3"-->
-<!--        text="fw25 Surf tales"-->
-<!--        custom-class="rounded-lg aspect-[1]"-->
-<!--        object-position="center"-->
-<!--        link="/campaigns"-->
-<!--      />-->
-<!--      <BannerCard-->
-<!--        :image-url="images.promo4"-->
-<!--        text="top capsule 25"-->
-<!--        custom-class="rounded-lg aspect-[1]"-->
-<!--        object-position="center"-->
-<!--        link="/campaigns"-->
-<!--      />-->
-<!--    </div>-->
-<!--    <AppSEO-->
-<!--      :paragraphs="[-->
-<!--        '— это бренд стильного белья и купальников, созданный для женщин, которые ценят комфорт, эстетику и качество.\n' +-->
-<!--          'Мы разрабатываем коллекции, вдохновлённые природой, искусством и городским ритмом жизни.',-->
-<!--        'В каталоге CASA AL MARE вы найдете:\n' +-->
-<!--          'купальники: раздельные и слитные;\n' +-->
-<!--          'комплекты нижнего белья: браллеты, трусики, боди;\n' +-->
-<!--          'аксессуары: пляжные полотенца, сумки, косметички.\n' +-->
-<!--          'мы используем премиальные материалы, адаптированные к разным типам фигуры и формам.\n' +-->
-<!--          'каждое изделие проходит ручную проверку, а дизайн продуман до мелочей.',-->
-<!--        'Быстрая доставка по всей России и миру. Поддержка клиентов работает ежедневно. Вся продукция произведена с заботой об экологии.\n' +-->
-<!--          'Выбирайте купальники и бельё CASA AL MARE — сочетание модных решений, комфорта и женственности.\n' +-->
-<!--          'Следите за новыми коллекциями, подписывайтесь на наш telegram, vk и открывайте красоту каждый день.',-->
-<!--      ]"-->
-<!--    />-->
   </main>
 </template>

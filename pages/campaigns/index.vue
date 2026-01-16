@@ -5,6 +5,10 @@ const docsStore = useDocsStore()
 const popupStore = usePopupStore()
 const setStore = useSetStore()
 
+const { data: treeData } = await useFetch(
+  "https://back.casaalmare.com/api/getdocTree"
+)
+
 const campaignsBranch = computed(() => docsStore.tree?.data?.campaigns)
 const campaignItems = computed(() => {
   if (!campaignsBranch.value?.subitems) return []
@@ -55,6 +59,47 @@ const missingParamLabel = computed(() => {
   return missing ? missing.pagetitle : 'все параметры'
 })
 
+const campaignsData = computed(() => treeData.value?.data?.campaigns)
+
+const pageTitle = computed(() => campaignsData.value?.pagetitle ?? "")
+const description = computed(() => campaignsData.value?.description ?? "")
+
+const metaTags = computed(() => {
+  const tags: Record<string, any> = {}
+  
+  campaignsData.value?.metatags?.forEach(tag => {
+    if (tag.name.startsWith('og:')) {
+      const ogKey = tag.name.replace('og:', '')
+      const camelCaseKey = 'og' + ogKey.charAt(0).toUpperCase() + ogKey.slice(1)
+      tags[camelCaseKey] = tag.content
+    } else if (tag.name.startsWith('twitter:')) {
+      const twitterKey = tag.name.replace('twitter:', '')
+      const camelCaseKey = 'twitter' + twitterKey.charAt(0).toUpperCase() + twitterKey.slice(1)
+      tags[camelCaseKey] = tag.content
+    } else {
+      tags[tag.name] = tag.content
+    }
+  })
+  
+  return tags
+})
+
+// Функция для обновления SEO
+const updateSeo = () => {
+  useSeoMeta({
+    title: pageTitle.value,
+    description: description.value,
+    ...metaTags.value
+  })
+}
+
+// Обновляем SEO при монтировании и при изменении данных
+updateSeo()
+
+watch([pageTitle, description, metaTags], () => {
+  updateSeo()
+}, { deep: true })
+
 onMounted(async () => {
   if (!docsStore.tree) {
     await docsStore.fetchTree()
@@ -65,22 +110,6 @@ const getCardClass = (index: number) => {
   const isWide = index === 2 || index === 7
   return isWide ? "rounded-lg aspect-[936/680] col-span-2" : "rounded-lg aspect-[460/680]"
 }
-
-const pageTitle = computed(() => docsStore.tree?.data?.campaigns?.pagetitle)
-const description = computed(() => docsStore.tree?.data?.campaigns?.description ?? "")
-const metatags = computed(() =>
-  docsStore.tree?.data?.campaigns?.metatags?.map(tag => ({ property: tag.name,
-    content: tag.content, })) ?? [] )
-
-useHead({
-  title: pageTitle,
-  meta: computed(() => [
-    { name: "description", content: description.value },
-    ...metatags.value,
-  ]),
-})
-
-
 </script>
 
 <template>

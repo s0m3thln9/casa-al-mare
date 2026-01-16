@@ -5,7 +5,33 @@ const route = useRoute()
 const slug = computed(() => route.params.slug as string)
 const docsStore = useDocsStore()
 
-const doc = computed(() => docsStore.getDocBySlug(slug.value))
+const { data: treeData } = await useFetch(
+  "https://back.casaalmare.com/api/getdocTree"
+)
+
+const doc = computed(() => {
+  const slugValue = slug.value
+  if (!slugValue || !treeData.value?.data) return null
+  
+  // Ищем документ по slug во всех ветках
+  const findDoc = (obj: any): any => {
+    if (!obj) return null
+    
+    for (const key in obj) {
+      const item = obj[key]
+      if (item && typeof item === 'object') {
+        if (item.alias === slugValue) return item
+        if (item.subitems) {
+          const found = findDoc(item.subitems)
+          if (found) return found
+        }
+      }
+    }
+    return null
+  }
+  
+  return findDoc(treeData.value.data)
+})
 
 const breadcrumbsItems = computed(() => [
   { name: "Главная", path: "/" },
@@ -14,23 +40,40 @@ const breadcrumbsItems = computed(() => [
 
 const pageTitle = computed(() => doc.value?.pagetitle ?? "")
 const description = computed(() => doc.value?.description ?? "")
-const metatags = computed(() =>
-  doc.value?.metatags?.map(tag =>
-    tag.name.startsWith("og:")
-      ? { property: tag.name, content: tag.content }
-      : { name: tag.name, content: tag.content }
-  ) ?? []
-)
 
-useHead({
-  title: pageTitle,
-  meta: computed(() => [
-    { name: "description", content: description.value },
-    ...metatags.value,
-  ]),
+const metaTags = computed(() => {
+  const tags: Record<string, any> = {}
+  
+  doc.value?.metatags?.forEach(tag => {
+    if (tag.name.startsWith('og:')) {
+      const ogKey = tag.name.replace('og:', '')
+      const camelCaseKey = 'og' + ogKey.charAt(0).toUpperCase() + ogKey.slice(1)
+      tags[camelCaseKey] = tag.content
+    } else if (tag.name.startsWith('twitter:')) {
+      const twitterKey = tag.name.replace('twitter:', '')
+      const camelCaseKey = 'twitter' + twitterKey.charAt(0).toUpperCase() + twitterKey.slice(1)
+      tags[camelCaseKey] = tag.content
+    } else {
+      tags[tag.name] = tag.content
+    }
+  })
+  
+  return tags
 })
 
+const updateSeo = () => {
+  useSeoMeta({
+    title: pageTitle.value,
+    description: description.value,
+    ...metaTags.value
+  })
+}
 
+updateSeo()
+
+watch(doc, () => {
+  updateSeo()
+}, { immediate: true })
 </script>
 
 <template>

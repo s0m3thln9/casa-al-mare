@@ -324,8 +324,12 @@ const hasMoreItems = computed(() => {
 
 const docsStore = useDocsStore()
 
+const { data: treeData } = await useFetch(
+  "https://back.casaalmare.com/api/getdocTree"
+)
+
 const getCurrentCategoryData = computed(() => {
-  const catalogData = docsStore.tree?.data?.catalog
+  const catalogData = treeData.value?.data?.catalog
   if (!catalogData?.subitems) return null
   
   const pathValue = currentPath.value?.trim()
@@ -349,10 +353,9 @@ const getCurrentCategoryData = computed(() => {
       current = current.subitems
     }
   }
-
-  const lastSegment = segments[segments.length - 1]
-  let result: any = docsStore.tree.data.catalog.subitems
   
+  const lastSegment = segments[segments.length - 1]
+  let result: any = catalogData.subitems
   for (let i = 0; i < segments.length - 1; i++) {
     result = result[segments[i]].subitems
   }
@@ -360,33 +363,43 @@ const getCurrentCategoryData = computed(() => {
   return result[lastSegment]
 })
 
-const pageTitle = computed(() => {
-  const categoryData = getCurrentCategoryData.value
-  return categoryData?.pagetitle || docsStore.tree?.data?.catalog?.pagetitle || "Каталог"
-})
+const pageTitle = computed(() => getCurrentCategoryData.value?.pagetitle || treeData.value?.data?.catalog?.pagetitle || "Каталог")
+const description = computed(() => getCurrentCategoryData.value?.description || treeData.value?.data?.catalog?.description || "")
 
-const description = computed(() => {
-  const categoryData = getCurrentCategoryData.value
-  return categoryData?.description || docsStore.tree?.data?.catalog?.description || ""
-})
-
-const metatags = computed(() => {
-  const categoryData = getCurrentCategoryData.value
-  const tags = categoryData?.metatags || docsStore.tree?.data?.catalog?.metatags || []
+const metaTags = computed(() => {
+  const tags = getCurrentCategoryData.value?.metatags || treeData.value?.data?.catalog?.metatags || []
   
-  return tags.map((tag: any) => ({
-    property: tag.name,
-    content: tag.content,
-  }))
+  const result: Record<string, string> = {}
+  tags.forEach(tag => {
+    if (tag.name.startsWith("og:")) {
+      const ogKey = tag.name.replace("og:", "")
+      const camelCaseKey = "og" + ogKey.charAt(0).toUpperCase() + ogKey.slice(1)
+      result[camelCaseKey] = tag.content
+    } else if (tag.name.startsWith("twitter:")) {
+      const twitterKey = tag.name.replace("twitter:", "")
+      const camelCaseKey = "twitter" + twitterKey.charAt(0).toUpperCase() + twitterKey.slice(1)
+      result[camelCaseKey] = tag.content
+    } else {
+      result[tag.name] = tag.content
+    }
+  })
+  
+  return result
 })
 
-useHead({
-  title: pageTitle,
-  meta: computed(() => [
-    { name: "description", content: description.value },
-    ...metatags.value,
-  ]),
-})
+const updateSeo = () => {
+  useSeoMeta({
+    title: pageTitle.value,
+    description: description.value,
+    ...metaTags.value
+  })
+}
+
+updateSeo()
+
+watch(getCurrentCategoryData, () => {
+  updateSeo()
+}, { immediate: true })
 </script>
 
  <template>
