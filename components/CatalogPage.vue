@@ -198,6 +198,8 @@ onMounted(async () => {
   applyFiltersFromPath(currentPath.value, route.query)
   catalogStore.shouldResetCount = false
   
+  catalogStore.syncPending()
+  
   void nextTick(() => {
     if (scrollPosition.value > 0) {
       window.scrollTo(0, scrollPosition.value)
