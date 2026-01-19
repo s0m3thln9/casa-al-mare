@@ -146,11 +146,11 @@ const secondMenuItems: MenuItem[] = [
       { label: "Уход за изделиями", link: "/care" },
     ],
   },
-  {
-    label: "Подписаться на расссылку",
-    customClass: "bg-[#F3A45429] rounded-lg",
-    func: () => popupStore.open("subscription"),
-  },
+  // {
+  //   label: "Подписаться на расссылку",
+  //   customClass: "bg-[#F3A45429] rounded-lg",
+  //   func: () => popupStore.open("subscription"),
+  // },
   {
     label: "Контакты",
     link: "/contacts",

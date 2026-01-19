@@ -167,7 +167,7 @@ const handleOrdersClick = () => {
           >оферта</NuxtLink
           ></span
         >
-        <span class="text-xs text-[#BBB8B6]">CASA AL MARE © 2025</span>
+        <span class="text-xs text-[#BBB8B6]">CASA AL MARE © 2026</span>
       </div>
 <!--      <div class="flex flex-col gap-4 w-full mt-4 lg:w-auto lg:mt-0">-->
 <!--        <h3 class="font-normal text-base uppercase">Аккаунт</h3>-->
@@ -213,7 +213,7 @@ const handleOrdersClick = () => {
 <!--            >оферта</NuxtLink-->
 <!--          ></span-->
 <!--        >-->
-<!--        <span class="text-xs">CASA AL MARE © 2025</span>-->
+<!--        <span class="text-xs">CASA AL MARE © 2026</span>-->
 <!--      </div>-->
     </div>
     <div class="flex flex-col items-center gap-12 sm:hidden">
@@ -287,7 +287,7 @@ const handleOrdersClick = () => {
         width="156"
         height="174"
       >
-      <span class="text-xs text-[#BBB8B6]">CASA AL MARE © 2025</span>
+      <span class="text-xs text-[#BBB8B6]">CASA AL MARE © 2026</span>
     </div>
   </footer>
 </template>

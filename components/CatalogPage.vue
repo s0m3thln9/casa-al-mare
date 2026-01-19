@@ -432,28 +432,29 @@ watch(getCurrentCategoryData, () => {
     </div>
     <div
       v-else
-      class="flex justify-between items-center p-2 sticky top-[32px] bg-[#FFFFFA] z-[8]"
+      class="flex flex-col gap-2 items-center p-2 sticky top-[32px] bg-[#FFFFFA] z-[8]"
     >
-      <SelectButton
-        v-model="catalogStore.mobileStrokeCardCount"
-        :variants="['2', '3']"
-      />
       <span class="text-[10px] font-light font-[Commissioner]"><AppBreadcrumbs :items="breadcrumsItems" /></span>
-      <div class="flex items-center gap-1">
-        <span class="text-[11px] font-[Manrope]" />
-        <button
-          class="cursor-pointer flex items-center justify-center w-12 h-6 font-[Manrope] text-xs text-[#211D1D]"
-          :disabled="catalogStore.isLoading"
-          @click="
-            async () => {
-              catalogStore.syncPending()
-              popupStore.open('filter')
-            }
-          "
-        >
-          {{ `(${pendingFilteredCount})` }}
-          <div class="sliders-icon" />
-        </button>
+      <div class="flex justify-between w-full">
+        <SelectButton
+          v-model="catalogStore.mobileStrokeCardCount"
+          :variants="['2', '3']"
+        />
+        <div class="flex items-center gap-1">
+          <button
+            class="cursor-pointer flex items-center justify-center w-12 h-6 font-[Manrope] text-xs text-[#211D1D]"
+            :disabled="catalogStore.isLoading"
+            @click="
+              async () => {
+                catalogStore.syncPending()
+                popupStore.open('filter')
+              }
+            "
+          >
+            {{ `(${pendingFilteredCount})` }}
+            <div class="sliders-icon" />
+          </button>
+        </div>
       </div>
     </div>
     <div

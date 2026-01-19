@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Preferences } from "@capacitor/preferences"
 
-const props = defineProps<{
+defineProps<{
   modelValue: boolean
 }>()
 
@@ -9,7 +9,8 @@ const emit = defineEmits<{
   (e: "update:modelValue", value: boolean): void
 }>()
 
-const isVisible = ref(props.modelValue)
+const isVisible = ref(false)
+const isChecked = ref(false)
 
 onMounted(async () => {
   try {
@@ -23,6 +24,8 @@ onMounted(async () => {
   } catch (error) {
     console.error("Ошибка чтения Preferences для cookies:", error)
     isVisible.value = true
+  } finally {
+    isChecked.value = true
   }
 })
 
@@ -40,14 +43,18 @@ const handleClick = async (e: MouseEvent) => {
 
 <template>
   <div
-    v-if="isVisible"
+    v-if="isChecked && isVisible"
     class="fixed bottom-0 left-0 z-50 w-full p-2 pt-6 bg-[#FFFFFA] sm:p-0 sm:bg-transparent sm:w-[300px] sm:left-auto sm:right-1 sm:bottom-5"
   >
     <div
       class="flex p-2.5 rounded-2xl bg-[#FFFFFA] justify-between gap-6 items-center border border-[#BBB8B6] sm:h-[65px]"
     >
-      <span class="text-xs font-[Manrope] text-[#1A1A1A] sm:text-[15px] sm:font-light sm:text-[#211D1D]">
-        Согласие на cookies
+      <span
+        class="text-xs font-[Manrope] text-[#1A1A1A] sm:text-[13px] sm:font-light sm:text-[#211D1D]">
+        Данный сайт использует cookies в порядке и целях, указанных по <NuxtLink
+        class="underline"
+        to="/info/confidence"
+      >ссылке</NuxtLink>
       </span>
       <AppButton
         content="принять"
