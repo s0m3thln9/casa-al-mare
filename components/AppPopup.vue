@@ -66,12 +66,21 @@ watch(
   { immediate: true },
 )
 
+const updateVh = () => {
+  const vh = window.innerHeight * 0.01
+  document.documentElement.style.setProperty('--vh', `${vh}px`)
+}
+
 onMounted(() => {
   window.addEventListener("keydown", handleKeydown)
-})
+  
+  updateVh()
+  window.addEventListener("resize", updateVh)
+});
 
 onUnmounted(() => {
-  window.removeEventListener("keydown", handleKeydown)
+  window.removeEventListener("keydown", handleKeydown);
+  window.removeEventListener("resize", updateVh);
 })
 </script>
 
@@ -86,11 +95,12 @@ onUnmounted(() => {
     @click.self="popupStore.close"
   >
     <div
-      class="fixed w-full h-[100dvh] overflow-y-auto bg-[#FFFFFA] z-30 top-0 right-0 py-8 px-4 transition-all duration-300 ease-in-out sm:w-[454px] sm:p-8"
+      class="fixed w-full overflow-y-auto bg-[#FFFFFA] z-30 top-0 right-0 py-8 px-4 transition-all duration-300 ease-in-out sm:w-[454px] sm:p-8"
+      :style="{ height: 'calc(var(--vh, 1vh) * 100)' }"
       :class="{
-        'opacity-100 translate-x-0': popupStore.isOpen(popupId),
-        'opacity-0 translate-x-[100%]': !popupStore.isOpen(popupId),
-      }"
+    'opacity-100 translate-x-0': popupStore.isOpen(popupId),
+    'opacity-0 translate-x-[100%]': !popupStore.isOpen(popupId),
+  }"
       @touchstart="onTouchStart"
       @touchmove="onTouchMove"
       @touchend="onTouchEnd"
