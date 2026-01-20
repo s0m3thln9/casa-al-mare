@@ -5,10 +5,13 @@ import type { Item } from "~/stores/catalog"
 const route = useRoute()
 const alias = computed(() => {
   const param = route.params.alias
+  let result = ''
   if (Array.isArray(param)) {
-    return param.join('/') || ''
+    result = param.join('/') || ''
+  } else {
+    result = param || ''
   }
-  return param || ''
+  return result.endsWith('/') ? result.slice(0, -1) : result
 })
 const catalogStore = useCatalogStore()
 const popupStore = usePopupStore()
