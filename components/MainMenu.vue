@@ -94,11 +94,11 @@ const menuItems = computed<MenuItem[]>(() => {
     link: "/certificate",
     customClass2: "my-4",
   })
-  items.push({
-    label: "Новинки",
-    link: "/catalog",
-    customClass2: "sm:hidden",
-  })
+  // items.push({
+  //   label: "Новинки",
+  //   link: "/catalog",
+  //   customClass2: "sm:hidden",
+  // })
   items.push({
     label: "Блог",
     link: "/blog",
