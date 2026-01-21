@@ -87,7 +87,7 @@ const navigateToItem = async (itemId: number) => {
   }
   const item = catalogStore.getItemById(itemId)
   const fullAlias = item?.alias || String(itemId)
-  const itemLink = `/catalog/item/${fullAlias}`
+  const itemLink = `/product/${fullAlias}`
   try {
     await navigateTo(itemLink)
   } catch (error) {

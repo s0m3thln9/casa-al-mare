@@ -727,7 +727,7 @@ watch(doc, () => {
               <NuxtLink
                 v-for="colorItem in availableColors"
                 :key="colorItem.alias"
-                :to="`/catalog/item/${colorItem.alias}`"
+                :to="`/product/${colorItem.alias}`"
                 class="flex flex-col justify-center gap-2 items-center cursor-pointer hover:opacity-80 transition-opacity"
               >
                 <div

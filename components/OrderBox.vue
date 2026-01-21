@@ -60,7 +60,7 @@ const navigateToItem = (itemAlias: string | undefined, itemId: number) => {
     return
   }
   const alias = itemAlias || String(itemId)
-  navigateTo(`/catalog/item/${alias}`)
+  navigateTo(`/product/${alias}`)
 }
 
 const formatDate = (timestamp: number): string => {
