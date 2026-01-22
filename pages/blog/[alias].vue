@@ -164,8 +164,27 @@ const breadcrumsItems = computed(() => [
   border-radius: 0.5rem;
   max-width: 100%;
   height: auto;
+  margin: 2rem 0;
+  display: block;
+}
+
+.article-content :deep(p img) {
+  border-radius: 0.5rem;
+  max-width: 100%;
+  height: auto;
   margin: 2rem auto;
   display: block;
+}
+
+.article-content :deep(blockquote div) {
+  display: flex;
+  gap: 1rem;
+}
+
+.article-content :deep(blockquote img) {
+  max-width: calc(50% - 1rem);
+  width: auto !important;
+  height: auto !important;
 }
 
 .article-content :deep(ul) {
