@@ -181,10 +181,56 @@ const breadcrumsItems = computed(() => [
   gap: 1rem;
 }
 
+
 .article-content :deep(blockquote img) {
   max-width: calc(50% - 1rem);
   width: auto !important;
   height: auto !important;
+}
+
+.article-content :deep(blockquote p) {
+  display: flex;
+  gap: 1rem;
+}
+
+.article-content :deep(blockquote) {
+  display: flex;
+  gap: 1rem;
+}
+
+.article-content :deep(blockquote img) {
+  max-width: calc(50% - 1rem);
+  width: auto !important;
+  height: auto !important;
+}
+
+@media screen and (max-width: 640px) {
+  .article-content :deep(blockquote div) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .article-content :deep(blockquote p) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .article-content :deep(blockquote) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .article-content :deep(blockquote img) {
+    max-width: 100%;
+    width: auto !important;
+    height: auto !important;
+  }
 }
 
 .article-content :deep(ul) {
