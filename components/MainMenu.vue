@@ -158,12 +158,12 @@ const secondMenuItems: MenuItem[] = [
   {
     label: "Telegram",
     customClass2: "sm:hidden",
-    a: "https://t.me/casaalmare_swim",
+    a: "https://t.me/casaalmarecom",
   },
   {
     label: "WhatsApp",
     customClass2: "sm:hidden",
-    a: "https://wa.me/79300360494",
+    a: "https://wa.me/message/QHQXRHXMTADMK1",
   },
 ]
 

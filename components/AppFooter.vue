@@ -95,23 +95,23 @@ const handleOrdersClick = () => {
           <li><NuxtLink to="/contacts">Контакты</NuxtLink></li>
           <li>
             <a
-              href="https://t.me/casaalmare_swim"
+              href="https://t.me/casaalmarecom"
               target="_blank"
               rel="noopener noreferrer"
             >
               Telegram
             </a>
           </li>
-<!--          <li>-->
-<!--            <a-->
-<!--              href="https://wa.me/79300360494"-->
-<!--              target="_blank"-->
-<!--              rel="noopener noreferrer"-->
-<!--            >-->
-<!--              WhatsApp-->
-<!--            </a>-->
-<!--          </li>-->
-          <li><NuxtLink to="/">Pinterest</NuxtLink></li>
+          <li>
+            <a
+              href="https://wa.me/message/QHQXRHXMTADMK1"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              WhatsApp
+            </a>
+          </li>
+<!--          <li><NuxtLink to="/">Pinterest</NuxtLink></li>-->
         </ul>
       </div>
       <div class="flex flex-col gap-4">
@@ -221,20 +221,20 @@ const handleOrdersClick = () => {
         <div class="flex gap-2">
           <a
             class="w-full h-full"
-            href="https://wa.me/79300360494"
+            href="https://wa.me/message/QHQXRHXMTADMK1"
             target="_blank"
             rel="noopener noreferrer"
           >
             <button
-              aria-label="Whatsapp"
+              aria-label="WhatsApp"
               class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]"
             >
-              Whatsapp
+              WhatsApp
             </button>
           </a>
           <a
             class="w-full h-full"
-            href="https://t.me/casaalmare_swim"
+            href="https://t.me/casaalmarecom"
             target="_blank"
             rel="noopener noreferrer"
           >
