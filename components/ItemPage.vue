@@ -252,8 +252,7 @@ const isNoSizeItem = computed(() => {
 })
 
 const isNoSizeItemParams = computed(() => {
-  return item.value?.template
-    !== 4
+  return !item.value?.showBlock
 })
 
 const canAddToCart = computed(() => isNoSizeItem.value || !!itemStore.size)
