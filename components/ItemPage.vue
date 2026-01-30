@@ -224,7 +224,8 @@ const isTransitioning = ref(false)
 // })
 
 const isNoSizeItem = computed(() => {
-  return Object.keys(item.value?.vector)[0] === 'NS'
+  return Object.keys(item.value?.vector)[0] === 'NS' || item.value?.template
+    !== 4
 })
 
 const canAddToCart = computed(() => isNoSizeItem.value || !!itemStore.size)
