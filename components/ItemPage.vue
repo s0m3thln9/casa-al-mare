@@ -788,7 +788,9 @@ watch(doc, () => {
         <div
           v-if="!isNoSizeItem"
           class="flex flex-col justify-center items-center gap-1 mt-12 sm:mt-10">
-          <span class="font-light text-xs">На модели размер: {{item.sizes[0]}}</span>
+          <span class="font-light text-xs">На модели размер:
+                                           {{item.sizes ? item.sizes[0] : 0
+                                           }}</span>
           <span class="text-[11px] text-[#363636]">Параметры модели: 178 88/59/90</span>
         </div>
         <div class="flex flex-col justify-center items-stretch gap-4 mt-6">
