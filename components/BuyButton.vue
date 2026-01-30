@@ -29,10 +29,10 @@ const styleVariants = {
 
 const getMissingParamText = (param: string | null): string => {
   if (!param) return "Выберите все параметры"
-
+  
   if (param === "size") return "Выберите размер"
   if (param === "all") return "Выберите все параметры"
-
+  
   // Для динамических типов товаров из комплекта
   return `Выберите размер для "${param.toLowerCase()}"`
 }
@@ -41,8 +41,13 @@ const currentState = computed(() => {
   let content: string
   let style: string
   let disabled: boolean
-
-  if (!props.inStock) {
+  
+  // Проверка выбранных параметров в самом верху
+  if (!props.isParametersSelected) {
+    content = getMissingParamText(props.missingParams)
+    style = styleBase + styleVariants.default
+    disabled = false
+  } else if (!props.inStock) {
     content = "Нет в наличии"
     style = styleBase + styleVariants.outOfStock
     disabled = true
@@ -50,30 +55,24 @@ const currentState = computed(() => {
     content = "Уведомить о размерах"
     style = styleBase + styleVariants.notify
     disabled = false
-  } else if (props.isParametersSelected) {
-    if (isLoading.value) {
-      content = "Добавление..."
-      style = styleBase + styleVariants.preload
-      disabled = true
-    } else if (showSuccess.value) {
-      content = "Добавлено"
-      style = styleBase + styleVariants.success
-      disabled = true
-    } else if (isInCart.value) {
-      content = "Перейти в корзину"
-      style = styleBase + styleVariants.default
-      disabled = false
-    } else {
-      content = props.items ? "Добавить комплект в корзину" : "Добавить в корзину"
-      style = styleBase + styleVariants.default
-      disabled = false
-    }
+  } else if (isLoading.value) {
+    content = "Добавление..."
+    style = styleBase + styleVariants.preload
+    disabled = true
+  } else if (showSuccess.value) {
+    content = "Добавлено"
+    style = styleBase + styleVariants.success
+    disabled = true
+  } else if (isInCart.value) {
+    content = "Перейти в корзину"
+    style = styleBase + styleVariants.default
+    disabled = false
   } else {
-    content = getMissingParamText(props.missingParams)
+    content = props.items ? "Добавить комплект в корзину" : "Добавить в корзину"
     style = styleBase + styleVariants.default
     disabled = false
   }
-
+  
   return { content, style, disabled }
 })
 
@@ -89,25 +88,30 @@ watch(
 )
 
 const handleClick = async () => {
-  if (!props.inStock) return
-  if (!props.availableQuantity) {
-    alert("Уведомление о поступлении товара настроено")
-    return
-  }
+  // Проверка параметров в самом начале обработчика
   if (!props.isParametersSelected) {
     errorMessage.value = currentState.value.content
     showError.value = true
     return
   }
+  
+  if (!props.inStock) return
+  
+  if (!props.availableQuantity) {
+    alert("Уведомление о поступлении товара настроено")
+    return
+  }
+  
   if (isInCart.value) {
     navigateTo("/order")
     return
   }
+  
   if (!isLoading.value && !showSuccess.value) {
     isLoading.value = true
     try {
       const token = await userStore.loadToken()
-
+      
       if (props.items && props.items.length > 0) {
         const response = await $fetch("https://back.casaalmare.com/api/addToCart", {
           method: "POST",
@@ -120,7 +124,7 @@ const handleClick = async () => {
             token: token,
           },
         })
-
+        
         if (response.success) {
           // Добавляем все товары в локальную корзину
           for (const item of props.items) {
@@ -132,7 +136,7 @@ const handleClick = async () => {
               orderStore.cartItems.push(newItem)
             }
           }
-
+          
           showSuccess.value = true
           setTimeout(() => {
             showSuccess.value = false

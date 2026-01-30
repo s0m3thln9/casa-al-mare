@@ -4,6 +4,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 const docsStore = useDocsStore()
 const popupStore = usePopupStore()
 const setStore = useSetStore()
+const catalogStore = useCatalogStore()
 
 const { data: treeData } = await useFetch(
   "https://back.casaalmare.com/api/getdocTree"
@@ -59,6 +60,57 @@ const missingParamLabel = computed(() => {
   return missing ? missing.pagetitle : 'все параметры'
 })
 
+// Проверка наличия товаров в комплекте
+const isInStock = computed(() => {
+  if (selectedSetItems.value.length === 0) return false
+  
+  return selectedSetItems.value.every(item => {
+    const catalogItem = catalogStore.getItemById(item.id)
+    if (!catalogItem || !catalogItem.vector) return false
+    
+    const selectedSize = setStore.items[item.id]
+    
+    // Проверка для товаров без размеров (NS)
+    const isNoSize = Object.keys(catalogItem.vector)[0] === 'NS'
+    
+    if (isNoSize) {
+      const vectorData = Object.values(catalogItem.vector)[0]
+      return (vectorData.quantity === 0 && vectorData.comingSoon > 0) || vectorData.quantity > 0
+    }
+    
+    // Проверка для товаров с размерами
+    if (!selectedSize || !catalogItem.vector[selectedSize]) return false
+    
+    const vectorData = catalogItem.vector[selectedSize]
+    return (vectorData.quantity === 0 && vectorData.comingSoon > 0) || vectorData.quantity > 0
+  })
+})
+
+const availableQuantity = computed(() => {
+  if (selectedSetItems.value.length === 0) return false
+  
+  return selectedSetItems.value.every(item => {
+    const catalogItem = catalogStore.getItemById(item.id)
+    if (!catalogItem || !catalogItem.vector) return false
+    
+    const selectedSize = setStore.items[item.id]
+    
+    // Проверка для товаров без размеров (NS)
+    const isNoSize = Object.keys(catalogItem.vector)[0] === 'NS'
+    
+    if (isNoSize) {
+      const vectorData = Object.values(catalogItem.vector)[0]
+      return vectorData.quantity > 0
+    }
+    
+    // Проверка для товаров с размерами
+    if (!selectedSize || !catalogItem.vector[selectedSize]) return false
+    
+    const vectorData = catalogItem.vector[selectedSize]
+    return vectorData.quantity > 0
+  })
+})
+
 const campaignsData = computed(() => treeData.value?.data?.campaigns)
 
 const pageTitle = computed(() => campaignsData.value?.pagetitle ?? "")
@@ -103,6 +155,11 @@ watch([pageTitle, description, metaTags], () => {
 onMounted(async () => {
   if (!docsStore.tree) {
     await docsStore.fetchTree()
+  }
+  
+  // Загружаем товары из каталога, если они еще не загружены
+  if (catalogStore.items.length === 0) {
+    await catalogStore.loadItems()
   }
 })
 
@@ -167,8 +224,8 @@ const getCardClass = (index: number) => {
           :items="itemsForPurchase"
           :is-parameters-selected="isAllSelected"
           :missing-params="missingParamLabel"
-          available-quantity
-          in-stock
+          :in-stock="isInStock"
+          :available-quantity="availableQuantity"
         />
       </div>
     </AppPopup>
