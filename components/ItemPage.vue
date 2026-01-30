@@ -26,6 +26,27 @@ const isHtml = (str: string) => {
   return /<\/?[a-z][\s\S]*>/i.test(str)
 }
 
+const sendViewItemEvent = (viewedItem: Item) => {
+  if (!viewedItem) return
+  
+  if (import.meta.client) {
+    window.dataLayer = window.dataLayer || []
+    window.dataLayer.push({
+      event: "view_item",
+      ecommerce: {
+        items: [{
+          item_name: viewedItem.name || "Название товара",
+          item_id: viewedItem.id?.toString() || "Артикул товара",
+          price: parseInt(viewedItem.price || "0"),
+          item_category: viewedItem.parents?.[0]?.name || "Категория товара",
+          item_variant: viewedItem.sizes?.[0] || "",
+          quantity: 1
+        }]
+      }
+    })
+  }
+}
+
 const loadItem = async () => {
   try {
     isLoading.value = true
@@ -68,6 +89,9 @@ const loadItem = async () => {
     }
     
     item.value = foundItem
+    
+    // Отправляем событие просмотра товара в Google Analytics
+    sendViewItemEvent(foundItem)
     
     const sizeFromQuery = route.query.size as string
     if (sizeFromQuery && foundItem.sizes?.includes(sizeFromQuery)) {
@@ -846,17 +870,17 @@ watch(doc, () => {
               class="w-full h-[1px] bg-[#BBB8B6]"
             />
           </template>
-<!--          <div-->
-<!--            v-if="tabSections.length > 0"-->
-<!--            class="w-full h-[1px] bg-[#BBB8B6]"-->
-<!--          />-->
-<!--          <div-->
-<!--            class="flex justify-center gap-2.5 items-center w-full sm:justify-between cursor-pointer sm:gap-0"-->
-<!--            @click="popupStore.open('subscription')"-->
-<!--          >-->
-<!--            <span class="font-light text-sm">Подписаться на рассылку</span>-->
-<!--            <div class="icon-mail w-4 h-4 shrink-0" />-->
-<!--          </div>-->
+          <!--          <div-->
+          <!--            v-if="tabSections.length > 0"-->
+          <!--            class="w-full h-[1px] bg-[#BBB8B6]"-->
+          <!--          />-->
+          <!--          <div-->
+          <!--            class="flex justify-center gap-2.5 items-center w-full sm:justify-between cursor-pointer sm:gap-0"-->
+          <!--            @click="popupStore.open('subscription')"-->
+          <!--          >-->
+          <!--            <span class="font-light text-sm">Подписаться на рассылку</span>-->
+          <!--            <div class="icon-mail w-4 h-4 shrink-0" />-->
+          <!--          </div>-->
         </div>
       </div>
     </div>
@@ -945,31 +969,31 @@ watch(doc, () => {
         </div>
       </AppPopup>
     </template>
-
-<!--    <AppPopup-->
-<!--      title="Подписаться на рассылку"-->
-<!--      popup-id="subscription"-->
-<!--    >-->
-<!--      <div class="mt-6 flex flex-col gap-6">-->
-<!--        <div class="p-4 border border-[#BBB8B6] rounded-2xl flex flex-col gap-4">-->
-<!--          <h3 class="font-[Manrope] text-sm text-[#211D1D]">Подписка на рассылку</h3>-->
-<!--          <span class="font-[Manrope] text-xs text-[#363636]">-->
-<!--            Подпишитесь, чтобы получать новости о новинках, акциях и эксклюзивных предложениях.-->
-<!--          </span>-->
-<!--          <div class="flex flex-col gap-2">-->
-<!--            <input-->
-<!--              type="email"-->
-<!--              placeholder="Ваш email"-->
-<!--              class="p-2 border border-[#BBB8B6] rounded-lg text-xs"-->
-<!--            >-->
-<!--            <AppButton-->
-<!--              content="Подписаться"-->
-<!--              custom-class="w-full"-->
-<!--            />-->
-<!--          </div>-->
-<!--        </div>-->
-<!--      </div>-->
-<!--    </AppPopup>-->
+    
+    <!--    <AppPopup-->
+    <!--      title="Подписаться на рассылку"-->
+    <!--      popup-id="subscription"-->
+    <!--    >-->
+    <!--      <div class="mt-6 flex flex-col gap-6">-->
+    <!--        <div class="p-4 border border-[#BBB8B6] rounded-2xl flex flex-col gap-4">-->
+    <!--          <h3 class="font-[Manrope] text-sm text-[#211D1D]">Подписка на рассылку</h3>-->
+    <!--          <span class="font-[Manrope] text-xs text-[#363636]">-->
+    <!--            Подпишитесь, чтобы получать новости о новинках, акциях и эксклюзивных предложениях.-->
+    <!--          </span>-->
+    <!--          <div class="flex flex-col gap-2">-->
+    <!--            <input-->
+    <!--              type="email"-->
+    <!--              placeholder="Ваш email"-->
+    <!--              class="p-2 border border-[#BBB8B6] rounded-lg text-xs"-->
+    <!--            >-->
+    <!--            <AppButton-->
+    <!--              content="Подписаться"-->
+    <!--              custom-class="w-full"-->
+    <!--            />-->
+    <!--          </div>-->
+    <!--        </div>-->
+    <!--      </div>-->
+    <!--    </AppPopup>-->
   </main>
 </template>
 

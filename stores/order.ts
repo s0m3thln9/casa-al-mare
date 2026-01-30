@@ -136,6 +136,7 @@ export interface PaymentMethod {
 export const useOrderStore = defineStore("order", () => {
   const userStore = useUserStore()
   const authStore = useAuthStore()
+  const catalogStore = useCatalogStore()
 
   const cartItems = ref<CartItem[]>([])
   const isCheckingOrderStatus = ref(false)
@@ -828,21 +829,76 @@ export const useOrderStore = defineStore("order", () => {
   }
   
   async function decrementQuantity(keyOrId: string) {
-    const item = findItem(keyOrId);
-    if (!item || item.count <= 1) return;
-    await updateCartApi(item.key, -1);
+    const item = findItem(keyOrId)
+    if (!item || item.count <= 1) return
+    await updateCartApi(item.key, -1)
+    if (import.meta.client) {
+      await catalogStore.loadItems()
+      const product = catalogStore.getItemById(item.id)
+      window.dataLayer = window.dataLayer || []
+      dataLayer.push({
+        event: "remove_from_cart",
+        ecommerce: {
+          items: [{
+            item_name: product?.name || "Название товара",
+            item_id: item.id.toString(),
+            price: item.price,
+            item_category: product?.parents?.[0]?.name || "Категория товара",
+            item_variant: item.variant,
+            quantity: 1
+          }]
+        }
+      })
+    }
   }
   
   async function incrementQuantity(keyOrId: string) {
-    const item = findItem(keyOrId);
-    if (!item) return;
-    await updateCartApi(item.key, 1);
+    const item = findItem(keyOrId)
+    if (!item) return
+    await updateCartApi(item.key, 1)
+    if (import.meta.client) {
+      await catalogStore.loadItems()
+      const product = catalogStore.getItemById(item.id)
+      window.dataLayer = window.dataLayer || []
+      dataLayer.push({
+        event: "add_to_cart",
+        ecommerce: {
+          items: [{
+            item_name: product?.name || "Название товара",
+            item_id: item.id.toString(),
+            price: item.price,
+            item_category: product?.parents?.[0]?.name || "Категория товара",
+            item_variant: item.variant,
+            quantity: 1
+          }]
+        }
+      })
+    }
   }
   
   async function removeItemFromCart(keyOrId: string) {
-    const item = findItem(keyOrId);
-    if (!item) return;
-    await updateCartApi(item.key, -item.count);
+    const item = findItem(keyOrId)
+    if (!item) return
+    const removedQuantity = item.count
+    await updateCartApi(item.key, -item.count)
+    if (import.meta.client) {
+      await catalogStore.loadItems()
+      const product = catalogStore.getItemById(item.id)
+      window.dataLayer = window.dataLayer || []
+      dataLayer.push({
+        event: "remove_from_cart",
+        ecommerce: {
+          items: [{
+            item_name: product?.name || "Название товара",
+            item_id: item.id.toString(),
+            price: item.price,
+            item_category: product?.parents?.[0]?.name || "Категория товара",
+            item_variant: item.variant,
+            quantity: removedQuantity
+          }]
+        }
+      })
+    }
   }
 
   function setCartItems(items: CartItem[] | null | undefined) {

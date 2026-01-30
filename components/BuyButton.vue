@@ -8,7 +8,6 @@ const props = defineProps<{
   size?: string
   missingParams?: string | null
 }>()
-
 const isLoading = ref(false)
 const showSuccess = ref(false)
 const isInCart = ref(false)
@@ -16,7 +15,7 @@ const errorMessage = ref("")
 const showError = ref(false)
 const userStore = useUserStore()
 const orderStore = useOrderStore()
-
+const catalogStore = useCatalogStore()
 const styleBase =
   "flex justify-center items-center w-full py-4 border rounded-[18px] text-[13px]/snug font-[Manrope] sm:text-sm/snug "
 const styleVariants = {
@@ -26,23 +25,19 @@ const styleVariants = {
   outOfStock: "bg-[#FFFFFA] border-[#8C8785] text-[#8C8785] cursor-default",
   notify: "bg-[#FFFFFA] border-[#211D1D] text-[#211D1D] cursor-pointer hover:bg-[#211D1D] hover:text-[#FFFFFA]",
 }
-
 const getMissingParamText = (param: string | null): string => {
   if (!param) return "Выберите все параметры"
   
   if (param === "size") return "Выберите размер"
   if (param === "all") return "Выберите все параметры"
   
-  // Для динамических типов товаров из комплекта
   return `Выберите размер для "${param.toLowerCase()}"`
 }
-
 const currentState = computed(() => {
   let content: string
   let style: string
   let disabled: boolean
   
-  // Проверка выбранных параметров в самом верху
   if (!props.isParametersSelected) {
     content = getMissingParamText(props.missingParams)
     style = styleBase + styleVariants.default
@@ -75,7 +70,6 @@ const currentState = computed(() => {
   
   return { content, style, disabled }
 })
-
 watch(
   [() => props.size, () => props.items],
   () => {
@@ -86,9 +80,7 @@ watch(
   },
   { deep: true, immediate: false },
 )
-
 const handleClick = async () => {
-  // Проверка параметров в самом начале обработчика
   if (!props.isParametersSelected) {
     errorMessage.value = currentState.value.content
     showError.value = true
@@ -126,7 +118,6 @@ const handleClick = async () => {
         })
         
         if (response.success) {
-          // Добавляем все товары в локальную корзину
           for (const item of props.items) {
             const newItem: CartItem = { id: item.id, size: item.size, count: 1 }
             const existing = orderStore.cartItems.find((e: CartItem) => e.id === newItem.id && e.size === newItem.size)
@@ -142,6 +133,26 @@ const handleClick = async () => {
             showSuccess.value = false
             isInCart.value = true
           }, 1500)
+          if (import.meta.client) {
+            await catalogStore.loadItems() // Загрузка товаров, если не загружены
+            window.dataLayer = window.dataLayer || []
+            dataLayer.push({
+              event: "add_to_cart",
+              ecommerce: {
+                items: props.items.map((item) => {
+                  const product = catalogStore.getItemById(item.id)
+                  return {
+                    item_name: product?.name || "Название товара",
+                    item_id: item.id.toString(),
+                    price: product?.price || 0, // Цена с учетом скидки
+                    item_category: product?.parents?.[0]?.name || "Категория товара",
+                    item_variant: item.size || "NS",
+                    quantity: 1
+                  }
+                })
+              }
+            })
+          }
         } else {
           errorMessage.value = response.error || "Ошибка добавления"
           showError.value = true
@@ -173,6 +184,24 @@ const handleClick = async () => {
             showSuccess.value = false
             isInCart.value = true
           }, 1500)
+          if (import.meta.client) {
+            await catalogStore.loadItems()
+            const product = catalogStore.getItemById(props.id!)
+            window.dataLayer = window.dataLayer || []
+            dataLayer.push({
+              event: "add_to_cart",
+              ecommerce: {
+                items: [{
+                  item_name: product?.name || "Название товара",
+                  item_id: props.id!.toString(),
+                  price: product?.price || 0,
+                  item_category: product?.parents?.[0]?.name || "Категория товара",
+                  item_variant: props.size || "NS",
+                  quantity: 1
+                }]
+              }
+            })
+          }
         } else {
           errorMessage.value = response.error || "Ошибка добавления"
           showError.value = true
@@ -187,7 +216,6 @@ const handleClick = async () => {
   }
 }
 </script>
-
 <template>
   <AppTooltip
     :text="errorMessage"
@@ -203,5 +231,4 @@ const handleClick = async () => {
     </button>
   </AppTooltip>
 </template>
-
 <style scoped></style>

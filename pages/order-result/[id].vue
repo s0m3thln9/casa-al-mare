@@ -408,6 +408,27 @@ async function handleRetryPay(): Promise<void> {
       orderStore.resetOrder()
       return
     }
+    
+    if (import.meta.client && orderStore.orderId) {
+      window.dataLayer = window.dataLayer || []
+      dataLayer.push({
+        event: "purchase",
+        ecommerce: {
+          transaction_id: orderStore.orderId.toString(),
+          value: orderStore.finalPrice.toString(),
+          shipping: orderStore.deliveryCost.toString(),
+          currency: "RUB",
+          items: orderStore.cartItems.map((item) => ({
+            item_name: item.name || "Название товара",
+            item_id: item.id.toString(),
+            price: item.price,
+            item_category: item.parents?.[0]?.name || "Категория товара",
+            item_variant: item.variant,
+            quantity: item.count
+          }))
+        }
+      })
+    }
 
     if (paymentData.type === "widget") {
       if (orderStore.isWidgetOpen) {

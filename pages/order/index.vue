@@ -20,7 +20,6 @@ useHead({
     }
   ],
 })
-
 interface CartResponseData {
   success: boolean
   cart_items_count?: number
@@ -47,24 +46,19 @@ interface CartResponseData {
     }
   >
 }
-
 const cityRef = ref<InstanceType<typeof AppSelect> | null>(null)
 const emailRef = ref<InstanceType<typeof AppInput> | null>(null)
 const nameRef = ref<InstanceType<typeof AppInput> | null>(null)
 const newAddressRef = ref<InstanceType<typeof AppInput> | null>(null)
 const phoneRef = ref<InstanceType<typeof SelectInput> | null>(null)
 const surnameRef = ref<InstanceType<typeof AppInput> | null>(null)
-
 const authStore = useAuthStore()
 const authModalStore = useAuthModalStore()
 const orderStore = useOrderStore()
 const userStore = useUserStore()
 const catalogStore = useCatalogStore()
-
 const isExpanded = ref(false)
-
 const isLoadingCart = ref(true)
-
 const handleProfileClick = () => {
   if (authStore.isAuth) {
     navigateTo("/profile/profile")
@@ -72,11 +66,9 @@ const handleProfileClick = () => {
     authModalStore.open()
   }
 }
-
 const toggleExpanded = () => {
   isExpanded.value = !isExpanded.value
 }
-
 const navigateToItem = async (itemId: number) => {
   if (itemId === -1) {
     navigateTo("/certificate")
@@ -94,13 +86,11 @@ const navigateToItem = async (itemId: number) => {
     console.error("Navigation error:", error)
   }
 }
-
 interface PhoneOption {
   code: string
   country: string
   iso: string
 }
-
 const phoneOptions: PhoneOption[] = [
   { code: "+7", country: "Россия", iso: "RU" },
   { code: "+375", country: "Беларусь", iso: "BY" },
@@ -115,14 +105,12 @@ const phoneOptions: PhoneOption[] = [
   { code: "+373", country: "Молдова", iso: "MD" },
   { code: "+995", country: "Грузия", iso: "GE" },
 ]
-
 const loadCloudPaymentsScript = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     if ((window as any).cp) {
       resolve()
       return
     }
-
     const script = document.createElement("script")
     script.src = "https://widget.cloudpayments.ru/bundles/cloudpayments.js"
     script.onload = () => {
@@ -134,7 +122,6 @@ const loadCloudPaymentsScript = (): Promise<void> => {
     document.head.appendChild(script)
   })
 }
-
 onMounted(async () => {
   try {
     await loadCloudPaymentsScript()
@@ -142,7 +129,6 @@ onMounted(async () => {
     console.error("Error loading CloudPayments:", error)
   }
   
-  // Загрузка корзины вынесена в отдельную функцию
   await loadCart()
   
   await orderStore.loadPaymentMethods()
@@ -152,8 +138,38 @@ onMounted(async () => {
   await nextTick()
   await orderStore.refreshCityForUI()
   await nextTick()
+  
+  if (catalogStore.items.length === 0) {
+    await catalogStore.loadItems()
+  }
+  
+  if (import.meta.client && orderStore.cartItems.length > 0) {
+    window.dataLayer = window.dataLayer || []
+    dataLayer.push({
+      event: "view_cart",
+      ecommerce: {
+        items: orderStore.cartItems.map((cartItem) => {
+          const fullItem = catalogStore.getItemById(cartItem.id)
+          
+          return {
+            item_name: fullItem?.name || '',
+            item_id: cartItem.id.toString(),
+            price: cartItem.price,
+            item_category:
+              fullItem?.parents?.[0]?.name ||
+              fullItem?.category ||
+              '',
+            item_variant:
+              fullItem?.variant ||
+              cartItem.variant ||
+              '',
+            quantity: cartItem.count
+          }
+        })
+      }
+    })
+  }
 })
-
 const loadCart = async (): Promise<void> => {
   const token = await userStore.loadToken()
   if (!token) {
@@ -185,10 +201,7 @@ const loadCart = async (): Promise<void> => {
     isLoadingCart.value = false
   }
 }
-
 const isLoading = computed(() => isLoadingCart.value || !orderStore.isLoaded)
-
-// Добавьте watcher для отслеживания изменений корзины:
 watch(
   () => authStore.isAuth,
   async (isAuth) => {
@@ -198,24 +211,17 @@ watch(
   },
   { immediate: true }
 )
-
-// Также добавьте onActivated для обновления при возврате на страницу:
 onActivated(async () => {
   await loadCart()
 })
-
-// И используйте onBeforeMount для ранней загрузки:
 onBeforeMount(async () => {
   await loadCart()
 })
-
 async function handlePay(): Promise<void> {
   if (orderStore.isLoadingPayment) return
-
   if (orderStore.cartItems.length === 0) {
     return
   }
-
   if (orderStore.isPaymentSuccessful === null) {
     if (!authStore.isAuth) {
       if (orderStore.isGuestAuthStep) {
@@ -235,30 +241,25 @@ async function handlePay(): Promise<void> {
         orderStore.errorDeliveryMethod = "Выберите город"
         return
       }
-
       if (!cityRef.value?.validate()) {
         orderStore.showErrorDeliveryMethod = true
         orderStore.errorDeliveryMethod = "Выберите город"
         return
       }
-
       if (!orderStore.deliveryMethod) {
         orderStore.showErrorDeliveryMethod = true
         orderStore.errorDeliveryMethod = "Выберите способ доставки"
         return
       }
-
       if (["1", "2", "3"].includes(orderStore.deliveryMethod)) {
         if (!orderStore.currentAddress) {
           orderStore.showErrorDeliveryMethod = true
           orderStore.errorDeliveryMethod = "Выберите адрес доставки"
           return
         }
-
         const isNewAddress =
           orderStore.currentAddress === "Новый адрес" ||
           (Array.isArray(orderStore.currentAddress) && orderStore.currentAddress.includes("Новый адрес"))
-
         if (isNewAddress) {
           if (!newAddressRef.value?.validate()) {
             orderStore.showErrorDeliveryMethod = true
@@ -281,57 +282,64 @@ async function handlePay(): Promise<void> {
       }
     }
   }
-
   if (orderStore.paymentMethod === null) {
     orderStore.showErrorPaymentMethod = true
     return
   }
-
   orderStore.isLoadingPayment = true
-
   try {
-    console.log("before")
     const paymentData = await orderStore.getPaymentData()
-    console.log("after")
     if (!paymentData || !paymentData.success) {
       console.error("Ошибка получения данных для оплаты")
       orderStore.isLoadingPayment = false
       return
     }
-
+    if (import.meta.client && orderStore.orderId) {
+      window.dataLayer = window.dataLayer || []
+      dataLayer.push({
+        event: "purchase",
+        ecommerce: {
+          transaction_id: orderStore.orderId.toString(),
+          value: orderStore.finalPrice.toString(),
+          shipping: orderStore.deliveryCost.toString(),
+          currency: "RUB",
+          items: orderStore.cartItems.map((item) => ({
+            item_name: item.name || "Название товара",
+            item_id: item.id.toString(),
+            price: item.price,
+            item_category: item.parents?.[0]?.name || "Категория товара",
+            item_variant: item.variant,
+            quantity: item.count
+          }))
+        }
+      })
+    }
     if (paymentData.type === "widget") {
       if (orderStore.isWidgetOpen) {
         console.warn("Виджет уже открыт, игнорируем повторный вызов")
         orderStore.isLoadingPayment = false
         return
       }
-
       if (!(window as any).cp) {
         console.error("CloudPayments script not loaded")
         orderStore.isLoadingPayment = false
         return
       }
-
       const requiredFields = ["publicId", "description", "amount", "currency", "accountId"]
       const missingFields = requiredFields.filter((field) => !paymentData.data?.[field])
-
       if (missingFields.length > 0) {
         console.error("Missing required fields:", missingFields)
         orderStore.isLoadingPayment = false
         return
       }
-
       if (typeof paymentData.data.amount !== "number" || paymentData.data.amount <= 0) {
         console.error("Invalid amount:", paymentData.data.amount)
         orderStore.isLoadingPayment = false
         return
       }
-
       orderStore.isWidgetOpen = true
-
       try {
         const widget = new (window as any).cp.CloudPayments()
-
         const widgetData = {
           publicId: paymentData.data.publicId,
           description: paymentData.data.description,
@@ -342,7 +350,6 @@ async function handlePay(): Promise<void> {
           skin: "mini",
           data: paymentData.data.data || {},
         }
-
         widget.pay("charge", widgetData, {
           onSuccess: (options: any) => {
             orderStore.isLoadingPayment = false
@@ -359,7 +366,6 @@ async function handlePay(): Promise<void> {
           onComplete: (paymentResult: any, options: any) => {
             orderStore.isLoadingPayment = false
             orderStore.isWidgetOpen = false
-
             if (paymentResult && paymentResult.success) {
               if (paymentData.link) {
                 navigateTo(paymentData.link)
@@ -382,35 +388,29 @@ async function handlePay(): Promise<void> {
     orderStore.isWidgetOpen = false
   }
 }
-
 async function handleSave(): Promise<void> {
   if (!newAddressRef.value?.validate()) return
   await orderStore.saveNewAddress()
 }
-
 const hasNonCertificateItems = computed(() => {
   return orderStore.cartItems.some(item => item.id !== -1)
 })
-
 async function handleGuestAuth(): Promise<void> {
   const inputs = [nameRef.value, surnameRef.value, phoneRef.value, emailRef.value]
   const isValid = inputs.every((input): input is NonNullable<typeof input> => input?.validate?.() ?? false)
   if (!isValid) return
-
   orderStore.showErrorAuth = false
   orderStore.showGuestAuthError = false
   orderStore.guestAuthError = ""
   orderStore.isGuestAuthLoading = true
   orderStore.guestAuthButtonContent = "Отправка..."
   orderStore.guestAuthButtonDisabled = true
-
   const body = {
     email: orderStore.email,
     phone: orderStore.phone,
     name: orderStore.name,
     surname: orderStore.surname,
   }
-
   let testData: any = null
   try {
     const response = await $fetch("https://back.casaalmare.com/api/testContacts", {
@@ -434,10 +434,8 @@ async function handleGuestAuth(): Promise<void> {
     orderStore.isGuestAuthLoading = false
     return
   }
-
   const loginType = testData.res === 1 ? 1 : 2
   orderStore.guestLoginType = loginType
-
   if (!orderStore.phone || !orderStore.phone.code || !orderStore.phone.phone) {
     orderStore.guestAuthError = "Неверный формат телефона"
     orderStore.showGuestAuthError = true
@@ -446,7 +444,6 @@ async function handleGuestAuth(): Promise<void> {
     orderStore.isGuestAuthLoading = false
     return
   }
-
   let smsData: any = null
   try {
     const smsBody = { phone: orderStore.phone, register: loginType === 2 ? 1 : 0 }
@@ -478,7 +475,6 @@ async function handleGuestAuth(): Promise<void> {
     orderStore.isGuestAuthLoading = false
     return
   }
-
   orderStore.isGuestAuthStep = true
   orderStore.guestNextCode = smsData.nextCode || 45
   orderStore.startGuestCountdown()
@@ -486,13 +482,11 @@ async function handleGuestAuth(): Promise<void> {
   orderStore.guestAuthButtonDisabled = false
   orderStore.isGuestAuthLoading = false
 }
-
 function getDayLabel(days: number): string {
   if (days % 10 === 1 && days % 100 !== 11) return "день"
   if (days % 10 >= 2 && days % 10 <= 4 && (days % 100 < 10 || days % 100 >= 20)) return "дня"
   return "дней"
 }
-
 function getTimeLabel(type: { term?: { min: number; max: number }; isExpress?: boolean }): string {
   if (type.isExpress) return ""
   const min = type.term?.min || 0
@@ -503,16 +497,13 @@ function getTimeLabel(type: { term?: { min: number; max: number }; isExpress?: b
   }
   return `(${min}-${max} ${getDayLabel(max)})`
 }
-
 async function handleGuestSmsConfirm(): Promise<void> {
   if (!orderStore.guestSmsCode) return
-
   orderStore.showGuestSmsError = false
   orderStore.guestSmsError = ""
   orderStore.isGuestAuthLoading = true
   orderStore.guestSmsButtonContent = "Проверка..."
   orderStore.guestSmsButtonDisabled = true
-
   const body: any = {
     phone: orderStore.phone,
     code: orderStore.guestSmsCode,
@@ -524,7 +515,6 @@ async function handleGuestSmsConfirm(): Promise<void> {
     body.firstname = orderStore.name
     body.lastname = orderStore.surname
   }
-
   let loginData: any = null
   try {
     const response = await $fetch("https://back.casaalmare.com/api/login", {
@@ -532,7 +522,6 @@ async function handleGuestSmsConfirm(): Promise<void> {
       body,
     })
     loginData = response
-
     if (loginData.success) {
       orderStore.guestSmsButtonContent = "Успешно"
       orderStore.guestSmsButtonDisabled = false
@@ -548,7 +537,6 @@ async function handleGuestSmsConfirm(): Promise<void> {
       const errorCode = loginData.error?.code || loginData.error || "Неверный код"
       orderStore.guestSmsError = `Ошибка: ${errorCode}`
       orderStore.showGuestSmsError = true
-
       orderStore.guestSmsButtonContent = "Попробовать снова"
       orderStore.guestSmsButtonDisabled = false
     }
@@ -564,19 +552,16 @@ async function handleGuestSmsConfirm(): Promise<void> {
     }
     orderStore.guestSmsError = errorMsg
     orderStore.showGuestSmsError = true
-
     orderStore.guestSmsButtonContent = "Попробовать снова"
     orderStore.guestSmsButtonDisabled = false
   } finally {
     orderStore.isGuestAuthLoading = false
   }
 }
-
 const isGuestAuthEnabled = computed(() => {
   if (orderStore.isGuestAuthStep) return false
   return orderStore.name && orderStore.surname && orderStore.phone && orderStore.email && !orderStore.isGuestAuthLoading
 })
-
 const hasItemsInCart = computed(() => orderStore.cartItems.length > 0)
 const isGuestSmsSubmitting = computed(() => orderStore.isGuestAuthLoading || orderStore.guestSmsButtonDisabled)
 useSmsAutoSubmit(
@@ -584,11 +569,7 @@ useSmsAutoSubmit(
   handleGuestSmsConfirm,
   isGuestSmsSubmitting,
 )
-
-
-
 </script>
-
 <template>
   <main
     class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D] flex justify-start items-center pt-8 pb-8 flex-col max-sm:px-2"
@@ -821,7 +802,7 @@ useSmsAutoSubmit(
                   <span
                     class="cursor-pointer underline"
                     @click="authModalStore.open"
-                    >Войти</span
+                  >Войти</span
                   >
                 </span>
                 <AppTooltip
@@ -907,7 +888,6 @@ useSmsAutoSubmit(
                     @click="handleGuestAuth"
                   />
                 </AppTooltip>
-
                 <div
                   v-if="orderStore.isGuestAuthStep"
                   class="flex flex-col gap-4 mt-4"
@@ -984,7 +964,7 @@ useSmsAutoSubmit(
                   <span
                     class="cursor-pointer underline"
                     @click="authModalStore.open"
-                    >Войти</span
+                  >Войти</span
                   >
                 </span>
                 <AppTooltip
@@ -1308,7 +1288,7 @@ useSmsAutoSubmit(
                   'max-h-500 opacity-100': orderStore.isExpandedPoints,
                   'max-h-0 opacity-0': !orderStore.isExpandedPoints,
                 }"
-                            >
+              >
                 <span class="text-[13px]">Баланс: {{ userStore.user?.points ?? 0 }} (1 балл = 1 рубль)</span>
                 <AppInput
                   id="points"
@@ -1377,7 +1357,7 @@ useSmsAutoSubmit(
                 <span
                   v-if="orderStore.certificateError"
                   class="font-light text-[13px] text-[#E57979]"
-                  >{{ orderStore.certificateError }}</span
+                >{{ orderStore.certificateError }}</span
                 >
                 <template
                   v-for="cert in userStore.user?.certificates ?? []"
@@ -1419,7 +1399,7 @@ useSmsAutoSubmit(
                   <span
                     v-if="orderStore.totalOldSum > orderStore.totalSum"
                     class="font-extralight line-through"
-                    >{{ orderStore.priceFormatter(orderStore.totalOldSum) }}</span
+                  >{{ orderStore.priceFormatter(orderStore.totalOldSum) }}</span
                   >
                 </span>
               </div>
@@ -1430,7 +1410,7 @@ useSmsAutoSubmit(
                   <span
                     v-if="orderStore.totalSum + orderStore.deliveryCost > orderStore.finalPrice"
                     class="font-extralight line-through"
-                    >{{ orderStore.priceFormatter(orderStore.totalSum + orderStore.deliveryCost) }}</span
+                  >{{ orderStore.priceFormatter(orderStore.totalSum + orderStore.deliveryCost) }}</span
                   >
                 </span>
               </div>
@@ -1501,7 +1481,7 @@ useSmsAutoSubmit(
                           Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
                         </template>
                         <template v-else-if="!item.isGame"
-                          >Кому: {{ item.recipientName }}
+                        >Кому: {{ item.recipientName }}
                           <span class="ml-1">Тип: {{ item.certificateType }}</span></template
                         >
                       </span>
@@ -1551,7 +1531,7 @@ useSmsAutoSubmit(
                       <span
                         v-if="item.oldPrice > 0"
                         class="line-through ml-1"
-                        >{{ orderStore.priceFormatter(item.oldPrice * item.count) }}</span
+                      >{{ orderStore.priceFormatter(item.oldPrice * item.count) }}</span
                       >
                     </span>
                   </div>
@@ -1578,7 +1558,7 @@ useSmsAutoSubmit(
                       'max-h-500 opacity-100': orderStore.isExpandedPoints,
                       'max-h-0 opacity-0': !orderStore.isExpandedPoints,
                     }"
-                                    >
+                  >
                     <span class="text-[13px]">Баланс: {{ userStore.user?.points ?? 0 }} (1 балл = 1 рубль)</span>
                     <AppInput
                       id="points"
@@ -1643,7 +1623,7 @@ useSmsAutoSubmit(
                     <span
                       v-if="orderStore.certificateError"
                       class="font-light text-[13px] text-[#E57979]"
-                      >{{ orderStore.certificateError }}</span
+                    >{{ orderStore.certificateError }}</span
                     >
                     <template
                       v-for="cert in userStore.user?.certificates ?? []"
@@ -1681,7 +1661,7 @@ useSmsAutoSubmit(
                       <span
                         v-if="orderStore.totalOldSum > orderStore.totalSum"
                         class="font-extralight line-through"
-                        >{{ orderStore.priceFormatter(orderStore.totalOldSum) }}</span
+                      >{{ orderStore.priceFormatter(orderStore.totalOldSum) }}</span
                       >
                     </span>
                   </div>
@@ -1692,7 +1672,7 @@ useSmsAutoSubmit(
                       <span
                         v-if="orderStore.totalSum + orderStore.deliveryCost > orderStore.finalPrice"
                         class="font-extralight line-through"
-                        >{{ orderStore.priceFormatter(orderStore.totalSum + orderStore.deliveryCost) }}</span
+                      >{{ orderStore.priceFormatter(orderStore.totalSum + orderStore.deliveryCost) }}</span
                       >
                     </span>
                   </div>
@@ -1709,12 +1689,12 @@ useSmsAutoSubmit(
                     <NuxtLink
                       class="underline"
                       to="/info/oferta"
-                      >публичной оферты</NuxtLink
+                    >публичной оферты</NuxtLink
                     >, принимаете
                     <NuxtLink
                       class="underline"
                       to="/info/oferta"
-                      >политику защиты и обработки персональных данных</NuxtLink
+                    >политику защиты и обработки персональных данных</NuxtLink
                     >
                     и даете свое согласие на их обработку.
                   </p>
@@ -1780,12 +1760,10 @@ useSmsAutoSubmit(
     </template>
   </main>
 </template>
-
 <style scoped>
 .collapsible-div {
   transition-property: max-height, opacity;
 }
-
 .minus-icon {
   background-image: url("/minus.svg");
   background-size: contain;
@@ -1794,7 +1772,6 @@ useSmsAutoSubmit(
   height: 100%;
   background-position: center;
 }
-
 .plus-icon {
   background-image: url("/plus.svg");
   background-size: contain;
@@ -1803,7 +1780,6 @@ useSmsAutoSubmit(
   height: 100%;
   background-position: center;
 }
-
 .x-icon {
   background-image: url("/x.svg");
   background-size: contain;
@@ -1812,7 +1788,6 @@ useSmsAutoSubmit(
   height: 100%;
   background-position: center;
 }
-
 .arrow-icon {
   background-image: url("/order-arrow.svg");
   background-size: contain;
@@ -1821,7 +1796,6 @@ useSmsAutoSubmit(
   height: 100%;
   background-position: center;
 }
-
 .arrow-icon.rotate-180 {
   transform: rotate(180deg);
 }

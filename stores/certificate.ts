@@ -112,6 +112,22 @@ export const useCertificateStore = defineStore("certificate", () => {
       })
       
       if (response.success) {
+        if (import.meta.client) {
+          window.dataLayer = window.dataLayer || []
+          dataLayer.push({
+            event: "add_to_cart",
+            ecommerce: {
+              items: [{
+                item_name: `Сертификат на ${selectedSum.value}`,
+                item_id: "-1",
+                price: selectedSum.value || 0,
+                item_category: "Сертификат",
+                item_variant: certificateType.value,
+                quantity: 1
+              }]
+            }
+          })
+        }
         return { success: true, data: response.data }
       }
       

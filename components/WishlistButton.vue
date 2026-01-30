@@ -50,31 +50,67 @@ const currentState = computed(() => {
   return { content, style, disabled, ariaLabel, ariaPressed }
 })
 
+const catalogStore = useCatalogStore()
+
+const getItem = async () => {
+  if (catalogStore.items.length === 0) {
+    await catalogStore.loadItems()
+  }
+  return catalogStore.getItemById(props.itemId)
+}
+
 const handleClick = async (e: MouseEvent | TouchEvent) => {
   e.stopPropagation()
   if (isPressed.value || isLoading.value) {
     e.preventDefault()
     return
   }
-
+  
   isPressed.value = true
   const buttonEl = buttonRef.value
   if (buttonEl) {
     buttonEl.style.pointerEvents = "none"
   }
-
+  
+  const wasFavorite = isFavoriteLocal.value
+  
   isFavoriteLocal.value = !isFavoriteLocal.value
   isLoading.value = true
-
+  
   try {
     await favoritesStore.toggleFavorite(props.itemId)
+    
+    // ✅ GA add_to_wishlist
+    if (!wasFavorite && import.meta.client) {
+      const item = await getItem()
+      
+      if (item) {
+        window.dataLayer = window.dataLayer || []
+        
+        dataLayer.push({
+          event: "add_to_wishlist",
+          ecommerce: {
+            items: [
+              {
+                item_name: item.name,
+                item_id: props.itemId.toString(),
+                price: parseInt(item.price || "0"),
+                item_category: item.parents?.[0]?.name || "",
+                item_variant: "",
+                quantity: 1,
+              },
+            ],
+          },
+        })
+      }
+    }
   } catch (error) {
     isFavoriteLocal.value = !isFavoriteLocal.value
     console.error("Не удалось обновить избранное:", error)
   } finally {
     isLoading.value = false
   }
-
+  
   setTimeout(() => {
     if (buttonEl) {
       buttonEl.style.pointerEvents = "auto"
