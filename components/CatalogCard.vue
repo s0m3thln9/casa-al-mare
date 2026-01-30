@@ -91,7 +91,7 @@ if (props.modelValue) {
     ]"
     @mouseenter="!popup && (isHovered = true)"
     @mouseleave="!popup && (isHovered = false)"
-    @click="handleClick"
+    @click="handleClick(null)"
   >
     <div class="w-full rounded-lg relative">
       <div class="overflow-hidden rounded-lg h-full">
