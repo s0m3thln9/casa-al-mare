@@ -224,7 +224,11 @@ const isTransitioning = ref(false)
 // })
 
 const isNoSizeItem = computed(() => {
-  return Object.keys(item.value?.vector)[0] === 'NS' || item.value?.template
+  return Object.keys(item.value?.vector)[0] === 'NS'
+})
+
+const isNoSizeItemParams = computed(() => {
+  return item.value?.template
     !== 4
 })
 
@@ -787,7 +791,7 @@ watch(doc, () => {
           </div>
         </div>
         <div
-          v-if="!isNoSizeItem"
+          v-if="!isNoSizeItemParams"
           class="flex flex-col justify-center items-center gap-1 mt-12 sm:mt-10">
           <span class="font-light text-xs">На модели размер:
                                            {{item.sizes ? item.sizes[0] : 0
@@ -798,8 +802,19 @@ watch(doc, () => {
           <BuyButton
             :id="item.id"
             :size="currentSize"
-            in-stock
-            available-quantity
+            :in-stock="isNoSizeItem ?
+            (Object.keys(item.vector)[0].quantity ===
+             0 && Object.keys(item.vector)[0].comingSoon >
+             0) || Object.keys(item.vector)[0].quantity >
+             0 :
+            (item.vector[currentSize].quantity === 0 &&
+            item.vector[currentSize].comingSoon > 0) ||
+            item.vector[currentSize].quantity >
+             0 "
+            :available-quantity="isNoSizeItem ?
+            Object.keys(item.vector)[0].quantity >
+             0 :
+            item.vector[currentSize].quantity > 0"
             :is-parameters-selected="canAddToCart"
             :missing-params="missingParams"
           />
