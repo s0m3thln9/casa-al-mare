@@ -826,16 +826,16 @@ watch(doc, () => {
             :id="item.id"
             :size="currentSize"
             :in-stock="isNoSizeItem ?
-            (Object.keys(item.vector)[0].quantity ===
-             0 && Object.keys(item.vector)[0].comingSoon >
-             0) || Object.keys(item.vector)[0].quantity >
+            (item.vector['NS'].quantity ===
+             0 && item.vector['NS'].comingSoon >
+             0) || item.vector['NS'].quantity >
              0 :
             (item.vector[currentSize].quantity === 0 &&
             item.vector[currentSize].comingSoon > 0) ||
             item.vector[currentSize].quantity >
              0 "
             :available-quantity="isNoSizeItem ?
-            Object.keys(item.vector)[0].quantity >
+            item.vector['NS'].quantity >
              0 :
             item.vector[currentSize].quantity > 0"
             :is-parameters-selected="canAddToCart"
