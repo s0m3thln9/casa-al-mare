@@ -518,7 +518,7 @@ class="text-sm"
                   : order.order.deliveryMethod === '2'
                     ? 'Курьер СДЭК с примеркой'
                     : order.order.deliveryMethod === '3'
-                      ? 'Экспресс-доставка'
+                      ? 'Экспресс-доставка (Яндекс курьер, индивидуальный расчет)'
                       : order.order.deliveryMethod === '4'
                         ? 'СДЭК (ПВЗ)'
                         : null,

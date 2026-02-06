@@ -57,7 +57,7 @@ const toggle = () => {
     <button
       :disabled="disabled"
       :class="[
-        'flex justify-center items-center rounded-3xl border border-[#BBB8B6]',
+        'flex justify-center items-center rounded-3xl border border-[#BBB8B6] flex-shrink-0',
         disabled ? 'bg-[#F9F6EC]' : 'cursor-pointer',
         size === 'S' && 'w-4 h-4',
         size === 'M' && 'w-5 h-5',

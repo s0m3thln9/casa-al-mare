@@ -210,7 +210,7 @@ export const useOrderStore = defineStore("order", () => {
   >([
     { id: 1, name: "Курьер СДЭК", term: { min: 0, max: 0 }, cost: 0 },
     { id: 2, name: "Курьер СДЭК с примеркой", term: { min: 0, max: 0 }, cost: 0 },
-    { id: 3, name: "Экспресс-доставка", isExpress: true },
+    { id: 3, name: "Экспресс-доставка (Яндекс курьер, индивидуальный расчет)", isExpress: true },
     { id: 4, name: "СДЭК (ПВЗ)", term: { min: 0, max: 0 }, cost: 0 },
   ])
   const deliveryTime = ref<string | null>(null)
@@ -372,7 +372,7 @@ export const useOrderStore = defineStore("order", () => {
         deliveryTypes.value = [
           { id: 1, name: "Курьер СДЭК", term: { min: 0, max: 0 }, cost: 0 },
           { id: 2, name: "Курьер СДЭК с примеркой", term: { min: 0, max: 0 }, cost: 0 },
-          { id: 3, name: "Экспресс-доставка", isExpress: true },
+          { id: 3, name: "Экспресс-доставка (Яндекс курьер, индивидуальный расчет)", isExpress: true },
           { id: 4, name: "СДЭК (ПВЗ)", term: { min: 0, max: 0 }, cost: 0 },
         ]
 
