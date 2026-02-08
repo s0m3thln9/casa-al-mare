@@ -1378,7 +1378,7 @@ useSmsAutoSubmit(
         <div class="sm:hidden mt-4 flex flex-col gap-6 w-full max-w-[652px] h-fit">
           <template v-if="orderStore.isPaymentSuccessful === null">
             <div class="flex flex-col gap-1 text-sm font-light">
-              <template v-if="orderStore.needsDelivery">
+              <template v-if="orderStore.needsDelivery && orderStore.deliveryMethod">
                 <div class="flex items-center justify-between">
                   <span>Доставка:</span>
                   <span>
@@ -1640,7 +1640,7 @@ useSmsAutoSubmit(
                   </div>
                 </div>
                 <div class="flex flex-col gap-1 text-sm font-light">
-                  <template v-if="orderStore.needsDelivery">
+                  <template v-if="orderStore.needsDelivery && orderStore.deliveryMethod">
                     <div class="flex items-center justify-between">
                       <span>Доставка:</span>
                       <span>
