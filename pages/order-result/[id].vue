@@ -157,6 +157,13 @@ const localGoodsSum = computed(() => {
   }, 0)
 })
 
+const localHasPhysicalCertificates = computed(() => {
+  return localCartItems.value.some(
+    item => item.id === -1 &&
+      (item.certificateType === "Физический" || item.options?.certificateType === "Физический")
+  )
+})
+
 const localCertsInCartSum = computed(() => {
   return localTotalSum.value - localGoodsSum.value
 })
@@ -171,6 +178,7 @@ const localTotalOldSum = computed(() => {
 function updateLocalDeliveryDetails() {
   const methodId = Number(localDeliveryMethod.value)
   const type = localDeliveryTypes.value.find((t) => t.id === methodId)
+  
   if (type) {
     if (type.term && type.term.min !== undefined && type.term.max !== undefined) {
       localDeliveryTime.value = `${type.term.min}-${type.term.max}`
@@ -187,10 +195,12 @@ function updateLocalDeliveryDetails() {
     localDeliveryTime.value = null
     localDeliveryCost.value = 0
   }
-  if (localGoodsSum.value >= 30000) {
+  
+  // Бесплатная доставка только для товаров (не для одних сертификатов)
+  if (localGoodsSum.value > 0 && localGoodsSum.value >= 30000) {
     localDeliveryCost.value = 0
   }
-
+  
   let certDiscount = 0
   if (authStore.isAuth && userStore.user?.certificates) {
     certDiscount = localSelectedCertificates.value.reduce((sum, code) => {
@@ -198,7 +208,7 @@ function updateLocalDeliveryDetails() {
       return cert ? sum + (cert.value_now || 0) : sum
     }, 0)
   }
-
+  
   let price = localGoodsSum.value
   if (localPointsToUse.value > 0) {
     price -= Math.min(localPointsToUse.value, price)

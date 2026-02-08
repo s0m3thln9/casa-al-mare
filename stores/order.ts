@@ -1409,7 +1409,14 @@ export const useOrderStore = defineStore("order", () => {
   )
 
   const hasGoods = computed(() => goodsSum.value > 0)
-
+  
+  const hasPhysicalCertificates = computed(() => {
+    return cartItems.value.some(
+      item => item.id === -1 &&
+        (item.certificateType === "Физический" || item.options?.certificateType === "Физический")
+    )
+  })
+  
   watch(
     () => userStore.user?.profile?.extended?.city,
     (newCity) => {
@@ -1421,7 +1428,7 @@ export const useOrderStore = defineStore("order", () => {
     },
     { immediate: true, deep: true },
   )
-
+  
   function updateDeliveryDetails() {
     if (!needsDelivery.value) {
       deliveryCost.value = 0
@@ -1432,15 +1439,16 @@ export const useOrderStore = defineStore("order", () => {
       selectedPvz.value = null
       return
     }
-
-    if (!hasGoods.value) {
+    
+    // Если нет товаров, но есть физические сертификаты - не обнуляем стоимость доставки
+    if (!hasGoods.value && !hasPhysicalCertificates.value) {
       deliveryCost.value = 0
       return
     }
-
+    
     const methodId = Number(deliveryMethod.value)
     const type = deliveryTypes.value.find((t) => t.id === methodId)
-
+    
     if (type) {
       if (type.term && type.term.min !== undefined && type.term.max !== undefined) {
         deliveryTime.value = `${type.term.min}-${type.term.max}`
@@ -1450,7 +1458,7 @@ export const useOrderStore = defineStore("order", () => {
         deliveryTime.value = null
       }
       deliveryCost.value = type.cost || 0
-
+      
       if (methodId === 4 && selectedPvz.value && selectedPvz.value.price) {
         deliveryCost.value = selectedPvz.value.price
       }
@@ -1458,8 +1466,9 @@ export const useOrderStore = defineStore("order", () => {
       deliveryTime.value = null
       deliveryCost.value = 0
     }
-
-    if (totalSum.value >= 30000) {
+    
+    // Бесплатная доставка только для товаров (не для одних сертификатов)
+    if (hasGoods.value && totalSum.value >= 30000) {
       deliveryCost.value = 0
     }
   }
