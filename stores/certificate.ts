@@ -21,28 +21,37 @@ export const useCertificateStore = defineStore("certificate", () => {
   const submitError = ref<string | null>(null)
   
   const userStore = useUserStore()
-
+  
   
   const totalSteps = computed(() =>
-    certificateType.value === "Физический" ? 3 : 4,
+    certificateType.value === "Физический" ? 2 : 4,
   )
   
-  const logicalStep = computed(() => {
-    if (certificateType.value === "Физический" && step.value >= 2) {
-      return step.value + 1
-    }
-    return step.value
+  // Для физического сертификата всегда возвращаем "Доставка"
+  const effectiveDeliveryMethod = computed(() => {
+    return certificateType.value === "Физический" ? "Доставка" : selectedWay.value
   })
   
   const canGoNext = computed(() => {
-    switch (logicalStep.value) {
+    // Для физического сертификата
+    if (certificateType.value === "Физический") {
+      switch (step.value) {
+        case 1:
+          return selectedSum.value !== null
+        case 2:
+          return recipientName.value.trim() !== ""
+        default:
+          return false
+      }
+    }
+    
+    // Для электронного сертификата
+    switch (step.value) {
       case 1:
         return selectedSum.value !== null
       
       case 2:
-        return certificateType.value === "Физический"
-          ? true
-          : selectedDesign.value !== null
+        return selectedDesign.value !== null
       
       case 3:
         if (selectedWay.value === "Электронной почтой") {
@@ -95,7 +104,7 @@ export const useCertificateStore = defineStore("certificate", () => {
             certificateType.value === "Физический"
               ? null
               : selectedDesign.value,
-          deliveryMethod: selectedWay.value,
+          deliveryMethod: effectiveDeliveryMethod.value,
           recipientEmail: recipientEmail.value || null,
           recipientPhone: recipientPhone.value
             ? {
@@ -161,15 +170,14 @@ export const useCertificateStore = defineStore("certificate", () => {
     }
   })
   
-  
   return {
     step,
     totalSteps,
-    logicalStep,
     certificateType,
     selectedSum,
     selectedDesign,
     selectedWay,
+    effectiveDeliveryMethod,
     recipientEmail,
     recipientPhone,
     selectedDetails,

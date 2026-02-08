@@ -38,7 +38,7 @@ const isLoadingNominals = ref(true)
 const breadcrumbsItems: { name: string; path?: string }[] = [{ name: "Главная", path: "/" }, { name: "Сертификат" }]
 
 const totalSteps = computed(() =>
-  certificateStore.certificateType === "Физический" ? 3 : 4,
+  certificateStore.certificateType === "Физический" ? 2 : 4,
 )
 
 const ways = computed(() => {
@@ -101,11 +101,6 @@ const getCart = async () => {
 
 const handleSubmit = async () => {
   const isPhysical = certificateStore.certificateType === "Физический"
-  
-  if (isPhysical && certificateStore.step === 1) {
-    certificateStore.step = 2
-    return
-  }
   
   if (certificateStore.step === totalSteps.value) {
     const result = await certificateStore.submitCertificate()
@@ -272,8 +267,6 @@ const getStepDescription = computed(() => {
       case 1:
         return "Выберите номинал:"
       case 2:
-        return "Как отправить получателю?"
-      case 3:
         return "Кому отправить?"
       default:
         return ""
@@ -413,9 +406,8 @@ const getStepDescription = computed(() => {
               'flex justify-center items-center font-light sm:font-normal w-full',
               certificateStore.step === 4 ||
               certificateStore.step === 1 ||
-              certificateStore.step === 2 ||
-              certificateStore.step === 3 && certificateStore.certificateType
-               === 'Физический' ||
+              certificateStore.step === 2 && certificateStore.certificateType === 'Физический' ||
+              certificateStore.step === 2 && certificateStore.certificateType !== 'Физический' ||
               (certificateStore.step === 3 && certificateStore.certificateType !== 'Физический' &&
                 (certificateStore.selectedWay === 'Электронной почтой' || certificateStore.selectedWay === 'По SMS'))
                 ? 'flex-col'
@@ -468,21 +460,21 @@ const getStepDescription = computed(() => {
                 </NuxtImg>
               </div>
             </div>
-
+            
+            <!-- Шаг выбора способа доставки только для электронного сертификата -->
             <div class="flex w-full justify-center items-center gap-3 sm:gap-4">
               <SingleSelectButton
-                v-if="
-  certificateStore.step ===
-  (certificateStore.certificateType === 'Физический' ? 2 : 3)
-"
+                v-if="certificateStore.step === 3 && certificateStore.certificateType !== 'Физический'"
                 v-model="certificateStore.selectedWay"
                 :content="ways"
               />
             </div>
+            
+            <!-- Шаг "Кому отправить?" - для физического это шаг 2, для электронного - шаг 4 -->
             <div
               v-if="
-  certificateStore.step ===
-  (certificateStore.certificateType === 'Физический' ? 3 : 4)
+  (certificateStore.certificateType === 'Физический' && certificateStore.step === 2) ||
+  (certificateStore.certificateType !== 'Физический' && certificateStore.step === 4)
 "
               class="w-full flex flex-col gap-8"
             >
@@ -512,21 +504,22 @@ const getStepDescription = computed(() => {
             <div
               class="flex justify-center items-center gap-3 font-light sm:gap-4 sm:font-normal mt-8"
               :class="
-                certificateStore.step === (certificateStore.certificateType === 'Физический' ? 2 : 3) &&
+                certificateStore.step === 3 && certificateStore.certificateType !== 'Физический' &&
                 (certificateStore.selectedWay === 'Электронной почтой' || certificateStore.selectedWay === 'По SMS') &&
                 'w-full'
               "
             >
               <SingleSelectButton
-                v-if="certificateStore.step ===
-  (certificateStore.certificateType === 'Физический' ? 3 : 4)"
+                v-if="
+                  (certificateStore.certificateType === 'Физический' && certificateStore.step === 2) ||
+                  (certificateStore.certificateType !== 'Физический' && certificateStore.step === 4)
+                "
                 v-model="certificateStore.selectedDetails"
                 :content="details"
               />
               <div
                 v-if="
-                  certificateStore.step ===
-  (certificateStore.certificateType === 'Физический' ? 2 : 3) &&
+                  certificateStore.step === 3 && certificateStore.certificateType !== 'Физический' &&
                   (certificateStore.selectedWay === 'Электронной почтой' || certificateStore.selectedWay === 'По SMS')
                 "
                 class="w-full flex flex-col"
@@ -584,15 +577,17 @@ const getStepDescription = computed(() => {
                     ? 'Сначала выберите номинал'
                     : certificateStore.step === 2 && certificateStore.certificateType !== 'Физический' && certificateStore.selectedDesign === null
                       ? 'Выберите дизайн'
-                      : certificateStore.step ===
-  (certificateStore.certificateType === 'Физический' ? 2 : 3) && certificateStore.selectedWay === null
+                      : certificateStore.step === 3 && certificateStore.certificateType !== 'Физический' && certificateStore.selectedWay === null
                         ? 'Выберите способ отправки'
-                        : certificateStore.step ===
-  (certificateStore.certificateType === 'Физический' ? 3 : 4) &&
-  certificateStore.recipientName.trim() === ''
+                        : (
+                            (certificateStore.certificateType === 'Физический' && certificateStore.step === 2) ||
+                            (certificateStore.certificateType !== 'Физический' && certificateStore.step === 4)
+                          ) && certificateStore.recipientName.trim() === ''
                           ? 'Укажите имя получателя'
-                          : certificateStore.step ===
-  (certificateStore.certificateType === 'Физический' ? 3 : 4)
+                          : (
+                              (certificateStore.certificateType === 'Физический' && certificateStore.step === 2) ||
+                              (certificateStore.certificateType !== 'Физический' && certificateStore.step === 4)
+                            )
                             ? 'Положить в корзину'
                             : 'Далее'
               "
