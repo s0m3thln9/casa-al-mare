@@ -180,6 +180,10 @@ watch(doc, () => {
   counter-increment: item;
 }
 
+.content :deep(a) {
+  text-decoration: underline;
+}
+
 .content :deep(ol li::before) {
   content: counter(item) ". ";
   color: #211d1d;

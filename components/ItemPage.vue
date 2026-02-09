@@ -1197,6 +1197,10 @@ watch(doc, () => {
   list-style-type: square;
 }
 
+.html-content-wrapper :deep(a) {
+  text-decoration: underline;
+}
+
 @media screen and (max-width: 640px) {
   .html-content-wrapper :deep(div.block) {
     border: 0.5px solid #bbb8b6;
