@@ -552,7 +552,7 @@ watch(doc, () => {
           <div class="aspect-[726/1080] bg-[#F9F6EC] rounded-2xl" />
         </div>
 
-        <div class="px-2 flex flex-col sm:px-0 sm:sticky sm:top-0 sm:h-screen sm:overflow-y-auto">
+        <div class="px-2 flex flex-col sm:px-0">
           <div class="flex justify-center items-center">
             <h2 class="font-[Inter] text-center text-[32px] sm:text-4xl">Название</h2>
           </div>
@@ -725,7 +725,7 @@ watch(doc, () => {
       </div>
       <div
         v-if="item"
-        class="px-2 flex flex-col sm:px-0 sm:sticky sm:top-20 sm:h-screen sm:overflow-y-auto"
+        class="px-2 flex flex-col sm:px-0 product-sidebar"
       >
         <div class="flex justify-center items-center">
           <h2 class="font-[Inter] text-center text-[32px] sm:text-4xl">{{ item.name }}</h2>
@@ -997,6 +997,47 @@ watch(doc, () => {
 </template>
 
 <style scoped>
+/* Правая колонка с адаптивным sticky поведением */
+.product-sidebar {
+  /* На маленьких экранах - обычный поток */
+  position: relative;
+}
+
+/* Sticky только на больших экранах с достаточной высотой */
+@media (min-width: 1024px) and (min-height: 800px) {
+  .product-sidebar {
+    position: sticky;
+    top: 5rem; /* top-20 в Tailwind */
+    align-self: flex-start;
+    max-height: calc(100vh - 5rem);
+    overflow-y: auto;
+    /* Скрываем scrollbar для более чистого вида */
+    scrollbar-width: thin;
+    scrollbar-color: #BBB8B6 transparent;
+  }
+  
+  .product-sidebar::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .product-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .product-sidebar::-webkit-scrollbar-thumb {
+    background-color: #BBB8B6;
+    border-radius: 3px;
+  }
+}
+
+/* На очень высоких экранах можно увеличить порог высоты */
+@media (min-width: 1280px) and (min-height: 1000px) {
+  .product-sidebar {
+    top: 6rem;
+    max-height: calc(100vh - 6rem);
+  }
+}
+
 .custom-section-content {
   font-family: "Manrope", sans-serif;
   line-height: 134%;

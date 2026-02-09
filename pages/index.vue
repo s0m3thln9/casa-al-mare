@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { computed, onMounted } from "vue"
-
 interface VideoSource {
   mp4: string
   ogv: string
