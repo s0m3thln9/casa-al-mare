@@ -52,7 +52,9 @@ const recommendedItemsIds = computed(() => {
       class="relative py-5 font-[Manrope] bg-[#FFFFFA] text-[#211D1D] sm:py-10 flex-1 flex flex-col justify-between"
       :class="authModalStore.isOpen && 'opacity-22'"
     >
-      <h2 class="uppercase text-center font-[Inter] text-[17px]">Избранное</h2>
+      <h2
+        class="uppercase text-center font-[Inter] text-[17px]">{{favoriteItems.length > 0 ? "Избранное" : "Избранное пока пусто"}}
+      </h2>
       <h3
         v-if="!authStore.isAuth"
         class="uppercase text-center font-[Inter] mt-8"
@@ -74,29 +76,27 @@ const recommendedItemsIds = computed(() => {
               link
             />
           </template>
-          <div class="col-span-2 w-full flex justify-center items-center mt-5 mb-3 sm:hidden">
-            <button class="font-light text-xs">Показать больше</button>
-          </div>
         </div>
-        <h3
-          v-else
-          class="uppercase text-center font-[Inter] mt-8"
-        >
-          Тут ничего нет
-        </h3>
-        <h2 class="hidden mt-10 font-[Inter] text-4xl text-center sm:block">Вам может понравиться</h2>
-        <div class="hidden mt-12 grid-cols-4 px-4 gap-x-4 gap-y-6 sm:grid">
-          <template
-            v-for="id in recommendedItemsIds"
-            :key="id"
+        <template v-else>
+          <h3
+            class="uppercase text-center font-[Inter] mt-8"
           >
-            <CatalogCard
-              :id="id"
-              variant="large"
-              link
-            />
-          </template>
-        </div>
+            Сохраняйте понравившиеся модели — они появятся здесь
+          </h3>
+        </template>
+<!--        <h2 class="hidden mt-10 font-[Inter] text-4xl text-center sm:block">Вам может понравиться</h2>-->
+<!--        <div class="hidden mt-12 grid-cols-4 px-4 gap-x-4 gap-y-6 sm:grid">-->
+<!--          <template-->
+<!--            v-for="id in recommendedItemsIds"-->
+<!--            :key="id"-->
+<!--          >-->
+<!--            <CatalogCard-->
+<!--              :id="id"-->
+<!--              variant="large"-->
+<!--              link-->
+<!--            />-->
+<!--          </template>-->
+<!--        </div>-->
 <!--        <AppSEO-->
 <!--          :paragraphs="[-->
 <!--            'CASA AL MARE — эстетика тела, свобода выбора.\n' +-->
