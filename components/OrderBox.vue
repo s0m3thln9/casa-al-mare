@@ -63,6 +63,10 @@ const navigateToItem = (itemAlias: string | undefined, itemId: number) => {
   navigateTo(`/product/${alias}`)
 }
 
+const contactViaTelegram = () => {
+  window.open('https://t.me/casaalmarecom', '_blank')
+}
+
 const formatDate = (timestamp: number): string => {
   const date = new Date(timestamp * 1000)
   const day = String(date.getDate()).padStart(2, "0")
@@ -231,6 +235,7 @@ v-if="item?.deliveryMethod === 'Электронной почтой' || item?.de
       <AppButton
         content="Связаться с магазином"
         custom-class="w-full"
+        @click="contactViaTelegram"
       />
     </div>
     <span
