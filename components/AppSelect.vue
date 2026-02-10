@@ -369,6 +369,7 @@ defineExpose({ validate, showError, setValue })
                 : item === selected
                   ? 'bg-[#211D1D] text-[#FFFFFA]'
                   : 'bg-[#FFFFFA] text-[#211D1D]',
+                  !item.label && 'hidden'
             ]"
             @click.stop="select(item)"
           >
