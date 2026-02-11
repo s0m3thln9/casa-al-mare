@@ -341,7 +341,7 @@ defineExpose({ validate, showError, setValue })
         :style="{ pointerEvents: isDropdownOpen ? 'auto' : 'none' }"
       >
         <div
-          v-if="asyncSearch && searchQuery.length < 2 && !isLoading"
+          v-if="asyncSearch && (searchQuery?.length ?? 0) < 2 && !isLoading"
           class="w-full py-2 text-center text-xs text-[#8C8785] font-light"
         >
           Введите минимум 2 символа

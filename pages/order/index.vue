@@ -1105,7 +1105,7 @@ useSmsAutoSubmit(
                       ref="cityRef"
                       :key="orderStore.city?.label || 'default'"
                       v-model="orderStore.city"
-                      label="Город"
+                      label="Введите город доставки"
                       custom-class="w-full"
                       required
                       searchable

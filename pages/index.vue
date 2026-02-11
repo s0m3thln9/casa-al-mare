@@ -16,7 +16,7 @@ const { data: treeData } = await useFetch(
 
 const indexData = computed(() => treeData.value?.data?.index)
 
-const pageTitle = computed(() => indexData.value?.pagetitle ?? "")
+const pageTitle = computed(() => indexData.value?.longtitle ?? indexData.value?.pagetitle)
 const description = computed(() => indexData.value?.description ?? "")
 
 const metaTags = computed(() => {
