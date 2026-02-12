@@ -364,7 +364,7 @@ export const useOrderStore = defineStore("order", () => {
     if (!city.value?.fias) return
 
     try {
-      const data = await $fetch(`https://back.casaalmare.com/api/getCdekByFias?fias=${city.value.fias}`)
+      const data = await $fetch(`https://back.casaalmare.com/api/getCdekByFias?fias=${city.value.fias}&cart_cost=${finalPrice}`)
 
       if (data) {
         cdekData.value = data
