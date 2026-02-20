@@ -53,11 +53,17 @@ const buildMenuFromTree = (node: DocNode, parentPath = ""): MenuItem[] => {
 
       // Добавляем подменю только для элементов первого уровня (без parentPath)
       if (!parentPath && item.subitems) {
-        const submenu: MenuItem[] = []
-
+        const submenu: MenuItem[] = [
+          {
+            label: "Смотреть все",
+            link: `/catalog/${item.alias}`,
+            path: currentPath, // путь родительской категории
+          },
+        ]
+        
         for (const subKey in item.subitems) {
           const subItem = item.subitems[subKey]
-
+          
           if (subItem.template === 2) {
             submenu.push({
               label: subItem.pagetitle,
@@ -66,8 +72,8 @@ const buildMenuFromTree = (node: DocNode, parentPath = ""): MenuItem[] => {
             })
           }
         }
-
-        if (submenu.length > 0) {
+        
+        if (submenu.length > 1) { // > 1, потому что "Смотреть все" уже есть
           menuItem.submenu = submenu
         }
       }
