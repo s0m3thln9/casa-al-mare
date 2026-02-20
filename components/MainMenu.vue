@@ -102,11 +102,16 @@ const menuItems = computed<MenuItem[]>(() => {
   items.push({
     label: "Блог",
     link: "/blog",
-    customClass2: "sm:hidden max-sm:-my-6",
+    customClass2: "sm:hidden max-sm:-mb-6",
   })
   items.push({
     label: "CAMPAIGNS",
     link: "/campaigns",
+    customClass2: "sm:hidden max-sm:-mb-6",
+  })
+  items.push({
+    label: "О нас",
+    link: "/about-us",
     customClass2: "sm:hidden",
   })
 
@@ -140,7 +145,7 @@ const secondMenuItems: MenuItem[] = [
   {
     label: "Покупателям",
     submenu: [
-      { label: "О нас", link: "/about-us" },
+      { label: "О нас", link: "/about-us", customClass: "max-sm:hidden" },
       { label: "Доставка и оплата", link: "/info/dostavka-i-oplata" },
       { label: "Возврат и обмен", link: "/info/vozvrat-i-obmen" },
       { label: "Уход за изделиями", link: "/care" },
@@ -362,7 +367,10 @@ watch(
             v-for="(item, index) in selectedSubmenu"
             :key="index"
             class="flex items-center justify-between cursor-pointer text-[#211D1D]"
-            :class="isMobile ? 'font-[Inter] text-[17px] uppercase' : 'text-base font-[Manrope] font-light'"
+            :class="[
+      isMobile ? 'font-[Inter] text-[17px] uppercase' : 'text-base font-[Manrope] font-light',
+      item.customClass
+    ]"
             @click.stop="handleMenuClick(item)"
           >
             {{ item.label }}
