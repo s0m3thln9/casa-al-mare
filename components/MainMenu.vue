@@ -378,8 +378,8 @@ watch(
   background-image: url("/arrow-right.svg");
   background-size: contain;
   background-repeat: no-repeat;
-  width: 0.375rem;
-  height: 0.375rem;
+  width: 0.75rem;
+  height: 0.75rem;
   background-position: center;
 }
 
@@ -391,8 +391,8 @@ watch(
   background-image: url("/arrow-right.svg");
   background-size: contain;
   background-repeat: no-repeat;
-  width: 0.5rem;
-  height: 0.5rem;
+  width: 0.75rem;
+  height: 0.75rem;
   background-position: center;
   transform: rotate(180deg);
 }
