@@ -199,6 +199,14 @@ onActivated(async () => {
 onBeforeMount(async () => {
   await loadCart()
 })
+
+// Helpers to check delivery type flags via selectedDeliveryType
+const isCourierDelivery = computed(() =>
+  !!orderStore.deliveryMethod && orderStore.selectedDeliveryType != null && !orderStore.selectedDeliveryType.isPvz
+)
+const isPvzDelivery = computed(() => orderStore.selectedDeliveryType?.isPvz === true)
+const isExpressDelivery = computed(() => orderStore.selectedDeliveryType?.isExpress === true)
+
 async function handlePay(): Promise<void> {
   if (orderStore.isLoadingPayment) return
   if (orderStore.cartItems.length === 0) {
@@ -233,7 +241,8 @@ async function handlePay(): Promise<void> {
         orderStore.errorDeliveryMethod = "Выберите способ доставки"
         return
       }
-      if (["1", "2", "3"].includes(orderStore.deliveryMethod)) {
+      // Courier (non-pvz) methods require an address
+      if (isCourierDelivery.value) {
         if (!orderStore.currentAddress) {
           orderStore.showErrorDeliveryMethod = true
           orderStore.errorDeliveryMethod = "Выберите адрес доставки"
@@ -255,7 +264,8 @@ async function handlePay(): Promise<void> {
           }
         }
       }
-      if (orderStore.deliveryMethod === "4") {
+      // PVZ method requires a selected pvz
+      if (isPvzDelivery.value) {
         if (!orderStore.selectedPvz) {
           orderStore.showErrorDeliveryMethod = true
           orderStore.errorDeliveryMethod = "Выберите пункт выдачи СДЭК"
@@ -325,7 +335,8 @@ async function handlePay(): Promise<void> {
         const widgetData = {
           publicId: paymentData.data.publicId,
           description: paymentData.data.description,
-          amount: paymentData.data.amount,
+          // For onlyDel types: always charge only the delivery cost (finalPrice = deliveryCost)
+          amount: orderStore.isOnlyDeliveryPayment ? orderStore.finalPrice : paymentData.data.amount,
           currency: paymentData.data.currency || "RUB",
           accountId: paymentData.data.accountId,
           email: paymentData.data.email || orderStore.email || "",
@@ -479,6 +490,15 @@ function getTimeLabel(type: { term?: { min: number; max: number }; isExpress?: b
   }
   return `(${min}-${max} ${getDayLabel(max)})`
 }
+
+// Helper: format delivery cost display
+function getDeliveryCostLabel(): string {
+  if (!orderStore.deliveryMethod) return ""
+  if (isExpressDelivery.value) return "по согласованию с менеджером"
+  if (orderStore.deliveryCost === 0) return "бесплатно"
+  return orderStore.priceFormatter(orderStore.deliveryCost)
+}
+
 async function handleGuestSmsConfirm(): Promise<void> {
   if (!orderStore.guestSmsCode) return
   orderStore.showGuestSmsError = false
@@ -1120,12 +1140,13 @@ useSmsAutoSubmit(
                       :key="type.id"
                       v-model="orderStore.deliveryMethod"
                       size="M"
-                      :label="`${type.name} ${!type.isExpress ? `${getTimeLabel(type)}` : ''}`"
-                      :value="String(type.id)"
+                      :label="`${type.name} ${!type.isExpress ? getTimeLabel(type) : ''}`"
+                      :value="type.id"
                     />
                   </div>
+                  <!-- Address input: shown for non-pvz courier methods -->
                   <div
-                    v-if="['1', '2', '3'].includes(orderStore.deliveryMethod)"
+                    v-if="isCourierDelivery"
                     class="flex flex-col gap-4"
                   >
                     <AppCheckbox
@@ -1181,7 +1202,8 @@ useSmsAutoSubmit(
                       />
                     </div>
                   </div>
-                  <div v-if="orderStore.deliveryMethod === '4'">
+                  <!-- PVZ selector -->
+                  <div v-if="isPvzDelivery">
                     <PvzSelector
                       v-model="orderStore.selectedPvz"
                       v-model:city="orderStore.city"
@@ -1357,21 +1379,14 @@ useSmsAutoSubmit(
             </div>
           </template>
         </div>
+        <!-- Mobile: price summary + pay button -->
         <div class="sm:hidden mt-4 flex flex-col gap-6 w-full max-w-[652px] h-fit">
           <template v-if="orderStore.isPaymentSuccessful === null">
             <div class="flex flex-col gap-1 text-sm font-light">
               <template v-if="orderStore.needsDelivery && orderStore.deliveryMethod">
                 <div class="flex items-center justify-between">
                   <span>Доставка:</span>
-                  <span>
-                    {{
-                      Number(orderStore.deliveryMethod) === 3
-                        ? "по согласованию с менеджером"
-                        : orderStore.totalSum >= 30000
-                          ? "бесплатно"
-                          : orderStore.priceFormatter(orderStore.deliveryCost)
-                    }}
-                  </span>
+                  <span>{{ getDeliveryCostLabel() }}</span>
                 </div>
               </template>
               <div class="flex items-center justify-between">
@@ -1386,11 +1401,17 @@ useSmsAutoSubmit(
                 </span>
               </div>
               <div class="flex items-center justify-between">
-                <span>Окончательная стоимость:</span>
+                <span>
+                  Окончательная стоимость:
+                  <span
+                    v-if="orderStore.isOnlyDeliveryPayment"
+                    class="text-xs text-[#8C8785] ml-1"
+                  >(Оплата только доставки)</span>
+                </span>
                 <span class="flex items-center gap-2">
                   {{ orderStore.priceFormatter(orderStore.finalPrice) }}
                   <span
-                    v-if="orderStore.totalSum + orderStore.deliveryCost > orderStore.finalPrice"
+                    v-if="!orderStore.isOnlyDeliveryPayment && orderStore.totalSum + orderStore.deliveryCost > orderStore.finalPrice"
                     class="font-extralight line-through"
                   >{{ orderStore.priceFormatter(orderStore.totalSum + orderStore.deliveryCost) }}</span
                   >
@@ -1425,6 +1446,7 @@ useSmsAutoSubmit(
             </div>
           </template>
         </div>
+        <!-- Desktop: right panel -->
         <div class="max-sm:hidden p-8 w-full max-w-[564px] h-fit rounded-lg border-[0.7px] border-[#BBB8B6]">
           <template v-if="orderStore.isPaymentSuccessful === null">
             <div
@@ -1621,19 +1643,12 @@ useSmsAutoSubmit(
                     </template>
                   </div>
                 </div>
+                <!-- Desktop price summary -->
                 <div class="flex flex-col gap-1 text-sm font-light">
                   <template v-if="orderStore.needsDelivery && orderStore.deliveryMethod">
                     <div class="flex items-center justify-between">
                       <span>Доставка:</span>
-                      <span>
-                        {{
-                          Number(orderStore.deliveryMethod) === 3
-                            ? "по согласованию с менеджером"
-                            : orderStore.deliveryCost === 0
-                              ? "бесплатно"
-                              : orderStore.priceFormatter(orderStore.deliveryCost)
-                        }}
-                      </span>
+                      <span>{{ getDeliveryCostLabel() }}</span>
                     </div>
                   </template>
                   <div class="flex items-center justify-between">
@@ -1648,11 +1663,17 @@ useSmsAutoSubmit(
                     </span>
                   </div>
                   <div class="flex items-center justify-between">
-                    <span>Окончательная стоимость:</span>
+                    <span>
+                      Окончательная стоимость:
+                      <span
+                        v-if="orderStore.isOnlyDeliveryPayment"
+                        class="text-xs text-[#8C8785] ml-1"
+                      >(Оплата только доставки)</span>
+                    </span>
                     <span class="flex items-center gap-2">
                       {{ orderStore.priceFormatter(orderStore.finalPrice) }}
                       <span
-                        v-if="orderStore.totalSum + orderStore.deliveryCost > orderStore.finalPrice"
+                        v-if="!orderStore.isOnlyDeliveryPayment && orderStore.totalSum + orderStore.deliveryCost > orderStore.finalPrice"
                         class="font-extralight line-through"
                       >{{ orderStore.priceFormatter(orderStore.totalSum + orderStore.deliveryCost) }}</span
                       >

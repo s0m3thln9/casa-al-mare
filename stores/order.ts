@@ -128,19 +128,36 @@ export type CartItem = {
   oldPrice: number
 }
 
+export interface DeliveryType {
+  id: string
+  name: string
+  cost: number
+  onlyDel: boolean
+  isPvz?: boolean
+  isExpress?: boolean
+  term?: { min: number; max: number }
+}
+
 export interface PaymentMethod {
   id: string
   name: string
 }
 
+// Default city used as fallback when no city is saved in the order/profile
+const DEFAULT_CITY_MOSCOW = {
+  label: "Москва",
+  name: "Москва",
+  fias: "0c5b2444-70a0-4932-980c-b4dc0d3f02b5",
+} as CityData
+
 export const useOrderStore = defineStore("order", () => {
   const userStore = useUserStore()
   const authStore = useAuthStore()
   const catalogStore = useCatalogStore()
-
+  
   const cartItems = ref<CartItem[]>([])
   const isCheckingOrderStatus = ref(false)
-
+  
   const addresses = ref<string[]>([])
   const city = ref<CityData | null>(null)
   const commentForCourier = ref("")
@@ -155,7 +172,7 @@ export const useOrderStore = defineStore("order", () => {
   const showErrorPaymentMethod = ref<boolean>(false)
   const isLoadingPayment = ref<boolean>(false)
   const paymentMethods = ref<PaymentMethod[]>([])
-
+  
   const isGuestAuthStep = ref(false)
   const guestLoginType = ref<number>(1)
   const guestSmsCode = ref("")
@@ -169,12 +186,12 @@ export const useOrderStore = defineStore("order", () => {
   const guestSmsError = ref("")
   const errorDeliveryMethod = ref("")
   const showGuestSmsError = ref(false)
-
+  
   const guestAuthButtonContent = ref("Авторизоваться / Зарегистрироваться")
   const guestAuthButtonDisabled = ref(false)
   const guestSmsButtonContent = ref("Подтвердить")
   const guestSmsButtonDisabled = ref(false)
-
+  
   const isExpandedPoints = ref<boolean>(false)
   const isExpandedPoints2 = ref<boolean>(true)
   const pendingPoints = ref<string>("")
@@ -188,7 +205,7 @@ export const useOrderStore = defineStore("order", () => {
   const newCertificateCode = ref<string>("")
   const selectedCertificates = ref<string[]>([])
   const isLoadingCert = ref<boolean>(false)
-
+  
   const email = ref<string>("")
   const name = ref<string>("")
   const phone = ref<{
@@ -201,21 +218,27 @@ export const useOrderStore = defineStore("order", () => {
   const isLoaded = ref(false)
   const orderId = ref<number | null>(null)
   const cdekData = ref<{
-    courier: { price: number; term: { min: number; max: number } }
-    courierPrim: { price: number; term: { min: number; max: number } }
-    pvz: { price: number; term: { min: number; max: number } }
+    courier?: { price: number; term: { min: number; max: number } }
+    courierPrim?: { price: number; term: { min: number; max: number } }
+    pvz?: { price: number; term: { min: number; max: number } }
+    deliveryList?: Record<string, { name: string; cost: number; onlyDel: boolean }>
   } | null>(null)
-  const deliveryTypes = ref<
-    Array<{ id: number; name: string; term?: { min: number; max: number }; cost?: number; isExpress?: boolean }>
-  >([
-    { id: 1, name: "Курьер СДЭК", term: { min: 0, max: 0 }, cost: 0 },
-    { id: 2, name: "Курьер СДЭК с примеркой", term: { min: 0, max: 0 }, cost: 0 },
-    { id: 3, name: "Экспресс-доставка (Яндекс курьер, индивидуальный расчет)", isExpress: true },
-    { id: 4, name: "СДЭК (ПВЗ)", term: { min: 0, max: 0 }, cost: 0 },
-  ])
+  
+  const deliveryTypes = ref<DeliveryType[]>([])
   const deliveryTime = ref<string | null>(null)
   const deliveryCost = ref<number>(0)
   const isMoscow = ref<boolean>(false)
+  
+  // Computed: currently selected delivery type object
+  const selectedDeliveryType = computed<DeliveryType | null>(() => {
+    if (!deliveryMethod.value) return null
+    return deliveryTypes.value.find(t => t.id === deliveryMethod.value) ?? null
+  })
+  
+  // True when the selected delivery requires paying only for delivery (no goods payment via site)
+  const isOnlyDeliveryPayment = computed(() => {
+    return selectedDeliveryType.value?.onlyDel === true
+  })
   
   async function loadPaymentMethods() {
     try {
@@ -263,11 +286,19 @@ export const useOrderStore = defineStore("order", () => {
     }
     
     try {
+      const body: Record<string, any> = { token }
+      
+      // When onlyDel: pass delivery cost as amount so backend charges only delivery
+      if (isOnlyDeliveryPayment.value) {
+        body.onlyDel = true
+        body.amount = finalPrice.value
+      }
+      
       const data = await $fetch<PaymentDataResponse>(
         "https://back.casaalmare.com/api/getPayData",
         {
           method: "POST",
-          body: { token },
+          body,
         }
       )
       
@@ -351,52 +382,93 @@ export const useOrderStore = defineStore("order", () => {
   const availablePoints = computed(() => {
     return (userStore.user?.points || 0) - pointsToUse.value
   })
-
-  function updateDeliveryType(id: number, term: { min: number; max: number }, cost: number) {
-    const type = deliveryTypes.value.find((t) => t.id === id)
-    if (type) {
-      type.term = term
-      type.cost = cost
-    }
-  }
-
+  
   async function loadCdekData() {
     if (!city.value?.fias) return
-
+    
     try {
-      const data = await $fetch(`https://back.casaalmare.com/api/getCdekByFias?fias=${city.value.fias}&cart_cost=${totalSum.value}`)
-
+      const data = await $fetch<any>(`https://back.casaalmare.com/api/getCdekByFias?fias=${city.value.fias}&cart_cost=${totalSum.value}`)
+      
       if (data) {
         cdekData.value = data
-
-        deliveryTypes.value = [
-          { id: 1, name: "Курьер СДЭК", term: { min: 0, max: 0 }, cost: 0 },
-          { id: 2, name: "Курьер СДЭК с примеркой", term: { min: 0, max: 0 }, cost: 0 },
-          { id: 3, name: "Экспресс-доставка (Яндекс курьер, индивидуальный расчет)", isExpress: true },
-          { id: 4, name: "СДЭК (ПВЗ)", term: { min: 0, max: 0 }, cost: 0 },
-        ]
-
-        if (data.courier && data.courier.term && typeof data.courier.price === "number") {
-          updateDeliveryType(1, data.courier.term, data.courier.price)
+        
+        // Build delivery types from deliveryList returned by the API
+        if (data.deliveryList && typeof data.deliveryList === "object") {
+          deliveryTypes.value = Object.entries(data.deliveryList).map(([key, typeData]: [string, any]) => {
+            // Attach term from top-level fields where applicable
+            let term: { min: number; max: number } | undefined
+            if (key === "cdek" && data.courier?.term) {
+              term = data.courier.term
+            } else if (key === "pvz" && data.pvz?.term) {
+              term = data.pvz.term
+            } else if (key === "courierPrim" && data.courierPrim?.term) {
+              term = data.courierPrim.term
+            }
+            
+            const isPvz = key === "pvz"
+            // Express = cost is 0 and key contains "express"
+            const isExpress = key === "express" || (typeData.cost === 0 && key.toLowerCase().includes("express"))
+            
+            return {
+              id: key,
+              name: typeData.name,
+              cost: typeData.cost ?? 0,
+              onlyDel: !!typeData.onlyDel,
+              isPvz,
+              isExpress,
+              term,
+            } as DeliveryType
+          })
+        } else {
+          // Fallback: build from legacy top-level fields
+          deliveryTypes.value = []
+          if (data.courier) {
+            deliveryTypes.value.push({
+              id: "cdek",
+              name: "Курьер СДЭК",
+              cost: data.courier.price ?? 0,
+              onlyDel: false,
+              term: data.courier.term,
+            })
+          }
+          if (data.courierPrim) {
+            deliveryTypes.value.push({
+              id: "courierPrim",
+              name: "Курьер СДЭК с примеркой",
+              cost: data.courierPrim.price ?? 0,
+              onlyDel: false,
+              term: data.courierPrim.term,
+            })
+          }
+          deliveryTypes.value.push({
+            id: "express",
+            name: "Экспресс-доставка (Яндекс курьер, индивидуальный расчет)",
+            cost: 0,
+            onlyDel: false,
+            isExpress: true,
+          })
+          if (data.pvz) {
+            deliveryTypes.value.push({
+              id: "pvz",
+              name: "СДЭК (ПВЗ)",
+              cost: data.pvz.price ?? 0,
+              onlyDel: false,
+              isPvz: true,
+              term: data.pvz.term,
+            })
+          }
         }
-        if (data.courierPrim && data.courierPrim.term && typeof data.courierPrim.price === "number") {
-          updateDeliveryType(2, data.courierPrim.term, data.courierPrim.price)
-        }
-        if (data.pvz && data.pvz.term && typeof data.pvz.price === "number") {
-          updateDeliveryType(4, data.pvz.term, data.pvz.price)
-        }
-
-        isMoscow.value = city.value?.name ? city.value.name.toLowerCase().includes("москва") : false
-        if (!isMoscow.value) {
-          deliveryTypes.value = deliveryTypes.value.filter((type) => type.id !== 3)
-        }
-
-        if (deliveryMethod.value && !deliveryTypes.value.some((t) => t.id === Number(deliveryMethod.value))) {
+        
+        // isMoscow: true if any delivery type has onlyDel (Moscow-specific options)
+        isMoscow.value = deliveryTypes.value.some(t => t.onlyDel)
+        
+        // Invalidate current delivery method if it no longer exists
+        if (deliveryMethod.value && !deliveryTypes.value.some(t => t.id === deliveryMethod.value)) {
           deliveryMethod.value = null
           deliveryTime.value = null
           deliveryCost.value = 0
         }
-
+        
         await nextTick()
         if (deliveryMethod.value) {
           updateDeliveryDetails()
@@ -406,7 +478,7 @@ export const useOrderStore = defineStore("order", () => {
       console.error("Ошибка API getCdekByFias:", error)
     }
   }
-
+  
   function startGuestCountdown() {
     guestRemainingSeconds.value = guestNextCode.value
     if (guestIntervalId.value) clearInterval(guestIntervalId.value)
@@ -418,7 +490,7 @@ export const useOrderStore = defineStore("order", () => {
       }
     }, 1000)
   }
-
+  
   function resetGuestAuth() {
     isGuestAuthStep.value = false
     guestSmsCode.value = ""
@@ -437,7 +509,7 @@ export const useOrderStore = defineStore("order", () => {
       guestIntervalId.value = null
     }
   }
-
+  
   function parseCart(rawCart: Record<string, any>): CartItem[] {
     return Object.entries(rawCart).map(([key, item]) => {
       const vector: Record<string, { quantity: number; comingSoon: boolean }> = {}
@@ -476,7 +548,7 @@ export const useOrderStore = defineStore("order", () => {
       }
     })
   }
-
+  
   const needsDelivery = computed(() => {
     const items = cartItems.value
     if (items.length === 0) return false
@@ -528,7 +600,7 @@ export const useOrderStore = defineStore("order", () => {
         }
         
         if (!targetCity || targetCity.label === "" || targetCity === false) {
-          city.value = null
+          city.value = DEFAULT_CITY_MOSCOW
         } else if (targetCity !== city.value) {
           city.value = targetCity
         }
@@ -694,13 +766,13 @@ export const useOrderStore = defineStore("order", () => {
   
   
   const debouncedUpdateOrderState = debounce(updateOrderState, 500)
-
+  
   const cartDetailed = computed(() => {
     return cartItems.value
       .map((cartItem) => {
         const isCertificate = cartItem.id === -1
         const isGame = cartItem.template === 6
-
+        
         if (isCertificate) {
           return {
             key: cartItem.key,
@@ -720,14 +792,14 @@ export const useOrderStore = defineStore("order", () => {
             isCertificate: true,
           }
         }
-
+        
         if (!cartItem.variant) return null
-
+        
         const size = cartItem.variant
         const colorName = cartItem.colorName || "Цвет не указан"
-
+        
         const imagesArray = Object.values(cartItem.images).filter((img) => img)
-
+        
         return {
           key: cartItem.key,
           id: cartItem.id,
@@ -745,39 +817,44 @@ export const useOrderStore = defineStore("order", () => {
       })
       .filter(Boolean)
   })
-
+  
   const goodsSum = computed(() => {
     return cartItems.value.reduce((sum, cartItem) => {
       if (cartItem.id === -1) return sum
       return sum + cartItem.price * cartItem.count
     }, 0)
   })
-
+  
   const certsInCartSum = computed(() => {
     return totalSum.value - goodsSum.value
   })
-
+  
   const totalOldSum = computed(() => {
     return cartItems.value.reduce((sum, cartItem) => {
       const oldPrice = cartItem.oldPrice > 0 ? cartItem.oldPrice : cartItem.price
       return sum + oldPrice * cartItem.count
     }, 0)
   })
-
+  
   const totalSum = computed(() => {
     return cartItems.value.reduce((sum, cartItem) => {
       return sum + cartItem.price * cartItem.count
     }, 0)
   })
-
+  
   const finalPrice = computed(() => {
+    // For onlyDel types: user only pays for delivery
+    if (isOnlyDeliveryPayment.value) {
+      return Math.max(deliveryCost.value, 0.01)
+    }
+    
     let price = goodsSum.value
-
+    
     if (pointsToUse.value > 0 && userStore.user) {
       const pointsDeduction = Math.min(pointsToUse.value, price)
       price -= pointsDeduction
     }
-
+    
     if (
       selectedCertificates.value &&
       Array.isArray(selectedCertificates.value) &&
@@ -795,10 +872,10 @@ export const useOrderStore = defineStore("order", () => {
       const certDeduction = Math.min(certDiscount, price)
       price -= certDeduction
     }
-
+    
     const deliveryFee = deliveryCost.value
     price += deliveryFee + certsInCartSum.value
-
+    
     const result = Math.max(price, 0.01)
     return result
   })
@@ -806,7 +883,7 @@ export const useOrderStore = defineStore("order", () => {
   const findItem = (keyOrId: string): CartItem | undefined => {
     return cartItems.value.find((i) => i.key === keyOrId || i.id === Number(keyOrId))
   }
-
+  
   async function updateCartApi(key: string, change: number) {
     const token = await userStore.loadToken()
     if (!token) return
@@ -900,7 +977,7 @@ export const useOrderStore = defineStore("order", () => {
       })
     }
   }
-
+  
   function setCartItems(items: CartItem[] | null | undefined) {
     cartItems.value = Array.isArray(items) ? items : []
   }
@@ -992,29 +1069,29 @@ export const useOrderStore = defineStore("order", () => {
     newAddressFirstLine.value = ""
     newAddressSecondLine.value = ""
     showErrorDeliveryMethod.value = false
-
+    
     isPaymentSuccessful.value = null
     paymentMethod.value = null
     showErrorPaymentMethod.value = false
     selectedPvz.value = null
-
+    
     isExpandedPoints.value = false
     isExpandedPoints2.value = true
     pendingPoints.value = ""
     pointsError.value = ""
     pointsToUse.value = 0
     usedPointsBackup.value = 0
-
+    
     certificateError.value = ""
     isExpandedCert.value = false
     newCertificateCode.value = ""
     selectedCertificates.value = []
-
+    
     orderState.value = {}
     orderId.value = null
     isWidgetOpen.value = false
   }
-
+  
   async function checkOrderStatus(id: number) {
     const token = await userStore.loadToken()
     if (!token) return null
@@ -1129,11 +1206,11 @@ export const useOrderStore = defineStore("order", () => {
     const rates: Record<number, number> = { 1: 0.1, 2: 0.15, 3: 0.2 }
     return rates[loyaltyLevel] || 0.1
   })
-
+  
   const maxAllowedPoints = computed(() => {
     return Math.floor(goodsSum.value * loyaltyDiscountPercent.value)
   })
-
+  
   const pointsInputError = computed(() => {
     const points = Number(pendingPoints.value)
     
@@ -1208,7 +1285,7 @@ export const useOrderStore = defineStore("order", () => {
     pointsToUse.value = 0
     pointsError.value = ""
   }
-
+  
   watch(pointsCheckboxValue, (newValue) => {
     if (newValue === 'apply') {
       applyPoints()
@@ -1216,7 +1293,7 @@ export const useOrderStore = defineStore("order", () => {
       cancelPoints()
     }
   })
-
+  
   watch(pendingPoints, () => {
     if (pointsCheckboxValue.value === 'apply') {
       pointsCheckboxValue.value = null
@@ -1251,7 +1328,7 @@ export const useOrderStore = defineStore("order", () => {
       }
     }
   })
-
+  
   function togglePoints() {
     isExpandedPoints.value = !isExpandedPoints.value
   }
@@ -1259,33 +1336,33 @@ export const useOrderStore = defineStore("order", () => {
   function togglePoints2() {
     isExpandedPoints2.value = !isExpandedPoints2.value
   }
-
+  
   watch(goodsSum, () => {
     updateDeliveryDetails()
   })
-
+  
   async function addCertificate() {
     if (isLoadingCert.value) return
-
+    
     isLoadingCert.value = true
     certificateError.value = ""
-
+    
     const code = newCertificateCode.value.trim()
-
+    
     if (!code) {
       certificateError.value = "Введите код сертификата"
       isLoadingCert.value = false
       return
     }
-
+    
     if (userStore.user?.certificates.some((c: Certificate) => c.code === code)) {
       certificateError.value = "Сертификат уже добавлен"
       isLoadingCert.value = false
       return
     }
-
+    
     const token = await userStore.loadToken()
-
+    
     try {
       const response = await $fetch<ApiResponse & { certificates: Certificate[] }>(
         "https://back.casaalmare.com/api/addCertificate",
@@ -1294,11 +1371,11 @@ export const useOrderStore = defineStore("order", () => {
           body: { token, code },
         },
       )
-
+      
       if (response.success && response.certificates) {
         if (userStore.user) {
           userStore.user.certificates = response.certificates
-
+          
           if (!selectedCertificates.value.includes(code)) {
             const newCert = response.certificates.find((c: Certificate) => c.code === code)
             if (newCert && newCert.value_now <= goodsSum.value && selectedCertificates.value.length === 0) {
@@ -1306,7 +1383,7 @@ export const useOrderStore = defineStore("order", () => {
             }
           }
         }
-
+        
         newCertificateCode.value = ""
         certificateError.value = ""
         await nextTick()
@@ -1321,11 +1398,11 @@ export const useOrderStore = defineStore("order", () => {
       isLoadingCert.value = false
     }
   }
-
+  
   function toggleCert() {
     isExpandedCert.value = !isExpandedCert.value
   }
-
+  
   async function refreshCityForUI() {
     let targetCity: CityData | null = null
     if (orderState.value.city) {
@@ -1335,14 +1412,14 @@ export const useOrderStore = defineStore("order", () => {
     } else if (userStore.user?.city) {
       targetCity = userStore.user.city
     }
-
+    
     if (!targetCity || targetCity.label === "" || targetCity === false) {
-      city.value = null
+      city.value = DEFAULT_CITY_MOSCOW
     } else if (targetCity && targetCity !== city.value) {
       city.value = targetCity
       await nextTick()
     }
-
+    
     if (city.value) {
       await loadCdekData()
       await nextTick()
@@ -1351,15 +1428,15 @@ export const useOrderStore = defineStore("order", () => {
       }
     }
   }
-
+  
   function priceFormatter(value: number): string {
     const formattedValue = new Intl.NumberFormat("ru-RU").format(Math.round(value))
     return `${formattedValue} ₽`
   }
-
+  
   watchEffect(() => {
     let newAddresses: string[] = []
-
+    
     if (userStore?.user?.profile?.address && Array.isArray(userStore.user.profile.address)) {
       const [adr1, adr2] = userStore.user.profile.address
       if (adr1?.trim()) {
@@ -1367,7 +1444,7 @@ export const useOrderStore = defineStore("order", () => {
         newAddresses = [mainAddress]
       }
     }
-
+    
     if (userStore?.user?.profile && userStore?.user?.profile.extended && userStore?.user?.profile.extended.addresses && Array.isArray(userStore.user.profile.extended.addresses)) {
       const extendedAddresses = userStore.user.profile.extended.addresses
         .filter((addr) => Array.isArray(addr) && addr[0]?.trim())
@@ -1376,13 +1453,13 @@ export const useOrderStore = defineStore("order", () => {
           return adr2?.trim() ? `${adr1.trim()}, ${adr2.trim()}` : adr1.trim()
         })
         .filter((addr) => !newAddresses.includes(addr))
-
+      
       newAddresses = [...newAddresses, ...extendedAddresses]
     }
-
+    
     addresses.value = newAddresses
   })
-
+  
   watch(
     () => userStore.city,
     (newCity) => {
@@ -1394,7 +1471,7 @@ export const useOrderStore = defineStore("order", () => {
     },
     { immediate: true },
   )
-
+  
   watch(
     () => city.value,
     async (newCity) => {
@@ -1407,7 +1484,7 @@ export const useOrderStore = defineStore("order", () => {
     },
     { immediate: true, deep: true },
   )
-
+  
   const hasGoods = computed(() => goodsSum.value > 0)
   
   const hasPhysicalCertificates = computed(() => {
@@ -1446,8 +1523,7 @@ export const useOrderStore = defineStore("order", () => {
       return
     }
     
-    const methodId = Number(deliveryMethod.value)
-    const type = deliveryTypes.value.find((t) => t.id === methodId)
+    const type = deliveryTypes.value.find(t => t.id === deliveryMethod.value)
     
     if (type) {
       if (type.term && type.term.min !== undefined && type.term.max !== undefined) {
@@ -1459,25 +1535,26 @@ export const useOrderStore = defineStore("order", () => {
       }
       deliveryCost.value = type.cost || 0
       
-      if (methodId === 4 && selectedPvz.value && selectedPvz.value.price) {
+      // PVZ: use selected pvz price if available
+      if (type.isPvz && selectedPvz.value && selectedPvz.value.price) {
         deliveryCost.value = selectedPvz.value.price
+      }
+      
+      // Бесплатная доставка только для товаров (не для onlyDel типов)
+      if (hasGoods.value && totalSum.value >= 30000 && !type.onlyDel) {
+        deliveryCost.value = 0
       }
     } else {
       deliveryTime.value = null
       deliveryCost.value = 0
     }
-    
-    // Бесплатная доставка только для товаров (не для одних сертификатов)
-    if (hasGoods.value && totalSum.value >= 30000) {
-      deliveryCost.value = 0
-    }
   }
-
+  
   watch(deliveryMethod, () => {
     updateDeliveryDetails()
     debouncedUpdateOrderState()
   })
-
+  
   watch(
     () => deliveryTypes.value,
     () => {
@@ -1487,14 +1564,14 @@ export const useOrderStore = defineStore("order", () => {
     },
     { deep: true },
   )
-
+  
   watch(
     () => authStore.isAuth,
     (newVal) => {
       if (newVal) resetGuestAuth()
     },
   )
-
+  
   watch(
     [
       deliveryMethod,
@@ -1519,18 +1596,20 @@ export const useOrderStore = defineStore("order", () => {
     },
     { deep: true },
   )
-
+  
   watch(
     [addresses, deliveryMethod],
     ([newAddresses, newDeliveryMethod]) => {
-      const isCourierMethod = ["1", "2", "3"].includes(newDeliveryMethod || "")
+      // Show address input for non-pvz courier methods
+      const currentType = deliveryTypes.value.find(t => t.id === newDeliveryMethod)
+      const isCourierMethod = !!newDeliveryMethod && currentType && !currentType.isPvz
       if (newAddresses.length === 0 && isCourierMethod && !currentAddress.value) {
         currentAddress.value = "Новый адрес"
       }
     },
     { immediate: true, deep: true },
   )
-
+  
   return {
     cartItems,
     addresses,
@@ -1624,5 +1703,8 @@ export const useOrderStore = defineStore("order", () => {
     parseCart,
     availablePoints,
     isCheckingOrderStatus,
+    // New exports
+    selectedDeliveryType,
+    isOnlyDeliveryPayment,
   }
 })
