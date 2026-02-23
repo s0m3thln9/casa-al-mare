@@ -47,6 +47,15 @@ const sendViewItemEvent = (viewedItem: Item) => {
   }
 }
 
+const handleAccordionClick = (e: MouseEvent) => {
+  const target = e.target as HTMLElement
+  const header = target.closest('.accordeon .header') as HTMLElement | null
+  if (!header) return
+  
+  const accordeon = header.closest('.accordeon') as HTMLElement
+  accordeon.classList.toggle('open')
+}
+
 const loadItem = async () => {
   try {
     isLoading.value = true
@@ -955,9 +964,9 @@ watch(doc, () => {
             class="prose prose-sm max-w-none custom-section-content"
           >
             <template v-if="isHtml(contentItem)">
-              <div class="html-content-wrapper">
-                <div v-html="contentItem" />
-              </div>
+              <div class="html-content-wrapper" @click="handleAccordionClick">
+  <div v-html="contentItem" />
+</div>
             </template>
             <template v-else>
               <div class="p-4 border-[0.5px] sm:border-1 border-[#BBB8B6] rounded-2xl custom-text-content">
@@ -1286,5 +1295,67 @@ watch(doc, () => {
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
+}
+
+.html-content-wrapper :deep(.accordeon) {
+  border: 0.5px solid #bbb8b6;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.html-content-wrapper :deep(.accordeon):last-child {
+  margin-bottom: 0;
+}
+
+.html-content-wrapper :deep(.accordeon .header) {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 400;
+  color: #211d1d;
+  user-select: none;
+}
+
+.html-content-wrapper :deep(.accordeon .header::after) {
+  content: '';
+  background-image: url("/arrow-right.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 0.75rem;
+  height: 0.75rem;
+  flex-shrink: 0;
+  transform: rotate(90deg);
+  transition: transform 300ms ease;
+}
+
+.html-content-wrapper :deep(.accordeon.open .header::after) {
+  transform: rotate(270deg);
+}
+
+.html-content-wrapper :deep(.accordeon .text) {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 300ms ease, padding 300ms ease;
+  padding: 0 16px;
+  font-size: 12px;
+  color: #363636;
+  line-height: 134%;
+}
+
+.html-content-wrapper :deep(.accordeon.open .text) {
+  max-height: 600px;
+  padding: 0 16px 14px;
+}
+
+@media screen and (max-width: 640px) {
+  .html-content-wrapper :deep(.accordeon) {
+    border-radius: 12px;
+    margin-bottom: 6px;
+  }
 }
 </style>
