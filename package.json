@@ -26,5 +26,8 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
   },
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "@nuxtjs/sitemap": "^7.6.0"
+  }
 }
