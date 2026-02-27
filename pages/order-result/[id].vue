@@ -205,7 +205,7 @@ function updateLocalDeliveryDetails() {
 }
 
 watch(
-  [localCartItems, localPointsToUse, localSelectedCertificates, localDeliveryCost, localGoodsSum],
+  [localCartItems, localPointsToUse, localSelectedCertificates, localGoodsSum],
   () => {
     localTotalSum.value = localCartItems.value.reduce((sum, item) => sum + item.price * item.count, 0)
     updateLocalDeliveryDetails()
@@ -258,7 +258,7 @@ onMounted(async () => {
     )
     
     if (data) {
-      localIsPaymentSuccessful.value = data.status === 2
+      localIsPaymentSuccessful.value = (data.status ?? 0) > 0
       
       if (data.status === 1 || data.status === 2) {
         orderStore.resetOrder()
