@@ -475,21 +475,6 @@ async function handleGuestAuth(): Promise<void> {
   orderStore.guestAuthButtonDisabled = false
   orderStore.isGuestAuthLoading = false
 }
-function getDayLabel(days: number): string {
-  if (days % 10 === 1 && days % 100 !== 11) return "день"
-  if (days % 10 >= 2 && days % 10 <= 4 && (days % 100 < 10 || days % 100 >= 20)) return "дня"
-  return "дней"
-}
-function getTimeLabel(type: { term?: { min: number; max: number }; isExpress?: boolean }): string {
-  if (type.isExpress) return ""
-  const min = type.term?.min || 0
-  const max = type.term?.max || 0
-  if (min === 0 && max === 0) return ""
-  if (min === max) {
-    return `(${min} ${getDayLabel(min)})`
-  }
-  return `(${min}-${max} ${getDayLabel(max)})`
-}
 
 // Helper: format delivery cost display
 function getDeliveryCostLabel(): string {
@@ -1140,11 +1125,10 @@ useSmsAutoSubmit(
                       :key="type.id"
                       v-model="orderStore.deliveryMethod"
                       size="M"
-                      :label="`${type.name} ${!type.isExpress ? getTimeLabel(type) : ''}`"
+                      :label="type.name"
                       :value="type.id"
                     />
                   </div>
-                  <!-- Address input: shown for non-pvz courier methods -->
                   <div
                     v-if="isCourierDelivery"
                     class="flex flex-col gap-4"
