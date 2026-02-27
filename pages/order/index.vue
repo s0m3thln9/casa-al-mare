@@ -104,6 +104,13 @@ const loadCloudPaymentsScript = (): Promise<void> => {
     document.head.appendChild(script)
   })
 }
+
+const payButtonLabel = computed(() =>
+  orderStore.isOnlyDeliveryPayment && orderStore.deliveryCost === 0
+    ? "Оформить заказ"
+    : "Оплатить заказ"
+)
+
 onMounted(async () => {
   try {
     await loadCloudPaymentsScript()
@@ -1389,12 +1396,17 @@ useSmsAutoSubmit(
                 <span>
                   Окончательная стоимость:
                   <span
-                    v-if="orderStore.isOnlyDeliveryPayment"
+                    v-if="orderStore.isOnlyDeliveryPayment && orderStore.deliveryCost > 0"
                     class="text-xs text-[#8C8785] ml-1"
                   >(Оплата только доставки)</span>
                 </span>
                 <span class="flex items-center gap-2">
-                  {{ orderStore.priceFormatter(orderStore.finalPrice) }}
+                  <template v-if="orderStore.isOnlyDeliveryPayment && orderStore.deliveryCost === 0">
+                    бесплатно
+                  </template>
+                  <template v-else>
+                    {{ orderStore.priceFormatter(orderStore.finalPrice) }}
+                  </template>
                   <span
                     v-if="!orderStore.isOnlyDeliveryPayment && orderStore.totalSum + orderStore.deliveryCost > orderStore.finalPrice"
                     class="font-extralight line-through"
@@ -1406,13 +1418,13 @@ useSmsAutoSubmit(
             <div class="flex flex-col gap-2">
               <AppButton
                 class="w-full"
-                content="Оплатить заказ"
+                :content="payButtonLabel"
                 variant="primary"
                 :disabled="orderStore.isLoadingPayment || orderStore.cartItems.length === 0"
                 @click="handlePay"
               />
               <p class="text-xs text-[#8C8785]">
-                Нажимая на кнопку «Оплатить», Вы соглашаетесь с условиями
+                Нажимая на кнопку «{{ payButtonLabel }}», Вы соглашаетесь с условиями
                 <NuxtLink
                   class="underline"
                   to="/info/oferta"
@@ -1651,12 +1663,17 @@ useSmsAutoSubmit(
                     <span>
                       Окончательная стоимость:
                       <span
-                        v-if="orderStore.isOnlyDeliveryPayment"
+                        v-if="orderStore.isOnlyDeliveryPayment && orderStore.deliveryCost > 0"
                         class="text-xs text-[#8C8785] ml-1"
                       >(Оплата только доставки)</span>
                     </span>
                     <span class="flex items-center gap-2">
-                      {{ orderStore.priceFormatter(orderStore.finalPrice) }}
+                      <template v-if="orderStore.isOnlyDeliveryPayment && orderStore.deliveryCost === 0">
+                        бесплатно
+                      </template>
+                      <template v-else>
+                        {{ orderStore.priceFormatter(orderStore.finalPrice) }}
+                      </template>
                       <span
                         v-if="!orderStore.isOnlyDeliveryPayment && orderStore.totalSum + orderStore.deliveryCost > orderStore.finalPrice"
                         class="font-extralight line-through"
@@ -1668,12 +1685,12 @@ useSmsAutoSubmit(
                 <div class="flex flex-col gap-2">
                   <AppButton
                     class="w-full"
-                    content="Оплатить заказ"
+                    :content="payButtonLabel"
                     :disabled="orderStore.isLoadingPayment || orderStore.cartItems.length === 0 || !authStore.isAuth"
                     @click="handlePay"
                   />
                   <p class="text-xs text-[#8C8785]">
-                    Нажимая на кнопку «Оплатить», Вы соглашаетесь с условиями
+                    Нажимая на кнопку «{{ payButtonLabel }}», Вы соглашаетесь с условиями
                     <NuxtLink
                       class="underline"
                       to="/info/oferta"

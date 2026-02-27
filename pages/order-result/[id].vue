@@ -115,6 +115,12 @@ function localIncrementQuantity(key: string) {
   }
 }
 
+const retryButtonLabel = computed(() =>
+  localIsOnlyDeliveryPayment.value && localDeliveryCost.value === 0
+    ? "Оформить заказ"
+    : "Оплатить заказ"
+)
+
 function localRemoveItemFromCart(key: string) {
   localCartItems.value = localCartItems.value.filter((item) => item.key !== key)
 }
@@ -167,9 +173,8 @@ function updateLocalDeliveryDetails() {
       localDeliveryCost.value = localSelectedPvz.value.price
     }
     
-    // Free delivery for goods orders >= 20000 (not for onlyDel types)
-    if (localGoodsSum.value > 0 && localGoodsSum.value >= 20000 &&
-      !type.onlyDel) {
+    // Free delivery for goods orders >= 20000
+    if (localGoodsSum.value > 0 && localGoodsSum.value >= 20000) {
       localDeliveryCost.value = 0
     }
   } else {
@@ -711,12 +716,17 @@ async function handleRetryPay(): Promise<void> {
               <span>
                 Окончательная стоимость:
                 <span
-                  v-if="localIsOnlyDeliveryPayment"
+                  v-if="localIsOnlyDeliveryPayment && localDeliveryCost > 0"
                   class="text-xs text-[#8C8785] ml-1"
                 >(Оплата только доставки)</span>
               </span>
               <span class="flex items-center gap-2">
-                {{ orderStore.priceFormatter(localFinalPrice) }}
+                <template v-if="localIsOnlyDeliveryPayment && localDeliveryCost === 0">
+                  бесплатно
+                </template>
+                <template v-else>
+                  {{ orderStore.priceFormatter(localFinalPrice) }}
+                </template>
                 <span
                   v-if="!localIsOnlyDeliveryPayment && localTotalSum + localDeliveryCost > localFinalPrice"
                   class="font-extralight line-through"
@@ -747,7 +757,7 @@ async function handleRetryPay(): Promise<void> {
           </AppTooltip>
           <AppButton
             class="w-full mt-8"
-            content="Оплатить заказ"
+            :content="retryButtonLabel"
             :disabled="localIsLoadingPayment || localCartItems.length === 0"
             @click="handleRetryPay"
           />

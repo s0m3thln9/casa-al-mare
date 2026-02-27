@@ -1540,8 +1540,8 @@ export const useOrderStore = defineStore("order", () => {
         deliveryCost.value = selectedPvz.value.price
       }
       
-      // Бесплатная доставка только для товаров (не для onlyDel типов)
-      if (hasGoods.value && totalSum.value >= 20000 && !type.onlyDel) {
+      // Бесплатная доставка только для товаров
+      if (hasGoods.value && totalSum.value >= 20000) {
         deliveryCost.value = 0
       }
     } else {
