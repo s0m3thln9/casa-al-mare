@@ -1541,7 +1541,7 @@ export const useOrderStore = defineStore("order", () => {
       }
       
       // Бесплатная доставка только для товаров (не для onlyDel типов)
-      if (hasGoods.value && totalSum.value >= 30000 && !type.onlyDel) {
+      if (hasGoods.value && totalSum.value >= 20000 && !type.onlyDel) {
         deliveryCost.value = 0
       }
     } else {

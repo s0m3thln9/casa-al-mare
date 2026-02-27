@@ -167,8 +167,9 @@ function updateLocalDeliveryDetails() {
       localDeliveryCost.value = localSelectedPvz.value.price
     }
     
-    // Free delivery for goods orders >= 30000 (not for onlyDel types)
-    if (localGoodsSum.value > 0 && localGoodsSum.value >= 30000 && !type.onlyDel) {
+    // Free delivery for goods orders >= 20000 (not for onlyDel types)
+    if (localGoodsSum.value > 0 && localGoodsSum.value >= 20000 &&
+      !type.onlyDel) {
       localDeliveryCost.value = 0
     }
   } else {
