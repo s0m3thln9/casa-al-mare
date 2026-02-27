@@ -7,6 +7,7 @@ const props = defineProps<{
   disabled?: boolean
   value: string | number
   multiple?: boolean
+  description?: string
 }>()
 
 const orderStore = useOrderStore()
@@ -71,12 +72,16 @@ const toggle = () => {
         class="check-icon"
       />
     </button>
-    <span
+    <div
       v-if="label"
-      class="text-sm font-light"
+      class="flex flex-col"
     >
-      {{ label }}
-    </span>
+      <span class="text-sm font-light">{{ label }}</span>
+      <span
+        v-if="description"
+        class="text-xs text-[#8C8785] font-light"
+      >{{ description }}</span>
+    </div>
     <span
       v-else-if="labelHtml"
       class="text-sm font-light"

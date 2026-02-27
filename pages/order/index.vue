@@ -1127,6 +1127,7 @@ useSmsAutoSubmit(
                       size="M"
                       :label="type.name"
                       :value="type.id"
+                      :description="type.description"
                     />
                   </div>
                   <div
