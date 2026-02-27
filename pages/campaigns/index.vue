@@ -18,7 +18,7 @@ const campaignItems = computed(() => {
 
 const breadcrumsItems: { name: string; path?: string }[] = [
   { name: "Главная", path: "/" },
-  { name: "CAMPAIGNS" },
+  { name: "Вдохновение" },
 ]
 
 const selectedSetItems = ref([])
@@ -175,7 +175,7 @@ const getCardClass = (index: number) => {
       <AppBreadcrumbs :items="breadcrumsItems" />
     </div>
     
-    <h2 class="uppercase text-center font-[Inter] text-[17px]">Campaigns</h2>
+    <h2 class="uppercase text-center font-[Inter] text-[17px]">Вдохновение</h2>
 
     <div v-if="docsStore.loading" class="text-center py-10">Загрузка...</div>
 

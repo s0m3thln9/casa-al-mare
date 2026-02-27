@@ -57,7 +57,7 @@ onMounted(() => {
         class="rounded-lg"
       >
       <div class="flex flex-col gap-2">
-        <h2 class="text-[15px] sm:text-xl max-sm:font-light text-[#0a0e11]">Swimwear Care</h2>
+        <h2 class="text-[15px] sm:text-xl max-sm:font-light text-[#0a0e11]">Уход за купальниками</h2>
         <p class="text-sm font-light">
           Любимые купальники заслуживают особого внимания. Стирать купальники нужно с застёгнутой фурнитурой. Рекомендуем стирать их в специальном мешочке для деликатных изделий — это защищает ткань от зацепок и трения.
         </p>

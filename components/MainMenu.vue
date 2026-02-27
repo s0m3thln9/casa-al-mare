@@ -111,7 +111,7 @@ const menuItems = computed<MenuItem[]>(() => {
     customClass2: "sm:hidden max-sm:-mb-6",
   })
   items.push({
-    label: "CAMPAIGNS",
+    label: "Вдохновение",
     link: "/campaigns",
     customClass2: "sm:hidden max-sm:-mb-6",
   })

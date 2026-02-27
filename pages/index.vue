@@ -86,7 +86,7 @@ const images = {
       />
       <BannerCard
         :image-url="images.promo2"
-        text="Campaign"
+        text="Вдохновение"
         custom-class="rounded-lg aspect-[1]"
         object-position="center"
         link="/campaigns"

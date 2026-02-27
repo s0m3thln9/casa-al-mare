@@ -484,7 +484,7 @@ watch(getCurrentCategoryData, () => {
           <template v-if="index === 8 && isMobile && videoData1 && !isAnyFilterActive">
             <VideoBanner
               :video-data="videoData1"
-              text="Campaign"
+              text="Вдохновение"
               custom-class="rounded-lg aspect-[1] col-span-2 sm:hidden"
               link="/campaigns"
             />
@@ -492,7 +492,7 @@ watch(getCurrentCategoryData, () => {
           <template v-else-if="index === 16 && isMobile && videoData2 && !isAnyFilterActive">
             <VideoBanner
               :video-data="videoData2"
-              text="Campaign"
+              text="Вдохновение"
               custom-class="rounded-lg aspect-[1] col-span-2 sm:hidden"
               link="/campaigns"
             />

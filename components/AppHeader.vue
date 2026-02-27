@@ -74,7 +74,7 @@ const handleMenuButtonClick = () => {
         </li>
 <!--        <li class="hover:text-[#F3A454]"><NuxtLink to="/catalog">Новинки</NuxtLink></li>-->
         <li class="hover:text-[#F3A454]"><NuxtLink to="/blog">Блог</NuxtLink></li>
-        <li class="hover:text-[#F3A454]"><NuxtLink to="/campaigns">CAMPAIGNS
+        <li class="hover:text-[#F3A454]"><NuxtLink to="/campaigns">Вдохновение
         </NuxtLink></li>
         <li class="hover:text-[#F3A454]">
           <a
