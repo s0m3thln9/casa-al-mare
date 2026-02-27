@@ -71,6 +71,15 @@ const updateSeo = () => {
 
 updateSeo()
 
+const handleAccordionClick = (e: MouseEvent) => {
+  const target = e.target as HTMLElement
+  const header = target.closest('.accordeon .header') as HTMLElement | null
+  if (!header) return
+  
+  const accordeon = header.closest('.accordeon') as HTMLElement
+  accordeon.classList.toggle('open')
+}
+
 watch(doc, () => {
   updateSeo()
 }, { immediate: true })
@@ -94,6 +103,7 @@ watch(doc, () => {
       <h2 class="uppercase mb-6 font-[Inter] text-[17px]">{{ doc.pagetitle }}</h2>
       <div
         class="prose prose-lg max-w-4xl w-full px-4 content"
+        @click="handleAccordionClick"
         v-html="doc.content"
       />
     </div>
@@ -201,6 +211,95 @@ watch(doc, () => {
 .content :deep(ul > li > ul > li > ul) {
   padding-left: 32px;
   list-style-type: square;
+}
+
+.content :deep(.accordeonWrapper) {
+  border: 1px solid #BBB8B6;
+  border-radius: 16px;
+  overflow: hidden;
+  padding: 16px;
+}
+
+.content :deep(.accordeon) {
+  border-bottom: 1px solid rgba(187, 184, 182, 0.5);
+  overflow: hidden;
+  padding-top: 16px;
+  padding-bottom: 16px;
+  transition: padding-bottom 300ms ease;
+}
+
+.content :deep(.accordeon.open) {
+  padding-bottom: 12px;
+}
+
+.content :deep(.accordeon):last-child {
+  border-bottom: none;
+}
+
+.content :deep(.accordeon):first-child {
+  padding-top: 4px;
+}
+
+.content :deep(.accordeon .header) {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-family: "Manrope", sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  color: #211d1d;
+  user-select: none;
+  padding-bottom: 0px;
+  transition: padding-bottom 300ms ease;
+}
+
+.content :deep(.accordeon.open .header) {
+  padding-bottom: 4px;
+}
+
+.content :deep(.accordeon .header::after) {
+  content: '';
+  background-image: url("/arrow-right.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 0.75rem;
+  height: 0.75rem;
+  flex-shrink: 0;
+  transform: rotate(90deg);
+  transition: transform 300ms ease;
+}
+
+.content :deep(.accordeon.open .header::after) {
+  transform: rotate(270deg);
+}
+
+.content :deep(.accordeon .text) {
+  max-height: 0;
+  font-weight: 400;
+  overflow: hidden;
+  font-family: "Manrope", sans-serif;
+  transition: max-height 300ms ease, padding 300ms ease;
+  font-size: 12px;
+  color: #363636;
+  line-height: 134%;
+}
+
+.content :deep(.accordeon.open .text) {
+  max-height: 600px;
+}
+
+.content :deep(.accordeon .text ul),
+.content :deep(.accordeon .text ol) {
+  list-style-position: outside;
+  padding-left: 16px;
+}
+
+.content :deep(.accordeon .text ul li),
+.content :deep(.accordeon .text ol li) {
+  display: list-item;
+  margin-bottom: 0;
 }
 
 @media screen and (max-width: 640px) {

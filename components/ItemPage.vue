@@ -1297,27 +1297,49 @@ watch(doc, () => {
   background-position: center;
 }
 
-.html-content-wrapper :deep(.accordeon) {
-  border: 0.5px solid #bbb8b6;
+.html-content-wrapper :deep(.accordeonWrapper) {
+  border: 1px solid #BBB8B6;
   border-radius: 16px;
   overflow: hidden;
-  margin-bottom: 8px;
+  padding: 16px;
+}
+
+.html-content-wrapper :deep(.accordeon) {
+  border-bottom: 1px solid rgba(187, 184, 182, 0.5);
+  overflow: hidden;
+  padding-top: 16px;
+  padding-bottom: 16px;
+  transition: padding-bottom 300ms ease;
+}
+
+.html-content-wrapper :deep(.accordeon.open) {
+  padding-bottom: 12px;
 }
 
 .html-content-wrapper :deep(.accordeon):last-child {
-  margin-bottom: 0;
+  border-bottom: none;
+}
+
+.html-content-wrapper :deep(.accordeon):first-child {
+  padding-top: 4px;
 }
 
 .html-content-wrapper :deep(.accordeon .header) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 16px;
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 400;
+  font-family: "Manrope", sans-serif;
+  font-size: 14px;
+  font-weight: 300;
   color: #211d1d;
   user-select: none;
+  padding-bottom: 0px;
+  transition: padding-bottom 300ms ease;
+}
+
+.html-content-wrapper :deep(.accordeon.open .header) {
+  padding-bottom: 4px;
 }
 
 .html-content-wrapper :deep(.accordeon .header::after) {
@@ -1339,9 +1361,10 @@ watch(doc, () => {
 
 .html-content-wrapper :deep(.accordeon .text) {
   max-height: 0;
+  font-weight: 400;
   overflow: hidden;
+  font-family: "Manrope", sans-serif;
   transition: max-height 300ms ease, padding 300ms ease;
-  padding: 0 16px;
   font-size: 12px;
   color: #363636;
   line-height: 134%;
@@ -1349,13 +1372,18 @@ watch(doc, () => {
 
 .html-content-wrapper :deep(.accordeon.open .text) {
   max-height: 600px;
-  padding: 0 16px 14px;
 }
 
-@media screen and (max-width: 640px) {
-  .html-content-wrapper :deep(.accordeon) {
-    border-radius: 12px;
-    margin-bottom: 6px;
-  }
+.html-content-wrapper :deep(.accordeon .text ul),
+.html-content-wrapper :deep(.accordeon .text ol) {
+  list-style-position: outside;
+  padding-left: 16px;
+  margin-bottom: 8px;
+}
+
+.html-content-wrapper :deep(.accordeon .text ul li),
+.html-content-wrapper :deep(.accordeon .text ol li) {
+  display: list-item;
+  margin-bottom: 0;
 }
 </style>
