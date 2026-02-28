@@ -414,6 +414,7 @@ export const useOrderStore = defineStore("order", () => {
               name: typeData.name,
               cost: typeData.cost ?? 0,
               onlyDel: !!typeData.onlyDel,
+              description: typeData.description ?? '',
               isPvz,
               isExpress,
               term,
