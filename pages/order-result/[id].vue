@@ -499,7 +499,7 @@ async function handleRetryPay(): Promise<void> {
             Мы уже проверяем ваш платеж и в течение 30 минут информация появится в вашем личном кабинете
           </p>
           <p class="font-[Manrope] text-sm text-[#211D1D] font-light">
-            В случае возникновения вопросов свяжитесь с нами, пожалуйста, написав на почту <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="17747b7e727963645774766476767b7a7665723974787a">[email&#160;protected]</a> или по
+            В случае возникновения вопросов свяжитесь с нами, пожалуйста, написав на почту <a href="mailto:clients@casaalmare.com">clients@casaalmare.com</a> или по
             телефону <a href="tel:+74950040494">+7 (495) 004-04-94</a>
           </p>
         </div>
