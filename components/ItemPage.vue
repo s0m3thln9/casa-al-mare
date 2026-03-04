@@ -1374,6 +1374,14 @@ watch(doc, () => {
   max-height: 600px;
 }
 
+.html-content-wrapper :deep(strong) {
+  font-weight: 500;
+}
+
+.html-content-wrapper :deep(em) {
+  font-style: italic;
+}
+
 .html-content-wrapper :deep(.accordeon .text ul),
 .html-content-wrapper :deep(.accordeon .text ol) {
   list-style-position: outside;

@@ -302,6 +302,14 @@ watch(doc, () => {
   margin-bottom: 0;
 }
 
+.content :deep(strong) {
+  font-weight: 500;
+}
+
+.content :deep(em) {
+  font-style: italic;
+}
+
 @media screen and (max-width: 640px) {
   .content :deep(h1),
   .content :deep(h2),
