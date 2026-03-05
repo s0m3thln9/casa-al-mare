@@ -106,7 +106,7 @@ const formatDate = (timestamp: number): string => {
                 : state.status === 3
                   ? "В пути"
                   : state.status === 4
-                    ? "Получен"
+                    ? "Выполнен"
                     : "Отменён"
           }}
         </div>
