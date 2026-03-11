@@ -367,7 +367,9 @@ const getCurrentCategoryData = computed(() => {
 
 const pageTitle = computed(() => getCurrentCategoryData.value?.pagetitle || getCurrentCategoryData.value?.longtitle ||
   treeData.value?.data?.catalog?.pagetitle || "Каталог")
-const description = computed(() => getCurrentCategoryData.value?.description || treeData.value?.data?.catalog?.description || "")
+const description = computed(() => getCurrentCategoryData.value?.meta_descr ||
+    getCurrentCategoryData.value?.description
+  || treeData.value?.data?.catalog?.description || "")
 
 const metaTags = computed(() => {
   const tags = getCurrentCategoryData.value?.metatags || treeData.value?.data?.catalog?.metatags || []

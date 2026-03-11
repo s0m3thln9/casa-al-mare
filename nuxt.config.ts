@@ -7,6 +7,12 @@ export default defineNuxtConfig({
     url: 'https://casaalmare.com',
   },
   
+  runtimeConfig: {
+    public: {
+      siteUrl: 'https://casaalmare.com'
+    }
+  },
+  
   hooks: {
     'nitro:config': async (nitroConfig) => {
       try {
