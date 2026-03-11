@@ -135,6 +135,7 @@ export interface DeliveryType {
   onlyDel: boolean
   isPvz?: boolean
   isExpress?: boolean
+  noAddress?: boolean
   term?: { min: number; max: number }
 }
 
@@ -417,6 +418,7 @@ export const useOrderStore = defineStore("order", () => {
               description: typeData.description ?? '',
               isPvz,
               isExpress,
+              noAddress: typeData.noAddress === 1,
               term,
             } as DeliveryType
           })

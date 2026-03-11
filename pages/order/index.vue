@@ -213,6 +213,7 @@ const isCourierDelivery = computed(() =>
 )
 const isPvzDelivery = computed(() => orderStore.selectedDeliveryType?.isPvz === true)
 const isExpressDelivery = computed(() => orderStore.selectedDeliveryType?.isExpress === true)
+const isNoAddressDelivery = computed(() => orderStore.selectedDeliveryType?.noAddress === true)
 
 async function handlePay(): Promise<void> {
   if (orderStore.isLoadingPayment) return
@@ -249,7 +250,7 @@ async function handlePay(): Promise<void> {
         return
       }
       // Courier (non-pvz) methods require an address
-      if (isCourierDelivery.value) {
+      if (isCourierDelivery.value && !isNoAddressDelivery.value) {
         if (!orderStore.currentAddress) {
           orderStore.showErrorDeliveryMethod = true
           orderStore.errorDeliveryMethod = "Выберите адрес доставки"
@@ -1138,7 +1139,7 @@ useSmsAutoSubmit(
                     />
                   </div>
                   <div
-                    v-if="isCourierDelivery"
+                    v-if="isCourierDelivery && !isNoAddressDelivery"
                     class="flex flex-col gap-4"
                   >
                     <AppCheckbox
