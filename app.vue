@@ -5,7 +5,7 @@ const config = useRuntimeConfig()
 const canonical = computed(() => {
   const url = new URL(route.fullPath, config.public.siteUrl)
   url.search = ''
-  return url.toString()
+  return url.toString().replace(/\/+$/, '') + '/'
 })
 
 useHead({
