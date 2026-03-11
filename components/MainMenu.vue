@@ -47,7 +47,7 @@ const buildMenuFromTree = (node: DocNode, parentPath = ""): MenuItem[] => {
 
       const menuItem: MenuItem = {
         label: item.pagetitle,
-        link: "/catalog",
+        link: "/catalog/",
         path: currentPath,
       }
 
@@ -56,7 +56,7 @@ const buildMenuFromTree = (node: DocNode, parentPath = ""): MenuItem[] => {
         const submenu: MenuItem[] = [
           {
             label: "Смотреть все",
-            link: `/catalog/${item.alias}`,
+            link: `/catalog/${item.alias}/`,
             path: currentPath, // путь родительской категории
           },
         ]
@@ -67,7 +67,7 @@ const buildMenuFromTree = (node: DocNode, parentPath = ""): MenuItem[] => {
           if (subItem.template === 2) {
             submenu.push({
               label: subItem.pagetitle,
-              link: "/catalog",
+              link: "/catalog/",
               path: `${currentPath}/${subItem.alias}`,
             })
           }
@@ -90,14 +90,15 @@ const menuItems = computed<MenuItem[]>(() => {
   const tree = docsStore.tree?.data
   if (!tree?.catalog) return []
 
-  const items: MenuItem[] = [{ label: "Смотреть все", link: "/catalog", customClass2: "mb-4" }]
+  const items: MenuItem[] = [{ label: "Смотреть все", link: "/catalog/",
+    customClass2: "mb-4" }]
 
   const dynamicItems = buildMenuFromTree(tree.catalog)
   items.push(...dynamicItems)
 
   items.push({
     label: "Сертификаты",
-    link: "/certificate",
+    link: "/certificate/",
     customClass2: "my-4",
   })
   // items.push({
@@ -107,17 +108,17 @@ const menuItems = computed<MenuItem[]>(() => {
   // })
   items.push({
     label: "Блог",
-    link: "/blog",
+    link: "/blog/",
     customClass2: "sm:hidden max-sm:-mb-6",
   })
   items.push({
     label: "Вдохновение",
-    link: "/campaigns",
+    link: "/campaigns/",
     customClass2: "sm:hidden max-sm:-mb-6",
   })
   items.push({
     label: "О нас",
-    link: "/about-us",
+    link: "/about-us/",
     customClass2: "sm:hidden",
   })
 
@@ -131,7 +132,7 @@ const secondMenuItems: MenuItem[] = [
     func: () => {
       menuStore.close()
       if (authStore.isAuth) {
-        navigateTo("/favorites")
+        navigateTo("/favorites/")
       } else {
         authModalStore.open()
       }
@@ -142,7 +143,7 @@ const secondMenuItems: MenuItem[] = [
     func: () => {
       menuStore.close()
       if (authStore.isAuth) {
-        navigateTo("/profile/profile")
+        navigateTo("/profile/profile/")
       } else {
         authModalStore.open()
       }
@@ -151,10 +152,10 @@ const secondMenuItems: MenuItem[] = [
   {
     label: "Покупателям",
     submenu: [
-      { label: "О нас", link: "/about-us", customClass: "max-sm:hidden" },
-      { label: "Доставка и оплата", link: "/info/dostavka-i-oplata" },
-      { label: "Возврат и обмен", link: "/info/vozvrat-i-obmen" },
-      { label: "Уход за изделиями", link: "/care" },
+      { label: "О нас", link: "/about-us/", customClass: "max-sm:hidden" },
+      { label: "Доставка и оплата", link: "/info/dostavka-i-oplata/" },
+      { label: "Возврат и обмен", link: "/info/vozvrat-i-obmen/" },
+      { label: "Уход за изделиями", link: "/care/" },
     ],
   },
   // {
@@ -164,7 +165,7 @@ const secondMenuItems: MenuItem[] = [
   // },
   {
     label: "Контакты",
-    link: "/contacts",
+    link: "/contacts/",
   },
   {
     label: "Telegram",
@@ -237,7 +238,7 @@ const proceedWithNavigationAndClose = (item: MenuItem) => {
 
     if (item.path) {
       navigateTo({
-        path: item.link + '/' + item.path,
+        path: item.link + item.path + '/',
       })
       return
     }

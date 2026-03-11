@@ -243,7 +243,7 @@ watch(
 const breadcrumsItems = computed(() => {
   const items: { name: string; path?: string }[] = [
     { name: "Главная", path: "/" },
-    { name: "Смотреть все", path: "/catalog" },
+    { name: "Смотреть все", path: "/catalog/" },
   ]
   
   const pathValue = currentPath.value
@@ -488,7 +488,7 @@ watch(getCurrentCategoryData, () => {
               :video-data="videoData1"
               text="Вдохновение"
               custom-class="rounded-lg aspect-[1] col-span-2 sm:hidden"
-              link="/campaigns"
+              link="/campaigns/"
             />
           </template>
           <template v-else-if="index === 16 && isMobile && videoData2 && !isAnyFilterActive">
@@ -496,7 +496,7 @@ watch(getCurrentCategoryData, () => {
               :video-data="videoData2"
               text="Вдохновение"
               custom-class="rounded-lg aspect-[1] col-span-2 sm:hidden"
-              link="/campaigns"
+              link="/campaigns/"
             />
           </template>
           <CatalogCard

@@ -33,7 +33,7 @@ const handleSubscribeFooter = () => {
 
 const handleProfileClick = () => {
   if (authStore.isAuth) {
-    navigateTo("/profile/profile")
+    navigateTo("/profile/profile/")
   } else {
     authModalStore.open()
   }
@@ -41,7 +41,7 @@ const handleProfileClick = () => {
 
 const handleFavClick = () => {
   if (authStore.isAuth) {
-    navigateTo("/profile/favorites")
+    navigateTo("/profile/favorites/")
   } else {
     authModalStore.open()
   }
@@ -49,7 +49,7 @@ const handleFavClick = () => {
 
 const handleOrdersClick = () => {
   if (authStore.isAuth) {
-    navigateTo("/profile/orders")
+    navigateTo("/profile/orders/")
   } else {
     authModalStore.open()
   }
@@ -63,36 +63,38 @@ const handleOrdersClick = () => {
       <div class="flex flex-col gap-4">
         <h3 class="font-normal text-base uppercase">Каталог</h3>
         <ul class="flex flex-col gap-4">
-          <li><NuxtLink to="/catalog/kupalniki">Купальники</NuxtLink></li>
-          <li><NuxtLink to="/catalog/kupalniki/niz">Нижняя часть
+          <li><NuxtLink to="/catalog/kupalniki/">Купальники</NuxtLink></li>
+          <li><NuxtLink to="/catalog/kupalniki/niz/">Нижняя часть
                                                       купальника</NuxtLink></li>
-          <li><NuxtLink to="/catalog/kupalniki/verx">Верхняя часть
+          <li><NuxtLink to="/catalog/kupalniki/verx/">Верхняя часть
                                                           купальника</NuxtLink></li>
-          <li><NuxtLink to="/catalog/odezhda">Одежда
+          <li><NuxtLink to="/catalog/odezhda/">Одежда
           </NuxtLink></li>
-          <li><NuxtLink to="/certificate">Сертификаты</NuxtLink></li>
+          <li><NuxtLink to="/certificate/">Сертификаты</NuxtLink></li>
         </ul>
       </div>
       <div class="flex flex-col gap-4">
         <h3 class="font-normal text-base uppercase">Покупателям</h3>
         <ul class="flex flex-col gap-4">
-          <li><NuxtLink to="/info/dostavka-i-oplata">Доставка и оплата</NuxtLink></li>
-          <li><NuxtLink to="/info/vozvrat-i-obmen">Возврат и обмен</NuxtLink></li>
-          <li><NuxtLink to="/info/rekvizity">Реквизиты</NuxtLink></li>
+          <li><NuxtLink to="/info/dostavka-i-oplata/">Доставка и
+                                                      оплата</NuxtLink></li>
+          <li><NuxtLink to="/info/vozvrat-i-obmen/">Возврат и
+                                                    обмен</NuxtLink></li>
+          <li><NuxtLink to="/info/rekvizity/">Реквизиты</NuxtLink></li>
           <li
             class="cursor-pointer"
             @click="popupStore.open('reverse')"
           >
             Обратная связь
           </li>
-          <li><NuxtLink to="/care">Уход за изделиями</NuxtLink></li>
+          <li><NuxtLink to="/care/">Уход за изделиями</NuxtLink></li>
         </ul>
       </div>
       <div class="flex flex-col gap-4">
         <h3 class="font-normal text-base uppercase">О бренде</h3>
         <ul class="flex flex-col gap-4">
-          <li><NuxtLink to="/about-us">О нас</NuxtLink></li>
-          <li><NuxtLink to="/contacts">Контакты</NuxtLink></li>
+          <li><NuxtLink to="/about-us/">О нас</NuxtLink></li>
+          <li><NuxtLink to="/contacts/">Контакты</NuxtLink></li>
           <li>
             <a
               href="https://t.me/casaalmarecom"
@@ -157,13 +159,13 @@ const handleOrdersClick = () => {
         <span class="text-xs text-[#BBB8B6]"
         ><NuxtLink
           class="hover:underline"
-          to="/info/confidence"
+          to="/info/confidence/"
         >Политика конфиденциальности</NuxtLink
         >
           и
           <NuxtLink
             class="hover:underline"
-            to="/info/oferta"
+            to="/info/oferta/"
           >оферта</NuxtLink
           ></span
         >
@@ -262,22 +264,23 @@ const handleOrdersClick = () => {
         </button>
         <NuxtLink
           class="w-full h-full"
-          to="/info/rekvizity"
+          to="/info/rekvizity/"
         >
           <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Реквизиты</button>
         </NuxtLink>
         <div class="flex gap-2">
           <button
             class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]"
-            aria-label="Политика конфиденциальности и оферта"
+            aria-label="Политика конфиденциальности"
           >
-            <NuxtLink to="/info/confidence">Политика конфиденциальности</NuxtLink>
+            <NuxtLink to="/info/confidence/">Политика
+                                             конфиденциальности</NuxtLink>
           </button>
           <button
             class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]"
-            aria-label="Политика конфиденциальности и оферта"
+            aria-label="Оферта"
           >
-            <NuxtLink to="/info/oferta">Оферта</NuxtLink>
+            <NuxtLink to="/info/oferta/">Оферта</NuxtLink>
           </button>
         </div>
       </div>

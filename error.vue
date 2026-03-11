@@ -96,7 +96,7 @@ const phoneOptions: PhoneOption[] = [
 
 const handleProfileClick = () => {
   if (authStore.isAuth) {
-    navigateTo("/profile/profile")
+    navigateTo("/profile/profile/")
   } else {
     authModalStore.open()
   }
@@ -114,43 +114,43 @@ const handleProfileClick = () => {
         <div class="grid sm:grid-cols-4 mt-[10%] gap-8 sm:justify-items-center max-sm:self-start">
           <div
             class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
-            @click="navigateTo('/catalog')"
+            @click="navigateTo('/catalog/')"
           >
             Смотреть все
           </div>
           <div
             class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
-            @click="navigateTo('/catalog/kupalniki/niz')"
+            @click="navigateTo('/catalog/kupalniki/niz/')"
           >
             Нижняя часть купальника
           </div>
           <div
             class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
-            @click="navigateTo('/catalog')"
+            @click="navigateTo('/catalog/aksessuaryi/panamyi/')"
           >
             Головные уборы
           </div>
           <div
             class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
-            @click="navigateTo('/certificate')"
+            @click="navigateTo('/certificate/')"
           >
             Cертификаты
           </div>
           <div
             class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
-            @click="navigateTo('/catalog/kupalniki')"
+            @click="navigateTo('/catalog/kupalniki/')"
           >
             Купальники
           </div>
           <div
             class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
-            @click="navigateTo('/catalog/kupalniki/verx')"
+            @click="navigateTo('/catalog/kupalniki/verx/')"
           >
             Верхняя часть купальника
           </div>
           <div
             class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
-            @click="navigateTo('/catalog')"
+            @click="navigateTo('/catalog/')"
           >
             Аксессуары
           </div>

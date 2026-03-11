@@ -131,7 +131,7 @@ const navigateToItem = async (itemId: number) => {
   }
   const item = catalogStore.getItemById(itemId)
   const fullAlias = item?.alias || String(itemId)
-  const itemLink = `/product/${fullAlias}`
+  const itemLink = `/product/${fullAlias}/`
   try {
     await navigateTo(itemLink)
   } catch (error) {
@@ -230,7 +230,7 @@ function normalizeAddress(address: string | string[] | null): string {
 
 onMounted(async () => {
   if (!orderId) {
-    await navigateTo("/order")
+    await navigateTo("/order/")
     return
   }
   

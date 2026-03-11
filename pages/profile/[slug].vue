@@ -153,7 +153,7 @@ const handleAddCertificate = async (): Promise<void> => {
 const handleTabChange = (tab: string) => {
   currentTab.value = tab
   const newSlug = tabToSlug[tab]
-  router.push(`/profile/${newSlug}`)
+  router.push(`/profile/${newSlug}/`)
 }
 
 const authStore = useAuthStore()

@@ -62,7 +62,7 @@ const subitemsArray = computed(() => {
         v-for="(item, index) in subitemsArray"
         :key="index"
         class="flex flex-col items-center cursor-pointer"
-        @click="navigateTo(`/blog/${item.alias}`)"
+        @click="navigateTo(`/blog/${item.alias}/`)"
       >
         <NuxtImg
           v-slot="{ src, alt, isLoaded, imgAttrs }"

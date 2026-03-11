@@ -186,7 +186,7 @@ export const useCatalogStore = defineStore("catalog", () => {
     }
     
     // Формируем финальный URL
-    const basePath = pathSegments.length > 0 ? `/catalog/${pathSegments.join("/")}` : "/catalog"
+    const basePath = pathSegments.length > 0 ? `/catalog/${pathSegments.join("/")}/` : "/catalog/"
     const queryString = params.toString()
     
     return queryString ? `${basePath}?${queryString}` : basePath

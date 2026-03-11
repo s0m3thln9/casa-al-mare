@@ -76,7 +76,7 @@ const images = {
       :video-data="data"
       text="В каталог"
       custom-class="sm:aspect-[375/607] max-sm:h-[100dvh] md:aspect-[5/4] lg:aspect-[1920/962]"
-      link="/catalog"
+      link="/catalog/"
     />
     <div class="flex flex-col lg:flex-row gap-2 px-2 py-2 sm:gap-4 sm:px-4 sm:py-4">
       <BannerCard
@@ -89,7 +89,7 @@ const images = {
         text="Вдохновение"
         custom-class="rounded-lg aspect-[1]"
         object-position="center"
-        link="/campaigns"
+        link="/campaigns/"
       />
     </div>
     <div class="grid grid-cols-2 gap-2 px-2 sm:gap-4 md:grid-cols-6 lg:grid-cols-5 sm:px-4">
@@ -98,35 +98,35 @@ const images = {
         text="Купальники"
         custom-class="rounded-lg col-span-2 aspect-[343/400] sm:aspect-[1920/2462] md:col-span-3 lg:col-span-1"
         object-position="center"
-        link="/catalog/kupalniki"
+        link="/catalog/kupalniki/"
       />
       <BannerCard
         :image-url="images.category2"
         text="Слитные купальники"
         custom-class="rounded-lg aspect-[167/284] sm:aspect-[1920/2462] md:col-span-3 lg:col-span-1"
         object-position="center"
-        link="/catalog/kupalniki/slitnyie-kupalniki"
+        link="/catalog/kupalniki/slitnyie-kupalniki/"
       />
       <BannerCard
         :image-url="images.category3"
         text="Одежда"
         custom-class="rounded-lg aspect-[167/284] sm:aspect-[1920/2462] md:col-span-2 lg:col-span-1"
         object-position="center"
-        link="/catalog/odezhda"
+        link="/catalog/odezhda/"
       />
       <BannerCard
         :image-url="images.category4"
         text="Аксессуары"
         custom-class="rounded-lg aspect-[167/284] sm:aspect-[1920/2462] md:col-span-2 lg:col-span-1"
         object-position="center"
-        link="/catalog/aksessuaryi"
+        link="/catalog/aksessuaryi/"
       />
       <BannerCard
         :image-url="images.category5"
         text="Настольные игры"
         custom-class="rounded-lg aspect-[167/284] sm:aspect-[1920/2462] md:col-span-2 lg:col-span-1"
         object-position="center"
-        link="/catalog/nastolnyie-igryi"
+        link="/catalog/nastolnyie-igryi/"
       />
     </div>
   </main>

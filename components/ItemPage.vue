@@ -157,11 +157,12 @@ const sortedShapes = computed(() => {
 
 const breadcrumsItems = computed(() => {
   if (isLoading.value) {
-    return [{ name: "Главная", path: "/" }, { name: "Смотреть все", path: "/catalog" }, { name: "Загрузка..." }]
+    return [{ name: "Главная", path: "/" }, { name: "Смотреть все", path:
+        "/catalog/" }, { name: "Загрузка..." }]
   }
   return [
     { name: "Главная", path: "/" },
-    { name: "Смотреть все", path: "/catalog" },
+    { name: "Смотреть все", path: "/catalog/" },
     { name: item.value?.name || "Товар" },
   ]
 })
@@ -764,7 +765,7 @@ watch(doc, () => {
               <NuxtLink
                 v-for="colorItem in availableColors"
                 :key="colorItem.alias"
-                :to="`/product/${colorItem.alias}`"
+                :to="`/product/${colorItem.alias}/`"
                 class="flex flex-col justify-center gap-2 items-center cursor-pointer hover:opacity-80 transition-opacity"
               >
                 <div

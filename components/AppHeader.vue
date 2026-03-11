@@ -20,7 +20,7 @@ const cartCount = computed(() => {
 
 const handleFavClick = () => {
   if (authStore.isAuth) {
-    navigateTo("/favorites")
+    navigateTo("/favorites/")
   } else {
     authModalStore.open()
   }
@@ -73,8 +73,9 @@ const handleMenuButtonClick = () => {
           </button>
         </li>
 <!--        <li class="hover:text-[#F3A454]"><NuxtLink to="/catalog">Новинки</NuxtLink></li>-->
-        <li class="hover:text-[#F3A454]"><NuxtLink to="/blog">Блог</NuxtLink></li>
-        <li class="hover:text-[#F3A454]"><NuxtLink to="/campaigns">Вдохновение
+        <li class="hover:text-[#F3A454]"><NuxtLink to="/blog/">Блог
+        </NuxtLink></li>
+        <li class="hover:text-[#F3A454]"><NuxtLink to="/campaigns/">Вдохновение
         </NuxtLink></li>
         <li class="hover:text-[#F3A454]">
           <a
@@ -112,7 +113,7 @@ const handleMenuButtonClick = () => {
           </NuxtLink>
         </li>
         <li class="hover:text-[#F3A454] relative">
-          <NuxtLink to="/order">Корзина</NuxtLink>
+          <NuxtLink to="/order/">Корзина</NuxtLink>
           <span
             v-if="cartCount > 0"
             class="absolute top-0 -right-1.5 text-[#211D1D] text-[9px]"

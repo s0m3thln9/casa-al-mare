@@ -95,7 +95,7 @@ const handleClick = async () => {
   }
   
   if (isInCart.value) {
-    navigateTo("/order")
+    navigateTo("/order/")
     return
   }
   

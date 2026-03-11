@@ -43,7 +43,7 @@ const isExpanded = ref(false)
 const isLoadingCart = ref(true)
 const handleProfileClick = () => {
   if (authStore.isAuth) {
-    navigateTo("/profile/profile")
+    navigateTo("/profile/profile/")
   } else {
     authModalStore.open()
   }
@@ -53,7 +53,7 @@ const toggleExpanded = () => {
 }
 const navigateToItem = async (itemId: number) => {
   if (itemId === -1) {
-    navigateTo("/certificate")
+    navigateTo("/certificate/")
     return
   }
   if (catalogStore.items.length === 0) {
@@ -61,7 +61,7 @@ const navigateToItem = async (itemId: number) => {
   }
   const item = catalogStore.getItemById(itemId)
   const fullAlias = item?.alias || String(itemId)
-  const itemLink = `/product/${fullAlias}`
+  const itemLink = `/product/${fullAlias}/`
   try {
     await navigateTo(itemLink)
   } catch (error) {
@@ -1427,14 +1427,14 @@ useSmsAutoSubmit(
                 Нажимая на кнопку «{{ payButtonLabel }}», Вы соглашаетесь с условиями
                 <NuxtLink
                   class="underline"
-                  to="/info/oferta"
+                  to="/info/oferta/"
                 >
                   публичной оферты
                 </NuxtLink>
                 , принимаете
                 <NuxtLink
                   class="underline"
-                  to="/info/oferta"
+                  to="/info/confidence/"
                 >
                   политику защиты и обработки персональных данных
                 </NuxtLink>
@@ -1693,12 +1693,12 @@ useSmsAutoSubmit(
                     Нажимая на кнопку «{{ payButtonLabel }}», Вы соглашаетесь с условиями
                     <NuxtLink
                       class="underline"
-                      to="/info/oferta"
+                      to="/info/oferta/"
                     >публичной оферты</NuxtLink
                     >, принимаете
                     <NuxtLink
                       class="underline"
-                      to="/info/oferta"
+                      to="/info/confidence/"
                     >политику защиты и обработки персональных данных</NuxtLink
                     >
                     и даете свое согласие на их обработку.
@@ -1715,43 +1715,43 @@ useSmsAutoSubmit(
       <div class="grid sm:grid-cols-4 mt-[10%] gap-8 sm:justify-items-center max-sm:self-start">
         <div
           class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
-          @click="navigateTo('/catalog')"
+          @click="navigateTo('/catalog/')"
         >
           Смотреть все
         </div>
         <div
           class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
-          @click="navigateTo('/catalog/kupalniki/niz')"
+          @click="navigateTo('/catalog/kupalniki/niz/')"
         >
           Нижняя часть купальника
         </div>
         <div
           class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
-          @click="navigateTo('/catalog')"
+          @click="navigateTo('/catalog/aksessuaryi/panamyi/')"
         >
           Головные уборы
         </div>
         <div
           class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
-          @click="navigateTo('/certificate')"
+          @click="navigateTo('/certificate/')"
         >
           Cертификаты
         </div>
         <div
           class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
-          @click="navigateTo('/catalog/kupalniki')"
+          @click="navigateTo('/catalog/kupalniki/')"
         >
           Купальники
         </div>
         <div
           class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
-          @click="navigateTo('/catalog/kupalniki/verx')"
+          @click="navigateTo('/catalog/kupalniki/verx/')"
         >
           Верхняя часть купальника
         </div>
         <div
           class="font-light text-[#211D1D] cursor-pointer max-sm:text-[17px] max-sm:font-[Inter] max-sm:uppercase"
-          @click="navigateTo('/catalog')"
+          @click="navigateTo('/catalog/')"
         >
           Аксессуары
         </div>

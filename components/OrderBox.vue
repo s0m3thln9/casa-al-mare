@@ -56,11 +56,11 @@ const priceFormatter = (value: number) => {
 const navigateToItem = (itemAlias: string | undefined, itemId: number) => {
   // Не навигируем для сертификатов
   if (itemId === -1) {
-    navigateTo("/certificate")
+    navigateTo("/certificate/")
     return
   }
   const alias = itemAlias || String(itemId)
-  navigateTo(`/product/${alias}`)
+  navigateTo(`/product/${alias}/`)
 }
 
 const contactViaTelegram = () => {

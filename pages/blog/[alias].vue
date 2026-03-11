@@ -83,7 +83,7 @@ const formatDate = (dateString: string | undefined) => {
 
 const breadcrumsItems = computed(() => [
   { name: "Главная", path: "/" },
-  { name: "Блог", path: "/blog" },
+  { name: "Блог", path: "/blog/" },
   { name: article.value?.pagetitle ?? "" },
 ])
 </script>
@@ -127,7 +127,7 @@ const breadcrumsItems = computed(() => [
           :key="item.id"
           :text="item.pagetitle"
           custom-class="rounded-lg aspect-[618/570] max-w-[33%]"
-          :link="`/blog/${item.alias}`"
+          :link="`/blog/${item.alias}/`"
           :image-url="item.image"
         />
       </div>
