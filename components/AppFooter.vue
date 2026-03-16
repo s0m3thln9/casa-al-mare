@@ -80,7 +80,7 @@ const handleOrdersClick = () => {
                                                       оплата</NuxtLink></li>
           <li><NuxtLink to="/info/vozvrat-i-obmen/">Возврат и
                                                     обмен</NuxtLink></li>
-          <li><NuxtLink to="/info/rekvizity/">Реквизиты</NuxtLink></li>
+          <li><NuxtLink to="/loyalty/">Программа лояльности</NuxtLink></li>
           <li
             class="cursor-pointer"
             @click="popupStore.open('reverse')"
@@ -95,6 +95,7 @@ const handleOrdersClick = () => {
         <ul class="flex flex-col gap-4">
           <li><NuxtLink to="/about-us/">О нас</NuxtLink></li>
           <li><NuxtLink to="/contacts/">Контакты</NuxtLink></li>
+          <li><NuxtLink to="/info/rekvizity/">Реквизиты</NuxtLink></li>
           <li>
             <a
               href="https://t.me/casaalmarecom"
@@ -264,9 +265,9 @@ const handleOrdersClick = () => {
         </button>
         <NuxtLink
           class="w-full h-full"
-          to="/info/rekvizity/"
+          to="/loyalty/"
         >
-          <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Реквизиты</button>
+          <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Программа лояльности</button>
         </NuxtLink>
         <div class="flex gap-2">
           <button
@@ -283,6 +284,12 @@ const handleOrdersClick = () => {
             <NuxtLink to="/info/oferta/">Оферта</NuxtLink>
           </button>
         </div>
+        <NuxtLink
+          class="w-full h-full"
+          to="/info/rekvizity/"
+        >
+          <button class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]">Реквизиты</button>
+        </NuxtLink>
       </div>
       <img
         src="/logo-3.svg"
