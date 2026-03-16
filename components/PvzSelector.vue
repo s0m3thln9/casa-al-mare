@@ -34,7 +34,7 @@ interface CityData {
 }
 
 const props = defineProps<{
-  city?: { name: string }
+  city?: { name: string; kladr?: string }
   modelValue?: PvzData | null
 }>()
 
@@ -91,8 +91,12 @@ const loadWidget = () => {
 
       if (addressData.city && addressData.city !== city.value?.name) {
         try {
+          const params = new URLSearchParams({
+            query: addressData.city,
+            kladr: city.value?.kladr || "",
+          })
           const response = await $fetch<{ data: Record<number, CityData>; success: boolean }>(
-            `https://back.casaalmare.com/api/getCityByQuery?query=${encodeURIComponent(addressData.city)}`,
+            `https://back.casaalmare.com/api/getCityByQuery?${params.toString()}`,
           )
 
           if (response?.data && response.success) {
