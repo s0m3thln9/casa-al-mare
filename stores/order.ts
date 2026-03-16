@@ -388,7 +388,12 @@ export const useOrderStore = defineStore("order", () => {
     if (!city.value?.fias) return
     
     try {
-      const data = await $fetch<any>(`https://back.casaalmare.com/api/getCdekByFias?fias=${city.value.fias}&cart_cost=${totalSum.value}`)
+      const params = new URLSearchParams({
+        fias: city.value.fias,
+        kladr: city.value.kladr ?? "",
+        cart_cost: String(totalSum.value),
+      })
+      const data = await $fetch<any>(`https://back.casaalmare.com/api/getCdekByFias?${params.toString()}`)
       
       if (data) {
         cdekData.value = data
