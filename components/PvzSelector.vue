@@ -34,7 +34,7 @@ interface CityData {
 }
 
 const props = defineProps<{
-  city?: { name: string; kladr?: string }
+  city?: { name: string }
   modelValue?: PvzData | null
 }>()
 
@@ -88,17 +88,13 @@ const loadWidget = () => {
     },
     onChoose: async (type: string, tariff: any, addressData: PvzData) => {
       emit("update:modelValue", addressData)
-
+      
       if (addressData.city && addressData.city !== city.value?.name) {
         try {
-          const params = new URLSearchParams({
-            query: addressData.city,
-            kladr: city.value?.kladr || "",
-          })
           const response = await $fetch<{ data: Record<number, CityData>; success: boolean }>(
-            `https://back.casaalmare.com/api/getCityByQuery?${params.toString()}`,
+            `https://back.casaalmare.com/api/getCityByQuery?query=${encodeURIComponent(addressData.city)}`,
           )
-
+          
           if (response?.data && response.success) {
             const newCity = response.data[0]
             emit("update:city", newCity)
