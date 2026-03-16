@@ -104,6 +104,30 @@ const handleClick = async () => {
     try {
       const token = await userStore.loadToken()
       
+      const buildLocalCartItem = async (id: number, size?: string): Promise<CartItem> => {
+        if (catalogStore.items.length === 0) {
+          await catalogStore.loadItems()
+        }
+        const product = catalogStore.getItemById(id)
+        const normalizedSize = size || "NS"
+        return {
+          key: `${id}-${normalizedSize}`,
+          id,
+          variant: normalizedSize,
+          count: 1,
+          name: product?.name || "Название товара",
+          colorName: product?.colorName || "",
+          sizes: product?.sizes || [],
+          images: product?.images || {},
+          vector: product?.vector || {},
+          type: product?.type || "",
+          material: product?.material || [],
+          useType: product?.useType || [],
+          price: parseInt(product?.price || "0"),
+          oldPrice: parseInt(product?.oldPrice || "0"),
+        }
+      }
+      
       if (props.items && props.items.length > 0) {
         const response = await $fetch("https://back.casaalmare.com/api/addToCart", {
           method: "POST",
@@ -119,8 +143,8 @@ const handleClick = async () => {
         
         if (response.success) {
           for (const item of props.items) {
-            const newItem: CartItem = { id: item.id, size: item.size, count: 1 }
-            const existing = orderStore.cartItems.find((e: CartItem) => e.id === newItem.id && e.size === newItem.size)
+            const newItem = await buildLocalCartItem(item.id, item.size)
+            const existing = orderStore.cartItems.find((e: CartItem) => e.id === newItem.id && e.variant === newItem.variant)
             if (existing) {
               existing.count += 1
             } else {
@@ -134,7 +158,6 @@ const handleClick = async () => {
             isInCart.value = true
           }, 1500)
           if (import.meta.client) {
-            await catalogStore.loadItems() // Загрузка товаров, если не загружены
             window.dataLayer = window.dataLayer || []
             dataLayer.push({
               event: "add_to_cart",
@@ -172,8 +195,8 @@ const handleClick = async () => {
           },
         })
         if (response.success) {
-          const newItem: CartItem = { id: props.id!, size: props.size!, count: 1 }
-          const existing = orderStore.cartItems.find((e: CartItem) => e.id === newItem.id && e.size === newItem.size)
+          const newItem = await buildLocalCartItem(props.id!, props.size)
+          const existing = orderStore.cartItems.find((e: CartItem) => e.id === newItem.id && e.variant === newItem.variant)
           if (existing) {
             existing.count += 1
           } else {
@@ -185,7 +208,6 @@ const handleClick = async () => {
             isInCart.value = true
           }, 1500)
           if (import.meta.client) {
-            await catalogStore.loadItems()
             const product = catalogStore.getItemById(props.id!)
             window.dataLayer = window.dataLayer || []
             dataLayer.push({

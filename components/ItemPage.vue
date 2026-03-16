@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue"
+import { computed, unref } from "vue"
 import type { Item } from "~/stores/catalog"
 
 const route = useRoute()
@@ -16,6 +16,7 @@ const alias = computed(() => {
 const catalogStore = useCatalogStore()
 const popupStore = usePopupStore()
 const itemStore = useItemStore()
+const orderStore = useOrderStore()
 // const setStore = useSetStore()
 
 const isLoading = ref(true)
@@ -286,6 +287,13 @@ const currentColorImages = computed(() => {
 
 const currentPrice = computed(() => parseInt(item.value?.price || "0"))
 const currentOldPrice = computed(() => parseInt(item.value?.oldPrice || "0"))
+const freeDeliveryThreshold = 20000
+const freeDeliveryText = computed(() => {
+  const total = unref(orderStore.totalSum) ?? 0
+  const remaining = freeDeliveryThreshold - total
+  if (remaining <= 0) return ""
+  return `Добавьте товаров на ${rubFormatter(remaining)} для бесплатной доставки`
+})
 
 const numBars = computed(() => Math.max(currentColorImages.value.length, 1))
 
@@ -403,6 +411,12 @@ const discount = computed(() => calculateDiscount(currentPrice.value, currentOld
 const priceFormatter = (value: number): string => {
   if (value === 0 || isNaN(value)) return "Цена не указана"
   const formattedValue = new Intl.NumberFormat("ru-RU").format(value)
+  return `${formattedValue} ₽`
+}
+
+const rubFormatter = (value: number): string => {
+  const safeValue = Number.isFinite(value) ? Math.max(0, Math.round(value)) : 0
+  const formattedValue = new Intl.NumberFormat("ru-RU").format(safeValue)
   return `${formattedValue} ₽`
 }
 
@@ -751,6 +765,15 @@ watch(doc, () => {
             class="font-[Inter] line-through font-light text-[17px] text-[#8C8785] sm:font-[Manrope] sm:font-normal sm:text-base sm:text-[#211D1D]"
           >
             {{ priceFormatter(currentOldPrice) }}
+          </span>
+        </div>
+        <div
+          v-if="freeDeliveryText"
+          class="flex justify-center items-center mt-1 sm:mt-2"
+        >
+          <span
+            class="font-light text-[13px] sm:text-xs text-[#211D1D] text-center">
+            {{ freeDeliveryText }}
           </span>
         </div>
         <div

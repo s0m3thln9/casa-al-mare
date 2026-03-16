@@ -191,6 +191,20 @@ const loadCart = async (): Promise<void> => {
   }
 }
 const isLoading = computed(() => isLoadingCart.value || !orderStore.isLoaded)
+const freeDeliveryThreshold = 20000
+const freeDeliveryProgressWidth = computed(() => {
+  const total = Math.max(0, orderStore.totalSum)
+  const percent = freeDeliveryThreshold > 0 ? Math.min((total / freeDeliveryThreshold) * 100, 100) : 0
+  return `${percent}%`
+})
+const freeDeliveryIsComplete = computed(() => orderStore.totalSum >= freeDeliveryThreshold)
+const freeDeliveryCurrentLabel = computed(() => orderStore.priceFormatter(Math.max(0, orderStore.totalSum)))
+const freeDeliveryThresholdLabel = computed(() => orderStore.priceFormatter(freeDeliveryThreshold))
+const freeDeliveryText = computed(() => {
+  const remaining = freeDeliveryThreshold - orderStore.totalSum
+  if (remaining <= 0) return "Бесплатная доставка"
+  return `Добавьте товаров на ${orderStore.priceFormatter(remaining)} для бесплатной доставки`
+})
 watch(
   () => authStore.isAuth,
   async (isAuth) => {
@@ -777,6 +791,21 @@ useSmsAutoSubmit(
                 @click="toggleExpanded"
               />
             </template>
+          </div>
+          <div class="mt-4 sm:mt-8">
+            <div class="w-full h-2 rounded-2xl border-[0.5px] border-[#211D1D]">
+              <div
+                class="h-full rounded-2xl bg-[#FFF4A4]"
+                :class="!freeDeliveryIsComplete && 'border-r-[0.5px] border-[#211D1D]'"
+                :style="{ width: freeDeliveryProgressWidth }"
+              />
+            </div>
+            <div
+              class="mt-3 flex flex-col text-[#211D1D] font-[Manrope] font-light text-[13px] sm:text-[14px] leading-[134%]"
+            >
+              <span v-if="!freeDeliveryIsComplete">{{ freeDeliveryCurrentLabel }} из {{ freeDeliveryThresholdLabel }}</span>
+              <span>{{ freeDeliveryText }}</span>
+            </div>
           </div>
         </div>
         <div
@@ -1452,90 +1481,109 @@ useSmsAutoSubmit(
               :class="{ 'opacity-50': orderStore.isLoadingPayment }"
             >
               <div class="flex flex-col gap-6">
-                <div
-                  v-for="(item, index) in orderStore.cartDetailed"
-                  :key="index"
-                  class="flex items-center justify-between w-full"
-                >
-                  <div
-                    v-if="item"
-                    class="flex items-center gap-2"
-                  >
-                    <img
-                      :src="(item.certificateType === 'Физический' ?
-                      '/cert.jpg' :
-                      item?.images ?
-                      item?.images[0] : '') || ''"
-                      alt="order-img"
-                      width="57"
-                      height="72"
-                      class="rounded-2xl border-[0.5px] border-[#211D1D]"
+                <div class="flex flex-col">
+                  <div class="flex flex-col gap-6">
+                    <div
+                      v-for="(item, index) in orderStore.cartDetailed"
+                      :key="index"
+                      class="flex items-center justify-between w-full"
                     >
-                    <div class="flex flex-col gap-1">
-                      <span
-                        class="font-light text-sm text-[#414141] cursor-pointer"
-                        @click="navigateToItem(item.id)"
+                      <div
+                        v-if="item"
+                        class="flex items-center gap-2"
                       >
-                        {{ item.name }}
-                      </span>
-                      <span class="font-light text-[13px]">
-                        <template v-if="!item.isCertificate && !item.isGame">
-                          Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
-                        </template>
-                        <template v-else-if="!item.isGame"
-                        >Кому: {{ item.recipientName }}
-                          <span class="ml-1">Тип: {{ item.certificateType }}</span></template
+                        <img
+                          :src="(item.certificateType === 'Физический' ?
+                          '/cert.jpg' :
+                          item?.images ?
+                          item?.images[0] : '') || ''"
+                          alt="order-img"
+                          width="57"
+                          height="72"
+                          class="rounded-2xl border-[0.5px] border-[#211D1D]"
                         >
-                      </span>
-                      <span class="text-xs text-[#414141]">
-                        {{ orderStore.priceFormatter(item.price) }}
-                        <span class="font-light text-[#606060] ml-1">за шт.</span>
-                      </span>
+                        <div class="flex flex-col gap-1">
+                          <span
+                            class="font-light text-sm text-[#414141] cursor-pointer"
+                            @click="navigateToItem(item.id)"
+                          >
+                            {{ item.name }}
+                          </span>
+                          <span class="font-light text-[13px]">
+                            <template v-if="!item.isCertificate && !item.isGame">
+                              Размер: {{ item.size }} <span class="ml-1">Цвет: {{ item.color }}</span>
+                            </template>
+                            <template v-else-if="!item.isGame"
+                            >Кому: {{ item.recipientName }}
+                              <span class="ml-1">Тип: {{ item.certificateType }}</span></template
+                            >
+                          </span>
+                          <span class="text-xs text-[#414141]">
+                            {{ orderStore.priceFormatter(item.price) }}
+                            <span class="font-light text-[#606060] ml-1">за шт.</span>
+                          </span>
+                        </div>
+                      </div>
+                      <div
+                        v-if="item"
+                        class="flex flex-col items-end gap-4"
+                      >
+                        <div class="flex items-center gap-2">
+                          <div
+                            class="py-1 px-2 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light"
+                            :class="item.isCertificate && 'px-2.5'"
+                          >
+                            <button
+                              v-if="!item.isCertificate"
+                              class="w-4 h-4 flex items-center justify-center cursor-pointer"
+                              :disabled="orderStore.isLoadingPayment"
+                              @click="orderStore.decrementQuantity(item.key)"
+                            >
+                              <div class="minus-icon" />
+                            </button>
+                            {{ item.count }}
+                            <button
+                              v-if="!item.isCertificate"
+                              class="w-4 h-4 flex items-center justify-center cursor-pointer"
+                              :disabled="orderStore.isLoadingPayment"
+                              @click="orderStore.incrementQuantity(item.key)"
+                            >
+                              <div class="plus-icon" />
+                            </button>
+                          </div>
+                          <button
+                            class="w-6 h-6 flex items-center justify-center cursor-pointer"
+                            :disabled="orderStore.isLoadingPayment"
+                            @click="orderStore.removeItemFromCart(item.key)"
+                          >
+                            <div class="x-icon" />
+                          </button>
+                        </div>
+                        <span class="text-xs font-light">
+                          {{ orderStore.priceFormatter(item.price * item.count) }}
+                          <span
+                            v-if="item.oldPrice > 0"
+                            class="line-through ml-1"
+                          >{{ orderStore.priceFormatter(item.oldPrice * item.count) }}</span
+                          >
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div
-                    v-if="item"
-                    class="flex flex-col items-end gap-4"
-                  >
-                    <div class="flex items-center gap-2">
+                  <div class="mt-4 sm:mt-8">
+                    <div class="w-full h-2 rounded-2xl border-[0.5px] border-[#211D1D]">
                       <div
-                        class="py-1 px-2 flex gap-1 rounded-xl border-[0.7px] border-[#211D1D] text-xs font-light"
-                        :class="item.isCertificate && 'px-2.5'"
-                      >
-                        <button
-                          v-if="!item.isCertificate"
-                          class="w-4 h-4 flex items-center justify-center cursor-pointer"
-                          :disabled="orderStore.isLoadingPayment"
-                          @click="orderStore.decrementQuantity(item.key)"
-                        >
-                          <div class="minus-icon" />
-                        </button>
-                        {{ item.count }}
-                        <button
-                          v-if="!item.isCertificate"
-                          class="w-4 h-4 flex items-center justify-center cursor-pointer"
-                          :disabled="orderStore.isLoadingPayment"
-                          @click="orderStore.incrementQuantity(item.key)"
-                        >
-                          <div class="plus-icon" />
-                        </button>
-                      </div>
-                      <button
-                        class="w-6 h-6 flex items-center justify-center cursor-pointer"
-                        :disabled="orderStore.isLoadingPayment"
-                        @click="orderStore.removeItemFromCart(item.key)"
-                      >
-                        <div class="x-icon" />
-                      </button>
+                        class="h-full rounded-2xl bg-[#FFF4A4]"
+                        :class="!freeDeliveryIsComplete && 'border-r-[0.5px] border-[#211D1D]'"
+                        :style="{ width: freeDeliveryProgressWidth }"
+                      />
                     </div>
-                    <span class="text-xs font-light">
-                      {{ orderStore.priceFormatter(item.price * item.count) }}
-                      <span
-                        v-if="item.oldPrice > 0"
-                        class="line-through ml-1"
-                      >{{ orderStore.priceFormatter(item.oldPrice * item.count) }}</span
-                      >
-                    </span>
+                    <div
+                      class="mt-3 flex flex-col text-[#211D1D] font-[Manrope] font-light text-[13px] sm:text-[14px] leading-[134%]"
+                    >
+                      <span v-if="!freeDeliveryIsComplete">{{ freeDeliveryCurrentLabel }} из {{ freeDeliveryThresholdLabel }}</span>
+                      <span>{{ freeDeliveryText }}</span>
+                    </div>
                   </div>
                 </div>
                 <div
