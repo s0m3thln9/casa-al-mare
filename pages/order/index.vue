@@ -793,10 +793,10 @@ useSmsAutoSubmit(
             </template>
           </div>
           <div class="mt-4 sm:mt-8">
-            <div class="w-full h-2 rounded-2xl border-[0.5px] border-[#211D1D]">
+            <div class="w-full h-2 rounded-2xl border border-[#211D1DCC]">
               <div
                 class="h-full rounded-2xl bg-[#FFF4A4]"
-                :class="!freeDeliveryIsComplete && 'border-r-[0.5px] border-[#211D1D]'"
+                :class="!freeDeliveryIsComplete && 'border-r border-[#211D1DCC]'"
                 :style="{ width: freeDeliveryProgressWidth }"
               />
             </div>
@@ -1571,10 +1571,10 @@ useSmsAutoSubmit(
                     </div>
                   </div>
                   <div class="mt-4 sm:mt-8">
-                    <div class="w-full h-2 rounded-2xl border-[0.5px] border-[#211D1D]">
+                    <div class="w-full h-2 rounded-2xl border border-[#211D1DCC]">
                       <div
                         class="h-full rounded-2xl bg-[#FFF4A4]"
-                        :class="!freeDeliveryIsComplete && 'border-r-[0.5px] border-[#211D1D]'"
+                        :class="!freeDeliveryIsComplete && 'border-r border-[#211D1DCC]'"
                         :style="{ width: freeDeliveryProgressWidth }"
                       />
                     </div>
