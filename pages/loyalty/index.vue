@@ -74,7 +74,7 @@ const handleAccordionClick = (e: MouseEvent) => {
           v-if="!authStore.isAuth"
           variant="primary"
           content="Создать аккаунт и получать бонусы"
-          custom-class="w-full sm:w-[280px]"
+          custom-class="w-full"
           @click="openAuthModal"
         />
         <div class="flex flex-col gap-4">
@@ -85,17 +85,17 @@ const handleAccordionClick = (e: MouseEvent) => {
             v-for="level in levels"
             :key="level.level"
             class="p-6 border rounded-lg flex items-start gap-4 max-sm:flex-col"
-            :class="currentLevel === level.level ? 'border-[#211D1D]' : 'border-[#BBB8B6]'"
+            :class="!authStore.isAuth || currentLevel === level.level ? 'border-[#211D1D]' : 'border-[#BBB8B6]'"
           >
             <div
               class="px-4 py-2 w-[100px] rounded-lg text-sm tracking-tighter"
-              :class="currentLevel === level.level ? 'bg-[#F3A454] text-[#FFFFFA]' : 'border border-[#8C8785] text-[#8C8785]'"
+              :class="!authStore.isAuth || currentLevel === level.level ? 'bg-[#F3A454] text-[#FFFFFA]' : 'border border-[#8C8785] text-[#8C8785]'"
             >
               {{ level.level }} уровень:
             </div>
             <p
               class="text-sm"
-              :class="currentLevel === level.level ? 'text-[#181818]' : 'text-[#8C8785]'"
+              :class="!authStore.isAuth || currentLevel === level.level ? 'text-[#181818]' : 'text-[#8C8785]'"
             >
               Общая сумма покупок с использованием карты: {{ level.range }}<br>
               Процент начисления бонусов от суммы покупки: {{ level.accrual }}<br>
@@ -107,7 +107,7 @@ const handleAccordionClick = (e: MouseEvent) => {
           </p>
         </div>
         <div class="flex flex-col gap-4">
-          <span class="font-[Manrope] font-light text-[15px] text-[#0A0E11] sm:font-normal sm:text-[20px]">FAQ:</span>
+          <span class="font-[Manrope] font-light text-[15px] text-[#0A0E11] sm:font-normal sm:text-[20px]">Ответы на частые вопросы</span>
           <div
             v-if="faqItems.length > 0"
             class="loyalty-faq"
