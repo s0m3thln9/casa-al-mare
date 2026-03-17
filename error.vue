@@ -251,7 +251,7 @@ const handleProfileClick = () => {
           />
         </AppTooltip>
         <AppTooltip
-          text="Это поле обязательно для заполнения"
+          text="Некорректный номер телефона или его отсутствие"
           type="error"
           :show="phoneRef?.showError"
         >

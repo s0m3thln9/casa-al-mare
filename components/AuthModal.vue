@@ -485,7 +485,7 @@ useSmsAutoSubmit(
             />
             <template v-if="authStore.method === 'По телефону'">
               <AppTooltip
-                text="Это поле обязательно для заполнения"
+                text="Некорректный номер телефона или его отсутствие"
                 type="error"
                 :show="phoneRef?.showError"
               >
@@ -718,7 +718,7 @@ useSmsAutoSubmit(
               />
             </AppTooltip>
             <AppTooltip
-              text="Это поле обязательно для заполнения"
+              text="Некорректный номер телефона или его отсутствие"
               type="error"
               :show="phoneRegRef?.showError"
             >

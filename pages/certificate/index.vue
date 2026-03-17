@@ -525,7 +525,7 @@ const getStepDescription = computed(() => {
                 </AppTooltip>
                 <AppTooltip
                   v-if="certificateStore.selectedWay === 'По SMS'"
-                  text="Это поле обязательно для заполнения"
+                  text="Некорректный номер телефона или его отсутствие"
                   type="error"
                   :show="recipientPhoneRef?.showError"
                   class="w-full"

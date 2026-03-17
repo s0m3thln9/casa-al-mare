@@ -862,7 +862,7 @@ useSmsAutoSubmit(
                   />
                 </AppTooltip>
                 <AppTooltip
-                  text="Это поле обязательно для заполнения"
+                  text="Некорректный номер телефона или его отсутствие"
                   type="error"
                   :show="phoneRef?.showError"
                   class="w-full"
@@ -1024,7 +1024,7 @@ useSmsAutoSubmit(
                   />
                 </AppTooltip>
                 <AppTooltip
-                  text="Это поле обязательно для заполнения"
+                  text="Некорректный номер телефона или его отсутствие"
                   type="error"
                   :show="phoneRef?.showError"
                   class="w-full"

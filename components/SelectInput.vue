@@ -258,6 +258,7 @@ const validate = (): boolean => {
       const parsed = parsePhoneNumberFromString(fullNumber)
 
       if (!parsed || !parsed.isValid()) {
+        triggerError()
         return false
       }
     } catch (e) {
