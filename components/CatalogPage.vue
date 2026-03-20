@@ -365,7 +365,8 @@ const getCurrentCategoryData = computed(() => {
   return result[lastSegment]
 })
 
-const pageTitle = computed(() => getCurrentCategoryData.value?.pagetitle || getCurrentCategoryData.value?.longtitle ||
+const pageTitle = computed(() => getCurrentCategoryData.value?.longtitle ||
+getCurrentCategoryData.value?.pagetitle ||
   treeData.value?.data?.catalog?.pagetitle || "Каталог")
 const description = computed(() => getCurrentCategoryData.value?.meta_descr ||
     getCurrentCategoryData.value?.description
