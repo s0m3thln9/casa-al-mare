@@ -481,6 +481,15 @@ const { data: treeData } = await useFetch(
   "https://back.casaalmare.com/api/getdocTree"
 )
 
+const { data: ssrProducts } = await useAsyncData<Item[]>(
+  `products-ssr-${alias.value}`,
+  () => $fetch<Item[]>("https://back.casaalmare.com/api/getProducts")
+)
+
+const ssrItem = computed(() =>
+  ssrProducts.value?.find((i) => i.alias === alias.value) ?? null
+)
+
 
 const doc = computed(() => {
   const slugValue = alias.value
@@ -543,6 +552,37 @@ watch(doc, () => {
   updateSeo()
 }, { immediate: true })
 
+const jsonLdSchema = computed(() => {
+  if (!ssrItem.value) return null
+  const i = ssrItem.value
+  const images = Object.values(i.images || {})
+  const description = i.content?.find(s => s.header === 'Описание')?.content ?? ''
+  const price = i.price?.replace(/\D/g, '') ?? '0'
+  const inStock = Object.values(i.vector || {}).some(v => v.quantity > 0)
+  return {
+    '@context': 'https://schema.org/',
+    '@type': 'Product',
+    name: i.name,
+    image: images,
+    description,
+    sku: i.alias,
+    brand: { '@type': 'Brand', name: 'CASA AL MARE' },
+    offers: {
+      '@type': 'Offer',
+      url: `https://casaalmare.com/product/${i.alias}/`,
+      priceCurrency: 'RUB',
+      price,
+      availability: `https://schema.org/${inStock ? 'InStock' : 'OutOfStock'}`,
+    },
+  }
+})
+
+useHead(computed(() => ({
+  script: jsonLdSchema.value
+    ? [{ type: 'application/ld+json', innerHTML: JSON.stringify(jsonLdSchema.value) }]
+    : [],
+})))
+
 
 </script>
 
@@ -578,7 +618,7 @@ watch(doc, () => {
 
         <div class="px-2 flex flex-col sm:px-0">
           <div class="flex justify-center items-center">
-            <h2 class="font-[Inter] text-center text-[32px] sm:text-4xl">Название</h2>
+            <h1 class="font-[Inter] text-center text-[32px] sm:text-4xl">Название</h1>
           </div>
           <div class="flex justify-center items-center gap-2 mt-4 sm:mt-6">
             <span
@@ -752,7 +792,7 @@ watch(doc, () => {
         class="px-2 flex flex-col sm:px-0 product-sidebar"
       >
         <div class="flex justify-center items-center">
-          <h2 class="font-[Inter] text-center text-[32px] sm:text-4xl">{{ item.name }}</h2>
+          <h1 class="font-[Inter] text-center text-[32px] sm:text-4xl">{{ item.name }}</h1>
         </div>
         <div class="flex justify-center items-center gap-2 mt-4 sm:mt-6">
           <span
@@ -1026,10 +1066,29 @@ watch(doc, () => {
     <!--        </div>-->
     <!--      </div>-->
     <!--    </AppPopup>-->
+
+    <div v-if="ssrItem" class="seo-content">
+      <h1>{{ ssrItem.name }}</h1>
+      <template
+        v-for="section in ssrItem.content"
+        :key="section.header"
+      >
+        <h2>{{ section.header }}</h2>
+        <p>{{ section.content }}</p>
+      </template>
+    </div>
   </main>
 </template>
 
 <style scoped>
+.seo-content {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
 /* Правая колонка с адаптивным sticky поведением */
 .product-sidebar {
   /* На маленьких экранах - обычный поток */
