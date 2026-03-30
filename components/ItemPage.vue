@@ -1068,7 +1068,7 @@ useHead(computed(() => ({
     <!--    </AppPopup>-->
 
     <div v-if="ssrItem" class="seo-content">
-      <h1>{{ ssrItem.name }}</h1>
+      <div>{{ ssrItem.name }}</div>
       <template
         v-for="section in ssrItem.content"
         :key="section.header"
