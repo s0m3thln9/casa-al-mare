@@ -609,7 +609,7 @@ watch(getCurrentCategoryData, () => {
                   class="flex gap-6 items-center justify-center"
                 >
                   <ImageButton
-                    :model-value="catalogStore.pendingFilters.secondLevelAliases"
+                    :model-value="catalogStore.pendingFilters.secondLevelAliases[0] || ''"
                     :items="
                       levelOptions.map((opt) => ({
                         alias: opt.alias,
@@ -618,10 +618,9 @@ watch(getCurrentCategoryData, () => {
                         activeImage: opt.activeImage || opt.image || '',
                       }))
                     "
-                    multiple
                     @update:model-value="
                       (val) => {
-                        catalogStore.pendingFilters.secondLevelAliases = val
+                        catalogStore.pendingFilters.secondLevelAliases = val ? [val] : []
                       }
                     "
                   />
@@ -630,9 +629,14 @@ watch(getCurrentCategoryData, () => {
                   v-else
                   class="flex flex-wrap gap-4 items-center justify-center"
                 >
-                  <MultiSelectButton
-                    v-model="catalogStore.pendingFilters.secondLevelAliases"
+                  <SingleSelectButton
+                    :model-value="catalogStore.pendingFilters.secondLevelAliases[0] || ''"
                     :content="levelOptions.map((opt) => ({ value: opt.alias, label: opt.name }))"
+                    @update:model-value="
+                      (val) => {
+                        catalogStore.pendingFilters.secondLevelAliases = val ? [val] : []
+                      }
+                    "
                   />
                 </div>
               </template>
