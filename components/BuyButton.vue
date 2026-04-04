@@ -37,8 +37,12 @@ const currentState = computed(() => {
   let content: string
   let style: string
   let disabled: boolean
-  
-  if (!props.isParametersSelected) {
+
+  if (!userStore.token) {
+    content = props.items ? "Добавить комплект в корзину" : "Добавить в корзину"
+    style = styleBase + styleVariants.outOfStock
+    disabled = true
+  } else if (!props.isParametersSelected) {
     content = getMissingParamText(props.missingParams)
     style = styleBase + styleVariants.default
     disabled = false
