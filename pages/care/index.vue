@@ -23,7 +23,7 @@ const preloadImages = async () => {
       img.onerror = reject
     })
   }
-
+  
   try {
     await Promise.all(["/about.jpg"].map((url) => loadImage(url)))
     areImagesLoaded.value = true
@@ -35,6 +35,14 @@ const preloadImages = async () => {
 
 onMounted(() => {
   preloadImages()
+})
+
+const { data: treeData } = await useFetch(
+  "https://back.casaalmare.com/api/getdocTree"
+)
+
+const careContent = computed(() => {
+  return (treeData.value as any)?.data?.docs?.subitems?.care?.content ?? ""
 })
 </script>
 
@@ -56,45 +64,30 @@ onMounted(() => {
         height="692"
         class="rounded-lg"
       >
-      <div class="flex flex-col gap-2">
-        <h2 class="text-[15px] sm:text-xl max-sm:font-light text-[#0a0e11]">Уход за купальниками</h2>
-        <p class="text-sm font-light">
-          Любимые купальники заслуживают особого внимания. Стирать купальники нужно с застёгнутой фурнитурой. Рекомендуем стирать их в специальном мешочке для деликатных изделий — это защищает ткань от зацепок и трения.
-        </p>
-        <p class="text-sm font-light">Следуйте нашим советам, чтобы сохранить форму, цвет и эластичность ткани.</p>
-        <h2 class="text-[15px] sm:text-xl max-sm:font-light text-[#0a0e11]">Соблюдать базовые правила ухода</h2>
-        <p class="text-sm font-light">
-          №1. Только ручная стирка Купальники и шорты из полиамида и эластана не любят машинной стирки. Используйте
-          прохладную воду (до 30 °C) и мягкое жидкое средство без отбеливателей.
-        </p>
-        <p class="text-sm font-light">
-          №2. Не тереть и не выкручивать. После стирки аккуратно промокните
-          изделие полотенцем, не выкручивая и не
-          растягивая ткань.
-        </p>
-        <h2 class="text-[15px] sm:text-xl max-sm:font-light text-[#0a0e11]">Дать высохнуть естественно</h2>
-        <p class="text-sm font-light">
-          Сушите купальник в тени, в расправленном виде, избегая прямых солнечных лучей и батарей. Высокая температура
-          может повредить волокна и изменить форму.
-        </p>
-        <h2 class="text-[15px] sm:text-xl max-sm:font-light text-[#0a0e11]">Приводить в порядок</h2>
-        <p class="text-sm font-light">
-          Не используйте сушильную машину и не гладьте. Если ткань чуть помялась, дайте ей «отдохнуть» — волокна
-          разгладятся сами.
-        </p>
-        <h2 class="text-[15px] sm:text-xl max-sm:font-light text-[#0a0e11]">Хранить с любовью</h2>
-        <p class="text-sm font-light">
-          Храните купальники в сухом, прохладном месте. Не оставляйте влажные вещи в сумке — это может вызвать
-          деформацию или изменение цвета.
-        </p>
-        <h2 class="text-[15px] sm:text-xl max-sm:font-light text-[#0a0e11]">Для туник и костюмов</h2>
-        <p class="text-sm font-light">
-          Туники и костюмы из хлопка и полиэстера можно стирать в машине на деликатном режиме при 30 °C. Используйте
-          мягкое средство и невысокие обороты отжима.
-        </p>
-      </div>
+      <div
+        class="care-content flex flex-col gap-2"
+        v-html="careContent"
+      />
     </div>
   </main>
 </template>
 
-<style scoped></style>
+<style scoped>
+.care-content :deep(h2) {
+  font-size: 20px;
+  font-weight: 400;
+  color: #0a0e11;
+}
+
+.care-content :deep(p) {
+  font-size: 14px;
+  font-weight: 300;
+}
+
+@media screen and (max-width: 640px) {
+  .care-content :deep(h2) {
+    font-size: 15px;
+    font-weight: 300;
+  }
+}
+</style>
