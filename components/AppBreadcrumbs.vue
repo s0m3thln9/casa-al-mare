@@ -1,15 +1,16 @@
 <script setup lang="ts">
 defineProps<{
-	items: {
-		name: string
-		path?: string
-	}[]
+  items: {
+    name: string
+    path?: string
+  }[]
+  center?: boolean
 }>()
 </script>
 
 <template>
   <nav class="select-none">
-   <ol class="flex items-center gap-1 text-[10px] sm:text-sm">
+   <ol :class="['flex flex-wrap items-center gap-1 text-[10px] sm:text-sm', center ? 'justify-center' : '']">
     <li
       v-for="(item, index) in items"
       :key="index"
@@ -24,7 +25,7 @@ defineProps<{
       </RouterLink>
      </template>
      <template v-else>
-      <span class="text-current truncate">
+      <span class="text-current">
         {{ item.name }}
       </span>
      </template>

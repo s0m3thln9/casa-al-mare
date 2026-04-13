@@ -406,13 +406,62 @@ updateSeo()
 watch(getCurrentCategoryData, () => {
   updateSeo()
 }, { immediate: true })
+
+const catalogH1 = computed(() => {
+  const segments = currentPath.value
+    ?.replace(/^\/+|\/+$/g, '')
+    .split('/')
+    .filter((s) => s.trim() !== '') ?? []
+
+  const typeAlias = segments[0] ?? ''
+  const subAlias  = segments[1]?.split(',')[0] ?? ''
+  const formAlias = segments[2]?.split(',')[0] ?? ''
+
+  if (!typeAlias) return 'Каталог'
+
+  const allParents = catalogStore.items.flatMap((item) => item.parents || [])
+
+  const normKey = (alias: string) =>
+    allParents.find((p) => p.alias === alias)?.name?.toLowerCase().trim().split(/\s+/)[0]
+    ?? alias.toLowerCase()
+
+  const typeName = normKey(typeAlias)
+  const subName  = subAlias  ? normKey(subAlias)  : ''
+  const formName = formAlias ? normKey(formAlias) : ''
+
+  if (typeName === 'купальники') {
+    if (!subName) return 'Купальники'
+
+    if (subName === 'верх') {
+      if (formName === 'треугольник') return 'Треугольный верх купальника'
+      if (formName === 'лиф-топ')    return 'Лиф-топ купальника'
+      if (formName === 'лиф')        return 'Лиф купальника'
+      return 'Верх купальника'
+    }
+
+    if (subName === 'низ') {
+      if (formName === 'слипы')      return 'Низ купальника слипы'
+      if (formName === 'бразилиано') return 'Низ купальника бразилиано'
+      if (formName === 'тонги')      return 'Низ купальника тонги'
+      return 'Низ купальника'
+    }
+
+    if (subName === 'слитные') return 'Слитные купальники'
+
+    return 'Купальники'
+  }
+
+  const subParent  = subAlias  ? allParents.find((p) => p.alias === subAlias)  : null
+  const typeParent = allParents.find((p) => p.alias === typeAlias)
+  return subParent?.name ?? typeParent?.name ?? 'Каталог'
+})
 </script>
 
  <template>
   <main class="font-[Manrope] bg-[#FFFFFA] text-[#211D1D]">
     <div
       v-if="!isMobile"
-      class="flex justify-between px-4 py-6"
+      class="flex justify-between px-4 pt-6"
     >
       <AppBreadcrumbs :items="breadcrumsItems" />
       <div class="flex gap-4 items-center">
@@ -438,7 +487,7 @@ watch(getCurrentCategoryData, () => {
       v-else
       class="flex flex-col gap-2 items-center p-2 sticky top-[32px] bg-[#FFFFFA] z-[8]"
     >
-      <span class="text-[10px] font-light font-[Commissioner]"><AppBreadcrumbs :items="breadcrumsItems" /></span>
+      <span class="text-[10px] font-light font-[Commissioner]"><AppBreadcrumbs :items="breadcrumsItems" center /></span>
       <div class="flex justify-between w-full">
         <SelectButton
           v-model="catalogStore.mobileStrokeCardCount"
@@ -461,6 +510,10 @@ watch(getCurrentCategoryData, () => {
         </div>
       </div>
     </div>
+    <h1
+      class="px-4 mb-3 sm:mb-6 text-center sm:text-left font-[Inter] uppercase sm:font-[Manrope] text-[17px] font-light">
+      {{ catalogH1 }}<template v-if="!isMobile && !catalogStore.isLoading && catalogStore.filteredItems.length > 0"> ({{ catalogStore.filteredItems.length }})</template>
+    </h1>
     <div
       v-if="catalogStore.filteredItems.length === 0 && !catalogStore.isLoading"
       class="flex justify-center items-center py-10 text-[#211D1D]/60"
