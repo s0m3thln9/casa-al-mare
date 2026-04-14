@@ -1,11 +1,18 @@
 <script setup lang="ts">
 defineProps<{
-  paragraphs: string[]
+  content: string
   customClass?: string
 }>()
 
 const isExpanded = ref(false)
 const textContainer = ref<HTMLElement>()
+const innerContent = ref<HTMLElement>()
+const hasOverflow = ref(false)
+
+onMounted(() => {
+  if (!innerContent.value) return
+  hasOverflow.value = innerContent.value.scrollHeight > innerContent.value.offsetHeight
+})
 
 const toggleExpand = () => {
   if (!textContainer.value) return
@@ -18,8 +25,7 @@ const toggleExpand = () => {
 
     nextTick(() => {
       if (textContainer.value) {
-        const targetHeight = textContainer.value.scrollHeight
-        textContainer.value.style.height = targetHeight + "px"
+        textContainer.value.style.height = textContainer.value.scrollHeight + "px"
       }
     })
   } else {
@@ -60,21 +66,22 @@ const onTransitionEnd = () => {
         alt="CASA AL MARE"
         width="230"
         height="31"
-      />
+      >
 
       <div
         ref="textContainer"
-        class="text-container w-full md:max-w-[800px] transition-all duration-500 ease-in-out overflow-hidden"
+        class="text-container w-full md:max-w-[800px] overflow-hidden"
         @transitionend="onTransitionEnd"
       >
-        <p
-          class="font-[Manrope] text-[11px] text-[#8F8F8F] font-light text-center w-full whitespace-pre-line sm:text-xs"
-        >
-          {{ isExpanded ? paragraphs.join("\n\n") : paragraphs[0] }}
-        </p>
+        <div
+          ref="innerContent"
+          :class="['seo-content', { 'seo-content--collapsed': !isExpanded }]"
+          v-html="content"
+        />
       </div>
 
       <ExpandButton
+        v-if="hasOverflow"
         :is-expanded="isExpanded"
         @toggle-expand="toggleExpand"
       />
@@ -90,6 +97,33 @@ const onTransitionEnd = () => {
 @media (prefers-reduced-motion: reduce) {
   .text-container {
     transition: none !important;
+  }
+}
+
+.seo-content--collapsed {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+.seo-content :deep(p) {
+  font-family: Manrope, sans-serif;
+  font-size: 11px;
+  color: #8F8F8F;
+  font-weight: 300;
+  text-align: center;
+  width: 100%;
+  margin: 0;
+}
+
+.seo-content :deep(p + p) {
+  margin-top: 0.4em;
+}
+
+@media (min-width: 640px) {
+  .seo-content :deep(p) {
+    font-size: 0.75rem;
   }
 }
 </style>

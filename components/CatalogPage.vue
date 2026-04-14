@@ -407,6 +407,36 @@ watch(getCurrentCategoryData, () => {
   updateSeo()
 }, { immediate: true })
 
+const seoContent = computed(() => {
+  const catalogData = treeData.value?.data?.catalog
+  if (!catalogData) return null
+
+  const pathValue = currentPath.value?.trim()
+  if (!pathValue) return catalogData.content || null
+
+  const segments = pathValue
+    .replace(/^\/+|\/+$/g, '')
+    .split('/')
+    .filter((p: string) => p.trim() !== '')
+
+  const firstAlias = segments[0]
+  if (!firstAlias) return catalogData.content || null
+
+  const firstLevel = catalogData.subitems?.[firstAlias]
+  if (!firstLevel) return catalogData.content || null
+
+  if (segments.length > 1) {
+    const secondSegment = segments[1]
+    if (!secondSegment.includes(',')) {
+      const secondLevel = firstLevel.subitems?.[secondSegment]
+      if (secondLevel?.content) return secondLevel.content
+    }
+  }
+
+  return firstLevel.content || catalogData.content || null
+})
+
+
 const catalogH1 = computed(() => {
   const segments = currentPath.value
     ?.replace(/^\/+|\/+$/g, '')
@@ -591,7 +621,13 @@ const catalogH1 = computed(() => {
       v-else-if="!catalogStore.isLoading && catalogStore.filteredItems.length > 0"
       class="pt-4 pb-2 sm:py-10"
     />
-    
+
+    <AppSEO
+      v-if="seoContent"
+      :content="seoContent"
+      custom-class="mb-4 sm:mb-10"
+    />
+
     <AppPopup
       title="Фильтр и сортировка"
       popup-id="filter"
