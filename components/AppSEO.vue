@@ -121,6 +121,76 @@ const onTransitionEnd = () => {
   margin-top: 0.4em;
 }
 
+.seo-content :deep(ul),
+.seo-content :deep(ol) {
+  display: table;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 8px;
+  line-height: 134%;
+}
+
+.seo-content :deep(ul):last-child,
+.seo-content :deep(ol):last-child {
+  margin-bottom: 0;
+}
+
+.seo-content :deep(ol) {
+  list-style: none;
+  counter-reset: item;
+}
+
+.seo-content :deep(ul) {
+  list-style: none;
+}
+
+.seo-content :deep(ol li),
+.seo-content :deep(ul li) {
+  margin-bottom: 4px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.seo-content :deep(ul li::before) {
+  content: "•";
+  flex-shrink: 0;
+  margin-right: 6px;
+  line-height: 134%;
+}
+
+.seo-content :deep(ol li) {
+  counter-increment: item;
+}
+
+.seo-content :deep(ol li::before) {
+  content: counter(item) ". ";
+  font-weight: 300;
+  flex-shrink: 0;
+  margin-right: 4px;
+  line-height: 134%;
+}
+
+.seo-content :deep(li p) {
+  text-align: left;
+  margin: 0;
+}
+
+.seo-content :deep(ul > li > ul) {
+  padding-left: 16px;
+}
+
+.seo-content :deep(ul > li > ul > li::before) {
+  content: "◦";
+}
+
+.seo-content :deep(ul > li > ul > li > ul) {
+  padding-left: 32px;
+}
+
+.seo-content :deep(ul > li > ul > li > ul > li::before) {
+  content: "▪";
+}
+
 @media (min-width: 640px) {
   .seo-content :deep(p) {
     font-size: 0.75rem;
