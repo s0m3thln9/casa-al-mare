@@ -49,7 +49,8 @@ watch([pageTitle, description, metaTags], () => {
 
 const subitemsArray = computed(() => {
   const data = docsStore.tree?.data?.blog?.subitems;
-  return data ? Object.values(data) : [];
+  if (!data) return [];
+  return Object.values(data).sort((a: any, b: any) => (b.publishedon ?? '').localeCompare(a.publishedon ?? ''));
 });
 
 </script>
