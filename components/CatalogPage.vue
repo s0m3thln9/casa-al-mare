@@ -471,7 +471,7 @@ const catalogH1 = computed(() => {
 
     if (subName === 'низ') {
       if (formName === 'слипы')      return 'Низ купальника слипы'
-      if (formName === 'бразилиано') return 'Низ купальника бразилиано'
+      if (formName === 'бразильяно') return 'Низ купальника бразильяно'
       if (formName === 'тонги')      return 'Низ купальника тонги'
       return 'Низ купальника'
     }
