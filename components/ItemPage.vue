@@ -577,11 +577,43 @@ const jsonLdSchema = computed(() => {
   }
 })
 
-useHead(computed(() => ({
-  script: jsonLdSchema.value
-    ? [{ type: 'application/ld+json', innerHTML: JSON.stringify(jsonLdSchema.value) }]
-    : [],
-})))
+const { buildBreadcrumbList } = useStructuredData()
+
+// Хлебные крошки карточки строятся из категорий товара (parents), последний пункт — сам товар.
+const breadcrumbJsonLd = computed(() => {
+  const it = ssrItem.value || item.value
+  if (!it) return null
+
+  const crumbs: { name: string; url?: string }[] = [{ name: "Главная", url: "/" }]
+  const parents = it.parents || []
+
+  if (parents[0]) {
+    crumbs.push({ name: parents[0].name, url: `/catalog/${parents[0].alias}/` })
+  }
+  if (parents[1]) {
+    crumbs.push({ name: parents[1].name, url: `/catalog/${parents[0]?.alias}/${parents[1].alias}/` })
+  }
+  if (parents[2]) {
+    crumbs.push({
+      name: parents[2].name,
+      url: `/catalog/${parents[0]?.alias}/${parents[1]?.alias}/${parents[2].alias}/`,
+    })
+  }
+  crumbs.push({ name: it.name, url: `/product/${it.alias}/` })
+
+  return buildBreadcrumbList(crumbs)
+})
+
+useHead(computed(() => {
+  const scripts: { type: string; innerHTML: string }[] = []
+  if (jsonLdSchema.value) {
+    scripts.push({ type: "application/ld+json", innerHTML: jsonLdInnerHtml(jsonLdSchema.value) })
+  }
+  if (breadcrumbJsonLd.value) {
+    scripts.push({ type: "application/ld+json", innerHTML: jsonLdInnerHtml(breadcrumbJsonLd.value) })
+  }
+  return { script: scripts }
+}))
 
 
 </script>

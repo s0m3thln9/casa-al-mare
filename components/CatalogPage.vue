@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { Item } from "~/stores/catalog"
+
 interface VideoSource {
   mp4: string
   ogv: string
@@ -485,6 +487,47 @@ const catalogH1 = computed(() => {
   const typeParent = allParents.find((p) => p.alias === typeAlias)
   return subParent?.name ?? typeParent?.name ?? 'Каталог'
 })
+
+/* --- Микроразметка Schema.org: CollectionPage + BreadcrumbList + ItemList --- */
+const { toAbsolute, withTrailingSlash, buildBreadcrumbList, buildItemList } = useStructuredData()
+
+// Отдельная SSR-загрузка товаров, чтобы ItemList попал в HTML страницы,
+// а не только после клиентской отрисовки (store наполняется в onMounted).
+const { data: ssrCatalogProducts } = await useAsyncData("catalog-ssr-products", () =>
+  $fetch<Item[]>("https://back.casaalmare.com/api/getProducts"),
+)
+
+// На клиенте берём уже загруженный store, на сервере — SSR-список.
+// Фильтрация по пути/query одинаковая, поэтому набор товаров совпадает с видимым.
+const jsonLdItems = computed<Item[]>(() => {
+  const base = catalogStore.items.length ? catalogStore.items : (ssrCatalogProducts.value || [])
+  return filterCatalogItemsByPath(base, currentPath.value, route.query)
+})
+
+const collectionUrl = computed(() =>
+  toAbsolute(withTrailingSlash(currentPath.value ? `/catalog/${currentPath.value}` : "/catalog")),
+)
+
+const collectionName = computed(() =>
+  pageTitle.value && pageTitle.value !== "Каталог" ? pageTitle.value : `${catalogH1.value} Casa Al Mare`,
+)
+
+const collectionJsonLd = computed(() => ({
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": collectionName.value,
+  "description": description.value || `${catalogH1.value} Casa Al Mare.`,
+  "url": collectionUrl.value,
+  "breadcrumb": buildBreadcrumbList(
+    breadcrumsItems.value.map((c) => ({ name: c.name, url: c.path })),
+    { withContext: false },
+  ),
+  "mainEntity": buildItemList(jsonLdItems.value, `${catalogH1.value} Casa Al Mare`),
+}))
+
+useHead(() => ({
+  script: [{ type: "application/ld+json", innerHTML: jsonLdInnerHtml(collectionJsonLd.value) }],
+}))
 </script>
 
  <template>
