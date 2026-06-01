@@ -722,7 +722,7 @@ async function handleRetryPay(): Promise<void> {
               </span>
               <span class="flex items-center gap-2">
                 <template v-if="localIsOnlyDeliveryPayment && localDeliveryCost === 0">
-                  бесплатно
+                  После примерки
                 </template>
                 <template v-else>
                   {{ orderStore.priceFormatter(localFinalPrice) }}

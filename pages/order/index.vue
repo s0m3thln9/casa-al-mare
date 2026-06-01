@@ -1432,7 +1432,7 @@ useSmsAutoSubmit(
                 </span>
                 <span class="flex items-center gap-2">
                   <template v-if="orderStore.isOnlyDeliveryPayment && orderStore.deliveryCost === 0">
-                    бесплатно
+                    После примерки
                   </template>
                   <template v-else>
                     {{ orderStore.priceFormatter(orderStore.finalPrice) }}
@@ -1718,7 +1718,7 @@ useSmsAutoSubmit(
                     </span>
                     <span class="flex items-center gap-2">
                       <template v-if="orderStore.isOnlyDeliveryPayment && orderStore.deliveryCost === 0">
-                        бесплатно
+                        После примерки
                       </template>
                       <template v-else>
                         {{ orderStore.priceFormatter(orderStore.finalPrice) }}
