@@ -555,15 +555,14 @@ watch(doc, () => {
 const jsonLdSchema = computed(() => {
   if (!ssrItem.value) return null
   const i = ssrItem.value
-  const images = Object.values(i.images || {})
+  const images = productImages(i)
   const description = i.content?.find(s => s.header === 'Описание')?.content ?? ''
   const price = i.price?.replace(/\D/g, '') ?? '0'
   const inStock = Object.values(i.vector || {}).some(v => v.quantity > 0)
-  return {
-    '@context': 'https://schema.org/',
+  const data: Record<string, unknown> = {
+    '@context': 'https://schema.org',
     '@type': 'Product',
     name: i.name,
-    image: images,
     description,
     sku: i.alias,
     brand: { '@type': 'Brand', name: 'CASA AL MARE' },
@@ -575,9 +574,11 @@ const jsonLdSchema = computed(() => {
       availability: `https://schema.org/${inStock ? 'InStock' : 'OutOfStock'}`,
     },
   }
+  if (images.length) data.image = images
+  return data
 })
 
-const { buildBreadcrumbList } = useStructuredData()
+const { buildBreadcrumbList, productImages } = useStructuredData()
 
 // Хлебные крошки карточки строятся из категорий товара (parents), последний пункт — сам товар.
 const breadcrumbJsonLd = computed(() => {

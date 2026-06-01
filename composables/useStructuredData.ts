@@ -100,8 +100,14 @@ export function useStructuredData() {
 
   const productUrl = (item: Item): string => `${siteUrl}/product/${item.alias}/`
 
+  // Видеофайлы (.mp4/.webm/.ogv) иногда лежат в images вперемешку с картинками,
+  // но в schema.org Product image допустимы только изображения — отсекаем видео.
+  const isImageSrc = (src: string): boolean =>
+    !!src && !/\.(mp4|webm|ogv|ogg|mov|m4v)(\?|#|$)/i.test(src)
+
   const productImages = (item: Item): string[] =>
     Object.values(item.images || {})
+      .filter(isImageSrc)
       .map((src) => toAbsolute(src))
       .filter(Boolean)
 
@@ -169,6 +175,7 @@ export function useStructuredData() {
     toAbsolute,
     withTrailingSlash,
     productUrl,
+    isImageSrc,
     productImages,
     isInStock,
     availability,
