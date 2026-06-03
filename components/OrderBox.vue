@@ -94,7 +94,11 @@ const formatDate = (timestamp: number): string => {
                   ? 'bg-[#4395C2] border-[#4395C2]'
                   : state.status === 4
                     ? 'bg-[#008C49] border-[#008C49]'
-                    : 'bg-[#E57979] border-[#E57979]',
+                    : state.status === 6
+                      ? 'bg-[#7B68EE] border-[#7B68EE]'
+                      : state.status === 7
+                        ? 'bg-[#D9534F] border-[#D9534F]'
+                        : 'bg-[#E57979] border-[#E57979]',
             'text-xs text-[#FFFFFA] p-1 rounded-md border',
           ]"
         >
@@ -107,7 +111,11 @@ const formatDate = (timestamp: number): string => {
                   ? "В пути"
                   : state.status === 4
                     ? "Выполнен"
-                    : "Отменён"
+                    : state.status === 6
+                      ? "Готово к отгрузке"
+                      : state.status === 7
+                        ? "Оплата просрочена"
+                        : "Отменён"
           }}
         </div>
       </div>
