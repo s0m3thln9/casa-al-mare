@@ -52,6 +52,58 @@ const certificateBalance = computed(() => {
   return userStore.user?.certificates?.reduce((acc, cert) => acc + cert.value_now, 0) || 0
 })
 
+const promoCode = ref("")
+const promoSuccessMessage = ref("")
+const promoErrorMessage = ref("")
+const isLoadingPromo = ref(false)
+const isPromoOpen = ref(false)
+
+const handleApplyPromo = async (): Promise<void> => {
+  if (isLoadingPromo.value) return
+
+  const code = promoCode.value.trim()
+  if (!code) {
+    promoSuccessMessage.value = ""
+    promoErrorMessage.value = "Введите промокод"
+    return
+  }
+
+  isLoadingPromo.value = true
+  promoSuccessMessage.value = ""
+  promoErrorMessage.value = ""
+
+  const token = await userStore.loadToken()
+  if (!token) {
+    promoErrorMessage.value = "Ошибка авторизации"
+    isLoadingPromo.value = false
+    return
+  }
+
+  try {
+    const response = await $fetch<{ success: boolean; message?: string }>(
+      "https://back.casaalmare.com/api/sendPromo",
+      {
+        method: "POST",
+        body: { token, code },
+      },
+    )
+
+    if (response.success) {
+      await userStore.fetchUser()
+      await orderStore.loadUserData()
+      promoSuccessMessage.value = response.message || "Промокод применён"
+      promoCode.value = ""
+    } else {
+      promoErrorMessage.value = response.message || "Промокод не найден"
+    }
+  } catch (error) {
+    promoErrorMessage.value = "Ошибка сети или API"
+    console.error("Ошибка применения промокода:", error)
+  } finally {
+    isLoadingPromo.value = false
+  }
+}
+
 const handleResetPassword = async (): Promise<void> => {
   await profileStore.resetPassword()
 }
@@ -416,6 +468,52 @@ watch(
                 <span class="text-sm text-[#1A1A1A] font-light">Ваш баланс: {{
                     userStore.user.points ?? 0
                                           }}</span>
+                <div class="flex flex-col p-4 border border-[#BBB8B6] rounded-2xl">
+                  <div
+                    class="flex items-center justify-between cursor-pointer"
+                    @click="isPromoOpen = !isPromoOpen"
+                  >
+                    <span class="font-light text-sm">Промокод</span>
+                    <button
+                      class="w-4 h-4 flex items-center justify-center cursor-pointer transition-transform duration-300"
+                      :class="isPromoOpen ? 'rotate-0' : 'rotate-180'"
+                    >
+                      <div class="arrow-icon" />
+                    </button>
+                  </div>
+                  <div
+                    class="collapsible-div flex flex-col gap-4 transition-max-height duration-300 ease-in-out overflow-hidden"
+                    :class="{
+                      'max-h-500 opacity-100 mt-4': isPromoOpen,
+                      'max-h-0 opacity-0': !isPromoOpen,
+                    }"
+                  >
+                    <AppInput
+                      id="promo"
+                      v-model="promoCode"
+                      label="Введите код"
+                      type="text"
+                      custom-class="w-full"
+                      :disabled="isLoadingPromo"
+                    />
+                    <AppButton
+                      variant="primary"
+                      content="Использовать"
+                      custom-class="w-full"
+                      :is-loading="isLoadingPromo"
+                      :disabled="isLoadingPromo || !promoCode.trim()"
+                      @click="handleApplyPromo"
+                    />
+                    <span
+                      v-if="promoSuccessMessage"
+                      class="font-light text-sm text-[#211D1D]"
+                    >{{ promoSuccessMessage }}</span>
+                    <span
+                      v-if="promoErrorMessage"
+                      class="font-light text-sm text-[#E29650]"
+                    >{{ promoErrorMessage }}</span>
+                  </div>
+                </div>
                 <div class="flex flex-col gap-2">
                   <div
                     class="p-6 border rounded-lg flex items-start gap-4 max-sm:flex-col"

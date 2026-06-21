@@ -52,6 +52,8 @@ export interface TestUser {
     website: string
     zip: string
   }
+  points?: number
+  loyaltyLevel?: number
   totalQuantity: number
   token: string
   uid: number

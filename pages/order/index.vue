@@ -266,8 +266,8 @@ async function handlePay(): Promise<void> {
       // Courier (non-pvz) methods require an address
       if (isCourierDelivery.value && !isNoAddressDelivery.value) {
         if (!orderStore.currentAddress) {
-          orderStore.showErrorDeliveryMethod = true
-          orderStore.errorDeliveryMethod = "Выберите адрес доставки"
+          orderStore.showErrorAddress = true
+          orderStore.errorAddress = "Выберите адрес доставки"
           return
         }
         const isNewAddress =
@@ -275,13 +275,13 @@ async function handlePay(): Promise<void> {
           (Array.isArray(orderStore.currentAddress) && orderStore.currentAddress.includes("Новый адрес"))
         if (isNewAddress) {
           if (!newAddressRef.value?.validate()) {
-            orderStore.showErrorDeliveryMethod = true
-            orderStore.errorDeliveryMethod = "Введите адрес доставки"
+            orderStore.showErrorAddress = true
+            orderStore.errorAddress = "Введите адрес доставки"
             return
           }
           if (orderStore.currentAddress === "Новый адрес") {
-            orderStore.showErrorDeliveryMethod = true
-            orderStore.errorDeliveryMethod = "Сохраните новый адрес перед оплатой"
+            orderStore.showErrorAddress = true
+            orderStore.errorAddress = "Сохраните новый адрес перед оплатой"
             return
           }
         }
@@ -1167,8 +1167,14 @@ useSmsAutoSubmit(
                       :description="type.description"
                     />
                   </div>
-                  <div
+                  <AppTooltip
                     v-if="isCourierDelivery && !isNoAddressDelivery"
+                    :text="orderStore.errorAddress ? orderStore.errorAddress : 'Выберите адрес доставки'"
+                    type="error"
+                    :show="orderStore.showErrorAddress"
+                    @update:show="(value) => (orderStore.showErrorAddress = value)"
+                  >
+                  <div
                     class="flex flex-col gap-4"
                   >
                     <AppCheckbox
@@ -1224,6 +1230,7 @@ useSmsAutoSubmit(
                       />
                     </div>
                   </div>
+                  </AppTooltip>
                   <!-- PVZ selector -->
                   <div v-if="isPvzDelivery">
                     <PvzSelector

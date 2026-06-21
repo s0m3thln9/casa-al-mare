@@ -167,6 +167,8 @@ export const useOrderStore = defineStore("order", () => {
   const newAddressFirstLine = ref("")
   const newAddressSecondLine = ref("")
   const showErrorDeliveryMethod = ref<boolean>(false)
+  const showErrorAddress = ref<boolean>(false)
+  const errorAddress = ref("")
   const selectedPvz = ref<PvzData | null>(null)
   const isPaymentSuccessful = ref<boolean | null>(null)
   const paymentMethod = ref<string | null>(null)
@@ -1077,7 +1079,9 @@ export const useOrderStore = defineStore("order", () => {
     newAddressFirstLine.value = ""
     newAddressSecondLine.value = ""
     showErrorDeliveryMethod.value = false
-    
+    showErrorAddress.value = false
+    errorAddress.value = ""
+
     isPaymentSuccessful.value = null
     paymentMethod.value = null
     showErrorPaymentMethod.value = false
@@ -1632,6 +1636,8 @@ export const useOrderStore = defineStore("order", () => {
     newAddressSecondLine,
     showErrorDeliveryMethod,
     errorDeliveryMethod,
+    showErrorAddress,
+    errorAddress,
     isPaymentSuccessful,
     paymentMethod,
     showErrorPaymentMethod,
