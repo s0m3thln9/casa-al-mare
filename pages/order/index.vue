@@ -664,8 +664,10 @@ useSmsAutoSubmit(
                       {{ item.count }}
                       <button
                         v-if="!item.isCertificate"
-                        class="w-4 h-4 flex items-center justify-center cursor-pointer"
-                        :disabled="orderStore.isLoadingPayment"
+                        class="w-4 h-4 flex items-center justify-center"
+                        :class="(orderStore.isLoadingPayment || !item.canIncrement) ? 'cursor-not-allowed opacity-30' : 'cursor-pointer'"
+                        :disabled="orderStore.isLoadingPayment || !item.canIncrement"
+                        :title="!item.canIncrement ? 'Больше нет в наличии' : ''"
                         @click="orderStore.incrementQuantity(item.key)"
                       >
                         <div class="plus-icon" />
@@ -1551,8 +1553,10 @@ useSmsAutoSubmit(
                             {{ item.count }}
                             <button
                               v-if="!item.isCertificate"
-                              class="w-4 h-4 flex items-center justify-center cursor-pointer"
-                              :disabled="orderStore.isLoadingPayment"
+                              class="w-4 h-4 flex items-center justify-center"
+                              :class="(orderStore.isLoadingPayment || !item.canIncrement) ? 'cursor-not-allowed opacity-30' : 'cursor-pointer'"
+                              :disabled="orderStore.isLoadingPayment || !item.canIncrement"
+                              :title="!item.canIncrement ? 'Больше нет в наличии' : ''"
                               @click="orderStore.incrementQuantity(item.key)"
                             >
                               <div class="plus-icon" />

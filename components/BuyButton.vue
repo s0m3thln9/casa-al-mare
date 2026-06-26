@@ -3,6 +3,7 @@ const props = defineProps<{
   isParametersSelected?: boolean
   inStock?: boolean
   availableQuantity?: boolean
+  maxQuantity?: number
   items?: Array<{ id: number; size: string }>
   id?: number
   size?: string
@@ -102,7 +103,46 @@ const handleClick = async () => {
     navigateTo("/order/")
     return
   }
-  
+
+  // Сколько единиц этого варианта уже лежит в корзине
+  const cartCountFor = (id: number, size?: string): number => {
+    const variant = size || "NS"
+    const existing = orderStore.cartItems.find(
+      (e: CartItem) => e.id === id && e.variant === variant
+    )
+    return existing?.count ?? 0
+  }
+
+  // Доступный остаток на складе для варианта (по данным каталога)
+  const stockFor = (id: number, size?: string): number => {
+    const product = catalogStore.getItemById(id)
+    if (!product?.vector) return 0
+    const variant = size || Object.keys(product.vector)[0] || "NS"
+    return product.vector[variant]?.quantity ?? 0
+  }
+
+  // Проверяем, что мы не пытаемся положить в корзину больше, чем есть на складе
+  if (catalogStore.items.length === 0) {
+    await catalogStore.loadItems()
+  }
+  if (props.items && props.items.length > 0) {
+    const overstocked = props.items.some(
+      (item) => cartCountFor(item.id, item.size) >= stockFor(item.id, item.size)
+    )
+    if (overstocked) {
+      errorMessage.value = "Больше нет в наличии"
+      showError.value = true
+      return
+    }
+  } else if (props.id != null) {
+    const max = props.maxQuantity ?? stockFor(props.id, props.size)
+    if (cartCountFor(props.id, props.size) >= max) {
+      errorMessage.value = "Больше нет в наличии"
+      showError.value = true
+      return
+    }
+  }
+
   if (!isLoading.value && !showSuccess.value) {
     isLoading.value = true
     try {

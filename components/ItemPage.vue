@@ -944,6 +944,9 @@ useHead(computed(() => {
             item.vector['NS'].quantity >
              0 :
             item.vector[currentSize].quantity > 0"
+            :max-quantity="isNoSizeItem ?
+            item.vector['NS'].quantity :
+            item.vector[currentSize].quantity"
             :is-parameters-selected="canAddToCart"
             :missing-params="missingParams"
           />

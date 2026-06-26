@@ -807,9 +807,12 @@ export const useOrderStore = defineStore("order", () => {
         
         const size = cartItem.variant
         const colorName = cartItem.colorName || "Цвет не указан"
-        
+
         const imagesArray = Object.values(cartItem.images).filter((img) => img)
-        
+
+        // Доступное количество товара на складе для выбранного размера/варианта
+        const availableQuantity = cartItem.vector?.[cartItem.variant]?.quantity ?? 0
+
         return {
           key: cartItem.key,
           id: cartItem.id,
@@ -821,6 +824,8 @@ export const useOrderStore = defineStore("order", () => {
           size,
           price: cartItem.price,
           oldPrice: cartItem.oldPrice,
+          availableQuantity,
+          canIncrement: cartItem.count < availableQuantity,
           isCertificate: false,
           isGame: isGame
         }
@@ -939,9 +944,24 @@ export const useOrderStore = defineStore("order", () => {
     }
   }
   
+  // Доступное количество товара на складе для конкретной позиции корзины
+  function availableQuantityFor(item: CartItem): number {
+    if (item.id === -1) return Infinity // сертификаты не ограничены складом
+    return item.vector?.[item.variant]?.quantity ?? 0
+  }
+
+  // Можно ли увеличить количество позиции (есть ли запас на складе)
+  function canIncrementItem(keyOrId: string): boolean {
+    const item = findItem(keyOrId)
+    if (!item) return false
+    return item.count < availableQuantityFor(item)
+  }
+
   async function incrementQuantity(keyOrId: string) {
     const item = findItem(keyOrId)
     if (!item) return
+    // Не позволяем добавить больше, чем есть на складе
+    if (item.count >= availableQuantityFor(item)) return
     await updateCartApi(item.key, 1)
     if (import.meta.client) {
       await catalogStore.loadItems()
@@ -1689,6 +1709,8 @@ export const useOrderStore = defineStore("order", () => {
     loadOrderState,
     decrementQuantity,
     incrementQuantity,
+    canIncrementItem,
+    availableQuantityFor,
     removeItemFromCart,
     setCartItems,
     saveNewAddress,
