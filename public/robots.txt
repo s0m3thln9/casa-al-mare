@@ -1,2 +1,15 @@
-User-Agent: *
-Disallow:
+Host: https://casaalmare.com
+User-agent: *
+Disallow: *?*
+Disallow: /*?
+Disallow: /search
+Disallow: /cart
+Disallow: /account
+Disallow: /checkout
+Disallow: /profile
+Disallow: /order-result
+Disallow: /_nuxt/
+Disallow: /*_payload.json
+Allow: *.css
+Allow: *.js
+Sitemap: https://casaalmare.com/sitemap.xml
