@@ -1177,7 +1177,7 @@ useSmsAutoSubmit(
                     @update:show="(value) => (orderStore.showErrorAddress = value)"
                   >
                   <div
-                    class="flex flex-col gap-4"
+                    class="flex flex-col gap-4 w-full"
                   >
                     <AppCheckbox
                       v-for="(address, index) in orderStore.addresses"
@@ -1191,7 +1191,7 @@ useSmsAutoSubmit(
                     <AppCheckbox
                       v-model="orderStore.currentAddress"
                       size="S"
-                      label="Новый адрес"
+                      label="Указать адрес"
                       value="Новый адрес"
                       :multiple="false"
                     />
