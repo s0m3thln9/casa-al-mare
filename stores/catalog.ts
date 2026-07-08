@@ -43,6 +43,13 @@ export type Item = {
     image?: string
     activeImage?: string
   }[]
+  shorts?: {
+    id: number
+    name: string
+    link: string
+    image?: string
+    activeImage?: string
+  }[]
   content: {
     header: string
     content: string

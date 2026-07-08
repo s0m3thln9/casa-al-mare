@@ -278,6 +278,82 @@ const currentSize = computed(() => {
   return itemStore.size || item.value?.sizes?.[0] || ""
 })
 
+// --- Дополнение образа шортами ---
+const shortsSelected = ref(false)
+const shortsSize = ref<string | null>(null)
+
+const shortsRef = computed(() => item.value?.shorts?.[0] ?? null)
+const shortsProduct = computed(() =>
+  shortsRef.value ? catalogStore.getItemById(shortsRef.value.id) ?? null : null,
+)
+const hasShorts = computed(() => !!shortsRef.value && !!shortsProduct.value)
+const shortsSizes = computed(() => shortsProduct.value?.sizes ?? [])
+const shortsPrice = computed(() => parseInt(shortsProduct.value?.price || "0"))
+const shortsImage = computed(
+  () => shortsRef.value?.image || Object.values(shortsProduct.value?.images || {})[0] || "",
+)
+// Размер можно выбрать только когда вариантов больше одного, иначе берём первый по умолчанию
+const showShortsSizeSelector = computed(() => shortsSelected.value && shortsSizes.value.length > 1)
+const finalShortsSize = computed(() => {
+  if (shortsSizes.value.length <= 1) return shortsSizes.value[0] || "NS"
+  return shortsSize.value || ""
+})
+const shortsCanAddToCart = computed(() => {
+  if (!shortsSelected.value) return true
+  return !!finalShortsSize.value
+})
+const shortsMode = computed(() => shortsSelected.value && hasShorts.value)
+
+const toggleShorts = () => {
+  shortsSelected.value = !shortsSelected.value
+  if (shortsSelected.value) {
+    if (shortsSizes.value.length <= 1) {
+      shortsSize.value = shortsSizes.value[0] || null
+    }
+  } else {
+    shortsSize.value = null
+  }
+}
+
+// Состояние наличия основного товара (вынесено из шаблона для читабельности)
+const mainInStock = computed(() => {
+  if (!item.value) return false
+  if (isNoSizeItem.value) {
+    const v = item.value.vector["NS"]
+    return (v.quantity === 0 && v.comingSoon > 0) || v.quantity > 0
+  }
+  const v = item.value.vector[currentSize.value]
+  if (!v) return false
+  return (v.quantity === 0 && v.comingSoon > 0) || v.quantity > 0
+})
+const mainAvailableQuantity = computed(() => {
+  if (!item.value) return false
+  if (isNoSizeItem.value) return item.value.vector["NS"].quantity > 0
+  return (item.value.vector[currentSize.value]?.quantity ?? 0) > 0
+})
+const mainMaxQuantity = computed(() => {
+  if (!item.value) return 0
+  if (isNoSizeItem.value) return item.value.vector["NS"].quantity
+  return item.value.vector[currentSize.value]?.quantity ?? 0
+})
+
+const buyItems = computed(() => {
+  if (!shortsMode.value || !item.value || !shortsRef.value) return undefined
+  return [
+    { id: item.value.id, size: currentSize.value },
+    { id: shortsRef.value.id, size: finalShortsSize.value },
+  ]
+})
+const buyIsParametersSelected = computed(() => {
+  if (shortsMode.value) return canAddToCart.value && shortsCanAddToCart.value
+  return canAddToCart.value
+})
+const buyMissingParams = computed<"size" | null>(() => {
+  if (!canAddToCart.value) return "size"
+  if (shortsMode.value && !shortsCanAddToCart.value) return "size"
+  return null
+})
+
 const currentColorCode = computed(() => item.value?.colorVal || "")
 const currentColorName = computed(() => item.value?.colorName || "")
 const currentColorImages = computed(() => {
@@ -459,6 +535,8 @@ watch(
     if (newAlias) {
       itemStore.color = null
       itemStore.size = null
+      shortsSelected.value = false
+      shortsSize.value = null
       await loadItem()
       
       if (!error.value) {
@@ -927,28 +1005,75 @@ useHead(computed(() => {
                                            }}</span>
           <span class="text-[11px] text-[#363636]">Параметры модели: 178 88/59/90</span>
         </div>
+        <div
+          v-if="hasShorts"
+          class="flex flex-col justify-center items-center gap-4 mt-12 sm:mt-10"
+        >
+          <div class="flex items-center justify-center gap-2.5 w-full">
+            <button
+              type="button"
+              :aria-pressed="shortsSelected"
+              aria-label="Дополнить образ шортами"
+              :class="[
+                'shrink-0 w-5 h-5 rounded-full border border-[#211D1D] flex items-center justify-center cursor-pointer transition-colors',
+                shortsSelected ? 'bg-[#211D1D]' : 'bg-transparent',
+              ]"
+              @click="toggleShorts"
+            >
+              <svg
+                v-if="shortsSelected"
+                width="12"
+                height="12"
+                viewBox="0 0 12 12"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M2.5 6.4L4.8 8.7L9.5 3.5"
+                  stroke="#FFFFFA"
+                  stroke-width="1.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+            <div class="w-[92px] h-[64px] shrink-0 flex items-center justify-center">
+              <img
+                v-if="shortsImage"
+                :src="shortsImage"
+                :alt="shortsRef?.name"
+                class="w-full h-full object-contain"
+              >
+              <div
+                v-else
+                class="w-full h-full bg-[#F9F6EC] rounded-lg"
+              />
+            </div>
+            <span class="font-light text-sm text-[#211D1D] max-w-[180px]">
+              Дополните образ шортами в тон — {{ priceFormatter(shortsPrice) }}
+            </span>
+          </div>
+          <div
+            v-if="showShortsSizeSelector"
+            class="flex justify-center items-center gap-3 font-light sm:gap-4 sm:font-normal"
+          >
+            <SingleSelectButton
+              v-model="shortsSize"
+              :content="shortsSizes"
+            />
+          </div>
+        </div>
         <div class="flex flex-col justify-center items-stretch gap-4 mt-6">
           <BuyButton
-            :id="item.id"
+            :id="shortsMode ? undefined : item.id"
+            :items="buyItems"
             :size="currentSize"
-            :in-stock="isNoSizeItem ?
-            (item.vector['NS'].quantity ===
-             0 && item.vector['NS'].comingSoon >
-             0) || item.vector['NS'].quantity >
-             0 :
-            (item.vector[currentSize].quantity === 0 &&
-            item.vector[currentSize].comingSoon > 0) ||
-            item.vector[currentSize].quantity >
-             0 "
-            :available-quantity="isNoSizeItem ?
-            item.vector['NS'].quantity >
-             0 :
-            item.vector[currentSize].quantity > 0"
-            :max-quantity="isNoSizeItem ?
-            item.vector['NS'].quantity :
-            item.vector[currentSize].quantity"
-            :is-parameters-selected="canAddToCart"
-            :missing-params="missingParams"
+            :add-button-text="shortsMode ? 'Добавить шорты в корзину' : undefined"
+            :in-stock="shortsMode ? true : mainInStock"
+            :available-quantity="shortsMode ? true : mainAvailableQuantity"
+            :max-quantity="mainMaxQuantity"
+            :is-parameters-selected="buyIsParametersSelected"
+            :missing-params="buyMissingParams"
           />
           <!--          <AppButton-->
           <!--            v-if="hasSetItems"-->

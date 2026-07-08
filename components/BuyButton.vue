@@ -8,6 +8,7 @@ const props = defineProps<{
   id?: number
   size?: string
   missingParams?: string | null
+  addButtonText?: string
 }>()
 const isLoading = ref(false)
 const showSuccess = ref(false)
@@ -40,7 +41,7 @@ const currentState = computed(() => {
   let disabled: boolean
 
   if (!userStore.token) {
-    content = props.items ? "Добавить комплект в корзину" : "Добавить в корзину"
+    content = props.addButtonText || (props.items ? "Добавить комплект в корзину" : "Добавить в корзину")
     style = styleBase + styleVariants.outOfStock
     disabled = true
   } else if (!props.isParametersSelected) {
@@ -68,7 +69,7 @@ const currentState = computed(() => {
     style = styleBase + styleVariants.default
     disabled = false
   } else {
-    content = props.items ? "Добавить комплект в корзину" : "Добавить в корзину"
+    content = props.addButtonText || (props.items ? "Добавить комплект в корзину" : "Добавить в корзину")
     style = styleBase + styleVariants.default
     disabled = false
   }
