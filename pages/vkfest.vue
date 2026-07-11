@@ -77,6 +77,7 @@ const bonusMessage = ref("")
 const firstname = ref("")
 const lastname = ref("")
 const birthdate = ref("")
+const birthFocused = ref(false)
 const phone = ref<{ code: string | null; phone: string; country: string | null } | null>(null)
 const email = ref("")
 const agree = ref<number | null>(null)
@@ -499,7 +500,7 @@ const openAuth = () => authModalStore.open()
                   <label
                     for="birthdate"
                     class="absolute left-2.5 top-3.5 pointer-events-none font-[Manrope] text-sm font-light transition-all duration-200 sm:text-xs"
-                    :class="birthdate ? '!top-[3px] text-[#8C8785]' : 'text-[#5E5B58]'"
+                    :class="birthdate || birthFocused ? '!top-[3px] text-[#8C8785]' : 'text-[#5E5B58]'"
                   >
                     Дата рождения
                     <span class="text-[#E29650]">*</span>
@@ -516,6 +517,8 @@ const openAuth = () => authModalStore.open()
                       'border-[#211D1D]': birthdate && !birthError,
                       'border-[#B8B8B6]': !birthdate && !birthError,
                     }"
+                    @focus="birthFocused = true"
+                    @blur="birthFocused = false"
                     @input="handleBirthInput"
                   >
                 </div>
