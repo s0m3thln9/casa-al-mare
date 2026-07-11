@@ -49,6 +49,7 @@ export interface TestUser {
     sessionid: string
     state: string
     thislogin: number
+    vkbonus?: number | string | boolean | null
     website: string
     zip: string
   }
