@@ -1042,7 +1042,7 @@ useHead(computed(() => {
                 v-if="shortsImage"
                 :src="shortsImage"
                 :alt="shortsRef?.name"
-                class="w-full h-full object-contain rounded-lg"
+                class="h-full object-contain rounded-lg"
               >
               <div
                 v-else
