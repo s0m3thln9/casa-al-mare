@@ -49,7 +49,7 @@ const searchTimeout = ref<NodeJS.Timeout | null>(null)
 const displayValue = computed(() => {
   if (!selected.value) return ""
   if (props.cityMode && typeof selected.value === "object") {
-    return selected.value.label
+    return selected.value.label ?? ""
   }
   return typeof selected.value === "string" ? selected.value : ""
 })
@@ -369,7 +369,7 @@ defineExpose({ validate, showError, setValue })
                 : item === selected
                   ? 'bg-[#211D1D] text-[#FFFFFA]'
                   : 'bg-[#FFFFFA] text-[#211D1D]',
-                  !item.label && 'hidden'
+                  cityMode && typeof item === 'object' && !item.label && 'hidden'
             ]"
             @click.stop="select(item)"
           >
