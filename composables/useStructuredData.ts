@@ -46,7 +46,10 @@ export function filterCatalogItemsByPath(
 
   const color = typeof query.color === "string" ? query.color.trim() : ""
   if (color) {
-    filtered = filtered.filter((i) => i.keys?.some((k) => k.type === "color" && k.alias === color))
+    const colorCodes = color.split(",").map((c) => c.trim()).filter(Boolean)
+    if (colorCodes.length) {
+      filtered = filtered.filter((i) => i.keys?.some((k) => k.type === "color" && colorCodes.includes(k.alias)))
+    }
   }
 
   const material = typeof query.material === "string" ? query.material.trim() : ""
@@ -56,6 +59,16 @@ export function filterCatalogItemsByPath(
       filtered = filtered.filter((i) => i.keys?.some((k) => k.type === "material" && mats.includes(k.alias)))
     }
   }
+
+  Object.entries(query).forEach(([key, value]) => {
+    if (key.startsWith("extra_") && typeof value === "string" && value.trim() !== "") {
+      const type = key.slice("extra_".length)
+      const aliases = value.split(",").map((a) => a.trim()).filter(Boolean)
+      if (aliases.length) {
+        filtered = filtered.filter((i) => i.keys?.some((k) => k.type === type && aliases.includes(k.alias)))
+      }
+    }
+  })
 
   const search = typeof query.query === "string" ? query.query.toLowerCase().trim() : ""
   if (search) {

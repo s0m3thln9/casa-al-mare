@@ -180,10 +180,17 @@ export const useCatalogStore = defineStore("catalog", () => {
     
     // Остальные фильтры добавляем как query параметры
     if (filters.colors && filters.colors.length > 0) {
-      params.set("color", filters.colors[0].code)
+      params.set("color", filters.colors.map((c) => c.code).join(","))
     }
     if (filters.materials && filters.materials.length > 0) {
       params.set("material", filters.materials.join(","))
+    }
+    if (filters.extra) {
+      Object.entries(filters.extra).forEach(([type, aliases]) => {
+        if (aliases && aliases.length > 0) {
+          params.set(`extra_${type}`, aliases.join(","))
+        }
+      })
     }
     if (filters.searchQuery && filters.searchQuery.trim() !== "") {
       params.set("query", filters.searchQuery)

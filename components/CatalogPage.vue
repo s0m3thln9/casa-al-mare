@@ -125,16 +125,21 @@ const applyFiltersFromPath = (pathString: string, q: any) => {
   catalogStore.currentFilters.thirdLevelByParent = thirdLevelByParent
   
   if (typeof q.color === "string" && q.color.trim() !== "") {
-    const colorCode = q.color.trim()
-    const colorKey = catalogStore.items.find((item) =>
-      item.keys?.some((k) => k.type === "color" && k.alias === colorCode),
-    )
-    const colorName =
-      colorKey?.keys?.find((k) => k.type === "color" && k.alias === colorCode)?.name ||
-      catalogStore.items.find((item) => item.colorVal === colorCode)?.colorName ||
-      ""
-    const colorValue = colorKey?.keys?.find((k) => k.type === "color" && k.alias === colorCode)?.value || colorCode
-    catalogStore.currentFilters.colors = [{ code: colorCode, name: colorName, value: colorValue }]
+    const colorCodes = q.color
+      .split(",")
+      .map((c: string) => c.trim())
+      .filter((c: string) => c !== "")
+    catalogStore.currentFilters.colors = colorCodes.map((colorCode: string) => {
+      const colorKey = catalogStore.items.find((item) =>
+        item.keys?.some((k) => k.type === "color" && k.alias === colorCode),
+      )
+      const colorName =
+        colorKey?.keys?.find((k) => k.type === "color" && k.alias === colorCode)?.name ||
+        catalogStore.items.find((item) => item.colorVal === colorCode)?.colorName ||
+        ""
+      const colorValue = colorKey?.keys?.find((k) => k.type === "color" && k.alias === colorCode)?.value || colorCode
+      return { code: colorCode, name: colorName, value: colorValue }
+    })
   } else {
     catalogStore.currentFilters.colors = []
   }
@@ -160,7 +165,19 @@ const applyFiltersFromPath = (pathString: string, q: any) => {
     catalogStore.currentFilters.sortType = null
   }
   
-  catalogStore.currentFilters.extra = {}
+  const extra: Record<string, string[]> = {}
+  Object.entries(q).forEach(([key, value]) => {
+    if (key.startsWith("extra_") && typeof value === "string" && value.trim() !== "") {
+      const aliases = value
+        .split(",")
+        .map((a: string) => a.trim())
+        .filter((a: string) => a !== "")
+      if (aliases.length > 0) {
+        extra[key.slice("extra_".length)] = aliases
+      }
+    }
+  })
+  catalogStore.currentFilters.extra = extra
 }
 
 const loadMoreObserver = ref<IntersectionObserver | null>(null)
