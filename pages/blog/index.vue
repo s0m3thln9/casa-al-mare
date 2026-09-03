@@ -12,8 +12,8 @@ const pageTitle = computed(() => blogData.value?.pagetitle ?? "")
 const description = computed(() => blogData.value?.description ?? "")
 
 const metaTags = computed(() => {
-  const tags: Record<string, any> = {}
-  
+  const tags: Record<string, string> = {}
+
   blogData.value?.metatags?.forEach(tag => {
     if (tag.name.startsWith('og:')) {
       const ogKey = tag.name.replace('og:', '')
@@ -27,11 +27,10 @@ const metaTags = computed(() => {
       tags[tag.name] = tag.content
     }
   })
-  
+
   return tags
 })
 
-// Функция для обновления SEO
 const updateSeo = () => {
   useSeoMeta({
     title: pageTitle.value,
@@ -40,7 +39,6 @@ const updateSeo = () => {
   })
 }
 
-// Обновляем SEO при монтировании и при изменении данных
 updateSeo()
 
 watch([pageTitle, description, metaTags], () => {
@@ -50,7 +48,7 @@ watch([pageTitle, description, metaTags], () => {
 const subitemsArray = computed(() => {
   const data = docsStore.tree?.data?.blog?.subitems;
   if (!data) return [];
-  return Object.values(data).sort((a: any, b: any) => (b.publishedon ?? '').localeCompare(a.publishedon ?? ''));
+  return Object.values(data).sort((a, b) => (b.publishedon ?? '').localeCompare(a.publishedon ?? ''));
 });
 
 </script>

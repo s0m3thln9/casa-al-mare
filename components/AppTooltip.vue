@@ -28,23 +28,20 @@ const tooltipRef = ref<HTMLElement | null>(null)
 const containerRef = ref<HTMLElement | null>(null)
 let hideTimer: ReturnType<typeof setTimeout> | null = null
 
-// Функция для прокрутки к тултипу на мобильных устройствах
 const scrollToTooltip = () => {
   if (!tooltipRef.value || !containerRef.value) return
-  
-  const isMobile = window.innerWidth < 640 // sm breakpoint
+
+  const isMobile = window.innerWidth < 640
   if (!isMobile) return
-  
-  // Небольшая задержка для рендеринга тултипа
+
   setTimeout(() => {
     const tooltip = tooltipRef.value
     const rect = tooltip?.getBoundingClientRect()
-    
+
     if (rect) {
       const isOutOfView = rect.top < 0 || rect.bottom > window.innerHeight
-      
+
       if (isOutOfView) {
-        // Прокручиваем к тултипу с отступом
         const scrollOffset = window.pageYOffset + rect.top - 100
         window.scrollTo({
           top: scrollOffset,
@@ -61,7 +58,7 @@ watch(
     if (val) {
       visible.value = true
       scrollToTooltip()
-      
+
       if (props.autoHide) {
         if (hideTimer) clearTimeout(hideTimer)
         hideTimer = setTimeout(() => {

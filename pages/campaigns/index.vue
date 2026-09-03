@@ -25,18 +25,18 @@ const selectedSetItems = ref([])
 
 const openSetPopup = (node) => {
   if (!node.set || !Array.isArray(node.set)) return
-  
+
   setStore.clear()
-  
+
   const items = node.set
     .map(id => docsStore.findDocById(docsStore.tree?.data, id))
     .filter((item) => item !== null)
-  
+
   selectedSetItems.value = items
-  
+
   const ids = items.map(item => String(item.id))
   setStore.setRequiredTypes(ids)
-  
+
   popupStore.open('set')
 }
 
@@ -60,27 +60,24 @@ const missingParamLabel = computed(() => {
   return missing ? missing.pagetitle : 'все параметры'
 })
 
-// Проверка наличия товаров в комплекте
 const isInStock = computed(() => {
   if (selectedSetItems.value.length === 0) return false
-  
+
   return selectedSetItems.value.every(item => {
     const catalogItem = catalogStore.getItemById(item.id)
     if (!catalogItem || !catalogItem.vector) return false
-    
+
     const selectedSize = setStore.items[item.id]
-    
-    // Проверка для товаров без размеров (NS)
+
     const isNoSize = Object.keys(catalogItem.vector)[0] === 'NS'
-    
+
     if (isNoSize) {
       const vectorData = Object.values(catalogItem.vector)[0]
       return (vectorData.quantity === 0 && vectorData.comingSoon > 0) || vectorData.quantity > 0
     }
-    
-    // Проверка для товаров с размерами
+
     if (!selectedSize || !catalogItem.vector[selectedSize]) return false
-    
+
     const vectorData = catalogItem.vector[selectedSize]
     return (vectorData.quantity === 0 && vectorData.comingSoon > 0) || vectorData.quantity > 0
   })
@@ -88,24 +85,22 @@ const isInStock = computed(() => {
 
 const availableQuantity = computed(() => {
   if (selectedSetItems.value.length === 0) return false
-  
+
   return selectedSetItems.value.every(item => {
     const catalogItem = catalogStore.getItemById(item.id)
     if (!catalogItem || !catalogItem.vector) return false
-    
+
     const selectedSize = setStore.items[item.id]
-    
-    // Проверка для товаров без размеров (NS)
+
     const isNoSize = Object.keys(catalogItem.vector)[0] === 'NS'
-    
+
     if (isNoSize) {
       const vectorData = Object.values(catalogItem.vector)[0]
       return vectorData.quantity > 0
     }
-    
-    // Проверка для товаров с размерами
+
     if (!selectedSize || !catalogItem.vector[selectedSize]) return false
-    
+
     const vectorData = catalogItem.vector[selectedSize]
     return vectorData.quantity > 0
   })
@@ -117,8 +112,8 @@ const pageTitle = computed(() => campaignsData.value?.pagetitle ?? "")
 const description = computed(() => campaignsData.value?.description ?? "")
 
 const metaTags = computed(() => {
-  const tags: Record<string, any> = {}
-  
+  const tags: Record<string, string> = {}
+
   campaignsData.value?.metatags?.forEach(tag => {
     if (tag.name.startsWith('og:')) {
       const ogKey = tag.name.replace('og:', '')
@@ -132,11 +127,10 @@ const metaTags = computed(() => {
       tags[tag.name] = tag.content
     }
   })
-  
+
   return tags
 })
 
-// Функция для обновления SEO
 const updateSeo = () => {
   useSeoMeta({
     title: pageTitle.value,
@@ -145,7 +139,6 @@ const updateSeo = () => {
   })
 }
 
-// Обновляем SEO при монтировании и при изменении данных
 updateSeo()
 
 watch([pageTitle, description, metaTags], () => {
@@ -156,8 +149,7 @@ onMounted(async () => {
   if (!docsStore.tree) {
     await docsStore.fetchTree()
   }
-  
-  // Загружаем товары из каталога, если они еще не загружены
+
   if (catalogStore.items.length === 0) {
     await catalogStore.loadItems()
   }
@@ -174,7 +166,7 @@ const getCardClass = (index: number) => {
     <div class="p-2 sm:px-4 sm:py-6">
       <AppBreadcrumbs :items="breadcrumsItems" />
     </div>
-    
+
     <h2 class="uppercase text-center font-[Inter] text-[17px]">Вдохновение</h2>
 
     <div v-if="docsStore.loading" class="text-center py-10">Загрузка...</div>
@@ -186,7 +178,7 @@ const getCardClass = (index: number) => {
           :video-data="{ pc: item.video[0], mob: item.video[0] }"
           :custom-class="getCardClass(index)"
         />
-        
+
         <BannerCard
           v-else
           :image-url="item.image ? item.image : ''"
@@ -214,7 +206,7 @@ const getCardClass = (index: number) => {
             />
           </div>
         </div>
-        
+
         <div v-if="selectedSetItems.length === 0" class="text-center text-gray-400">
           В данном комплекте пока нет товаров
         </div>

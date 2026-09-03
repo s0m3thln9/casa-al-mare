@@ -29,10 +29,10 @@ const styleVariants = {
 }
 const getMissingParamText = (param: string | null): string => {
   if (!param) return "Выберите все параметры"
-  
+
   if (param === "size") return "Выберите размер"
   if (param === "all") return "Выберите все параметры"
-  
+
   return `Выберите размер для "${param.toLowerCase()}"`
 }
 const currentState = computed(() => {
@@ -73,7 +73,7 @@ const currentState = computed(() => {
     style = styleBase + styleVariants.default
     disabled = false
   }
-  
+
   return { content, style, disabled }
 })
 watch(
@@ -92,20 +92,19 @@ const handleClick = async () => {
     showError.value = true
     return
   }
-  
+
   if (!props.inStock) return
-  
+
   if (!props.availableQuantity) {
     alert("Уведомление о поступлении товара настроено")
     return
   }
-  
+
   if (isInCart.value) {
     navigateTo("/order/")
     return
   }
 
-  // Сколько единиц этого варианта уже лежит в корзине
   const cartCountFor = (id: number, size?: string): number => {
     const variant = size || "NS"
     const existing = orderStore.cartItems.find(
@@ -114,7 +113,6 @@ const handleClick = async () => {
     return existing?.count ?? 0
   }
 
-  // Доступный остаток на складе для варианта (по данным каталога)
   const stockFor = (id: number, size?: string): number => {
     const product = catalogStore.getItemById(id)
     if (!product?.vector) return 0
@@ -122,7 +120,6 @@ const handleClick = async () => {
     return product.vector[variant]?.quantity ?? 0
   }
 
-  // Проверяем, что мы не пытаемся положить в корзину больше, чем есть на складе
   if (catalogStore.items.length === 0) {
     await catalogStore.loadItems()
   }
@@ -148,7 +145,7 @@ const handleClick = async () => {
     isLoading.value = true
     try {
       const token = await userStore.loadToken()
-      
+
       const buildLocalCartItem = async (id: number, size?: string): Promise<CartItem> => {
         if (catalogStore.items.length === 0) {
           await catalogStore.loadItems()
@@ -172,7 +169,7 @@ const handleClick = async () => {
           oldPrice: parseInt(product?.oldPrice || "0"),
         }
       }
-      
+
       if (props.items && props.items.length > 0) {
         const response = await $fetch("https://back.casaalmare.com/api/addToCart", {
           method: "POST",
@@ -185,7 +182,7 @@ const handleClick = async () => {
             token: token,
           },
         })
-        
+
         if (response.success) {
           for (const item of props.items) {
             const newItem = await buildLocalCartItem(item.id, item.size)
@@ -196,7 +193,7 @@ const handleClick = async () => {
               orderStore.cartItems.push(newItem)
             }
           }
-          
+
           showSuccess.value = true
           setTimeout(() => {
             showSuccess.value = false
@@ -212,7 +209,7 @@ const handleClick = async () => {
                   return {
                     item_name: product?.name || "Название товара",
                     item_id: item.id.toString(),
-                    price: product?.price || 0, // Цена с учетом скидки
+                    price: product?.price || 0,
                     item_category: product?.parents?.[0]?.name || "Категория товара",
                     item_variant: item.size || "NS",
                     quantity: 1

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { DocNode } from "~/types"
+
 import { useRoute } from "vue-router"
 
 const route = useRoute()
@@ -12,24 +14,23 @@ const { data: treeData } = await useFetch(
 const doc = computed(() => {
   const slugValue = slug.value
   if (!slugValue || !treeData.value?.data) return null
-  
-  // Ищем документ по slug во всех ветках
-  const findDoc = (obj: any): any => {
-    if (!obj) return null
-    
-    for (const key in obj) {
-      const item = obj[key]
-      if (item && typeof item === 'object') {
-        if (item.alias === slugValue) return item
-        if (item.subitems) {
-          const found = findDoc(item.subitems)
+
+  const findDoc = (nodes: Record<string, DocNode> | undefined): DocNode | null => {
+    if (!nodes) return null
+
+    for (const key in nodes) {
+      const node = nodes[key]
+      if (node && typeof node === 'object') {
+        if (node.alias === slugValue) return node
+        if (node.subitems) {
+          const found = findDoc(node.subitems)
           if (found) return found
         }
       }
     }
     return null
   }
-  
+
   return findDoc(treeData.value.data)
 })
 
@@ -42,8 +43,8 @@ const pageTitle = computed(() => doc.value?.pagetitle ?? "")
 const description = computed(() => doc.value?.description ?? "")
 
 const metaTags = computed(() => {
-  const tags: Record<string, any> = {}
-  
+  const tags: Record<string, string> = {}
+
   doc.value?.metatags?.forEach(tag => {
     if (tag.name.startsWith('og:')) {
       const ogKey = tag.name.replace('og:', '')
@@ -57,7 +58,7 @@ const metaTags = computed(() => {
       tags[tag.name] = tag.content
     }
   })
-  
+
   return tags
 })
 
@@ -75,7 +76,7 @@ const handleAccordionClick = (e: MouseEvent) => {
   const target = e.target as HTMLElement
   const header = target.closest('.accordeon .header') as HTMLElement | null
   if (!header) return
-  
+
   const accordeon = header.closest('.accordeon') as HTMLElement
   accordeon.classList.toggle('open')
 }

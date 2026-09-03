@@ -1,16 +1,11 @@
 import type { Item } from "~/stores/catalog"
+import { getItemCollections, isItemNew } from "~/stores/catalog"
 
 export interface Crumb {
   name: string
-  /** Путь или абсолютный URL. Относительные пути дополняются siteUrl и слэшем. */
   url?: string
 }
 
-/**
- * Фильтрует список товаров так же, как каталог при отрисовке (filteredItems в сторе):
- * по уровням пути и query-параметрам. Вынесено чистой функцией, чтобы строить ItemList
- * микроразметки одинаково на сервере (SSR) и на клиенте из одних и тех же данных.
- */
 export function filterCatalogItemsByPath(
   items: Item[],
   path: string,
@@ -52,6 +47,18 @@ export function filterCatalogItemsByPath(
     }
   }
 
+  if (query.new === "1" || query.new === 1 || query.new === true) {
+    filtered = filtered.filter(isItemNew)
+  }
+
+  const collection = typeof query.collection === "string" ? query.collection.trim() : ""
+  if (collection) {
+    const aliases = collection.split(",").map((c) => c.trim()).filter(Boolean)
+    if (aliases.length) {
+      filtered = filtered.filter((i) => getItemCollections(i).some((c) => aliases.includes(c.alias)))
+    }
+  }
+
   const material = typeof query.material === "string" ? query.material.trim() : ""
   if (material) {
     const mats = material.split(",").map((m) => m.trim()).filter(Boolean)
@@ -87,10 +94,6 @@ export function filterCatalogItemsByPath(
   return filtered
 }
 
-/**
- * Сериализует объект JSON-LD для вставки в <script type="application/ld+json">.
- * Экранирует "<", чтобы данные не могли закрыть тег раньше времени.
- */
 export function jsonLdInnerHtml(data: Record<string, unknown>): string {
   return JSON.stringify(data).replace(/</g, "\\u003c")
 }
@@ -113,8 +116,6 @@ export function useStructuredData() {
 
   const productUrl = (item: Item): string => `${siteUrl}/product/${item.alias}/`
 
-  // Видеофайлы (.mp4/.webm/.ogv) иногда лежат в images вперемешку с картинками,
-  // но в schema.org Product image допустимы только изображения — отсекаем видео.
   const isImageSrc = (src: string): boolean =>
     !!src && !/\.(mp4|webm|ogv|ogg|mov|m4v)(\?|#|$)/i.test(src)
 

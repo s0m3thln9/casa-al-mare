@@ -20,8 +20,8 @@ const pageTitle = computed(() => indexData.value?.longtitle ?? indexData.value?.
 const description = computed(() => indexData.value?.description ?? "")
 
 const metaTags = computed(() => {
-  const tags: Record<string, any> = {}
-  
+  const tags: Record<string, string> = {}
+
   indexData.value?.metatags?.forEach(tag => {
     if (tag.name.startsWith('og:')) {
       const ogKey = tag.name.replace('og:', '')
@@ -35,11 +35,10 @@ const metaTags = computed(() => {
       tags[tag.name] = tag.content
     }
   })
-  
+
   return tags
 })
 
-// Функция для обновления SEO
 const updateSeo = () => {
   useSeoMeta({
     title: pageTitle.value,
@@ -48,7 +47,6 @@ const updateSeo = () => {
   })
 }
 
-// Обновляем SEO при монтировании и при изменении данных
 updateSeo()
 
 watch([pageTitle, description, metaTags], () => {

@@ -43,6 +43,7 @@ const {
   handleStarMouseDown,
   handleStarTouchStart,
   availableSizes,
+  isNew,
 } = useCatalogCard({
   variant: props.variant,
   id: props.id,
@@ -95,7 +96,7 @@ if (props.modelValue) {
   >
     <div class="w-full rounded-lg relative">
       <div class="overflow-hidden rounded-lg h-full">
-        
+
         <video
           v-if="videoSource"
           autoplay
@@ -135,7 +136,7 @@ if (props.modelValue) {
             alt="card"
           >
         </NuxtImg>
-        
+
         <div
           v-else
           class="w-full h-full aspect-[300/450] bg-[#F9F6EC]"
@@ -154,6 +155,11 @@ if (props.modelValue) {
     </template>
 
     <template v-else>
+      <span
+        v-if="isNew && !popup"
+        class="absolute z-7 left-2 top-2 md:left-3 md:top-3 px-1.5 py-0.5 rounded-md bg-[#FFFFFA]/90 border-[0.7px] border-[#BBB8B6] font-[Manrope] text-[9px] md:text-[10px] font-light tracking-[0.08em] uppercase text-[#211D1D] pointer-events-none"
+      >NEW</span>
+
       <h4 class="mt-1 sm:mt-2 line-clamp-1 min-h-4">
         {{ item.name }}
       </h4>
@@ -248,7 +254,11 @@ if (props.modelValue) {
     </template>
 
     <template v-else>
-      
+      <span
+        v-if="isNew && !popup"
+        class="absolute z-10 left-2 top-2 md:left-3 md:top-3 px-1.5 py-0.5 rounded-md bg-[#FFFFFA]/90 border-[0.7px] border-[#BBB8B6] font-[Manrope] text-[9px] md:text-[10px] font-light tracking-[0.08em] uppercase text-[#211D1D] pointer-events-none"
+      >NEW</span>
+
       <template v-if="videoSource">
          <video
            autoplay
@@ -373,7 +383,7 @@ if (props.modelValue) {
             (isNarrowScreen || (!popup && isHovered) || isFavoriteLocal) && 'opacity-100',
           ]"
         />
-      
+
         <div
           v-if="isNarrowScreen || (!popup && isHovered) || isFavoriteLocal"
           ref="starRef"

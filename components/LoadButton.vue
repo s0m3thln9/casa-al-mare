@@ -19,8 +19,8 @@ const currentState = computed(() => {
 	const content = props.content
 	const style = styleBase.value + styleVariants.default
 	const disabled = props.disabled || false
-	
-	
+
+
 	return { content, style, disabled }
 })
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { UserCertificate } from "~/types"
 
 useHead({
   title: "Профиль - CASA AL MARE",
@@ -174,7 +175,7 @@ const handleAddCertificate = async (): Promise<void> => {
   }
 
   try {
-    const response = await $fetch<{ success: boolean; error?: string; certificates?: any[] }>(
+    const response = await $fetch<{ success: boolean; error?: string; certificates?: UserCertificate[] }>(
       "https://back.casaalmare.com/api/addCertificate",
       {
         method: "POST",

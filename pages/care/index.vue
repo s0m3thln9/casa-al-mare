@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { DocTree } from "~/types"
+
 
 useHead({
   title: "Уход за изделиями - CASA AL MARE",
@@ -23,7 +25,7 @@ const preloadImages = async () => {
       img.onerror = reject
     })
   }
-  
+
   try {
     await Promise.all(["/about.jpg"].map((url) => loadImage(url)))
     areImagesLoaded.value = true
@@ -37,12 +39,12 @@ onMounted(() => {
   preloadImages()
 })
 
-const { data: treeData } = await useFetch(
+const { data: treeData } = await useFetch<DocTree>(
   "https://back.casaalmare.com/api/getdocTree"
 )
 
 const careContent = computed(() => {
-  return (treeData.value as any)?.data?.docs?.subitems?.care?.content ?? ""
+  return treeData.value?.data?.docs?.subitems?.care?.content ?? ""
 })
 </script>
 

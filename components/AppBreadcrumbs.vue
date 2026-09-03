@@ -29,7 +29,7 @@ defineProps<{
         {{ item.name }}
       </span>
      </template>
-     
+
      <span
        v-if="index < items.length - 1"
        class="ml-1 flex-shrink-0"

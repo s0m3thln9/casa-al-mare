@@ -1,35 +1,8 @@
 <script setup lang="ts">
 const popupStore = usePopupStore()
 
-const email = ref("")
-const emailFooterRef = ref()
-
-const buttonStateFooter = ref({
-  content: "Подписаться",
-  isLoading: false,
-  showSuccess: false,
-})
-
 const authStore = useAuthStore()
 const authModalStore = useAuthModalStore()
-
-const handleSubscribeFooter = () => {
-  if (emailFooterRef.value?.validate()) {
-    buttonStateFooter.value.isLoading = true
-    setTimeout(() => {
-      buttonStateFooter.value.isLoading = false
-      buttonStateFooter.value.content = "Вы подписаны"
-      buttonStateFooter.value.showSuccess = true
-      setTimeout(() => {
-        buttonStateFooter.value.content = "Подписаться"
-        buttonStateFooter.value.showSuccess = false
-        email.value = ""
-      }, 1000)
-    }, 1000)
-  } else {
-    console.warn("Email не валиден для подписки")
-  }
-}
 
 const handleProfileClick = () => {
   if (authStore.isAuth) {
@@ -114,7 +87,6 @@ const handleOrdersClick = () => {
               WhatsApp
             </a>
           </li>
-<!--          <li><NuxtLink to="/">Pinterest</NuxtLink></li>-->
         </ul>
       </div>
       <div class="flex flex-col gap-4">
@@ -172,52 +144,6 @@ const handleOrdersClick = () => {
         >
         <span class="text-xs text-[#BBB8B6]">CASA AL MARE © 2026</span>
       </div>
-<!--      <div class="flex flex-col gap-4 w-full mt-4 lg:w-auto lg:mt-0">-->
-<!--        <h3 class="font-normal text-base uppercase">Аккаунт</h3>-->
-<!--        <div class="flex flex-col items-start gap-4 xl:flex-row">-->
-<!--          <AppTooltip-->
-<!--            text="Это поле обязательно для заполнения"-->
-<!--            type="error"-->
-<!--            :show="emailFooterRef?.showError"-->
-<!--          >-->
-<!--            <AppInput-->
-<!--              id="email"-->
-<!--              ref="emailFooterRef"-->
-<!--              v-model="email"-->
-<!--              label="Введите e-mail для получения новостей"-->
-<!--              type="email"-->
-<!--              custom-class="min-w-[245px]"-->
-<!--              required-->
-<!--            />-->
-<!--          </AppTooltip>-->
-<!--          <AppButton-->
-<!--            :content="buttonStateFooter.content"-->
-<!--            :is-loading="buttonStateFooter.isLoading"-->
-<!--            :show-success="buttonStateFooter.showSuccess"-->
-<!--            variant="primary"-->
-<!--            custom-class="w-full px-0 max-xl:w-[245px]"-->
-<!--            @click="handleSubscribeFooter"-->
-<!--          />-->
-<!--        </div>-->
-<!--        <p class="max-w-[300px] text-[10px] font-[Commissioner] xl:max-w-[416px]">-->
-<!--          Нажимая на кнопку «Подписаться», я соглашаюсь на обработку моих персональных данных и ознакомлен(а) с-->
-<!--          условиями конфиденциальности.-->
-<!--        </p>-->
-<!--        <span class="text-xs"-->
-<!--          ><NuxtLink-->
-<!--            class="underline"-->
-<!--            to="/info/confidence"-->
-<!--            >Политика конфиденциальности</NuxtLink-->
-<!--          >-->
-<!--          и-->
-<!--          <NuxtLink-->
-<!--            class="underline"-->
-<!--            to="/info/oferta"-->
-<!--            >оферта</NuxtLink-->
-<!--          ></span-->
-<!--        >-->
-<!--        <span class="text-xs">CASA AL MARE © 2026</span>-->
-<!--      </div>-->
     </div>
     <div class="flex flex-col items-center gap-12 sm:hidden">
       <div class="w-full flex flex-col gap-2">
@@ -248,13 +174,6 @@ const handleOrdersClick = () => {
               Telegram
             </button>
           </a>
-<!--          <button-->
-<!--            aria-label="Рассылка"-->
-<!--            class="w-full py-3 px-2 rounded-2xl bg-[#F9F6EC] font-normal text-[11px]"-->
-<!--            @click="popupStore.open('subscription')"-->
-<!--          >-->
-<!--            Рассылка-->
-<!--          </button>-->
         </div>
         <button
           aria-label="Обратная связь"

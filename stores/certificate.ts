@@ -1,39 +1,37 @@
 export const useCertificateStore = defineStore("certificate", () => {
   const step = ref(1)
   const certificateType = ref<"Электронный" | "Физический">("Электронный")
-  
+
   const selectedSum = ref<number | null>(null)
   const selectedDesign = ref<number | null>(null)
   const selectedWay = ref<string | null>(null)
-  
+
   const recipientEmail = ref("")
   const recipientPhone = ref<{
     code: string
     phone: string
     country: string
   } | null>(null)
-  
+
   const selectedDetails = ref<string | null>(null)
   const recipientName = ref("")
   const message = ref("")
-  
+
   const isSubmitting = ref(false)
   const submitError = ref<string | null>(null)
-  
+
   const userStore = useUserStore()
-  
-  
+
+
   const totalSteps = computed(() =>
     certificateType.value === "Физический" ? 2 : 4,
   )
-  
-  // Для физического сертификата всегда возвращаем "Доставка"
+
   const effectiveDeliveryMethod = computed(() => {
     return certificateType.value === "Физический" ? "Доставка" : selectedWay.value
   })
-  
+
   const canGoNext = computed(() => {
-    // Для физического сертификата
     if (certificateType.value === "Физический") {
       switch (step.value) {
         case 1:
@@ -44,20 +42,19 @@ export const useCertificateStore = defineStore("certificate", () => {
           return false
       }
     }
-    
-    // Для электронного сертификата
+
     switch (step.value) {
       case 1:
         return selectedSum.value !== null
-      
+
       case 2:
         return selectedDesign.value !== null
-      
+
       case 3:
         if (selectedWay.value === "Электронной почтой") {
           return recipientEmail.value.trim() !== ""
         }
-        
+
         if (selectedWay.value === "По SMS") {
           return (
             recipientPhone.value !== null &&
@@ -65,35 +62,35 @@ export const useCertificateStore = defineStore("certificate", () => {
             recipientPhone.value.phone.trim() !== ""
           )
         }
-        
+
         return selectedWay.value !== null
-      
+
       case 4:
         return recipientName.value.trim() !== ""
-      
+
       default:
         return false
     }
   })
-  
+
   const nextStep = () => {
     if (step.value < totalSteps.value) {
       step.value++
     }
   }
-  
+
   const prevStep = () => {
     if (step.value > 1) {
       step.value--
     }
   }
-  
+
   const submitCertificate = async () => {
     isSubmitting.value = true
     submitError.value = null
-    
+
     const token = await userStore.loadToken()
-    
+
     try {
       const response = await $fetch("https://back.casaalmare.com/api/addCert", {
         method: "POST",
@@ -119,7 +116,7 @@ export const useCertificateStore = defineStore("certificate", () => {
           token,
         },
       })
-      
+
       if (response.success) {
         if (import.meta.client) {
           window.dataLayer = window.dataLayer || []
@@ -139,7 +136,7 @@ export const useCertificateStore = defineStore("certificate", () => {
         }
         return { success: true, data: response.data }
       }
-      
+
       submitError.value = response.error || "Ошибка при оформлении сертификата"
       return { success: false, error: submitError.value }
     } catch (error) {
@@ -150,7 +147,7 @@ export const useCertificateStore = defineStore("certificate", () => {
       isSubmitting.value = false
     }
   }
-  
+
   const resetForm = () => {
     step.value = 1
     selectedSum.value = null
@@ -163,13 +160,13 @@ export const useCertificateStore = defineStore("certificate", () => {
     message.value = ""
     submitError.value = null
   }
-  
+
   watch(certificateType, (newType, oldType) => {
     if (newType !== oldType) {
       resetForm()
     }
   })
-  
+
   return {
     step,
     totalSteps,

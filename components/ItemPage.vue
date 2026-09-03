@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, unref } from "vue"
 import type { Item } from "~/stores/catalog"
+import type { DocNode } from "~/types"
 
 const route = useRoute()
 const alias = computed(() => {
@@ -17,7 +18,6 @@ const catalogStore = useCatalogStore()
 const popupStore = usePopupStore()
 const itemStore = useItemStore()
 const orderStore = useOrderStore()
-// const setStore = useSetStore()
 
 const isLoading = ref(true)
 const error = ref<string | null>(null)
@@ -29,7 +29,7 @@ const isHtml = (str: string) => {
 
 const sendViewItemEvent = (viewedItem: Item) => {
   if (!viewedItem) return
-  
+
   if (import.meta.client) {
     window.dataLayer = window.dataLayer || []
     window.dataLayer.push({
@@ -52,7 +52,7 @@ const handleAccordionClick = (e: MouseEvent) => {
   const target = e.target as HTMLElement
   const header = target.closest('.accordeon .header') as HTMLElement | null
   if (!header) return
-  
+
   const accordeon = header.closest('.accordeon') as HTMLElement
   accordeon.classList.toggle('open')
 }
@@ -61,18 +61,17 @@ const loadItem = async () => {
   try {
     isLoading.value = true
     error.value = null
-    
+
     if (catalogStore.items.length === 0) {
       await catalogStore.loadItems()
     }
-    
+
     let foundItem: Item | null = null
     console.log(alias.value)
     if (alias.value && alias.value.trim() !== "") {
       foundItem = catalogStore.items.find((i) => i.alias === alias.value) || null
-      
+
       if (foundItem) {
-        // Установка цвета в стор
         if (foundItem.colorVal && foundItem.colorName) {
           itemStore.color = {
             code: foundItem.colorVal,
@@ -86,23 +85,21 @@ const loadItem = async () => {
         return
       }
     } else {
-      // Оставляем поиск по ID как запасной вариант из параметров пути
       const idFromParams = route.params.id
       if (typeof idFromParams === "string" && !isNaN(Number(idFromParams))) {
         foundItem = catalogStore.getItemById(Number(idFromParams)) || null
       }
     }
-    
+
     if (!foundItem) {
       error.value = "Товар не найден."
       return
     }
-    
+
     item.value = foundItem
-    
-    // Отправляем событие просмотра товара в Google Analytics
+
     sendViewItemEvent(foundItem)
-    
+
     const sizeFromQuery = route.query.size as string
     if (sizeFromQuery && foundItem.sizes?.includes(sizeFromQuery)) {
       await nextTick()
@@ -137,9 +134,9 @@ const availableColors = computed(() => {
 
 const sortedShapes = computed(() => {
   if (!item.value?.complex || item.value.complex.length === 0) return []
-  
+
   const allShapes = [...item.value.complex]
-  
+
   if (item.value.parents[2]) {
     const currentShapeInComplex = allShapes.find((s) => s.id === item.value?.parents[2].id)
     if (!currentShapeInComplex) {
@@ -152,7 +149,7 @@ const sortedShapes = computed(() => {
       })
     }
   }
-  
+
   return allShapes.sort((a, b) => a.id - b.id)
 })
 
@@ -197,8 +194,6 @@ const relatedItemsIds = computed(() => {
   return shuffled.slice(0, 3)
 })
 
-// const setItemsIds = computed(() => item.value?.set?.map((item) => item.id) || [])
-// const hasSetItems = computed(() => setItemsIds.value.length > 0)
 
 const currentImageIndex = ref(0)
 const touchStartX = ref(0)
@@ -206,57 +201,8 @@ const touchStartY = ref(0)
 const isHorizontalSwipe = ref(false)
 const isTransitioning = ref(false)
 
-// const setItems = computed(() => {
-//   const result: { id: number; size: string }[] = []
-//
-//   if (catalogStore.items.length === 0 || !hasSetItems.value) return result
-//
-//   item.value?.set?.forEach((setItem) => {
-//     const itemType = setItem.type
-//     const size = setStore.items[itemType]
-//     const itemId = setStore.itemsIds[itemType] || setItem.id
-//
-//     if (size && size.trim() !== "") {
-//       const catalogItem = catalogStore.getItemById(itemId)
-//       if (catalogItem) {
-//         result.push({
-//           id: catalogItem.id,
-//           size: size,
-//         })
-//       }
-//     }
-//   })
-//
-//   return result
-// })
 
-// const setMissingParams = computed<string | "all" | null>(() => {
-//   if (setStore.canAddToCart) return null
-//
-//   const allTypes = item.value?.set?.map((s) => s.type) || []
-//   const missing: string[] = []
-//
-//   allTypes.forEach((type) => {
-//     if (!setStore.items[type] || setStore.items[type].trim() === "") {
-//       missing.push(type)
-//     }
-//   })
-//
-//   if (missing.length === allTypes.length) return "all"
-//   return missing.length > 0 ? missing[0] : null
-// })
 
-// const setButtonText = computed(() => {
-//   if (!hasSetItems.value) return "Собрать комплект"
-//
-//   const types = item.value?.set?.map((s) => s.type) || []
-//
-//   if (types.length === 0) return "Собрать комплект"
-//   if (types.length === 1) return `Добавить ${types[0].toLowerCase()}`
-//   if (types.length === 2) return `Собрать комплект (${types.length} товара)`
-//
-//   return `Собрать комплект (${types.length} товара)`
-// })
 
 const isNoSizeItem = computed(() => {
   return Object.keys(item.value?.vector)[0] === 'NS'
@@ -268,17 +214,11 @@ const isNoSizeItemParams = computed(() => {
 
 const canAddToCart = computed(() => isNoSizeItem.value || !!itemStore.size)
 
-const missingParams = computed<"size" | null>(() => {
-  if (canAddToCart.value) return null
-  return "size"
-})
-
 const currentSize = computed(() => {
   if (isNoSizeItem.value) return ""
   return itemStore.size || item.value?.sizes?.[0] || ""
 })
 
-// --- Дополнение образа шортами ---
 const shortsSelected = ref(false)
 const shortsSize = ref<string | null>(null)
 
@@ -292,7 +232,6 @@ const shortsPrice = computed(() => parseInt(shortsProduct.value?.price || "0"))
 const shortsImage = computed(
   () => shortsRef.value?.image || Object.values(shortsProduct.value?.images || {})[0] || "",
 )
-// Размер можно выбрать только когда вариантов больше одного, иначе берём первый по умолчанию
 const showShortsSizeSelector = computed(() => shortsSelected.value && shortsSizes.value.length > 1)
 const finalShortsSize = computed(() => {
   if (shortsSizes.value.length <= 1) return shortsSizes.value[0] || "NS"
@@ -315,7 +254,6 @@ const toggleShorts = () => {
   }
 }
 
-// Состояние наличия основного товара (вынесено из шаблона для читабельности)
 const mainInStock = computed(() => {
   if (!item.value) return false
   if (isNoSizeItem.value) {
@@ -428,20 +366,20 @@ const handleTouchStart = (e: TouchEvent) => {
 const handleTouchMove = (e: TouchEvent) => {
   const len = currentColorImages.value.length
   if (len <= 1 || isTransitioning.value || !touchStartX.value || !touchStartY.value) return
-  
+
   const currentX = e.touches[0].clientX
   const currentY = e.touches[0].clientY
   const deltaX = Math.abs(currentX - touchStartX.value)
   const deltaY = Math.abs(currentY - touchStartY.value)
-  
+
   const directionThreshold = 10
-  
+
   if (deltaX > directionThreshold || deltaY > directionThreshold) {
     if (isHorizontalSwipe.value) {
       e.preventDefault()
       return
     }
-    
+
     if (deltaX > deltaY * 1.5 && deltaX > directionThreshold) {
       isHorizontalSwipe.value = true
       e.preventDefault()
@@ -454,13 +392,13 @@ const handleTouchMove = (e: TouchEvent) => {
 const handleTouchEnd = (e: TouchEvent) => {
   const len = currentColorImages.value.length
   if (len <= 1 || isTransitioning.value) return
-  
+
   if (!isHorizontalSwipe.value) {
     touchStartX.value = 0
     touchStartY.value = 0
     return
   }
-  
+
   const deltaX = e.changedTouches[0].clientX - touchStartX.value
   const threshold = 50
   if (Math.abs(deltaX) > threshold) {
@@ -471,7 +409,7 @@ const handleTouchEnd = (e: TouchEvent) => {
       isTransitioning.value = false
     }, 400)
   }
-  
+
   touchStartX.value = 0
   touchStartY.value = 0
   isHorizontalSwipe.value = false
@@ -516,19 +454,12 @@ watch(
       if (newItem.sizes?.[0]) {
         itemStore.size = newItem.sizes[0]
       }
-      
-      // if (newItem.set && newItem.set.length > 0) {
-      //   const types = newItem.set.map((s) => s.type)
-      //   setStore.setRequiredTypes(types)
-      // } else {
-      //   setStore.setRequiredTypes([])
-      // }
+
     }
   },
   { immediate: true },
 )
 
-// Следим за изменением пропса alias
 watch(
   () => alias.value,
   async (newAlias) => {
@@ -538,7 +469,7 @@ watch(
       shortsSelected.value = false
       shortsSize.value = null
       await loadItem()
-      
+
       if (!error.value) {
         scrollToTop()
       }
@@ -572,24 +503,23 @@ const ssrItem = computed(() =>
 const doc = computed(() => {
   const slugValue = alias.value
   if (!slugValue || !treeData.value?.data) return null
-  
-  // Ищем документ по slug во всех ветках
-  const findDoc = (obj: any): any => {
-    if (!obj) return null
-    
-    for (const key in obj) {
-      const item = obj[key]
-      if (item && typeof item === 'object') {
-        if (item.alias === slugValue) return item
-        if (item.subitems) {
-          const found = findDoc(item.subitems)
+
+  const findDoc = (nodes: Record<string, DocNode> | undefined): DocNode | null => {
+    if (!nodes) return null
+
+    for (const key in nodes) {
+      const node = nodes[key]
+      if (node && typeof node === 'object') {
+        if (node.alias === slugValue) return node
+        if (node.subitems) {
+          const found = findDoc(node.subitems)
           if (found) return found
         }
       }
     }
     return null
   }
-  
+
   return findDoc(treeData.value.data)
 })
 
@@ -597,8 +527,8 @@ const pageTitle = computed(() => doc.value?.pagetitle ?? "")
 const description = computed(() => doc.value?.description ?? "")
 
 const metaTags = computed(() => {
-  const tags: Record<string, any> = {}
-  
+  const tags: Record<string, string> = {}
+
   doc.value?.metatags?.forEach(tag => {
     if (tag.name.startsWith('og:')) {
       const ogKey = tag.name.replace('og:', '')
@@ -612,7 +542,7 @@ const metaTags = computed(() => {
       tags[tag.name] = tag.content
     }
   })
-  
+
   return tags
 })
 
@@ -658,7 +588,6 @@ const jsonLdSchema = computed(() => {
 
 const { buildBreadcrumbList, productImages } = useStructuredData()
 
-// Хлебные крошки карточки строятся из категорий товара (parents), последний пункт — сам товар.
 const breadcrumbJsonLd = computed(() => {
   const it = ssrItem.value || item.value
   if (!it) return null
@@ -762,7 +691,6 @@ useHead(computed(() => {
           </div>
           <div class="flex flex-col justify-center items-stretch gap-4 mt-6">
             <div>Кнопка купить</div>
-            <!--            <div>Собрать комплект</div>-->
           </div>
           <div class="flex justify-center items-center mt-4 sm:mt-6">
             <div>В избранное</div>
@@ -1075,13 +1003,6 @@ useHead(computed(() => {
             :is-parameters-selected="buyIsParametersSelected"
             :missing-params="buyMissingParams"
           />
-          <!--          <AppButton-->
-          <!--            v-if="hasSetItems"-->
-          <!--            variant="secondary"-->
-          <!--            :content="setButtonText"-->
-          <!--            custom-class="w-full py-4"-->
-          <!--            @click="popupStore.open('set')"-->
-          <!--          />-->
         </div>
         <div class="flex justify-center items-center mt-4 sm:mt-6">
           <WishlistButton :item-id="item?.id" />
@@ -1103,17 +1024,6 @@ useHead(computed(() => {
               class="w-full h-[1px] bg-[#BBB8B6]"
             />
           </template>
-          <!--          <div-->
-          <!--            v-if="tabSections.length > 0"-->
-          <!--            class="w-full h-[1px] bg-[#BBB8B6]"-->
-          <!--          />-->
-          <!--          <div-->
-          <!--            class="flex justify-center gap-2.5 items-center w-full sm:justify-between cursor-pointer sm:gap-0"-->
-          <!--            @click="popupStore.open('subscription')"-->
-          <!--          >-->
-          <!--            <span class="font-light text-sm">Подписаться на рассылку</span>-->
-          <!--            <div class="icon-mail w-4 h-4 shrink-0" />-->
-          <!--          </div>-->
         </div>
       </div>
     </div>
@@ -1134,46 +1044,6 @@ useHead(computed(() => {
         />
       </div>
     </div>
-    <!--    <AppPopup-->
-    <!--      v-if="hasSetItems"-->
-    <!--      title="Собрать комплект"-->
-    <!--      popup-id="set"-->
-    <!--    >-->
-    <!--      <div class="flex flex-col gap-6 mt-6">-->
-    <!--        <div class="grid grid-cols-2 gap-y-6 gap-x-4 sm:gap-x-2">-->
-    <!--          <div-->
-    <!--            v-for="setItem in item?.set"-->
-    <!--            :key="setItem.id"-->
-    <!--            class="flex flex-col gap-2"-->
-    <!--          >-->
-    <!--            <span class="font-[Manrope] text-sm">{{ setItem.type }}</span>-->
-    <!--            <CatalogCard-->
-    <!--              v-if="catalogStore.items.length > 0"-->
-    <!--              :id="setItem.id"-->
-    <!--              :key="`${currentColorCode}-${setItem.type}`"-->
-    <!--              :model-value="setStore.items[setItem.type]"-->
-    <!--              :current-color-code="currentColorCode"-->
-    <!--              custom-image-class="aspect-[200/300] w-full"-->
-    <!--              popup-->
-    <!--              variant="mini"-->
-    <!--              link-->
-    <!--              @update:model-value="(val) => setStore.setItem(setItem.type, val, setItem.id)"-->
-    <!--            />-->
-    <!--            <div-->
-    <!--              v-else-->
-    <!--              class="aspect-[200/300] w-full bg-[#F9F6EC]"-->
-    <!--            />-->
-    <!--          </div>-->
-    <!--        </div>-->
-    <!--        <BuyButton-->
-    <!--          :items="setItems"-->
-    <!--          available-quantity-->
-    <!--          in-stock-->
-    <!--          :is-parameters-selected="setStore.canAddToCart"-->
-    <!--          :missing-params="setMissingParams"-->
-    <!--        />-->
-    <!--      </div>-->
-    <!--    </AppPopup>-->
     <template
       v-for="section in tabSections"
       :key="section.header"
@@ -1202,31 +1072,7 @@ useHead(computed(() => {
         </div>
       </AppPopup>
     </template>
-    
-    <!--    <AppPopup-->
-    <!--      title="Подписаться на рассылку"-->
-    <!--      popup-id="subscription"-->
-    <!--    >-->
-    <!--      <div class="mt-6 flex flex-col gap-6">-->
-    <!--        <div class="p-4 border border-[#BBB8B6] rounded-2xl flex flex-col gap-4">-->
-    <!--          <h3 class="font-[Manrope] text-sm text-[#211D1D]">Подписка на рассылку</h3>-->
-    <!--          <span class="font-[Manrope] text-xs text-[#363636]">-->
-    <!--            Подпишитесь, чтобы получать новости о новинках, акциях и эксклюзивных предложениях.-->
-    <!--          </span>-->
-    <!--          <div class="flex flex-col gap-2">-->
-    <!--            <input-->
-    <!--              type="email"-->
-    <!--              placeholder="Ваш email"-->
-    <!--              class="p-2 border border-[#BBB8B6] rounded-lg text-xs"-->
-    <!--            >-->
-    <!--            <AppButton-->
-    <!--              content="Подписаться"-->
-    <!--              custom-class="w-full"-->
-    <!--            />-->
-    <!--          </div>-->
-    <!--        </div>-->
-    <!--      </div>-->
-    <!--    </AppPopup>-->
+
 
     <div v-if="ssrItem" class="seo-content">
       <div>{{ ssrItem.name }}</div>
@@ -1250,40 +1096,35 @@ useHead(computed(() => {
   overflow: hidden;
 }
 
-/* Правая колонка с адаптивным sticky поведением */
 .product-sidebar {
-  /* На маленьких экранах - обычный поток */
   position: relative;
 }
 
-/* Sticky только на больших экранах с достаточной высотой */
 @media (min-width: 1024px) and (min-height: 800px) {
   .product-sidebar {
     position: sticky;
-    top: 5rem; /* top-20 в Tailwind */
+    top: 5rem;
     align-self: flex-start;
     max-height: calc(100vh - 5rem);
     overflow-y: auto;
-    /* Скрываем scrollbar для более чистого вида */
     scrollbar-width: thin;
     scrollbar-color: #BBB8B6 transparent;
   }
-  
+
   .product-sidebar::-webkit-scrollbar {
     width: 6px;
   }
-  
+
   .product-sidebar::-webkit-scrollbar-track {
     background: transparent;
   }
-  
+
   .product-sidebar::-webkit-scrollbar-thumb {
     background-color: #BBB8B6;
     border-radius: 3px;
   }
 }
 
-/* На очень высоких экранах можно увеличить порог высоты */
 @media (min-width: 1280px) and (min-height: 1000px) {
   .product-sidebar {
     top: 6rem;
@@ -1500,15 +1341,15 @@ useHead(computed(() => {
     border: 0.5px solid #bbb8b6;
     margin-bottom: 8px;
   }
-  
+
   .custom-text-content {
     border: 0.5px solid #bbb8b6;
   }
-  
+
   .html-content-wrapper :deep(table) {
     padding: 8px 0 10px;
   }
-  
+
   .html-content-wrapper :deep(h1),
   .html-content-wrapper :deep(h2),
   .html-content-wrapper :deep(h3),
@@ -1517,11 +1358,11 @@ useHead(computed(() => {
   .html-content-wrapper :deep(h6) {
     margin-bottom: 4px;
   }
-  
+
   .html-content-wrapper :deep(p) {
     margin-bottom: 4px;
   }
-  
+
   .html-content-wrapper :deep(tbody tr:first-child)::before {
     top: 8px;
   }

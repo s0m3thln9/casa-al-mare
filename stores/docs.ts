@@ -1,25 +1,10 @@
 import { defineStore } from "pinia"
 import { ref, computed } from "vue"
-
-interface DocNode {
-  id: number
-  type: string
-  pagetitle: string
-  longtitle: string
-  description: string
-  alias: string
-  content: string
-  metatags: {
-    name: string
-    content: string
-  }[]
-  subitems?: Record<string, DocNode>
-  [key: string]: any
-}
+import type { DocNode, DocTree } from "~/types"
 
 export const useDocsStore = defineStore("docs", () => {
   const rawState = ref<{
-    tree: { data: { docs: DocNode, campaigns: DocNode, catalog: DocNode } } | null
+    tree: DocTree | null
     loading: boolean
     error: string | null
   }>({
@@ -39,15 +24,15 @@ export const useDocsStore = defineStore("docs", () => {
     const timeoutId = setTimeout(() => controller.abort(), 10000)
 
     try {
-      const response = await $fetch<{ data: { docs: DocNode } }>("https://back.casaalmare.com/api/getdocTree", {
+      const response = await $fetch<DocTree>("https://back.casaalmare.com/api/getdocTree", {
         signal: controller.signal,
       })
       rawState.value.tree = response
-    } catch (err: any) {
-      if (err.name === "AbortError") {
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
         rawState.value.error = "Таймаут загрузки, попробуйте позже"
       } else {
-        rawState.value.error = `Ошибка: ${err.message}`
+        rawState.value.error = `Ошибка: ${err instanceof Error ? err.message : String(err)}`
       }
       console.error("Fetch error:", err)
     } finally {
@@ -55,7 +40,7 @@ export const useDocsStore = defineStore("docs", () => {
       rawState.value.loading = false
     }
   }
-  
+
   const findDocById = (nodes: Record<string, DocNode> | DocNode[], id: number | string): DocNode | null => {
     const nodesArray = Array.isArray(nodes) ? nodes : Object.values(nodes);
     for (const node of nodesArray) {

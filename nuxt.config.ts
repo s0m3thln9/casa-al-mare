@@ -1,37 +1,34 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2025-05-15",
   modules: ["@nuxt/eslint", "@nuxt/fonts", "@nuxt/image", "@nuxtjs/tailwindcss", "@pinia/nuxt", "nuxt-viewport", '@nuxtjs/sitemap'],
-  
+
   site: {
     url: 'https://casaalmare.com',
   },
-  
+
   runtimeConfig: {
     public: {
       siteUrl: 'https://casaalmare.com'
     }
   },
-  
+
   hooks: {
     'nitro:config': async (nitroConfig) => {
       try {
         console.log('Fetching routes from API for prerendering...');
-        
+
         const response = await fetch('https://back.casaalmare.com/api/getNuxtLinks');
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const links = await response.json();
         console.log('Links received from API:', links);
-        
-        // Инициализируем routes как массив, если он еще не существует
+
         nitroConfig.prerender = nitroConfig.prerender || {};
         nitroConfig.prerender.routes = nitroConfig.prerender.routes || [];
-        
-        // Если API возвращает массив, добавляем все пути
+
         if (Array.isArray(links)) {
           const allRoutes = links.includes('/') ? links : ['/', ...links];
           allRoutes.forEach(link => {
@@ -41,21 +38,16 @@ export default defineNuxtConfig({
             }
           });
         } else if (links && typeof links === 'object') {
-          // Если API возвращает объект, возможно нужно извлечь пути
-          // Например: { pages: ['/about', '/contact'] }
-          // Адаптируйте этот блок под структуру вашего API
           console.warn('API returned object, not array. Structure:', links);
-          
-          // Добавляем корневой путь
+
           if (!nitroConfig.prerender.routes.includes('/')) {
             nitroConfig.prerender.routes.push('/');
           }
         }
-        
+
         console.log('Final prerender routes:', nitroConfig.prerender.routes);
       } catch (error) {
         console.error('Failed to fetch links for prerendering:', error);
-        // Гарантируем, что есть хотя бы корневой путь
         nitroConfig.prerender = nitroConfig.prerender || {};
         nitroConfig.prerender.routes = ['/'];
       }
@@ -73,31 +65,30 @@ export default defineNuxtConfig({
       inline: ['vue']
     },
     prerender: {
-      // sitemap на статическом хостинге должен быть сгенерен в dist
       routes: ['/sitemap.xml'],
     },
   },
-  
+
   sitemap: {
     urls: async () => {
       try {
         const response = await fetch('https://back.casaalmare.com/api/getNuxtLinks')
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
         }
-        
+
         const links = await response.json()
-        
+
         if (!Array.isArray(links)) {
           return [{ loc: '/' }]
         }
-        
+
         const allRoutes = links.includes('/') ? links : ['/', ...links]
-        
+
         return allRoutes.map(link => {
           const cleanLink = link.startsWith('/') ? link : `/${link}`
-          
+
           return {
             loc: cleanLink,
           }

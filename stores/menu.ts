@@ -1,7 +1,7 @@
 export const useMenuStore = defineStore('menu', () => {
 	const isOpen = ref(false)
 	const { lockBodyScroll, unlockBodyScroll } = useBodyScrollLock()
-	
+
 	const open = () => {
 		lockBodyScroll()
 		isOpen.value = true
@@ -10,6 +10,6 @@ export const useMenuStore = defineStore('menu', () => {
 		unlockBodyScroll()
 		isOpen.value = false
 	}
-	
+
 	return { isOpen, open, close  }
 })

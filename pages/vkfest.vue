@@ -65,12 +65,6 @@ const phoneOptions = [
   { code: "+995", country: "Грузия", iso: "GE" },
 ]
 
-// 'checking' — проверяем авторизацию/статус бонуса (для авторизованных)
-// 'form' — форма регистрации (обычный неавторизованный пользователь)
-// 'sms' — подтверждение номера телефона кодом из СМС
-// 'success' — бонусы начислены (экран «Готово»)
-// 'exists' — аккаунт уже существует, нужно авторизоваться
-// 'already' — бонус уже был получен (показываем только висячий блок)
 const view = ref<"checking" | "form" | "sms" | "success" | "exists" | "already">("checking")
 const bonusMessage = ref("")
 
@@ -93,7 +87,6 @@ const submitError = ref("")
 const buttonContent = ref("Создать карту и получить бонусы")
 const buttonDisabled = ref(false)
 
-// Шаг подтверждения телефона по СМС (как в регистрации).
 const sms = ref("")
 const smsRef = ref<{ validate: () => boolean; showError: boolean } | null>(null)
 const smsError = ref("")
@@ -103,7 +96,6 @@ const resendLoading = ref(false)
 const remainingSeconds = ref(0)
 let countdownTimer: ReturnType<typeof setInterval> | null = null
 
-// Маска для даты рождения ДД.ММ.ГГГГ
 const handleBirthInput = (event: Event) => {
   const digits = (event.target as HTMLInputElement).value.replace(/\D/g, "").slice(0, 8)
   let formatted = digits
@@ -118,18 +110,14 @@ const handleBirthInput = (event: Event) => {
 
 const isBirthValid = computed(() => /^\d{2}\.\d{2}\.\d{4}$/.test(birthdate.value))
 
-// Коды ответа registerByLink. Если бэкенд использует другие — поправить здесь.
 const ALREADY_CODES = ["BONUS_ALREADY_RECEIVED", "ALREADY_RECEIVED", "BONUS_EXISTS", "USER_HAS_BONUS"]
 const EXISTS_CODES = ["USER_ALREADY_EXISTS", "USER_EXISTS", "PHONE_EXISTS", "PHONE_ALREADY_EXISTS"]
 
 const responseCode = (res: RegisterByLinkResponse) =>
   String(res?.errorCode ?? res?.code ?? res?.status ?? "").toUpperCase()
 
-// Бонус считается полученным ТОЛЬКО когда бэкенд явно вернул success: true.
-// success: false — это не ошибка, а «бонус ещё не начислен».
 const isBonusReceived = (res: RegisterByLinkResponse) => res?.success === true
 
-// Бонус мог быть получен ранее — тогда у пользователя проставлен profile.vkbonus.
 const hasVkBonus = (): boolean => {
   const v = userStore.user?.profile?.vkbonus
   return Boolean(v) && v !== "0"
@@ -140,7 +128,6 @@ const callRegisterByLink = (body: Record<string, unknown>) =>
 
 const phoneBody = () => ({ code: phone.value!.code, phone: phone.value!.phone })
 
-// Отправка СМС-кода на телефон (универсальный эндпоинт, как при входе).
 const sendSmsCode = async (): Promise<{ ok: boolean; error?: string }> => {
   try {
     const res = await $fetch<SmsResponse>("https://back.casaalmare.com/api/createSmsCode", {
@@ -155,7 +142,6 @@ const sendSmsCode = async (): Promise<{ ok: boolean; error?: string }> => {
   }
 }
 
-// Обратный отсчёт до повторной отправки СМС.
 const startCountdown = () => {
   remainingSeconds.value = 45
   if (countdownTimer) clearInterval(countdownTimer)
@@ -168,7 +154,6 @@ const startCountdown = () => {
   }, 1000)
 }
 
-// Вход по телефону с уже введённым СМС-кодом (для сценария «аккаунт существует»).
 const loginByPhone = async (code: string): Promise<boolean> => {
   const token = await userStore.loadToken()
   const res = await $fetch<LoginResponse>("https://back.casaalmare.com/api/login", {
@@ -182,8 +167,6 @@ const loginByPhone = async (code: string): Promise<boolean> => {
   return false
 }
 
-// Разбираем ответ registerByLink. Возвращаем целевой экран или null,
-// если бонус ещё не начислен (success: false) и код не распознан.
 const resolveResponse = (res: RegisterByLinkResponse): "success" | "already" | "exists" | null => {
   if (res?.message) bonusMessage.value = res.message
   const code = responseCode(res)
@@ -193,13 +176,11 @@ const resolveResponse = (res: RegisterByLinkResponse): "success" | "already" | "
   return null
 }
 
-// Запрос бонуса по токену — для авторизованного пользователя и после входа из сценария «аккаунт есть».
 const requestBonusByToken = async (): Promise<void> => {
   const token = await userStore.loadToken()
   view.value = resolveResponse(await callRegisterByLink({ token })) ?? "form"
 }
 
-// Экран для авторизованного пользователя: уже получал бонус → 'already', иначе запрашиваем по токену.
 const resolveAuthorizedView = async (): Promise<void> => {
   if (hasVkBonus()) {
     view.value = "already"
@@ -229,7 +210,6 @@ const triggerAgreeError = () => {
   setTimeout(() => (agreeError.value = false), 3000)
 }
 
-// Шаг 1 — валидируем форму и отправляем СМС-код на телефон.
 const handleSubmit = async () => {
   submitError.value = ""
 
@@ -276,7 +256,6 @@ const showSmsError = (message: string) => {
   smsErrorTimer = setTimeout(() => (smsError.value = ""), 3000)
 }
 
-// Шаг 2 — подтверждаем код и завершаем начисление бонуса.
 const handleConfirmSms = async () => {
   if (!smsRef.value?.validate()) return
 
@@ -295,18 +274,12 @@ const handleConfirmSms = async () => {
       token,
     })
 
-    // Аккаунт уже существует — логиним по телефону с тем же кодом и продолжаем «на месте»
-    // (без перезагрузки страницы, чтобы не мигал фон и экран загрузки).
     if (res?.registered) {
       if (res.message) bonusMessage.value = res.message
       const loggedIn = await loginByPhone(sms.value)
       if (loggedIn) {
         view.value = "checking"
-        try {
-          await userStore.fetchUser()
-        } catch {
-          // игнорируем — resolveAuthorizedView сам покажет запасной экран
-        }
+        await userStore.fetchUser().catch(() => {})
         await resolveAuthorizedView()
         return
       }
@@ -317,15 +290,9 @@ const handleConfirmSms = async () => {
 
     const resolved = resolveResponse(res)
     if (resolved === "success") {
-      // Новый аккаунт создан — если бэкенд вернул токен, авторизуем пользователя,
-      // чтобы после «Перейти к покупкам» сохранялись корзина/избранное/профиль.
       if (res.token) {
         await userStore.saveToken(res.token)
-        try {
-          await userStore.fetchUser()
-        } catch {
-          // не критично для экрана «Готово»
-        }
+        await userStore.fetchUser().catch(() => {})
       }
       view.value = "success"
       return
@@ -344,7 +311,6 @@ const handleConfirmSms = async () => {
   }
 }
 
-// Повторная отправка СМС-кода.
 const handleResendSms = async () => {
   if (resendLoading.value || remainingSeconds.value > 0) return
   resendLoading.value = true
@@ -364,33 +330,24 @@ useSmsAutoSubmit(
 onMounted(async () => {
   await userStore.loadToken()
 
-  // Нет токена — точно неавторизованный пользователь, показываем форму.
   if (!userStore.token) {
     view.value = "form"
     return
   }
 
   if (!userStore.user) {
-    try {
-      await userStore.fetchUser()
-    } catch {
-      // игнорируем — покажем форму
-    }
+    await userStore.fetchUser().catch(() => {})
   }
 
-  // Проверяем пользователя напрямую по uid: authStore.isAuth обновляется через
-  // watchEffect асинхронно и сразу после fetchUser() ещё содержит старое значение.
   const isAuthed = Number(userStore.user?.uid ?? 0) > 0
 
   if (isAuthed) {
-    // Авторизован — форму пропускаем: либо 'already' (бонус был), либо запрос по токену.
     await resolveAuthorizedView()
   } else {
     view.value = "form"
   }
 })
 
-// После входа из сценария «аккаунт уже существует» — продолжаем: запрашиваем бонус по токену.
 watch(
   () => authStore.isAuth,
   async (isAuth) => {
@@ -416,7 +373,6 @@ const openAuth = () => authModalStore.open()
   <div class="relative min-h-[100dvh] w-full overflow-hidden font-[Manrope] text-[#211D1D]">
     <AuthModal v-if="authModalStore.isOpen" />
 
-    <!-- Фоновое видео с главной -->
     <video
       v-if="currentVideo"
       autoplay
@@ -442,14 +398,12 @@ const openAuth = () => authModalStore.open()
     <div class="relative flex min-h-[100dvh] flex-col items-center px-4 py-8 sm:py-12">
       <div class="flex w-full flex-1 items-center justify-center">
         <div class="w-full max-w-[470px]">
-        <!-- Проверка статуса (для авторизованного пользователя) -->
         <template v-if="view === 'checking'">
           <div class="rounded-[20px] border border-[#E3E0DD] bg-[#FFFFFA] p-8 text-center">
             <p class="text-sm font-light text-[#5E5B58]">Загрузка...</p>
           </div>
         </template>
 
-        <!-- Форма -->
         <template v-else-if="view === 'form'">
           <div class="rounded-[20px] border border-[#E3E0DD] bg-[#FFFFFA] p-6 sm:p-8">
             <span class="text-[11px] uppercase tracking-[0.08em] text-[#8C8785]">Программа лояльности</span>
@@ -586,7 +540,6 @@ const openAuth = () => authModalStore.open()
             </div>
           </div>
 
-          <!-- Информационный блок снизу с отступом -->
           <div class="mt-4 rounded-[16px] border border-[#E3E0DD] bg-[#FFFFFA] px-5 py-4">
             <p class="text-sm font-light text-[#5E5B58]">
               1500 приветственных бонусов будут начислены на карту лояльности после регистрации.
@@ -594,7 +547,6 @@ const openAuth = () => authModalStore.open()
           </div>
         </template>
 
-        <!-- Подтверждение телефона по СМС -->
         <template v-else-if="view === 'sms'">
           <div class="rounded-[20px] border border-[#E3E0DD] bg-[#FFFFFA] p-6 sm:p-8">
             <span class="text-[11px] uppercase tracking-[0.08em] text-[#8C8785]">Подтверждение номера</span>
@@ -655,7 +607,6 @@ const openAuth = () => authModalStore.open()
           </div>
         </template>
 
-        <!-- Готово: бонусы начислены -->
         <template v-else-if="view === 'success'">
           <div class="rounded-[20px] border border-[#E3E0DD] bg-[#FFFFFA] p-8 text-center">
             <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#F1EAB6]">
@@ -687,7 +638,6 @@ const openAuth = () => authModalStore.open()
           </div>
         </template>
 
-        <!-- Телефон уже есть — нужно авторизоваться -->
         <template v-else-if="view === 'exists'">
           <div class="rounded-[20px] border border-[#E3E0DD] bg-[#FFFFFA] p-8 text-center">
             <h1 class="text-[24px] font-normal">Почти готово</h1>
@@ -704,7 +654,6 @@ const openAuth = () => authModalStore.open()
           </div>
         </template>
 
-        <!-- Бонус уже получен — только висячий блок с текстом из message -->
         <template v-else>
           <div class="rounded-[16px] border border-[#E3E0DD] bg-[#FFFFFA] px-5 py-4 text-center">
             <p class="text-sm font-light text-[#5E5B58]">
@@ -715,7 +664,6 @@ const openAuth = () => authModalStore.open()
         </div>
       </div>
 
-      <!-- Ссылки снизу -->
       <div class="mt-auto flex flex-col items-center gap-2 pt-14 text-center">
         <NuxtLink
           to="/info/confidence/"
