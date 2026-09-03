@@ -119,7 +119,7 @@ defineExpose({ validate, showError })
         }
       "
       @input="handleInput"
-    />
+    >
     <button
       v-if="type === 'password'"
       class="cursor-pointer absolute top-1/2 -translate-y-1/2 right-[10.5px] w-fit"

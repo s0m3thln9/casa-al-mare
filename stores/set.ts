@@ -1,7 +1,7 @@
 export const useSetStore = defineStore("set", () => {
   const items = ref<Record<string, string>>({})
   const itemsIds = ref<Record<string, number | null>>({})
-  const requiredTypes = ref<string[]>([]) // Добавляем список обязательных типов
+  const requiredTypes = ref<string[]>([])
 
   const setItem = (type: string, size: string, id: number) => {
     items.value[type] = size
@@ -9,8 +9,8 @@ export const useSetStore = defineStore("set", () => {
   }
 
   const clearItem = (type: string) => {
-    delete items.value[type]
-    delete itemsIds.value[type]
+    Reflect.deleteProperty(items.value, type)
+    Reflect.deleteProperty(itemsIds.value, type)
   }
 
   const setRequiredTypes = (types: string[]) => {
@@ -24,7 +24,6 @@ export const useSetStore = defineStore("set", () => {
   }
 
   const canAddToCart = computed(() => {
-    // Проверяем, что все обязательные типы выбраны
     if (requiredTypes.value.length === 0) return false
 
     return requiredTypes.value.every((type) => {

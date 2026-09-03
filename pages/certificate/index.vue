@@ -65,13 +65,13 @@ const phoneOptions: PhoneOption[] = [
 const getCart = async () => {
   const token = await userStore.loadToken()
   if (!token) return
-  
+
   try {
     const data = await $fetch("https://back.casaalmare.com/api/getCart", {
       method: "POST",
       body: { token },
     })
-    
+
     if (data?.success && data.cart) {
       const parsedCart = orderStore.parseCart(data.cart)
       orderStore.setCartItems(parsedCart)
@@ -82,15 +82,12 @@ const getCart = async () => {
 }
 
 const handleSubmit = async () => {
-  const isPhysical = certificateStore.certificateType === "Физический"
-  
   if (certificateStore.step === totalSteps.value) {
     const result = await certificateStore.submitCertificate()
-    
+
     if (result.success) {
       certificateStore.resetForm()
       await getCart()
-      // Переход на страницу корзины
       router.push('/order')
     } else {
       console.error(`Ошибка: ${result.error}`)
@@ -162,7 +159,7 @@ onMounted(async () => {
   } finally {
     isLoadingImages.value = false
   }
-  
+
   try {
     isLoadingNominals.value = true
     const nominalsResponse = await $fetch<Nominal[]>("https://back.casaalmare.com/api/getCertNominals")
@@ -192,20 +189,20 @@ const handleTouchStart = (e: TouchEvent) => {
 const handleTouchMove = (e: TouchEvent) => {
   const len = certificateImages.value.length
   if (len <= 1 || isTransitioning.value || !touchStartX.value || !touchStartY.value) return
-  
+
   const currentX = e.touches[0].clientX
   const currentY = e.touches[0].clientY
   const deltaX = Math.abs(currentX - touchStartX.value)
   const deltaY = Math.abs(currentY - touchStartY.value)
-  
+
   const directionThreshold = 10
-  
+
   if (deltaX > directionThreshold || deltaY > directionThreshold) {
     if (isHorizontalSwipe.value) {
       e.preventDefault()
       return
     }
-    
+
     if (deltaX > deltaY * 1.5 && deltaX > directionThreshold) {
       isHorizontalSwipe.value = true
       e.preventDefault()
@@ -218,13 +215,13 @@ const handleTouchMove = (e: TouchEvent) => {
 const handleTouchEnd = (e: TouchEvent) => {
   const len = certificateImages.value.length
   if (len <= 1 || isTransitioning.value) return
-  
+
   if (!isHorizontalSwipe.value) {
     touchStartX.value = 0
     touchStartY.value = 0
     return
   }
-  
+
   const deltaX = e.changedTouches[0].clientX - touchStartX.value
   const threshold = 50
   if (Math.abs(deltaX) > threshold) {
@@ -235,7 +232,7 @@ const handleTouchEnd = (e: TouchEvent) => {
       isTransitioning.value = false
     }, 400)
   }
-  
+
   touchStartX.value = 0
   touchStartY.value = 0
   isHorizontalSwipe.value = false
@@ -243,7 +240,7 @@ const handleTouchEnd = (e: TouchEvent) => {
 
 const getStepDescription = computed(() => {
   const isPhysical = certificateStore.certificateType === "Физический"
-  
+
   if (isPhysical) {
     switch (certificateStore.step) {
       case 1:
@@ -254,7 +251,7 @@ const getStepDescription = computed(() => {
         return ""
     }
   }
-  
+
   switch (certificateStore.step) {
     case 1:
       return "Выберите номинал:"
@@ -442,8 +439,7 @@ const getStepDescription = computed(() => {
                 </NuxtImg>
               </div>
             </div>
-            
-            <!-- Шаг выбора способа доставки только для электронного сертификата -->
+
             <div class="flex w-full justify-center items-center gap-3 sm:gap-4">
               <SingleSelectButton
                 v-if="certificateStore.step === 3 && certificateStore.certificateType !== 'Физический'"
@@ -451,8 +447,7 @@ const getStepDescription = computed(() => {
                 :content="ways"
               />
             </div>
-            
-            <!-- Шаг "Кому отправить?" - для физического это шаг 2, для электронного - шаг 4 -->
+
             <div
               v-if="
   (certificateStore.certificateType === 'Физический' && certificateStore.step === 2) ||

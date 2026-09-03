@@ -65,28 +65,27 @@ const handleClick = async (e: MouseEvent | TouchEvent) => {
     e.preventDefault()
     return
   }
-  
+
   isPressed.value = true
   const buttonEl = buttonRef.value
   if (buttonEl) {
     buttonEl.style.pointerEvents = "none"
   }
-  
+
   const wasFavorite = isFavoriteLocal.value
-  
+
   isFavoriteLocal.value = !isFavoriteLocal.value
   isLoading.value = true
-  
+
   try {
     await favoritesStore.toggleFavorite(props.itemId)
-    
-    // ✅ GA add_to_wishlist
+
     if (!wasFavorite && import.meta.client) {
       const item = await getItem()
-      
+
       if (item) {
         window.dataLayer = window.dataLayer || []
-        
+
         dataLayer.push({
           event: "add_to_wishlist",
           ecommerce: {
@@ -110,7 +109,7 @@ const handleClick = async (e: MouseEvent | TouchEvent) => {
   } finally {
     isLoading.value = false
   }
-  
+
   setTimeout(() => {
     if (buttonEl) {
       buttonEl.style.pointerEvents = "auto"

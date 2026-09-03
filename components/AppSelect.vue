@@ -74,7 +74,7 @@ watch(
   },
 )
 
-watch(selected, (newValue) => {
+watch(selected, () => {
   if (!isDropdownOpen.value && props.searchable) {
     searchQuery.value = displayValue.value
     nextTick(() => {
@@ -92,7 +92,7 @@ const filteredOptions = computed(() => {
       : props.searchable && searchQuery.value
         ? props.options.filter((option) => option.toLowerCase().includes(searchQuery.value.toLowerCase()))
         : props.options
-  
+
   if (props.cityMode && typeof selected.value === "object" && selected.value) {
     const selectedCity = selected.value as CityData
     const isAlreadyInOptions = options.some((opt) => typeof opt === "object" && opt.kladr === selectedCity.kladr)
@@ -100,7 +100,7 @@ const filteredOptions = computed(() => {
       options = [selectedCity, ...options]
     }
   }
-  
+
   return options
 })
 
@@ -109,14 +109,14 @@ const searchCities = async () => {
     asyncOptions.value = []
     return
   }
-  
+
   isLoading.value = true
-  
+
   try {
     const response = await $fetch<{ success: boolean; data?: CityData[] }>(
       `${props.asyncSearchUrl}?query=${encodeURIComponent(searchQuery.value)}`,
     )
-    
+
     if (response.success && response.data) {
       asyncOptions.value = response.data
     } else {
@@ -194,22 +194,22 @@ const select = (item: CityData | string) => {
 const handleSearchInput = (event: Event) => {
   const target = event.target as HTMLInputElement
   searchQuery.value = target.value
-  
+
   if (props.searchable && !isDropdownOpen.value && searchQuery.value.trim().length > 0) {
     isDropdownOpen.value = true
     nextTick(() => inputRef.value?.focus())
   }
-  
+
   if (props.searchable && isDropdownOpen.value && searchQuery.value.trim() === "") {
     isDropdownOpen.value = false
     asyncOptions.value = []
   }
-  
+
   if (props.asyncSearch && searchQuery.value.length >= 2) {
     if (searchTimeout.value) {
       clearTimeout(searchTimeout.value)
     }
-    
+
     searchTimeout.value = setTimeout(() => {
       searchCities()
     }, 300)

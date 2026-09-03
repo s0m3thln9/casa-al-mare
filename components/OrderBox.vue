@@ -54,7 +54,6 @@ const priceFormatter = (value: number) => {
 }
 
 const navigateToItem = (itemAlias: string | undefined, itemId: number) => {
-  // Не навигируем для сертификатов
   if (itemId === -1) {
     navigateTo("/certificate/")
     return

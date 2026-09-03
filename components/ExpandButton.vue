@@ -30,7 +30,7 @@ const currentState = computed(() => {
 	let content: string
 	let style: string
 	let disabled: boolean
-	
+
 	if (isLoading.value) {
 		content = "Загрузка..."
 		style = styleBase.value + styleVariants.preload
@@ -44,7 +44,7 @@ const currentState = computed(() => {
 		style = styleBase.value + styleVariants.default
 		disabled = props.disabled || false
 	}
-	
+
 	return { content, style, disabled }
 })
 

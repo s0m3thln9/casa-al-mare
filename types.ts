@@ -1,16 +1,18 @@
+export interface UserCertificate {
+  code: string
+  created: number | null
+  email: string
+  id: number
+  options: null
+  phone: string
+  send: number
+  user_id: number
+  value: number
+  value_now: number
+}
+
 export interface TestUser {
-  certificates: {
-    code: string
-    created: number | null
-    email: string
-    id: number
-    options: null
-    phone: string
-    send: number
-    user_id: number
-    value: number
-    value_now: number
-  }[]
+  certificates: UserCertificate[]
   city: CityData
   cityQuestion: string
   favorites: number[]
@@ -72,6 +74,18 @@ export interface CityData {
   region: string
 }
 
+export interface CartItemOptions {
+  certificateType: string
+  nominal: string
+  design: 2
+  deliveryMethod: string | null
+  recipientEmail: string | null
+  recipientPhone: string | null
+  deliveryDetails: string | null
+  recipientName: string | null
+  message?: string | null
+}
+
 export interface CartItem {
   alias?: string
   article?: string
@@ -98,17 +112,7 @@ export interface CartItem {
   name: string
   oldPrice: number | string
   price: number | string
-  options?: {
-    certificateType: string
-    nominal: string
-    design: 2
-    deliveryMethod: string | null
-    recipientEmail: string | null
-    recipientPhone: string | null
-    deliveryDetails: string | null
-    recipientName: string | null
-    message?: string | null
-  }
+  options?: CartItemOptions
 }
 
 export interface PvzData {
@@ -204,4 +208,75 @@ export interface AddOrRemoveFavorites {
   success: boolean
   favorites: number[]
   message?: string
+}
+
+export interface DocMetaTag {
+  name: string
+  content: string
+}
+
+export interface DocNode {
+  id: number
+  type: string
+  pagetitle: string
+  alias: string
+  longtitle?: string
+  description?: string
+  meta_descr?: string
+  content?: string
+  template?: number
+  menuindex?: number
+  publishedon?: string
+  image?: string
+  metatags?: DocMetaTag[]
+  subitems?: Record<string, DocNode>
+}
+
+export interface DocTree {
+  data: {
+    docs: DocNode
+    campaigns: DocNode
+    catalog: DocNode
+    [key: string]: DocNode
+  }
+}
+
+export interface CloudPaymentsData {
+  publicId: string
+  description: string
+  amount: number
+  currency: string
+  accountId: string
+  email?: string
+  skin?: string
+  data?: Record<string, unknown>
+}
+
+export interface CloudPaymentsResult {
+  success?: boolean
+  code?: number
+}
+
+export interface CloudPaymentsCallbacks {
+  onSuccess?: () => void
+  onFail?: (reason: unknown) => void
+  onComplete?: (paymentResult: CloudPaymentsResult | null) => void | Promise<void>
+}
+
+export interface CloudPaymentsWidget {
+  pay: (type: "charge" | "auth", data: CloudPaymentsData, callbacks: CloudPaymentsCallbacks) => void
+}
+
+export interface CdekWidget {
+  open: () => void
+  close: () => void
+  destroy?: () => void
+  setLocation?: (location: string) => void
+}
+
+declare global {
+  interface Window {
+    cp?: { CloudPayments: new () => CloudPaymentsWidget }
+    CDEKWidget?: new (config: Record<string, unknown>) => CdekWidget
+  }
 }

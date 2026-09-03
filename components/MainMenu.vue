@@ -1,13 +1,5 @@
 <script setup lang="ts">
-interface DocNode {
-  id: number
-  type: string
-  pagetitle: string
-  alias: string
-  template: number
-  subitems?: Record<string, DocNode>
-  [key: string]: any
-}
+import type { DocNode } from "~/types"
 
 interface MenuItem {
   label: string
@@ -21,7 +13,6 @@ interface MenuItem {
 }
 
 const menuStore = useMenuStore()
-const popupStore = usePopupStore()
 const authStore = useAuthStore()
 const authModalStore = useAuthModalStore()
 const docsStore = useDocsStore()
@@ -32,7 +23,6 @@ const selectedSubmenuLabel = ref<string | null>(null)
 const viewport = useViewport()
 const isMobile = computed(() => viewport.isLessThan("sm"))
 
-// Рекурсивная функция для построения меню из дерева (только 1 уровень)
 const buildMenuFromTree = (node: DocNode, parentPath = ""): MenuItem[] => {
   const items: MenuItem[] = []
 
@@ -41,7 +31,6 @@ const buildMenuFromTree = (node: DocNode, parentPath = ""): MenuItem[] => {
   for (const key in node.subitems) {
     const item = node.subitems[key]
 
-    // Только элементы с template = 2 (категории)
     if (item.template === 2) {
       const currentPath = parentPath ? `${parentPath}/${item.alias}` : item.alias
 
@@ -51,19 +40,18 @@ const buildMenuFromTree = (node: DocNode, parentPath = ""): MenuItem[] => {
         path: currentPath,
       }
 
-      // Добавляем подменю только для элементов первого уровня (без parentPath)
       if (!parentPath && item.subitems) {
         const submenu: MenuItem[] = [
           {
             label: "Смотреть все",
             link: `/catalog/${item.alias}/`,
-            path: currentPath, // путь родительской категории
+            path: currentPath,
           },
         ]
-        
+
         for (const subKey in item.subitems) {
           const subItem = item.subitems[subKey]
-          
+
           if (subItem.template === 2) {
             submenu.push({
               label: subItem.pagetitle,
@@ -72,8 +60,8 @@ const buildMenuFromTree = (node: DocNode, parentPath = ""): MenuItem[] => {
             })
           }
         }
-        
-        if (submenu.length > 1) { // > 1, потому что "Смотреть все" уже есть
+
+        if (submenu.length > 1) {
           menuItem.submenu = submenu
         }
       }
@@ -85,13 +73,17 @@ const buildMenuFromTree = (node: DocNode, parentPath = ""): MenuItem[] => {
   return items
 }
 
-// Генерируем меню из дерева
 const menuItems = computed<MenuItem[]>(() => {
   const tree = docsStore.tree?.data
   if (!tree?.catalog) return []
 
   const items: MenuItem[] = [{ label: "Смотреть все", link: "/catalog/",
     customClass2: "mb-4" }]
+
+  items.push({
+    label: "Новинки",
+    link: "/catalog/?new=1",
+  })
 
   const dynamicItems = buildMenuFromTree(tree.catalog)
   items.push(...dynamicItems)
@@ -101,11 +93,6 @@ const menuItems = computed<MenuItem[]>(() => {
     link: "/certificate/",
     customClass2: "my-4",
   })
-  // items.push({
-  //   label: "Новинки",
-  //   link: "/catalog",
-  //   customClass2: "sm:hidden",
-  // })
   items.push({
     label: "Блог",
     link: "/blog/",
@@ -158,11 +145,6 @@ const secondMenuItems: MenuItem[] = [
       { label: "Уход за изделиями", link: "/care/" },
     ],
   },
-  // {
-  //   label: "Подписаться на расссылку",
-  //   customClass: "bg-[#F3A45429] rounded-lg",
-  //   func: () => popupStore.open("subscription"),
-  // },
   {
     label: "Контакты",
     link: "/contacts/",
@@ -233,6 +215,11 @@ const proceedWithNavigationAndClose = (item: MenuItem) => {
 
     if (item.label === "Сертификаты") {
       navigateTo({ path: item.link })
+      return
+    }
+
+    if (item.label === "Новинки") {
+      navigateTo(item.link)
       return
     }
 

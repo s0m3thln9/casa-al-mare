@@ -2,6 +2,40 @@
 useHead({
   title: "Оформление заказа - CASA AL MARE",
 })
+interface GuestPhone {
+  code: string
+  phone: string
+  country: string
+}
+
+interface TestContactsResponse {
+  success: boolean
+  res?: number
+  error?: string
+}
+
+interface SmsCodeResponse {
+  success: boolean
+  nextCode?: number
+  error?: string
+}
+
+interface LoginRequest {
+  phone: GuestPhone | null
+  code: string
+  loginType: number
+  token: string
+  email?: string
+  firstname?: string
+  lastname?: string
+}
+
+interface LoginResponse {
+  success: boolean
+  token?: string
+  error?: { code?: string } | string
+}
+
 interface CartResponseData {
   success: boolean
   cart_items_count?: number
@@ -23,7 +57,7 @@ interface CartResponseData {
       sizes: string[]
       type: string
       useType: string[]
-      colors: any[]
+      colors: unknown[]
       vector: Record<string, { quantity: number; comingSoon: number }>
     }
   >
@@ -89,7 +123,7 @@ const phoneOptions: PhoneOption[] = [
 ]
 const loadCloudPaymentsScript = (): Promise<void> => {
   return new Promise((resolve, reject) => {
-    if ((window as any).cp) {
+    if (window.cp) {
       resolve()
       return
     }
@@ -117,21 +151,21 @@ onMounted(async () => {
   } catch (error) {
     console.error("Error loading CloudPayments:", error)
   }
-  
+
   await loadCart()
-  
+
   await orderStore.loadPaymentMethods()
   await orderStore.loadUserData()
   await orderStore.loadOrderState()
-  
+
   await nextTick()
   await orderStore.refreshCityForUI()
   await nextTick()
-  
+
   if (catalogStore.items.length === 0) {
     await catalogStore.loadItems()
   }
-  
+
   if (import.meta.client && orderStore.cartItems.length > 0) {
     window.dataLayer = window.dataLayer || []
     dataLayer.push({
@@ -139,7 +173,7 @@ onMounted(async () => {
       ecommerce: {
         items: orderStore.cartItems.map((cartItem) => {
           const fullItem = catalogStore.getItemById(cartItem.id)
-          
+
           return {
             item_name: fullItem?.name || '',
             item_id: cartItem.id.toString(),
@@ -166,9 +200,9 @@ const loadCart = async (): Promise<void> => {
     isLoadingCart.value = false
     return
   }
-  
+
   isLoadingCart.value = true
-  
+
   try {
     const data = await $fetch<CartResponseData>("https://back.casaalmare.com/api/getCart", {
       method: "POST",
@@ -177,15 +211,15 @@ const loadCart = async (): Promise<void> => {
       },
       params: { t: Date.now() }
     })
-    
+
     if (data?.success && data?.cart) {
       const rawCart = data.cart
       const parsedCart = orderStore.parseCart(rawCart)
       orderStore.setCartItems(parsedCart)
       console.log("Cart updated successfully")
     }
-  } catch (error: any) {
-    console.error("Ошибка при получении корзины:", error.data || error.message)
+  } catch (error) {
+    console.error("Ошибка при получении корзины:", apiErrorMessage(error, "Неизвестная ошибка"))
   } finally {
     isLoadingCart.value = false
   }
@@ -221,7 +255,6 @@ onBeforeMount(async () => {
   await loadCart()
 })
 
-// Helpers to check delivery type flags via selectedDeliveryType
 const isCourierDelivery = computed(() =>
   !!orderStore.deliveryMethod && orderStore.selectedDeliveryType != null && !orderStore.selectedDeliveryType.isPvz
 )
@@ -263,7 +296,6 @@ async function handlePay(): Promise<void> {
         orderStore.errorDeliveryMethod = "Выберите способ доставки"
         return
       }
-      // Courier (non-pvz) methods require an address
       if (isCourierDelivery.value && !isNoAddressDelivery.value) {
         if (!orderStore.currentAddress) {
           orderStore.showErrorAddress = true
@@ -286,7 +318,6 @@ async function handlePay(): Promise<void> {
           }
         }
       }
-      // PVZ method requires a selected pvz
       if (isPvzDelivery.value) {
         if (!orderStore.selectedPvz) {
           orderStore.showErrorDeliveryMethod = true
@@ -334,7 +365,7 @@ async function handlePay(): Promise<void> {
         orderStore.isLoadingPayment = false
         return
       }
-      if (!(window as any).cp) {
+      if (!window.cp) {
         console.error("CloudPayments script not loaded")
         orderStore.isLoadingPayment = false
         return
@@ -353,11 +384,10 @@ async function handlePay(): Promise<void> {
       }
       orderStore.isWidgetOpen = true
       try {
-        const widget = new (window as any).cp.CloudPayments()
+        const widget = new window.cp.CloudPayments()
         const widgetData = {
           publicId: paymentData.data.publicId,
           description: paymentData.data.description,
-          // For onlyDel types: always charge only the delivery cost (finalPrice = deliveryCost)
           amount: orderStore.isOnlyDeliveryPayment ? orderStore.finalPrice : paymentData.data.amount,
           currency: paymentData.data.currency || "RUB",
           accountId: paymentData.data.accountId,
@@ -366,19 +396,19 @@ async function handlePay(): Promise<void> {
           data: paymentData.data.data || {},
         }
         widget.pay("charge", widgetData, {
-          onSuccess: (options: any) => {
+          onSuccess: () => {
             orderStore.isLoadingPayment = false
             orderStore.isWidgetOpen = false
             if (paymentData.link) {
               navigateTo(paymentData.link)
             }
           },
-          onFail: (reason: any, options: any) => {
-            console.error("❌ Оплата неуспешна:", reason, options)
+          onFail: (reason) => {
+            console.error("❌ Оплата неуспешна:", reason)
             orderStore.isLoadingPayment = false
             orderStore.isWidgetOpen = false
           },
-          onComplete: (paymentResult: any, options: any) => {
+          onComplete: (paymentResult) => {
             orderStore.isLoadingPayment = false
             orderStore.isWidgetOpen = false
             if (paymentResult && paymentResult.success) {
@@ -410,10 +440,23 @@ async function handleSave(): Promise<void> {
 const hasNonCertificateItems = computed(() => {
   return orderStore.cartItems.some(item => item.id !== -1)
 })
+function showGuestAuthAlert(message: string): void {
+  orderStore.guestAuthError = message
+  orderStore.showGuestAuthError = false
+  void nextTick(() => {
+    orderStore.showGuestAuthError = true
+  })
+}
+
 async function handleGuestAuth(): Promise<void> {
+  if (orderStore.isGuestAuthLoading) return
+
   const inputs = [nameRef.value, surnameRef.value, phoneRef.value, emailRef.value]
-  const isValid = inputs.every((input): input is NonNullable<typeof input> => input?.validate?.() ?? false)
-  if (!isValid) return
+  const isValid = inputs.map((input) => input?.validate?.() ?? false).every(Boolean)
+  if (!isValid || !isGuestAuthFilled.value) {
+    showGuestAuthAlert("Заполните все поля")
+    return
+  }
   orderStore.showErrorAuth = false
   orderStore.showGuestAuthError = false
   orderStore.guestAuthError = ""
@@ -426,13 +469,12 @@ async function handleGuestAuth(): Promise<void> {
     name: orderStore.name,
     surname: orderStore.surname,
   }
-  let testData: any = null
+  let testData!: TestContactsResponse
   try {
-    const response = await $fetch("https://back.casaalmare.com/api/testContacts", {
+    testData = await $fetch<TestContactsResponse>("https://back.casaalmare.com/api/testContacts", {
       method: "POST",
       body,
     })
-    testData = response
     if (!testData.success) {
       orderStore.guestAuthError = testData.error || "Ошибка проверки данных (пользователь не найден)"
       orderStore.showGuestAuthError = true
@@ -459,10 +501,10 @@ async function handleGuestAuth(): Promise<void> {
     orderStore.isGuestAuthLoading = false
     return
   }
-  let smsData: any = null
+  let smsData!: SmsCodeResponse
   try {
     const smsBody = { phone: orderStore.phone, register: loginType === 2 ? 1 : 0 }
-    smsData = await $fetch("https://back.casaalmare.com/api/createSmsCode", {
+    smsData = await $fetch<SmsCodeResponse>("https://back.casaalmare.com/api/createSmsCode", {
       method: "POST",
       body: smsBody,
     })
@@ -498,7 +540,6 @@ async function handleGuestAuth(): Promise<void> {
   orderStore.isGuestAuthLoading = false
 }
 
-// Helper: format delivery cost display
 function getDeliveryCostLabel(): string {
   if (!orderStore.deliveryMethod) return ""
   if (isExpressDelivery.value) return "по согласованию с менеджером"
@@ -513,7 +554,7 @@ async function handleGuestSmsConfirm(): Promise<void> {
   orderStore.isGuestAuthLoading = true
   orderStore.guestSmsButtonContent = "Проверка..."
   orderStore.guestSmsButtonDisabled = true
-  const body: any = {
+  const body: LoginRequest = {
     phone: orderStore.phone,
     code: orderStore.guestSmsCode,
     loginType: orderStore.guestLoginType,
@@ -524,13 +565,12 @@ async function handleGuestSmsConfirm(): Promise<void> {
     body.firstname = orderStore.name
     body.lastname = orderStore.surname
   }
-  let loginData: any = null
+  let loginData: LoginResponse | null = null
   try {
-    const response = await $fetch("https://back.casaalmare.com/api/login", {
+    loginData = await $fetch<LoginResponse>("https://back.casaalmare.com/api/login", {
       method: "POST",
       body,
     })
-    loginData = response
     if (loginData.success) {
       orderStore.guestSmsButtonContent = "Успешно"
       orderStore.guestSmsButtonDisabled = false
@@ -543,7 +583,8 @@ async function handleGuestSmsConfirm(): Promise<void> {
       window.location.reload()
       return
     } else {
-      const errorCode = loginData.error?.code || loginData.error || "Неверный код"
+      const errorObject = typeof loginData.error === "object" ? loginData.error : null
+      const errorCode = errorObject?.code || loginData.error || "Неверный код"
       orderStore.guestSmsError = `Ошибка: ${errorCode}`
       orderStore.showGuestSmsError = true
       orderStore.guestSmsButtonContent = "Попробовать снова"
@@ -567,9 +608,12 @@ async function handleGuestSmsConfirm(): Promise<void> {
     orderStore.isGuestAuthLoading = false
   }
 }
+const isGuestAuthFilled = computed(() =>
+  Boolean(orderStore.name && orderStore.surname && orderStore.phone && orderStore.email),
+)
 const isGuestAuthEnabled = computed(() => {
   if (orderStore.isGuestAuthStep) return false
-  return orderStore.name && orderStore.surname && orderStore.phone && orderStore.email && !orderStore.isGuestAuthLoading
+  return !orderStore.isGuestAuthLoading
 })
 const hasItemsInCart = computed(() => orderStore.cartItems.length > 0)
 const isGuestSmsSubmitting = computed(() => orderStore.isGuestAuthLoading || orderStore.guestSmsButtonDisabled)
@@ -902,6 +946,7 @@ useSmsAutoSubmit(
                   class="w-full"
                   @update:show="
                     (value) => {
+                      orderStore.showGuestAuthError = value
                       if (!value) orderStore.guestAuthError = ''
                     }
                   "
@@ -933,6 +978,7 @@ useSmsAutoSubmit(
                     class="w-full"
                     @update:show="
                       (value) => {
+                        orderStore.showGuestSmsError = value
                         if (!value) orderStore.guestSmsError = ''
                       }
                     "
@@ -1064,6 +1110,7 @@ useSmsAutoSubmit(
                   class="w-full"
                   @update:show="
                     (value) => {
+                      orderStore.showGuestAuthError = value
                       if (!value) orderStore.guestAuthError = ''
                     }
                   "
@@ -1095,6 +1142,7 @@ useSmsAutoSubmit(
                     class="w-full"
                     @update:show="
                       (value) => {
+                        orderStore.showGuestSmsError = value
                         if (!value) orderStore.guestSmsError = ''
                       }
                     "
@@ -1233,7 +1281,6 @@ useSmsAutoSubmit(
                     </div>
                   </div>
                   </AppTooltip>
-                  <!-- PVZ selector -->
                   <div v-if="isPvzDelivery">
                     <PvzSelector
                       v-model="orderStore.selectedPvz"
@@ -1410,7 +1457,6 @@ useSmsAutoSubmit(
             </div>
           </template>
         </div>
-        <!-- Mobile: price summary + pay button -->
         <div class="sm:hidden mt-4 flex flex-col gap-6 w-full max-w-[652px] h-fit">
           <template v-if="orderStore.isPaymentSuccessful === null">
             <div class="flex flex-col gap-1 text-sm font-light">
@@ -1482,7 +1528,6 @@ useSmsAutoSubmit(
             </div>
           </template>
         </div>
-        <!-- Desktop: right panel -->
         <div class="max-sm:hidden p-8 w-full max-w-[564px] h-fit rounded-lg border-[0.7px] border-[#BBB8B6]">
           <template v-if="orderStore.isPaymentSuccessful === null">
             <div
@@ -1700,7 +1745,6 @@ useSmsAutoSubmit(
                     </template>
                   </div>
                 </div>
-                <!-- Desktop price summary -->
                 <div class="flex flex-col gap-1 text-sm font-light">
                   <template v-if="orderStore.needsDelivery && orderStore.deliveryMethod">
                     <div class="flex items-center justify-between">

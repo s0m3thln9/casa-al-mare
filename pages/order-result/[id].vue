@@ -43,7 +43,7 @@ const localCartDetailed = computed(() => {
   return localCartItems.value
     .map((cartItem) => {
       const isCertificate = cartItem.id === -1
-      
+
       if (isCertificate) {
         const imagesArray = Object.values(cartItem.images).filter((img) => img)
         return {
@@ -64,7 +64,7 @@ const localCartDetailed = computed(() => {
           isCertificate: true,
         }
       }
-      
+
       if (!cartItem.variant) return null
       const size = cartItem.variant
       const colorName = cartItem.colorName || "Цвет не указан"
@@ -87,7 +87,6 @@ const localCartDetailed = computed(() => {
     .filter(Boolean)
 })
 
-// Resolved delivery type from the store's dynamic list
 const localSelectedDeliveryType = computed(() => {
   if (!localDeliveryMethod.value) return null
   return orderStore.deliveryTypes.find(t => t.id === localDeliveryMethod.value) ?? null
@@ -159,7 +158,7 @@ const localTotalOldSum = computed(() => {
 
 function updateLocalDeliveryDetails() {
   const type = localSelectedDeliveryType.value
-  
+
   if (type) {
     if (type.term && type.term.min !== undefined && type.term.max !== undefined) {
       localDeliveryTime.value = `${type.term.min}-${type.term.max}`
@@ -167,13 +166,11 @@ function updateLocalDeliveryDetails() {
       localDeliveryTime.value = null
     }
     localDeliveryCost.value = type.cost || 0
-    
-    // PVZ: use selected pvz price if available
+
     if (type.isPvz && localSelectedPvz.value && typeof localSelectedPvz.value.price === "number") {
       localDeliveryCost.value = localSelectedPvz.value.price
     }
-    
-    // Free delivery for goods orders >= 20000
+
     if (localGoodsSum.value > 0 && localGoodsSum.value >= 20000) {
       localDeliveryCost.value = 0
     }
@@ -181,21 +178,20 @@ function updateLocalDeliveryDetails() {
     localDeliveryTime.value = null
     localDeliveryCost.value = 0
   }
-  
-  // For onlyDel types: final price = delivery cost only
+
   if (localIsOnlyDeliveryPayment.value) {
     localFinalPrice.value = Math.max(localDeliveryCost.value, 0.01)
     return
   }
-  
+
   let certDiscount = 0
   if (authStore.isAuth && userStore.user?.certificates) {
     certDiscount = localSelectedCertificates.value.reduce((sum, code) => {
-      const cert = userStore.user.certificates.find((c: any) => c.code === code)
+      const cert = userStore.user.certificates.find((c) => c.code === code)
       return cert ? sum + (cert.value_now || 0) : sum
     }, 0)
   }
-  
+
   let price = localGoodsSum.value
   if (localPointsToUse.value > 0) {
     price -= Math.min(localPointsToUse.value, price)
@@ -213,7 +209,6 @@ watch(
   { deep: true, immediate: true },
 )
 
-// Re-calculate when delivery types load (async from store)
 watch(
   () => orderStore.deliveryTypes,
   () => updateLocalDeliveryDetails(),
@@ -233,21 +228,19 @@ onMounted(async () => {
     await navigateTo("/order/")
     return
   }
-  
+
   await orderStore.loadPaymentMethods()
   await orderStore.loadUserData()
-  // loadOrderState internally calls loadCdekData when city is set,
-  // which populates orderStore.deliveryTypes with dynamic types
   await orderStore.loadOrderState()
   await userStore.fetchUser()
-  
+
   const token = await userStore.loadToken()
   if (!token) {
     localIsPaymentSuccessful.value = false
     orderStore.resetOrder()
     return
   }
-  
+
   try {
     const data = await $fetch<CheckOrderStatusResponse>(
       "https://back.casaalmare.com/api/checkOrderStatus",
@@ -256,23 +249,23 @@ onMounted(async () => {
         body: { token, orderId },
       }
     )
-    
+
     if (data) {
       localIsPaymentSuccessful.value = (data.status ?? 0) > 0
-      
+
       if (data.status === 1 || data.status === 2) {
         orderStore.resetOrder()
       }
-      
+
       let cartData = data.cart
       if (!cartData && data.order?.cart) {
         cartData = data.order.cart
       }
-      
+
       if (cartData) {
         localCartItems.value = orderStore.parseCart(cartData)
       }
-      
+
       if (data.order) {
         loadedOrder.value = data.order
         localDeliveryMethod.value = data.order.deliveryMethod || null
@@ -285,7 +278,7 @@ onMounted(async () => {
         localDeliveryTime.value = data.order.deliveryTime || null
         localPointsToUse.value = data.order.points || 0
         localSelectedCertificates.value = data.order.certificates || []
-        
+
         updateLocalDeliveryDetails()
       } else {
         localIsPaymentSuccessful.value = false
@@ -330,11 +323,11 @@ function restoreToStoreForPayment() {
 
 async function handleRetryPay(): Promise<void> {
   if (localIsLoadingPayment.value) return
-  
+
   if (localCartItems.value.length === 0) return
-  
+
   if (localIsPaymentSuccessful.value !== false) return
-  
+
   if (!authStore.isAuth) {
     if (orderStore.isGuestAuthStep) {
       if (!orderStore.guestSmsCode) {
@@ -347,18 +340,17 @@ async function handleRetryPay(): Promise<void> {
       return
     }
   }
-  
+
   if (!localCity.value) {
     orderStore.showErrorDeliveryMethod = true
     return
   }
-  
+
   if (!localDeliveryMethod.value) {
     orderStore.showErrorDeliveryMethod = true
     return
   }
-  
-  // Use type flags instead of hardcoded IDs
+
   if (localIsCourierDelivery.value) {
     if (!localCurrentAddress.value) {
       orderStore.showErrorDeliveryMethod = true
@@ -370,7 +362,7 @@ async function handleRetryPay(): Promise<void> {
       return
     }
   }
-  
+
   if (localIsPvzDelivery.value) {
     if (!localSelectedPvz.value) {
       orderStore.showErrorDeliveryMethod = true
@@ -378,18 +370,18 @@ async function handleRetryPay(): Promise<void> {
       return
     }
   }
-  
+
   if (localPaymentMethod.value === null) {
     localShowErrorPaymentMethod.value = true
     return
   }
-  
+
   localIsLoadingPayment.value = true
   orderStore.isLoadingPayment = true
-  
+
   try {
     restoreToStoreForPayment()
-    
+
     const paymentData = await orderStore.getPaymentData()
     if (!paymentData || !paymentData.success) {
       console.error("Ошибка получения данных для оплаты")
@@ -398,7 +390,7 @@ async function handleRetryPay(): Promise<void> {
       orderStore.resetOrder()
       return
     }
-    
+
     if (import.meta.client && orderStore.orderId) {
       window.dataLayer = window.dataLayer || []
       dataLayer.push({
@@ -419,7 +411,7 @@ async function handleRetryPay(): Promise<void> {
         }
       })
     }
-    
+
     if (paymentData.type === "widget") {
       if (orderStore.isWidgetOpen) {
         console.warn("Виджет уже открыт, игнорируем повторный вызов")
@@ -428,10 +420,10 @@ async function handleRetryPay(): Promise<void> {
         orderStore.resetOrder()
         return
       }
-      
+
       orderStore.isWidgetOpen = true
-      
-      if (!(window as any).cp) {
+
+      if (!window.cp) {
         const script = document.createElement("script")
         script.src = "https://widget.cloudpayments.ru/bundles/cloudpayments.js"
         script.async = true
@@ -440,29 +432,28 @@ async function handleRetryPay(): Promise<void> {
           script.onload = resolve
         })
       }
-      
-      const widget = new (window as any).cp.CloudPayments()
-      // For onlyDel: override amount to charge only delivery cost
+
+      const widget = new window.cp.CloudPayments()
       const payData = localIsOnlyDeliveryPayment.value
         ? { ...paymentData.data, amount: localFinalPrice.value }
         : paymentData.data
       widget.pay("charge", payData, {
-        onSuccess: (options: any) => {
+        onSuccess: () => {
           localIsPaymentSuccessful.value = true
           orderStore.resetOrder()
         },
-        onFail: (reason: any, options: any) => {
+        onFail: () => {
           localIsLoadingPayment.value = false
           orderStore.isLoadingPayment = false
           orderStore.isWidgetOpen = false
           orderStore.resetOrder()
         },
-        onComplete: async (paymentResult: any, options: any) => {
+        onComplete: async (paymentResult) => {
           localIsLoadingPayment.value = false
           orderStore.isLoadingPayment = false
           orderStore.isWidgetOpen = false
-          
-          if (paymentResult.success && paymentResult.code === 0) {
+
+          if (paymentResult?.success && paymentResult.code === 0) {
             await navigateTo(paymentData.link)
           } else {
             localIsPaymentSuccessful.value = false
@@ -699,8 +690,7 @@ async function handleRetryPay(): Promise<void> {
           >
             <p class="font-light text-sm text-[#414141]">Корзина пуста. Перейдите к оформлению нового заказа.</p>
           </div>
-          
-          <!-- Price summary -->
+
           <div class="flex flex-col gap-1 text-sm font-light mt-8 sm:pt-4 sm:border-t sm:border-[#F9F6EC]">
             <div class="flex items-center justify-between">
               <span>Стоимость товаров:</span>

@@ -26,11 +26,11 @@ const onTouchMove = (e: TouchEvent) => {
 
 const onTouchEnd = () => {
   const diff = currentX - startX
-  
+
   if (diff > SWIPE_CLOSE_THRESHOLD) {
     popupStore.close()
   }
-  
+
   startX = 0
   currentX = 0
 }
@@ -38,7 +38,7 @@ const onTouchEnd = () => {
 const lockScroll = () => {
   const scrollBarWidth =
     window.innerWidth - document.documentElement.clientWidth
-  
+
   document.body.style.overflow = "hidden"
   document.body.style.paddingRight = `${scrollBarWidth}px`
 }
@@ -73,7 +73,7 @@ const updateVh = () => {
 
 onMounted(() => {
   window.addEventListener("keydown", handleKeydown)
-  
+
   updateVh()
   window.addEventListener("resize", updateVh)
 });
@@ -117,7 +117,7 @@ onUnmounted(() => {
           {{ title }}
         </span>
       </div>
-  
+
       <slot />
     </div>
   </div>

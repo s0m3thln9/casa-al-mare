@@ -16,7 +16,6 @@ const emit = defineEmits<{
 
 const select = (alias: string) => {
   if (props.multiple) {
-    // Режим множественного выбора
     const currentValues = Array.isArray(props.modelValue) ? [...props.modelValue] : []
     const index = currentValues.indexOf(alias)
     if (index > -1) {
@@ -26,7 +25,6 @@ const select = (alias: string) => {
     }
     emit("update:modelValue", currentValues)
   } else {
-    // Режим одиночного выбора
     if (props.modelValue === alias) {
       emit("update:modelValue", null)
     } else {

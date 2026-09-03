@@ -39,7 +39,7 @@ const currentLevel = computed(() => (authStore.isAuth ? userStore.user?.loyaltyL
 const faqItems = computed(() => {
   const rawItems = docsStore.tree?.data?.docs?.subitems?.["loyality-faq"]?.subitems
   if (!rawItems) return []
-  return Object.values(rawItems).sort((a: any, b: any) => (a?.menuindex ?? 0) - (b?.menuindex ?? 0))
+  return Object.values(rawItems).sort((a, b) => (a?.menuindex ?? 0) - (b?.menuindex ?? 0))
 })
 
 const openAuthModal = () => {

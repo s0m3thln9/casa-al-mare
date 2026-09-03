@@ -35,9 +35,9 @@ export const useAuthStore = defineStore("auth", () => {
   const resetButtonDisabled = ref<boolean>(true)
   const resetError = ref<string>("")
   const resendLoading = ref<boolean>(false)
-  
+
   const userStore = useUserStore()
-  
+
   const resetForm = () => {
     email.value = ''
     password.value = ''
@@ -53,7 +53,7 @@ export const useAuthStore = defineStore("auth", () => {
     smsError2.value = ''
     regError.value = ''
     resetError.value = ''
-    
+
     smsStep.value = false
     regStep.value = false
     smsButtonContent.value = 'Подтвердить'
@@ -71,7 +71,7 @@ export const useAuthStore = defineStore("auth", () => {
     type.value = 'Авторизация'
     resendLoading.value = false
   }
-  
+
   watch(
     phone,
     () => {
@@ -79,7 +79,7 @@ export const useAuthStore = defineStore("auth", () => {
     },
     { immediate: true },
   )
-  
+
   watch(
     [email, password],
     () => {
@@ -87,7 +87,7 @@ export const useAuthStore = defineStore("auth", () => {
     },
     { immediate: true },
   )
-  
+
   watch(
     sms,
     () => {
@@ -95,7 +95,7 @@ export const useAuthStore = defineStore("auth", () => {
     },
     { immediate: true },
   )
-  
+
   watch(
     [emailReg, phoneReg, name, surname],
     () => {
@@ -103,7 +103,7 @@ export const useAuthStore = defineStore("auth", () => {
     },
     { immediate: true },
   )
-  
+
   watch(
     resetEmail,
     () => {
@@ -111,11 +111,11 @@ export const useAuthStore = defineStore("auth", () => {
     },
     { immediate: true },
   )
-  
+
   watchEffect(() => {
     isAuth.value = (userStore.user?.uid as number) > 0
   })
-  
+
   return {
     email,
     emailButtonContent,

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Item } from "~/stores/catalog"
+import type { DocNode, DocTree } from "~/types"
 
 interface VideoSource {
   mp4: string
@@ -32,22 +33,26 @@ const currentPath = computed(() =>
 
 const isAnyFilterActive = computed(() => {
   const filters = catalogStore.currentFilters
-  
+
   const pathChanged =
     filters.parentsAliases.length > 0 ||
     filters.secondLevelAliases.length > 0 ||
     Object.keys(filters.thirdLevelByParent).length > 0
-  
+
   const colorChanged = filters.colors.length > 0
+  const collectionChanged = filters.collections.length > 0
+  const onlyNewChanged = filters.onlyNew
   const materialChanged = filters.materials.length > 0
   const searchQueryChanged = filters.searchQuery.trim() !== ""
   const sortTypeChanged = filters.sortType !== null
   const extraChanged = Object.keys(filters.extra).some(
     (key) => filters.extra[key]?.length > 0,
   )
-  
+
   return (
     pathChanged ||
+    collectionChanged ||
+    onlyNewChanged ||
     colorChanged ||
     materialChanged ||
     searchQueryChanged ||
@@ -84,26 +89,35 @@ const currentCardCount = computed(() =>
 
 const scrollPosition = ref(0)
 
-const applyFiltersFromPath = (pathString: string, q: any) => {
+const onlyNewModel = computed(() => (catalogStore.pendingFilters.onlyNew ? ["new"] : []))
+
+const emptyResultText = computed(() => {
+  const query = typeof route.query.query === "string" ? route.query.query.trim() : ""
+  if (query) return `Ничего не найдено по запросу "${query}". Попробуйте другой поиск.`
+  if (isAnyFilterActive.value) return "По выбранным фильтрам ничего не найдено."
+  return "Ничего не найдено."
+})
+
+const applyFiltersFromPath = (pathString: string, q: Record<string, unknown>) => {
   let parentsAliasesFromQuery: string[] = []
   let secondLevelAliases: string[] = []
   const thirdLevelByParent: Record<string, string> = {}
-  
+
   if (pathString && pathString.trim() !== "") {
     const segments = pathString
       .replace(/^\/+|\/+$/g, "")
       .split("/")
       .filter((p) => p.trim() !== "")
-    
+
     parentsAliasesFromQuery = segments.slice(0, 1)
-    
+
     if (segments.length > 1) {
       secondLevelAliases = segments[1].split(",").filter((s) => s.trim() !== "")
     }
-    
+
     if (segments.length > 2 && secondLevelAliases.length > 0) {
       const thirdLevelSegments = segments[2].split(",").filter((s) => s.trim() !== "")
-      
+
       thirdLevelSegments.forEach((thirdAlias) => {
         const itemWithThisChild = catalogStore.items.find(
           (item) =>
@@ -111,7 +125,7 @@ const applyFiltersFromPath = (pathString: string, q: any) => {
             item.parents[2]?.alias === thirdAlias &&
             secondLevelAliases.includes(item.parents[1]?.alias),
         )
-        
+
         if (itemWithThisChild && itemWithThisChild.parents[1]) {
           const parentAlias = itemWithThisChild.parents[1].alias
           thirdLevelByParent[parentAlias] = thirdAlias
@@ -119,11 +133,11 @@ const applyFiltersFromPath = (pathString: string, q: any) => {
       })
     }
   }
-  
+
   catalogStore.currentFilters.parentsAliases = parentsAliasesFromQuery
   catalogStore.currentFilters.secondLevelAliases = secondLevelAliases
   catalogStore.currentFilters.thirdLevelByParent = thirdLevelByParent
-  
+
   if (typeof q.color === "string" && q.color.trim() !== "") {
     const colorCodes = q.color
       .split(",")
@@ -143,7 +157,7 @@ const applyFiltersFromPath = (pathString: string, q: any) => {
   } else {
     catalogStore.currentFilters.colors = []
   }
-  
+
   if (typeof q.material === "string" && q.material.trim() !== "") {
     catalogStore.currentFilters.materials = q.material
       .split(",")
@@ -152,19 +166,30 @@ const applyFiltersFromPath = (pathString: string, q: any) => {
   } else {
     catalogStore.currentFilters.materials = []
   }
-  
+
+  if (typeof q.collection === "string" && q.collection.trim() !== "") {
+    catalogStore.currentFilters.collections = q.collection
+      .split(",")
+      .map((c: string) => c.trim())
+      .filter((c: string) => c !== "")
+  } else {
+    catalogStore.currentFilters.collections = []
+  }
+
+  catalogStore.currentFilters.onlyNew = q.new === "1"
+
   if (typeof q.query === "string") {
     catalogStore.currentFilters.searchQuery = q.query.trim()
   } else {
     catalogStore.currentFilters.searchQuery = ""
   }
-  
+
   if (typeof q.sortType === "string" && q.sortType.trim() !== "") {
     catalogStore.currentFilters.sortType = q.sortType.trim()
   } else {
     catalogStore.currentFilters.sortType = null
   }
-  
+
   const extra: Record<string, string[]> = {}
   Object.entries(q).forEach(([key, value]) => {
     if (key.startsWith("extra_") && typeof value === "string" && value.trim() !== "") {
@@ -188,7 +213,7 @@ const setupInfiniteScroll = () => {
     loadMoreObserver.value.disconnect()
     loadMoreObserver.value = null
   }
-  
+
   loadMoreObserver.value = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
@@ -202,7 +227,7 @@ const setupInfiniteScroll = () => {
       threshold: 0.1,
     },
   )
-  
+
   if (loadMoreTrigger.value) {
     loadMoreObserver.value.observe(loadMoreTrigger.value)
   }
@@ -213,12 +238,12 @@ onMounted(async () => {
     catalogStore.loadItems(),
     !docsStore.tree ? docsStore.fetchTree() : Promise.resolve()
   ])
-  
+
   applyFiltersFromPath(currentPath.value, route.query)
   catalogStore.shouldResetCount = false
-  
+
   catalogStore.syncPending()
-  
+
   void nextTick(() => {
     if (scrollPosition.value > 0) {
       window.scrollTo(0, scrollPosition.value)
@@ -229,7 +254,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   scrollPosition.value = window.scrollY
-  
+
   if (loadMoreObserver.value) {
     loadMoreObserver.value.disconnect()
   }
@@ -240,7 +265,7 @@ watch(
   ([newQuery, newPath]) => {
     if (catalogStore.items.length > 0) {
       applyFiltersFromPath(newPath, newQuery)
-      
+
       if (catalogStore.shouldResetCount) {
         catalogStore.currentVisibleCardCount = 12
         catalogStore.shouldResetCount = false
@@ -264,57 +289,57 @@ const breadcrumsItems = computed(() => {
     { name: "Главная", path: "/" },
     { name: "Смотреть все", path: "/catalog/" },
   ]
-  
+
   const pathValue = currentPath.value
   if (typeof pathValue === "string" && pathValue.trim() !== "") {
     const segments = pathValue
       .replace(/^\/+|\/+$/g, "")
       .split("/")
       .filter((p) => p.trim() !== "")
-    
+
     if (segments.length > 0) {
       const firstLevelAlias = segments[0]
       const category = catalogStore.items
         .flatMap((item) => item.parents || [])
         .find((parent) => parent.alias === firstLevelAlias)
-      
+
       items.push({
         name: category?.name || firstLevelAlias.charAt(0).toUpperCase() + firstLevelAlias.slice(1).replace(/-/g, " "),
         path: `/catalog/${firstLevelAlias}`,
       })
     }
-    
+
     if (segments.length > 1) {
       const secondLevelAliases = segments[1].split(",").filter((s) => s.trim() !== "")
-      
+
       if (secondLevelAliases.length > 0) {
         const names = secondLevelAliases.map((secondAlias) => {
           const category = catalogStore.items
             .flatMap((item) => item.parents || [])
             .find((parent) => parent.alias === secondAlias)
-          
+
           return category?.name || secondAlias.charAt(0).toUpperCase() + secondAlias.slice(1).replace(/-/g, " ")
         })
-        
+
         items.push({
           name: names.join(", "),
           path: `/catalog/${segments[0]}/${segments[1]}`,
         })
       }
     }
-    
+
     if (segments.length > 2) {
       const thirdLevelAliases = segments[2].split(",").filter((s) => s.trim() !== "")
-      
+
       if (thirdLevelAliases.length > 0) {
         const names = thirdLevelAliases.map((thirdAlias) => {
           const category = catalogStore.items
             .flatMap((item) => item.parents || [])
             .find((parent) => parent.alias === thirdAlias)
-          
+
           return category?.name || thirdAlias.charAt(0).toUpperCase() + thirdAlias.slice(1).replace(/-/g, " ")
         })
-        
+
         items.push({
           name: names.join(", "),
           path: `/catalog/${segments[0]}/${segments[1]}/${segments[2]}`,
@@ -322,7 +347,7 @@ const breadcrumsItems = computed(() => {
       }
     }
   }
-  
+
   return items
 })
 
@@ -345,43 +370,32 @@ const hasMoreItems = computed(() => {
 
 const docsStore = useDocsStore()
 
-const { data: treeData } = await useFetch(
+const { data: treeData } = await useFetch<DocTree>(
   "https://back.casaalmare.com/api/getdocTree"
 )
 
 const getCurrentCategoryData = computed(() => {
   const catalogData = treeData.value?.data?.catalog
   if (!catalogData?.subitems) return null
-  
+
   const pathValue = currentPath.value?.trim()
   if (!pathValue) return catalogData
-  
+
   const segments = pathValue
     .replace(/^\/+|\/+$/g, "")
     .split("/")
     .filter((p) => p.trim() !== "")
-  
-  let current: any = catalogData.subitems
-  
+
+  let node: DocNode | undefined
+  let level: Record<string, DocNode> | undefined = catalogData.subitems
+
   for (const segment of segments) {
-    if (current && current[segment]) {
-      current = current[segment]
-    } else {
-      return null
-    }
-    
-    if (current.subitems) {
-      current = current.subitems
-    }
+    node = level?.[segment]
+    if (!node) return null
+    level = node.subitems
   }
-  
-  const lastSegment = segments[segments.length - 1]
-  let result: any = catalogData.subitems
-  for (let i = 0; i < segments.length - 1; i++) {
-    result = result[segments[i]].subitems
-  }
-  
-  return result[lastSegment]
+
+  return node ?? null
 })
 
 const pageTitle = computed(() => getCurrentCategoryData.value?.longtitle ||
@@ -393,7 +407,7 @@ const description = computed(() => getCurrentCategoryData.value?.meta_descr ||
 
 const metaTags = computed(() => {
   const tags = getCurrentCategoryData.value?.metatags || treeData.value?.data?.catalog?.metatags || []
-  
+
   const result: Record<string, string> = {}
   tags.forEach(tag => {
     if (tag.name.startsWith("og:")) {
@@ -408,7 +422,7 @@ const metaTags = computed(() => {
       result[tag.name] = tag.content
     }
   })
-  
+
   return result
 })
 
@@ -505,17 +519,12 @@ const catalogH1 = computed(() => {
   return subParent?.name ?? typeParent?.name ?? 'Каталог'
 })
 
-/* --- Микроразметка Schema.org: CollectionPage + BreadcrumbList + ItemList --- */
 const { toAbsolute, withTrailingSlash, buildBreadcrumbList, buildItemList } = useStructuredData()
 
-// Отдельная SSR-загрузка товаров, чтобы ItemList попал в HTML страницы,
-// а не только после клиентской отрисовки (store наполняется в onMounted).
 const { data: ssrCatalogProducts } = await useAsyncData("catalog-ssr-products", () =>
   $fetch<Item[]>("https://back.casaalmare.com/api/getProducts"),
 )
 
-// На клиенте берём уже загруженный store, на сервере — SSR-список.
-// Фильтрация по пути/query одинаковая, поэтому набор товаров совпадает с видимым.
 const jsonLdItems = computed<Item[]>(() => {
   const base = catalogStore.items.length ? catalogStore.items : (ssrCatalogProducts.value || [])
   return filterCatalogItemsByPath(base, currentPath.value, route.query)
@@ -606,11 +615,17 @@ useHead(() => ({
     </h1>
     <div
       v-if="catalogStore.filteredItems.length === 0 && !catalogStore.isLoading"
-      class="flex justify-center items-center py-10 text-[#211D1D]/60"
+      class="flex flex-col justify-center items-center gap-4 py-10 text-[#211D1D]/60"
     >
-      <p>
-        Ничего не найдено{{ route.query.query ? ` по запросу "${route.query.query}"` : "" }}. Попробуйте другой поиск.
+      <p class="text-center px-4">
+        {{ emptyResultText }}
       </p>
+      <AppButton
+        v-if="isAnyFilterActive"
+        custom-class="py-4 px-8"
+        content="Сбросить фильтры"
+        @click="catalogStore.reset()"
+      />
     </div>
     <div
       v-if="catalogStore.isLoading"
@@ -713,7 +728,7 @@ useHead(() => ({
               >
                 {{ catalogStore.popupDynamicFilters.pathLevelNames[levelIndex] }}
               </h3>
-              
+
               <template v-if="levelIndex === 0">
                 <div
                   v-if="levelOptions.some((opt) => opt.image && opt.image.trim() !== '')"
@@ -751,7 +766,7 @@ useHead(() => ({
                   />
                 </div>
               </template>
-              
+
               <template v-else-if="levelIndex === 1">
                 <div
                   v-if="levelOptions.some((opt) => opt.image && opt.image.trim() !== '')"
@@ -837,6 +852,31 @@ useHead(() => ({
               </div>
             </div>
           </template>
+        </div>
+        <div
+          v-if="catalogStore.popupDynamicFilters.hasNewItems || catalogStore.pendingFilters.onlyNew"
+          class="flex flex-col items-center gap-4 sm:gap-6"
+        >
+          <MultiSelectButton
+            :model-value="onlyNewModel"
+            :content="[{ value: 'new', label: 'Только новинки' }]"
+            custom-class="px-4"
+            @update:model-value="(value) => (catalogStore.pendingFilters.onlyNew = value.includes('new'))"
+          />
+        </div>
+        <div
+          v-if="catalogStore.popupDynamicFilters.collections.length > 0"
+          class="flex flex-col items-center gap-4 sm:gap-6"
+        >
+          <h3 class="font-[Inter] text-[17px] font-light sm:font-[Manrope] sm:font-light sm:text-base sm:uppercase">
+            Коллекция
+          </h3>
+          <div class="flex flex-wrap gap-4 items-center justify-center">
+            <MultiSelectButton
+              v-model="catalogStore.pendingFilters.collections"
+              :content="catalogStore.popupDynamicFilters.collections.map((c) => ({ value: c.alias, label: c.name }))"
+            />
+          </div>
         </div>
         <div class="flex flex-col items-center gap-4 sm:gap-6">
           <h3 class="font-[Inter] text-[17px] font-light sm:font-[Manrope] sm:font-light sm:text-base sm:uppercase">

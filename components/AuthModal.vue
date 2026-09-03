@@ -75,13 +75,13 @@ const sendSmsCode = async (
   const endpoint = isReg
     ? "https://back.casaalmare.com/api/createSmsCodeReg"
     : "https://back.casaalmare.com/api/createSmsCode"
-  
+
   try {
     const response = await $fetch<SmsResponse>(endpoint, {
       method: "POST",
       body: { phone: phoneData },
     })
-    
+
     if (response.success) {
       if (!isReg) {
         authStore.smsError = ""
@@ -119,8 +119,8 @@ const sendSmsCode = async (
     } else {
       throw new Error(response.error || "Неизвестная ошибка")
     }
-  } catch (error: any) {
-    const errorMsg = error.data?.error || error.message || "Ошибка сети или сервера"
+  } catch (error) {
+    const errorMsg = apiErrorMessage(error, "Ошибка сети или сервера")
     if (!isReg) {
       if (isResend) {
         authStore.smsError2 = errorMsg
@@ -185,14 +185,14 @@ const handleClick = async (login: "phone" | "email"): Promise<void> => {
     authStore.emailButtonDisabled = true
     authStore.emailButtonContent = "Вход..."
   }
-  
+
   if (login === "phone") {
     authStore.phoneButtonDisabled = true
     authStore.phoneButtonContent = "Отправка..."
     await sendSmsCode({ code: authStore.phone!.code, phone: authStore.phone!.phone }, false, false)
-    
+
     if (authStore.type === "Регистрация") return
-    
+
     if (!authStore.smsError) {
       authStore.phoneButtonContent = "Код отправлен"
       authStore.phoneButtonDisabled = false
@@ -209,7 +209,7 @@ const handleClick = async (login: "phone" | "email"): Promise<void> => {
         method: "POST",
         body: { email: authStore.email, password: authStore.password, loginType: 1 },
       })
-      
+
       if (response.success) {
         authStore.smsError = ""
         authStore.emailButtonContent = "Успешно"
@@ -227,7 +227,7 @@ const handleClick = async (login: "phone" | "email"): Promise<void> => {
         authStore.smsError = typeof response.error === "string" ? response.error : "Неизвестная ошибка"
         authStore.emailButtonContent = "Попробовать снова"
       }
-    } catch (error: any) {
+    } catch {
       authStore.smsError = "Ошибка сети или сервера"
       authStore.emailButtonContent = "Попробовать снова"
     } finally {
@@ -247,7 +247,7 @@ const handleSmsClick = async (): Promise<void> => {
 
   authStore.smsButtonDisabled = true
   authStore.smsButtonContent = "Проверка..."
-  
+
   try {
     const token = await userStore.loadToken()
     const response = await $fetch<LoginResponse>("https://back.casaalmare.com/api/login", {
@@ -259,7 +259,7 @@ const handleSmsClick = async (): Promise<void> => {
         token,
       },
     })
-    
+
     if (response.success) {
       authStore.smsError2 = ""
       authStore.smsButtonContent = "Успешно"
@@ -272,7 +272,7 @@ const handleSmsClick = async (): Promise<void> => {
       authStore.smsError2 = typeof response.error === 'object' ? response.error?.code : "Неверный код"
       authStore.smsButtonContent = "Попробовать снова"
     }
-  } catch (err) {
+  } catch {
     authStore.smsError2 = "Ошибка сети или сервера"
     authStore.smsButtonContent = "Попробовать снова"
   } finally {
@@ -344,7 +344,7 @@ const handleRegSmsClick = async (): Promise<void> => {
 
   authStore.smsButtonDisabled = true
   authStore.smsButtonContent = "Регистрация..."
-  
+
   try {
     const token = await userStore.loadToken()
     const response = await $fetch<LoginResponse>("https://back.casaalmare.com/api/login", {
@@ -359,7 +359,7 @@ const handleRegSmsClick = async (): Promise<void> => {
         token,
       },
     })
-    
+
     if (response.success) {
       authStore.regError = ""
       if (response.token) {
@@ -372,7 +372,7 @@ const handleRegSmsClick = async (): Promise<void> => {
       authStore.regError = typeof response.error === 'object' ? response.error?.code : "Ошибка регистрации"
       authStore.smsButtonContent = "Попробовать снова"
     }
-  } catch (err) {
+  } catch {
     authStore.regError = "Ошибка сети"
   } finally {
     authStore.smsButtonDisabled = false
@@ -403,13 +403,13 @@ const handleResetPassword = async (): Promise<void> => {
 
   authStore.resetButtonDisabled = true
   authStore.resetButtonContent = "Отправка..."
-  
+
   try {
     const response = await $fetch<ResetPasswordResponse>("https://back.casaalmare.com/api/resetPassword", {
       method: "POST",
       body: { email: authStore.resetEmail },
     })
-    
+
     if (response.success) {
       authStore.resetError = ""
       authStore.type = "Успех восстановления"
@@ -418,7 +418,7 @@ const handleResetPassword = async (): Promise<void> => {
       authStore.resetButtonContent = "Попробовать снова"
       authStore.resetButtonDisabled = false
     }
-  } catch (error) {
+  } catch {
     authStore.resetError = "Ошибка сети"
     authStore.resetButtonDisabled = false
   }
@@ -442,7 +442,6 @@ onUnmounted(() => {
   toggleBodyScroll(false)
   if (timeoutId.value) clearTimeout(timeoutId.value)
   if (intervalId.value) clearInterval(intervalId.value)
-  // ИЗМЕНЕНИЕ: Полный сброс формы при закрытии модалки
   authStore.resetForm()
 })
 

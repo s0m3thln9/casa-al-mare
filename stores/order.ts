@@ -1,6 +1,57 @@
+import type { CartItemOptions, CloudPaymentsData } from "~/types"
+
 interface ApiResponse {
   success: boolean
   error?: string
+}
+
+interface CdekTerm {
+  min: number
+  max: number
+}
+
+interface CdekOption {
+  price: number
+  term: CdekTerm
+}
+
+interface CdekDeliveryOption {
+  name: string
+  cost: number
+  onlyDel: boolean
+  description?: string
+  noAddress?: number
+}
+
+interface CdekResponse {
+  courier?: CdekOption
+  courierPrim?: CdekOption
+  pvz?: CdekOption
+  deliveryList?: Record<string, CdekDeliveryOption>
+}
+
+interface RawCartVector {
+  quantity?: number
+  comingSoon?: number | boolean
+}
+
+interface RawCartItem {
+  id: number
+  name: string
+  count: number
+  variant?: string
+  updated_at?: number | null
+  colorName?: string
+  sizes?: string[]
+  images?: Record<string, string>
+  vector?: Record<string, RawCartVector>
+  type?: string
+  material?: string[]
+  useType?: string[]
+  price: string | number
+  oldPrice: string | number
+  options?: CartItemOptions
+  template?: number
 }
 
 interface Certificate {
@@ -10,15 +61,10 @@ interface Certificate {
   value_now: number
 }
 
-interface PointsResponse {
-  success: boolean
-  points: number
-}
-
 interface PaymentDataResponse {
   success: boolean
   type?: "widget" | string
-  data?: any
+  data?: CloudPaymentsData
   link?: string
   external?: boolean
   error?: string
@@ -99,7 +145,7 @@ interface UpdateCartResponse {
       type: string
       material: string[]
       useType: string[]
-      colors: any[]
+      colors: unknown[]
       price: string
       oldPrice: string
     }
@@ -144,7 +190,6 @@ export interface PaymentMethod {
   name: string
 }
 
-// Default city used as fallback when no city is saved in the order/profile
 const DEFAULT_CITY_MOSCOW = {
   label: "Москва",
   name: "Москва",
@@ -155,10 +200,10 @@ export const useOrderStore = defineStore("order", () => {
   const userStore = useUserStore()
   const authStore = useAuthStore()
   const catalogStore = useCatalogStore()
-  
+
   const cartItems = ref<CartItem[]>([])
   const isCheckingOrderStatus = ref(false)
-  
+
   const addresses = ref<string[]>([])
   const city = ref<CityData | null>(null)
   const commentForCourier = ref("")
@@ -175,7 +220,7 @@ export const useOrderStore = defineStore("order", () => {
   const showErrorPaymentMethod = ref<boolean>(false)
   const isLoadingPayment = ref<boolean>(false)
   const paymentMethods = ref<PaymentMethod[]>([])
-  
+
   const isGuestAuthStep = ref(false)
   const guestLoginType = ref<number>(1)
   const guestSmsCode = ref("")
@@ -189,12 +234,12 @@ export const useOrderStore = defineStore("order", () => {
   const guestSmsError = ref("")
   const errorDeliveryMethod = ref("")
   const showGuestSmsError = ref(false)
-  
+
   const guestAuthButtonContent = ref("Авторизоваться / Зарегистрироваться")
   const guestAuthButtonDisabled = ref(false)
   const guestSmsButtonContent = ref("Подтвердить")
   const guestSmsButtonDisabled = ref(false)
-  
+
   const isExpandedPoints = ref<boolean>(false)
   const isExpandedPoints2 = ref<boolean>(true)
   const pendingPoints = ref<string>("")
@@ -208,7 +253,7 @@ export const useOrderStore = defineStore("order", () => {
   const newCertificateCode = ref<string>("")
   const selectedCertificates = ref<string[]>([])
   const isLoadingCert = ref<boolean>(false)
-  
+
   const email = ref<string>("")
   const name = ref<string>("")
   const phone = ref<{
@@ -220,29 +265,22 @@ export const useOrderStore = defineStore("order", () => {
   const orderState = ref<OrderState>(<OrderState>{})
   const isLoaded = ref(false)
   const orderId = ref<number | null>(null)
-  const cdekData = ref<{
-    courier?: { price: number; term: { min: number; max: number } }
-    courierPrim?: { price: number; term: { min: number; max: number } }
-    pvz?: { price: number; term: { min: number; max: number } }
-    deliveryList?: Record<string, { name: string; cost: number; onlyDel: boolean }>
-  } | null>(null)
-  
+  const cdekData = ref<CdekResponse | null>(null)
+
   const deliveryTypes = ref<DeliveryType[]>([])
   const deliveryTime = ref<string | null>(null)
   const deliveryCost = ref<number>(0)
   const isMoscow = ref<boolean>(false)
-  
-  // Computed: currently selected delivery type object
+
   const selectedDeliveryType = computed<DeliveryType | null>(() => {
     if (!deliveryMethod.value) return null
     return deliveryTypes.value.find(t => t.id === deliveryMethod.value) ?? null
   })
-  
-  // True when the selected delivery requires paying only for delivery (no goods payment via site)
+
   const isOnlyDeliveryPayment = computed(() => {
     return selectedDeliveryType.value?.onlyDel === true
   })
-  
+
   async function loadPaymentMethods() {
     try {
       const data = await $fetch<PaymentMethodsResponse>(
@@ -251,7 +289,7 @@ export const useOrderStore = defineStore("order", () => {
           method: "GET",
         }
       )
-      
+
       if (data?.success && data.data) {
         paymentMethods.value = Object.entries(data.data).map(
           ([id, name]) => ({ id, name })
@@ -263,8 +301,8 @@ export const useOrderStore = defineStore("order", () => {
       console.error("Network error loading payment methods:", error)
     }
   }
-  
-  
+
+
   function debounce<T extends (...args: unknown[]) => unknown>(
     func: T,
     wait: number,
@@ -280,23 +318,22 @@ export const useOrderStore = defineStore("order", () => {
       }, wait)
     } as (...args: Parameters<T>) => ReturnType<T>
   }
-  
+
   async function getPaymentData(): Promise<PaymentDataResponse | null> {
     const token = await userStore.loadToken()
     if (!token) {
       console.error("Нет токена для получения данных оплаты")
       return null
     }
-    
+
     try {
-      const body: Record<string, any> = { token }
-      
-      // When onlyDel: pass delivery cost as amount so backend charges only delivery
+      const body: { token: string; onlyDel?: boolean; amount?: number } = { token }
+
       if (isOnlyDeliveryPayment.value) {
         body.onlyDel = true
         body.amount = finalPrice.value
       }
-      
+
       const data = await $fetch<PaymentDataResponse>(
         "https://back.casaalmare.com/api/getPayData",
         {
@@ -304,24 +341,24 @@ export const useOrderStore = defineStore("order", () => {
           body,
         }
       )
-      
+
       if (!data?.success) {
         console.error("Server error getting payment data:", data?.error)
         return null
       }
-      
+
       return data
     } catch (error) {
       console.error("Network error getting payment data:", error)
       return null
     }
   }
-  
-  
+
+
   async function loadUserData() {
     const token = await userStore.loadToken()
     if (!token) return
-    
+
     try {
       const loyaltyData = await $fetch<{
         balance: number
@@ -333,7 +370,7 @@ export const useOrderStore = defineStore("order", () => {
           method: "GET",
         }
       )
-      
+
       if (loyaltyData) {
         if (userStore.user) {
           userStore.user.points = loyaltyData.balance
@@ -341,9 +378,9 @@ export const useOrderStore = defineStore("order", () => {
           userStore.user.loyaltyLevel = loyaltyData.level
         }
       }
-      
+
       let allAddresses: string[] = []
-      
+
       if (
         userStore.user?.profile?.address &&
         Array.isArray(userStore.user.profile.address)
@@ -356,7 +393,7 @@ export const useOrderStore = defineStore("order", () => {
           allAddresses = [mainAddress]
         }
       }
-      
+
       if (
         userStore.user?.profile?.extended?.addresses &&
         Array.isArray(userStore.user.profile.extended.addresses)
@@ -371,39 +408,37 @@ export const useOrderStore = defineStore("order", () => {
                 : adr1.trim()
             })
             .filter((addr) => !allAddresses.includes(addr))
-        
+
         allAddresses = [...allAddresses, ...extendedAddresses]
       }
-      
+
       addresses.value = allAddresses
     } catch (error) {
       console.error("Ошибка загрузки user data:", error)
     }
   }
-  
-  
+
+
   const availablePoints = computed(() => {
     return (userStore.user?.points || 0) - pointsToUse.value
   })
-  
+
   async function loadCdekData() {
     if (!city.value?.fias) return
-    
+
     try {
       const params = new URLSearchParams({
         fias: city.value.fias,
         kladr: city.value.kladr ?? "",
         cart_cost: String(totalSum.value),
       })
-      const data = await $fetch<any>(`https://back.casaalmare.com/api/getCdekByFias?${params.toString()}`)
-      
+      const data = await $fetch<CdekResponse>(`https://back.casaalmare.com/api/getCdekByFias?${params.toString()}`)
+
       if (data) {
         cdekData.value = data
-        
-        // Build delivery types from deliveryList returned by the API
+
         if (data.deliveryList && typeof data.deliveryList === "object") {
-          deliveryTypes.value = Object.entries(data.deliveryList).map(([key, typeData]: [string, any]) => {
-            // Attach term from top-level fields where applicable
+          deliveryTypes.value = Object.entries(data.deliveryList).map(([key, typeData]) => {
             let term: { min: number; max: number } | undefined
             if (key === "cdek" && data.courier?.term) {
               term = data.courier.term
@@ -412,11 +447,10 @@ export const useOrderStore = defineStore("order", () => {
             } else if (key === "courierPrim" && data.courierPrim?.term) {
               term = data.courierPrim.term
             }
-            
+
             const isPvz = key === "pvz"
-            // Express = cost is 0 and key contains "express"
             const isExpress = key === "express" || (typeData.cost === 0 && key.toLowerCase().includes("express"))
-            
+
             return {
               id: key,
               name: typeData.name,
@@ -430,7 +464,6 @@ export const useOrderStore = defineStore("order", () => {
             } as DeliveryType
           })
         } else {
-          // Fallback: build from legacy top-level fields
           deliveryTypes.value = []
           if (data.courier) {
             deliveryTypes.value.push({
@@ -468,17 +501,15 @@ export const useOrderStore = defineStore("order", () => {
             })
           }
         }
-        
-        // isMoscow: true if any delivery type has onlyDel (Moscow-specific options)
+
         isMoscow.value = deliveryTypes.value.some(t => t.onlyDel)
-        
-        // Invalidate current delivery method if it no longer exists
+
         if (deliveryMethod.value && !deliveryTypes.value.some(t => t.id === deliveryMethod.value)) {
           deliveryMethod.value = null
           deliveryTime.value = null
           deliveryCost.value = 0
         }
-        
+
         await nextTick()
         if (deliveryMethod.value) {
           updateDeliveryDetails()
@@ -488,7 +519,7 @@ export const useOrderStore = defineStore("order", () => {
       console.error("Ошибка API getCdekByFias:", error)
     }
   }
-  
+
   function startGuestCountdown() {
     guestRemainingSeconds.value = guestNextCode.value
     if (guestIntervalId.value) clearInterval(guestIntervalId.value)
@@ -500,7 +531,7 @@ export const useOrderStore = defineStore("order", () => {
       }
     }, 1000)
   }
-  
+
   function resetGuestAuth() {
     isGuestAuthStep.value = false
     guestSmsCode.value = ""
@@ -519,8 +550,8 @@ export const useOrderStore = defineStore("order", () => {
       guestIntervalId.value = null
     }
   }
-  
-  function parseCart(rawCart: Record<string, any>): CartItem[] {
+
+  function parseCart(rawCart: Record<string, RawCartItem>): CartItem[] {
     return Object.entries(rawCart).map(([key, item]) => {
       const vector: Record<string, { quantity: number; comingSoon: boolean }> = {}
       if (item.vector) {
@@ -558,17 +589,17 @@ export const useOrderStore = defineStore("order", () => {
       }
     })
   }
-  
+
   const needsDelivery = computed(() => {
     const items = cartItems.value
     if (items.length === 0) return false
     return items.some((item) => item.id !== -1 || (item.id === -1 && item.certificateType === "Физический"))
   })
-  
+
   async function loadOrderState() {
     const token = await userStore.loadToken()
     if (!token) return
-    
+
     try {
       const data = await $fetch<ApiResponse & GetOrderResponse>(
         "https://back.casaalmare.com/api/getOrderState",
@@ -577,30 +608,30 @@ export const useOrderStore = defineStore("order", () => {
           body: { token },
         }
       )
-      
+
       if (data?.success && data?.order) {
         const loadedOrder: OrderState = data.order
-        
+
         if (data.orderId) orderId.value = data.orderId
-        
+
         if (loadedOrder.deliveryMethod) {
           deliveryMethod.value = loadedOrder.deliveryMethod
         }
-        
+
         if (loadedOrder.deliveryTime !== undefined) {
           deliveryTime.value = loadedOrder.deliveryTime
         }
-        
+
         if (loadedOrder.deliveryCost !== undefined) {
           deliveryCost.value = loadedOrder.deliveryCost
         }
-        
+
         if (loadedOrder.pvz) {
           selectedPvz.value = loadedOrder.pvz
         }
-        
+
         let targetCity: CityData | null = null
-        
+
         if (loadedOrder.city) {
           targetCity = loadedOrder.city
         } else if (userStore.user?.profile?.extended?.city) {
@@ -608,15 +639,15 @@ export const useOrderStore = defineStore("order", () => {
         } else if (userStore.user?.city) {
           targetCity = userStore.user.city
         }
-        
+
         if (!targetCity || targetCity.label === "" || targetCity === false) {
           city.value = DEFAULT_CITY_MOSCOW
         } else if (targetCity !== city.value) {
           city.value = targetCity
         }
-        
+
         await nextTick()
-        
+
         if (loadedOrder.currentAddress) {
           if (Array.isArray(loadedOrder.currentAddress)) {
             const [adr1, adr2] = loadedOrder.currentAddress
@@ -627,20 +658,20 @@ export const useOrderStore = defineStore("order", () => {
             currentAddress.value = loadedOrder.currentAddress
           }
         }
-        
+
         if (loadedOrder.commentForCourier) {
           commentForCourier.value = loadedOrder.commentForCourier
         }
-        
+
         if (loadedOrder.paymentMethod) {
           paymentMethod.value = loadedOrder.paymentMethod
         }
-        
+
         if (loadedOrder.points !== undefined) {
           pointsToUse.value = loadedOrder.points
           pendingPoints.value = String(loadedOrder.points)
         }
-        
+
         if (loadedOrder.certificates) {
           selectedCertificates.value = Array.isArray(loadedOrder.certificates)
             ? loadedOrder.certificates
@@ -648,15 +679,15 @@ export const useOrderStore = defineStore("order", () => {
         } else {
           selectedCertificates.value = []
         }
-        
+
         if (!authStore.isAuth && loadedOrder.userInfo) {
           const info = loadedOrder.userInfo
-          
+
           if (info.name) name.value = info.name
           if (info.surname) surname.value = info.surname
           if (info.phone) phone.value = info.phone
           if (info.email) email.value = info.email
-          
+
           if (Array.isArray(info.addresses)) {
             addresses.value = info.addresses
               .filter((addr) => Array.isArray(addr) && addr[0]?.trim())
@@ -668,9 +699,9 @@ export const useOrderStore = defineStore("order", () => {
               })
           }
         }
-        
+
         orderState.value = loadedOrder
-        
+
         if (!needsDelivery.value) {
           deliveryMethod.value = null
           city.value = null
@@ -687,7 +718,7 @@ export const useOrderStore = defineStore("order", () => {
       console.error("Ошибка загрузки состояния заказа:", error)
     } finally {
       isLoaded.value = true
-      
+
       if (city.value) {
         await loadCdekData()
         await nextTick()
@@ -697,15 +728,15 @@ export const useOrderStore = defineStore("order", () => {
       }
     }
   }
-  
+
   const updateOrderState = async () => {
     if (isCheckingOrderStatus.value) {
       console.log("Skipping updateOrderState: order status check in progress")
       return
     }
-    
+
     if (isPaymentSuccessful.value !== null) return
-    
+
     if (!needsDelivery.value) {
       deliveryMethod.value = null
       city.value = null
@@ -713,10 +744,10 @@ export const useOrderStore = defineStore("order", () => {
       selectedPvz.value = null
       commentForCourier.value = ""
     }
-    
+
     const token = await userStore.loadToken()
     if (!token) return
-    
+
     const orderStateObj: Partial<OrderState> = {
       deliveryMethod: deliveryMethod.value,
       deliveryTime: deliveryTime.value,
@@ -738,9 +769,9 @@ export const useOrderStore = defineStore("order", () => {
         }
         : null,
     }
-    
+
     const lastUpdate = Math.floor(Date.now() / 1000)
-    
+
     try {
       const data = await $fetch<ApiResponse & UpdateOrderResponse>(
         "https://back.casaalmare.com/api/updateOrderState",
@@ -753,16 +784,16 @@ export const useOrderStore = defineStore("order", () => {
           },
         }
       )
-      
+
       if (!data?.success) {
         console.error("Server error updating order state:", data?.error)
         return
       }
-      
+
       if (data.orderId) {
         orderId.value = data.orderId
       }
-      
+
       if (data.updated === false) {
         console.warn("Order state update ignored: timestamp too old", {
           lastUpdate,
@@ -773,16 +804,16 @@ export const useOrderStore = defineStore("order", () => {
       console.error("Ошибка обновления состояния заказа:", error)
     }
   }
-  
-  
+
+
   const debouncedUpdateOrderState = debounce(updateOrderState, 500)
-  
+
   const cartDetailed = computed(() => {
     return cartItems.value
       .map((cartItem) => {
         const isCertificate = cartItem.id === -1
         const isGame = cartItem.template === 6
-        
+
         if (isCertificate) {
           return {
             key: cartItem.key,
@@ -802,15 +833,14 @@ export const useOrderStore = defineStore("order", () => {
             isCertificate: true,
           }
         }
-        
+
         if (!cartItem.variant) return null
-        
+
         const size = cartItem.variant
         const colorName = cartItem.colorName || "Цвет не указан"
 
         const imagesArray = Object.values(cartItem.images).filter((img) => img)
 
-        // Доступное количество товара на складе для выбранного размера/варианта
         const availableQuantity = cartItem.vector?.[cartItem.variant]?.quantity ?? 0
 
         return {
@@ -832,44 +862,43 @@ export const useOrderStore = defineStore("order", () => {
       })
       .filter(Boolean)
   })
-  
+
   const goodsSum = computed(() => {
     return cartItems.value.reduce((sum, cartItem) => {
       if (cartItem.id === -1) return sum
       return sum + cartItem.price * cartItem.count
     }, 0)
   })
-  
+
   const certsInCartSum = computed(() => {
     return totalSum.value - goodsSum.value
   })
-  
+
   const totalOldSum = computed(() => {
     return cartItems.value.reduce((sum, cartItem) => {
       const oldPrice = cartItem.oldPrice > 0 ? cartItem.oldPrice : cartItem.price
       return sum + oldPrice * cartItem.count
     }, 0)
   })
-  
+
   const totalSum = computed(() => {
     return cartItems.value.reduce((sum, cartItem) => {
       return sum + cartItem.price * cartItem.count
     }, 0)
   })
-  
+
   const finalPrice = computed(() => {
-    // For onlyDel types: user only pays for delivery
     if (isOnlyDeliveryPayment.value) {
       return Math.max(deliveryCost.value, 0.01)
     }
-    
+
     let price = goodsSum.value
-    
+
     if (pointsToUse.value > 0 && userStore.user) {
       const pointsDeduction = Math.min(pointsToUse.value, price)
       price -= pointsDeduction
     }
-    
+
     if (
       selectedCertificates.value &&
       Array.isArray(selectedCertificates.value) &&
@@ -887,39 +916,39 @@ export const useOrderStore = defineStore("order", () => {
       const certDeduction = Math.min(certDiscount, price)
       price -= certDeduction
     }
-    
+
     const deliveryFee = deliveryCost.value
     price += deliveryFee + certsInCartSum.value
-    
+
     const result = Math.max(price, 0.01)
     return result
   })
-  
+
   const findItem = (keyOrId: string): CartItem | undefined => {
     return cartItems.value.find((i) => i.key === keyOrId || i.id === Number(keyOrId))
   }
-  
+
   async function updateCartApi(key: string, change: number) {
     const token = await userStore.loadToken()
     if (!token) return
-    
+
     try {
       const response = await $fetch<UpdateCartResponse>("https://back.casaalmare.com/api/updateCart", {
         method: "POST",
         body: { token, key, change },
       })
-      
+
       if (response.success && response.cart) {
         const parsedCart = parseCart(response.cart)
         setCartItems(parsedCart)
       } else {
         console.error("Server error updating cart:", response.error)
       }
-    } catch (err: any) {
-      console.error("Network or execution error:", err.data || err.message)
+    } catch (err) {
+      console.error("Network or execution error:", apiErrorMessage(err, "Неизвестная ошибка"))
     }
   }
-  
+
   async function decrementQuantity(keyOrId: string) {
     const item = findItem(keyOrId)
     if (!item || item.count <= 1) return
@@ -943,14 +972,12 @@ export const useOrderStore = defineStore("order", () => {
       })
     }
   }
-  
-  // Доступное количество товара на складе для конкретной позиции корзины
+
   function availableQuantityFor(item: CartItem): number {
-    if (item.id === -1) return Infinity // сертификаты не ограничены складом
+    if (item.id === -1) return Infinity
     return item.vector?.[item.variant]?.quantity ?? 0
   }
 
-  // Можно ли увеличить количество позиции (есть ли запас на складе)
   function canIncrementItem(keyOrId: string): boolean {
     const item = findItem(keyOrId)
     if (!item) return false
@@ -960,7 +987,6 @@ export const useOrderStore = defineStore("order", () => {
   async function incrementQuantity(keyOrId: string) {
     const item = findItem(keyOrId)
     if (!item) return
-    // Не позволяем добавить больше, чем есть на складе
     if (item.count >= availableQuantityFor(item)) return
     await updateCartApi(item.key, 1)
     if (import.meta.client) {
@@ -982,7 +1008,7 @@ export const useOrderStore = defineStore("order", () => {
       })
     }
   }
-  
+
   async function removeItemFromCart(keyOrId: string) {
     const item = findItem(keyOrId)
     if (!item) return
@@ -1007,23 +1033,23 @@ export const useOrderStore = defineStore("order", () => {
       })
     }
   }
-  
+
   function setCartItems(items: CartItem[] | null | undefined) {
     cartItems.value = Array.isArray(items) ? items : []
   }
-  
+
   async function saveNewAddress() {
     const firstLine = newAddressFirstLine.value.trim()
     const secondLine = newAddressSecondLine.value.trim()
-    
+
     if (!firstLine) return
-    
+
     const newAddress = [firstLine, secondLine]
-    
+
     if (authStore.isAuth) {
       const token = await userStore.loadToken()
       if (!token) return
-      
+
       try {
         const data = await $fetch<ApiResponse>(
           "https://back.casaalmare.com/api/saveAddress",
@@ -1032,25 +1058,25 @@ export const useOrderStore = defineStore("order", () => {
             body: { token, address: newAddress },
           }
         )
-        
+
         if (data?.success) {
           const addressString = secondLine
             ? `${firstLine}, ${secondLine}`
             : firstLine
-          
+
           if (!addresses.value.includes(addressString)) {
             addresses.value.push(addressString)
           }
-          
+
           currentAddress.value = addressString
           newAddressFirstLine.value = ""
           newAddressSecondLine.value = ""
-          
+
           if (userStore.user) {
             if (!userStore.user.profile.extended.addresses) {
               userStore.user.profile.extended.addresses = []
             }
-            
+
             const addressExists =
               userStore.user.profile.extended.addresses.some(
                 (addr) =>
@@ -1058,7 +1084,7 @@ export const useOrderStore = defineStore("order", () => {
                   addr[0] === firstLine &&
                   addr[1] === secondLine
               )
-            
+
             if (!addressExists) {
               userStore.user.profile.extended.addresses.push(newAddress)
             }
@@ -1073,20 +1099,20 @@ export const useOrderStore = defineStore("order", () => {
       const addressString = secondLine
         ? `${firstLine}, ${secondLine}`
         : firstLine
-      
+
       if (!addresses.value.includes(addressString)) {
         addresses.value.push(addressString)
       }
-      
+
       currentAddress.value = addressString
       newAddressFirstLine.value = ""
       newAddressSecondLine.value = ""
-      
+
       debouncedUpdateOrderState()
     }
   }
-  
-  
+
+
   function resetOrder() {
     cartItems.value = []
     addresses.value = []
@@ -1106,29 +1132,29 @@ export const useOrderStore = defineStore("order", () => {
     paymentMethod.value = null
     showErrorPaymentMethod.value = false
     selectedPvz.value = null
-    
+
     isExpandedPoints.value = false
     isExpandedPoints2.value = true
     pendingPoints.value = ""
     pointsError.value = ""
     pointsToUse.value = 0
     usedPointsBackup.value = 0
-    
+
     certificateError.value = ""
     isExpandedCert.value = false
     newCertificateCode.value = ""
     selectedCertificates.value = []
-    
+
     orderState.value = {}
     orderId.value = null
     isWidgetOpen.value = false
   }
-  
+
   async function checkOrderStatus(id: number) {
     const token = await userStore.loadToken()
     if (!token) return null
     isCheckingOrderStatus.value = true
-    
+
     try {
       const data = await $fetch<CheckOrderStatusResponse>(
         "https://back.casaalmare.com/api/checkOrderStatus",
@@ -1137,20 +1163,20 @@ export const useOrderStore = defineStore("order", () => {
           body: { token, orderId: id },
         }
       )
-      
+
       if (data?.success !== undefined) {
         isPaymentSuccessful.value = data.success
-        
+
         if (data.status === 1 || data.status === 2) {
           resetOrder()
         }
-        
+
         if (data.success && data.order) {
           const loadedOrder = data.order
-          
+
           if (loadedOrder.deliveryMethod) deliveryMethod.value = loadedOrder.deliveryMethod
           if (loadedOrder.city) city.value = loadedOrder.city
-          
+
           if (loadedOrder.currentAddress) {
             if (Array.isArray(loadedOrder.currentAddress)) {
               const [adr1, adr2] = loadedOrder.currentAddress
@@ -1161,34 +1187,34 @@ export const useOrderStore = defineStore("order", () => {
               currentAddress.value = loadedOrder.currentAddress
             }
           }
-          
+
           if (loadedOrder.commentForCourier) {
             commentForCourier.value = loadedOrder.commentForCourier
           }
-          
+
           if (loadedOrder.paymentMethod) {
             paymentMethod.value = loadedOrder.paymentMethod
           }
-          
+
           if (loadedOrder.points !== undefined) {
             pointsToUse.value = loadedOrder.points
             if (userStore.user) {
               userStore.user.points += usedPointsBackup.value - loadedOrder.points
             }
           }
-          
+
           if (loadedOrder.certificates) {
             selectedCertificates.value = loadedOrder.certificates
           }
-          
+
           if (!authStore.isAuth && loadedOrder.userInfo) {
             const info = loadedOrder.userInfo
-            
+
             if (info.name) name.value = info.name
             if (info.surname) surname.value = info.surname
             if (info.phone) phone.value = info.phone
             if (info.email) email.value = info.email
-            
+
             if (Array.isArray(info.addresses)) {
               addresses.value = info.addresses
                 .filter((addr) => Array.isArray(addr) && addr[0]?.trim())
@@ -1200,16 +1226,16 @@ export const useOrderStore = defineStore("order", () => {
                 })
             }
           }
-          
+
           if (data.cart) {
             const parsedCart = parseCart(data.cart)
             setCartItems(parsedCart)
           }
-          
+
           if (!data.success) {
             isWidgetOpen.value = false
           }
-          
+
           if (!needsDelivery.value) {
             deliveryMethod.value = null
             city.value = null
@@ -1220,7 +1246,7 @@ export const useOrderStore = defineStore("order", () => {
             commentForCourier.value = ""
           }
         }
-        
+
         return data
       }
     } catch (error) {
@@ -1229,50 +1255,50 @@ export const useOrderStore = defineStore("order", () => {
       await userStore.fetchUser()
       isCheckingOrderStatus.value = false
     }
-    
+
     return null
   }
-  
+
   const loyaltyDiscountPercent = computed(() => {
     const loyaltyLevel = userStore.user?.loyaltyLevel || 1
     const rates: Record<number, number> = { 1: 0.1, 2: 0.15, 3: 0.2 }
     return rates[loyaltyLevel] || 0.1
   })
-  
+
   const maxAllowedPoints = computed(() => {
     return Math.floor(goodsSum.value * loyaltyDiscountPercent.value)
   })
-  
+
   const pointsInputError = computed(() => {
     const points = Number(pendingPoints.value)
-    
+
     if (!pendingPoints.value) return ""
-    
+
     if (isNaN(points) || points <= 0) {
       return "Введите корректное количество баллов"
     }
-    
+
     if (points > (userStore.user?.points || 0)) {
       return "Недостаточно баллов на балансе"
     }
-    
+
     if (points > maxAllowedPoints.value) {
       const percentText = Math.round(loyaltyDiscountPercent.value * 100)
       return `Максимум: ${maxAllowedPoints.value} баллов (${percentText}% от суммы)`
     }
-    
+
     return ""
   })
-  
+
   const pointsCheckboxValue = ref<string | null>(null)
-  
+
   const pointsBenefit = computed(() => {
     const points = Number(pendingPoints.value)
     if (isNaN(points) || points <= 0) return null
-    
+
     const loyaltyLevel = userStore.user?.loyaltyLevel || 1
     let discountPercent = 0.1
-    
+
     switch (loyaltyLevel) {
       case 1:
         discountPercent = 0.1
@@ -1284,13 +1310,13 @@ export const useOrderStore = defineStore("order", () => {
         discountPercent = 0.2
         break
     }
-    
+
     const maxPoints = Math.floor(goodsSum.value * discountPercent)
-    
+
     if (points > (userStore.user?.points || 0) || points > maxPoints) {
       return null
     }
-    
+
     const priceWithPoints = goodsSum.value - points
     return {
       benefit: points,
@@ -1298,26 +1324,26 @@ export const useOrderStore = defineStore("order", () => {
       oldPrice: goodsSum.value
     }
   })
-  
+
   async function applyPoints() {
     if (isLoadingPoints.value || pointsInputError.value) {
       pointsCheckboxValue.value = null
       return
     }
-    
+
     isLoadingPoints.value = true
     const points = Number(pendingPoints.value)
-    
+
     pointsToUse.value = points
-    
+
     isLoadingPoints.value = false
   }
-  
+
   function cancelPoints() {
     pointsToUse.value = 0
     pointsError.value = ""
   }
-  
+
   watch(pointsCheckboxValue, (newValue) => {
     if (newValue === 'apply') {
       applyPoints()
@@ -1325,19 +1351,19 @@ export const useOrderStore = defineStore("order", () => {
       cancelPoints()
     }
   })
-  
+
   watch(pendingPoints, () => {
     if (pointsCheckboxValue.value === 'apply') {
       pointsCheckboxValue.value = null
     }
   })
-  
+
   watch(pointsToUse, (newValue) => {
     if (newValue > 0 && !pointsCheckboxValue.value) {
       pointsCheckboxValue.value = 'apply'
     }
   })
-  
+
   watch(
     () => isLoaded.value,
     (loaded) => {
@@ -1349,7 +1375,7 @@ export const useOrderStore = defineStore("order", () => {
     },
     { immediate: true }
   )
-  
+
   const isPointsCheckboxChecked = computed({
     get: () => pointsToUse.value > 0,
     set: (value: boolean) => {
@@ -1360,41 +1386,41 @@ export const useOrderStore = defineStore("order", () => {
       }
     }
   })
-  
+
   function togglePoints() {
     isExpandedPoints.value = !isExpandedPoints.value
   }
-  
+
   function togglePoints2() {
     isExpandedPoints2.value = !isExpandedPoints2.value
   }
-  
+
   watch(goodsSum, () => {
     updateDeliveryDetails()
   })
-  
+
   async function addCertificate() {
     if (isLoadingCert.value) return
-    
+
     isLoadingCert.value = true
     certificateError.value = ""
-    
+
     const code = newCertificateCode.value.trim()
-    
+
     if (!code) {
       certificateError.value = "Введите код сертификата"
       isLoadingCert.value = false
       return
     }
-    
+
     if (userStore.user?.certificates.some((c: Certificate) => c.code === code)) {
       certificateError.value = "Сертификат уже добавлен"
       isLoadingCert.value = false
       return
     }
-    
+
     const token = await userStore.loadToken()
-    
+
     try {
       const response = await $fetch<ApiResponse & { certificates: Certificate[] }>(
         "https://back.casaalmare.com/api/addCertificate",
@@ -1403,11 +1429,11 @@ export const useOrderStore = defineStore("order", () => {
           body: { token, code },
         },
       )
-      
+
       if (response.success && response.certificates) {
         if (userStore.user) {
           userStore.user.certificates = response.certificates
-          
+
           if (!selectedCertificates.value.includes(code)) {
             const newCert = response.certificates.find((c: Certificate) => c.code === code)
             if (newCert && newCert.value_now <= goodsSum.value && selectedCertificates.value.length === 0) {
@@ -1415,7 +1441,7 @@ export const useOrderStore = defineStore("order", () => {
             }
           }
         }
-        
+
         newCertificateCode.value = ""
         certificateError.value = ""
         await nextTick()
@@ -1430,11 +1456,11 @@ export const useOrderStore = defineStore("order", () => {
       isLoadingCert.value = false
     }
   }
-  
+
   function toggleCert() {
     isExpandedCert.value = !isExpandedCert.value
   }
-  
+
   async function refreshCityForUI() {
     let targetCity: CityData | null = null
     if (orderState.value.city) {
@@ -1444,14 +1470,14 @@ export const useOrderStore = defineStore("order", () => {
     } else if (userStore.user?.city) {
       targetCity = userStore.user.city
     }
-    
+
     if (!targetCity || targetCity.label === "" || targetCity === false) {
       city.value = DEFAULT_CITY_MOSCOW
     } else if (targetCity && targetCity !== city.value) {
       city.value = targetCity
       await nextTick()
     }
-    
+
     if (city.value) {
       await loadCdekData()
       await nextTick()
@@ -1460,15 +1486,15 @@ export const useOrderStore = defineStore("order", () => {
       }
     }
   }
-  
+
   function priceFormatter(value: number): string {
     const formattedValue = new Intl.NumberFormat("ru-RU").format(Math.round(value))
     return `${formattedValue} ₽`
   }
-  
+
   watchEffect(() => {
     let newAddresses: string[] = []
-    
+
     if (userStore?.user?.profile?.address && Array.isArray(userStore.user.profile.address)) {
       const [adr1, adr2] = userStore.user.profile.address
       if (adr1?.trim()) {
@@ -1476,7 +1502,7 @@ export const useOrderStore = defineStore("order", () => {
         newAddresses = [mainAddress]
       }
     }
-    
+
     if (userStore?.user?.profile && userStore?.user?.profile.extended && userStore?.user?.profile.extended.addresses && Array.isArray(userStore.user.profile.extended.addresses)) {
       const extendedAddresses = userStore.user.profile.extended.addresses
         .filter((addr) => Array.isArray(addr) && addr[0]?.trim())
@@ -1485,13 +1511,13 @@ export const useOrderStore = defineStore("order", () => {
           return adr2?.trim() ? `${adr1.trim()}, ${adr2.trim()}` : adr1.trim()
         })
         .filter((addr) => !newAddresses.includes(addr))
-      
+
       newAddresses = [...newAddresses, ...extendedAddresses]
     }
-    
+
     addresses.value = newAddresses
   })
-  
+
   watch(
     () => userStore.city,
     (newCity) => {
@@ -1503,7 +1529,7 @@ export const useOrderStore = defineStore("order", () => {
     },
     { immediate: true },
   )
-  
+
   watch(
     () => city.value,
     async (newCity) => {
@@ -1516,16 +1542,16 @@ export const useOrderStore = defineStore("order", () => {
     },
     { immediate: true, deep: true },
   )
-  
+
   const hasGoods = computed(() => goodsSum.value > 0)
-  
+
   const hasPhysicalCertificates = computed(() => {
     return cartItems.value.some(
       item => item.id === -1 &&
         (item.certificateType === "Физический" || item.options?.certificateType === "Физический")
     )
   })
-  
+
   watch(
     () => userStore.user?.profile?.extended?.city,
     (newCity) => {
@@ -1537,7 +1563,7 @@ export const useOrderStore = defineStore("order", () => {
     },
     { immediate: true, deep: true },
   )
-  
+
   function updateDeliveryDetails() {
     if (!needsDelivery.value) {
       deliveryCost.value = 0
@@ -1548,15 +1574,14 @@ export const useOrderStore = defineStore("order", () => {
       selectedPvz.value = null
       return
     }
-    
-    // Если нет товаров, но есть физические сертификаты - не обнуляем стоимость доставки
+
     if (!hasGoods.value && !hasPhysicalCertificates.value) {
       deliveryCost.value = 0
       return
     }
-    
+
     const type = deliveryTypes.value.find(t => t.id === deliveryMethod.value)
-    
+
     if (type) {
       if (type.term && type.term.min !== undefined && type.term.max !== undefined) {
         deliveryTime.value = `${type.term.min}-${type.term.max}`
@@ -1566,13 +1591,11 @@ export const useOrderStore = defineStore("order", () => {
         deliveryTime.value = null
       }
       deliveryCost.value = type.cost || 0
-      
-      // PVZ: use selected pvz price if available
+
       if (type.isPvz && selectedPvz.value && selectedPvz.value.price) {
         deliveryCost.value = selectedPvz.value.price
       }
-      
-      // Бесплатная доставка только для товаров
+
       if (hasGoods.value && totalSum.value >= 20000) {
         deliveryCost.value = 0
       }
@@ -1581,12 +1604,12 @@ export const useOrderStore = defineStore("order", () => {
       deliveryCost.value = 0
     }
   }
-  
+
   watch(deliveryMethod, () => {
     updateDeliveryDetails()
     debouncedUpdateOrderState()
   })
-  
+
   watch(
     () => deliveryTypes.value,
     () => {
@@ -1596,14 +1619,14 @@ export const useOrderStore = defineStore("order", () => {
     },
     { deep: true },
   )
-  
+
   watch(
     () => authStore.isAuth,
     (newVal) => {
       if (newVal) resetGuestAuth()
     },
   )
-  
+
   watch(
     [
       deliveryMethod,
@@ -1628,11 +1651,10 @@ export const useOrderStore = defineStore("order", () => {
     },
     { deep: true },
   )
-  
+
   watch(
     [addresses, deliveryMethod],
     ([newAddresses, newDeliveryMethod]) => {
-      // Show address input for non-pvz courier methods
       const currentType = deliveryTypes.value.find(t => t.id === newDeliveryMethod)
       const isCourierMethod = !!newDeliveryMethod && currentType && !currentType.isPvz
       if (newAddresses.length === 0 && isCourierMethod && !currentAddress.value) {
@@ -1641,7 +1663,7 @@ export const useOrderStore = defineStore("order", () => {
     },
     { immediate: true, deep: true },
   )
-  
+
   return {
     cartItems,
     addresses,
@@ -1739,7 +1761,6 @@ export const useOrderStore = defineStore("order", () => {
     parseCart,
     availablePoints,
     isCheckingOrderStatus,
-    // New exports
     selectedDeliveryType,
     isOnlyDeliveryPayment,
   }

@@ -15,7 +15,7 @@ const subitems = computed(() =>
 const article = computed(() => {
   const alias = articleAlias.value
   if (!alias) return null
-  
+
   return treeData.value?.data?.blog?.subitems?.[alias] ?? null
 })
 
@@ -26,18 +26,18 @@ const articleContent = computed(() => article.value?.content ?? "")
 
 const randomOtherArticles = computed(() => {
   if (!article.value) return []
-  
+
   const others = subitems.value.filter(
     item => item.id !== article.value!.id
   )
-  
+
   const shuffled = [...others].sort(() => 0.5 - Math.random())
   return shuffled.slice(0, 3)
 })
 
 const metaTags = computed(() => {
-  const tags: Record<string, any> = {}
-  
+  const tags: Record<string, string> = {}
+
   article.value?.metatags?.forEach(tag => {
     if (tag.name.startsWith('og:')) {
       const ogKey = tag.name.replace('og:', '')
@@ -51,11 +51,10 @@ const metaTags = computed(() => {
       tags[tag.name] = tag.content
     }
   })
-  
+
   return tags
 })
 
-// Функция для обновления SEO
 const updateSeo = () => {
   useSeoMeta({
     title: pageTitle.value,
@@ -64,7 +63,6 @@ const updateSeo = () => {
   })
 }
 
-// Обновляем SEO при монтировании и при изменении статьи
 updateSeo()
 
 watch(article, () => {
@@ -95,7 +93,7 @@ const breadcrumsItems = computed(() => [
     </div>
 
     <div class="px-2 sm:px-4 grid grid-cols-1 gap-10 items-start lg:grid-cols-[minmax(auto,618px)_1fr] lg:gap-20">
-      
+
       <div class="flex flex-col items-center pt-4 lg:sticky lg:top-16 lg:h-fit">
         <NuxtImg
           v-if="article?.image"
@@ -211,21 +209,21 @@ const breadcrumsItems = computed(() => [
     align-items: center;
     gap: 1rem;
   }
-  
+
   .article-content :deep(blockquote p) {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1rem;
   }
-  
+
   .article-content :deep(blockquote) {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1rem;
   }
-  
+
   .article-content :deep(blockquote img) {
     max-width: 100%;
     width: auto !important;

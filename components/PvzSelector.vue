@@ -18,11 +18,13 @@
 </template>
 
 <script setup lang="ts">
+import type { CdekWidget } from "~/types"
+
 interface PvzData {
   address: string
   city?: string
   cityCode?: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 interface CityData {
@@ -45,13 +47,15 @@ const emit = defineEmits<{
 
 const { city, modelValue } = toRefs(props)
 
-const widget = ref<any>(null)
+const widget = ref<CdekWidget | null>(null)
 const loaded = ref(false)
 
 const loadWidget = () => {
   if (typeof window === "undefined") return
 
-  widget.value = new (window as any).CDEKWidget({
+  if (!window.CDEKWidget) return
+
+  widget.value = new window.CDEKWidget({
     defaultLocation: city.value?.name || "Москва",
     from: "Москва",
     country: "Россия",
@@ -86,15 +90,15 @@ const loadWidget = () => {
     onReady: () => {
       loaded.value = true
     },
-    onChoose: async (type: string, tariff: any, addressData: PvzData) => {
+    onChoose: async (type: string, tariff: unknown, addressData: PvzData) => {
       emit("update:modelValue", addressData)
-      
+
       if (addressData.city && addressData.city !== city.value?.name) {
         try {
           const response = await $fetch<{ data: Record<number, CityData>; success: boolean }>(
             `https://back.casaalmare.com/api/getCityByQuery?query=${encodeURIComponent(addressData.city)}`,
           )
-          
+
           if (response?.data && response.success) {
             const newCity = response.data[0]
             emit("update:city", newCity)
