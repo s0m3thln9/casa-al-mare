@@ -1,0 +1,248 @@
+<script setup lang="ts">
+import { computed, onMounted, ref, watch } from 'vue'
+import type { DocNode, DocTree } from '~/types'
+
+const route = useRoute()
+const docsStore = useDocsStore()
+const popupStore = usePopupStore()
+const setStore = useSetStore()
+const catalogStore = useCatalogStore()
+
+const alias = computed(() => String(route.params.alias))
+
+const { data: treeData } = await useFetch<DocTree>(
+  "https://back.casaalmare.com/api/getdocTree"
+)
+
+const campaignsData = computed(() => docsStore.tree?.data?.campaigns ?? treeData.value?.data?.campaigns)
+
+const campaign = computed<DocNode | null>(() => {
+  const subitems = campaignsData.value?.subitems
+  if (!subitems) return null
+  return Object.values(subitems).find(item => item.alias === alias.value) ?? null
+})
+
+const campaignItems = computed(() => {
+  if (!campaign.value?.subitems) return []
+  return Object.values(campaign.value.subitems)
+    .slice()
+    .sort((a, b) => (a.menuindex ?? 0) - (b.menuindex ?? 0))
+})
+
+if (campaignsData.value?.subitems && !campaign.value) {
+  throw createError({ statusCode: 404, statusMessage: "Кампания не найдена", fatal: true })
+}
+
+const breadcrumsItems = computed<{ name: string; path?: string }[]>(() => [
+  { name: "Главная", path: "/" },
+  { name: "Вдохновение", path: "/campaigns/" },
+  { name: campaign.value?.pagetitle ?? "" },
+])
+
+const selectedSetItems = ref<DocNode[]>([])
+
+const openSetPopup = (node: DocNode) => {
+  if (!node.set || !Array.isArray(node.set)) return
+
+  setStore.clear()
+
+  const items = node.set
+    .map(id => docsStore.findDocById(docsStore.tree?.data ?? {}, id))
+    .filter((item): item is DocNode => item !== null)
+
+  selectedSetItems.value = items
+
+  const ids = items.map(item => String(item.id))
+  setStore.setRequiredTypes(ids)
+
+  popupStore.open('set')
+}
+
+const hasSet = (item: DocNode) => (item.set ?? []).filter(i => i !== '').length > 0
+
+const isAllSelected = computed(() => {
+  if (selectedSetItems.value.length === 0) return false
+  return selectedSetItems.value.every(item =>
+    setStore.items[item.id] && setStore.items[item.id].trim() !== ""
+  )
+})
+
+const itemsForPurchase = computed(() => {
+  return selectedSetItems.value.map(item => ({
+    id: Number(item.id),
+    size: setStore.items[item.id] || ""
+  }))
+})
+
+const missingParamLabel = computed(() => {
+  if (isAllSelected.value) return null
+  const missing = selectedSetItems.value.find(item => !setStore.items[item.id])
+  return missing ? missing.pagetitle : 'все параметры'
+})
+
+const isInStock = computed(() => {
+  if (selectedSetItems.value.length === 0) return false
+
+  return selectedSetItems.value.every(item => {
+    const catalogItem = catalogStore.getItemById(item.id)
+    if (!catalogItem || !catalogItem.vector) return false
+
+    const selectedSize = setStore.items[item.id]
+
+    const isNoSize = Object.keys(catalogItem.vector)[0] === 'NS'
+
+    if (isNoSize) {
+      const vectorData = Object.values(catalogItem.vector)[0]
+      return (vectorData.quantity === 0 && vectorData.comingSoon > 0) || vectorData.quantity > 0
+    }
+
+    if (!selectedSize || !catalogItem.vector[selectedSize]) return false
+
+    const vectorData = catalogItem.vector[selectedSize]
+    return (vectorData.quantity === 0 && vectorData.comingSoon > 0) || vectorData.quantity > 0
+  })
+})
+
+const availableQuantity = computed(() => {
+  if (selectedSetItems.value.length === 0) return false
+
+  return selectedSetItems.value.every(item => {
+    const catalogItem = catalogStore.getItemById(item.id)
+    if (!catalogItem || !catalogItem.vector) return false
+
+    const selectedSize = setStore.items[item.id]
+
+    const isNoSize = Object.keys(catalogItem.vector)[0] === 'NS'
+
+    if (isNoSize) {
+      const vectorData = Object.values(catalogItem.vector)[0]
+      return vectorData.quantity > 0
+    }
+
+    if (!selectedSize || !catalogItem.vector[selectedSize]) return false
+
+    const vectorData = catalogItem.vector[selectedSize]
+    return vectorData.quantity > 0
+  })
+})
+
+const pageTitle = computed(() => campaign.value?.pagetitle ?? "")
+const description = computed(() => campaign.value?.description ?? "")
+
+const metaTags = computed(() => {
+  const tags: Record<string, string> = {}
+
+  campaign.value?.metatags?.forEach(tag => {
+    if (tag.name.startsWith('og:')) {
+      const ogKey = tag.name.replace('og:', '')
+      const camelCaseKey = 'og' + ogKey.charAt(0).toUpperCase() + ogKey.slice(1)
+      tags[camelCaseKey] = tag.content
+    } else if (tag.name.startsWith('twitter:')) {
+      const twitterKey = tag.name.replace('twitter:', '')
+      const camelCaseKey = 'twitter' + twitterKey.charAt(0).toUpperCase() + twitterKey.slice(1)
+      tags[camelCaseKey] = tag.content
+    } else {
+      tags[tag.name] = tag.content
+    }
+  })
+
+  return tags
+})
+
+const updateSeo = () => {
+  useSeoMeta({
+    title: pageTitle.value,
+    description: description.value,
+    ...metaTags.value
+  })
+}
+
+updateSeo()
+
+watch([pageTitle, description, metaTags], () => {
+  updateSeo()
+}, { deep: true })
+
+onMounted(async () => {
+  if (!docsStore.tree) {
+    await docsStore.fetchTree()
+  }
+
+  if (catalogStore.items.length === 0) {
+    await catalogStore.loadItems()
+  }
+})
+
+const getCardClass = (index: number) => {
+  const isWide = index === 2 || index === 7
+  return isWide ? "rounded-lg aspect-[936/680] col-span-2" : "rounded-lg aspect-[460/680]"
+}
+</script>
+
+<template>
+  <main class="mb-5 font-[Manrope] bg-[#FFFFFA] text-[#211D1D] sm:mb-10">
+    <div class="p-2 sm:px-4 sm:py-6">
+      <AppBreadcrumbs :items="breadcrumsItems" />
+    </div>
+
+    <h2 class="uppercase text-center font-[Inter] text-[17px]">{{ pageTitle }}</h2>
+
+    <div v-if="docsStore.loading && campaignItems.length === 0" class="text-center py-10">Загрузка...</div>
+
+    <div v-else-if="campaignItems.length === 0" class="text-center py-10 text-gray-400">
+      В этой кампании пока нет материалов
+    </div>
+
+    <div v-else class="grid grid-cols-2 mt-4 px-2 gap-2 sm:gap-4 sm:px-4 sm:mt-10 md:grid-cols-4">
+      <template v-for="(item, index) in campaignItems" :key="item.id">
+        <VideoBanner
+          v-if="item.video && item.video.length > 0"
+          :video-data="{ pc: item.video[0], mob: item.video[0] }"
+          :plus="hasSet(item)"
+          :custom-class="getCardClass(index)"
+          @click="hasSet(item) && openSetPopup(item)"
+        />
+
+        <BannerCard
+          v-else
+          :image-url="item.image ? item.image : ''"
+          :plus="hasSet(item)"
+          :custom-class="getCardClass(index)"
+          :object-position="index === 2 ? '50% 70%' : 'center'"
+          @click="hasSet(item) && openSetPopup(item)"
+        />
+      </template>
+    </div>
+
+    <AppPopup title="Собрать комплект" popup-id="set">
+      <div class="flex flex-col gap-6 mt-6">
+        <div class="grid grid-cols-2 gap-y-6 gap-x-4 sm:gap-x-2">
+          <div v-for="product in selectedSetItems" :key="product.id" class="flex flex-col gap-2">
+            <CatalogCard
+              :id="product.id"
+              v-model="setStore.items[product.id]"
+              custom-image-class="aspect-[200/300] w-full"
+              popup
+              variant="mini"
+              link
+              disable-size-navigation
+            />
+          </div>
+        </div>
+
+        <div v-if="selectedSetItems.length === 0" class="text-center text-gray-400">
+          В данном комплекте пока нет товаров
+        </div>
+
+        <BuyButton
+          v-else
+          :items="itemsForPurchase"
+          :is-parameters-selected="isAllSelected"
+          :missing-params="missingParamLabel"
+          :in-stock="isInStock"
+          :available-quantity="availableQuantity"
+        />
+      </div>
+    </AppPopup>
+  </main>
+</template>

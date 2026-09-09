@@ -215,6 +215,12 @@ export interface DocMetaTag {
   content: string
 }
 
+export interface DocVideo {
+  mp4: string
+  ogv: string
+  webm: string
+}
+
 export interface DocNode {
   id: number
   type: string
@@ -228,6 +234,8 @@ export interface DocNode {
   menuindex?: number
   publishedon?: string
   image?: string
+  video?: DocVideo[]
+  set?: string[]
   metatags?: DocMetaTag[]
   subitems?: Record<string, DocNode>
 }
