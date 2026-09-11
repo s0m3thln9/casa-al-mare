@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
-import type { DocNode, DocTree } from '~/types'
+import type { DocNode, DocTree, DocVideo } from '~/types'
 
 const docsStore = useDocsStore()
 
@@ -24,7 +24,14 @@ const campaignMedia = (campaign: DocNode) => {
     .sort((a, b) => (a.menuindex ?? 0) - (b.menuindex ?? 0))
 }
 
-const campaignCover = (campaign: DocNode) => campaignMedia(campaign).find(item => item.image || item.video?.length)
+type CampaignCover = { image?: string; video?: DocVideo[] }
+
+const campaignCover = (campaign: DocNode): CampaignCover | undefined => {
+  if (campaign.image) return { image: docImageUrl(campaign.id, campaign.image) }
+  const media = campaignMedia(campaign).find(item => item.image || item.video?.length)
+  if (!media) return undefined
+  return { image: docImageUrl(media.id, media.image), video: media.video }
+}
 
 const breadcrumsItems: { name: string; path?: string }[] = [
   { name: "Главная", path: "/" },
