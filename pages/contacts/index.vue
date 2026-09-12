@@ -32,12 +32,12 @@ useHead({
           </a>
           <a
             class="grid grid-rows-2 text-center gap-1 sm:gap-2"
-            href="https://t.me/casaalmarecom"
+            href="https://t.me/casaalmare_swim"
             target="_blank"
             rel="noopener"
           >
             <span>Telegram</span>
-            <span class="font-light">@casaalmarecom</span>
+            <span class="font-light">@casaalmare_swim</span>
           </a>
           <a
             class="grid grid-rows-2 text-center gap-1 sm:gap-2"

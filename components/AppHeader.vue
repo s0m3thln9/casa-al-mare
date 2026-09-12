@@ -78,7 +78,7 @@ const handleMenuButtonClick = () => {
         </NuxtLink></li>
         <li class="hover:text-[#F3A454]">
           <a
-            href="https://t.me/casaalmarecom"
+            href="https://t.me/casaalmare_swim"
             target="_blank"
             rel="noopener noreferrer"
           >

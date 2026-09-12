@@ -71,7 +71,7 @@ const handleOrdersClick = () => {
           <li><NuxtLink to="/info/rekvizity/">Реквизиты</NuxtLink></li>
           <li>
             <a
-              href="https://t.me/casaalmarecom"
+              href="https://t.me/casaalmare_swim"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -163,7 +163,7 @@ const handleOrdersClick = () => {
           </a>
           <a
             class="w-full h-full"
-            href="https://t.me/casaalmarecom"
+            href="https://t.me/casaalmare_swim"
             target="_blank"
             rel="noopener noreferrer"
           >
