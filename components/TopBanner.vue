@@ -10,7 +10,7 @@ const isVisible = useState("top-banner-visible", () => true)
 
 onMounted(() => {
   try {
-    if (localStorage.getItem(STORAGE_KEY)) isVisible.value = false
+    if (sessionStorage.getItem(STORAGE_KEY)) isVisible.value = false
   } catch {
   }
 })
@@ -18,7 +18,7 @@ onMounted(() => {
 const close = () => {
   isVisible.value = false
   try {
-    localStorage.setItem(STORAGE_KEY, "1")
+    sessionStorage.setItem(STORAGE_KEY, "1")
   } catch {
   }
 }
