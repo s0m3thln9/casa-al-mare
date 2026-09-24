@@ -116,7 +116,7 @@ onUnmounted(() => {
       class="fixed inset-0 z-50"
     >
       <div
-        class="max-w-[590px] w-full z-50 fixed top-[32px] sm:top-[62px] right-0 bg-[#FFFFFA] p-2 border-[0.7px] border-[#211D1D] rounded-bl-lg rounded-br-2xl"
+        class="max-w-[590px] w-full z-50 fixed top-[calc(32px+var(--top-banner-h,0px))] sm:top-[calc(62px+var(--top-banner-h,0px))] right-0 bg-[#FFFFFA] p-2 border-[0.7px] border-[#211D1D] rounded-bl-lg rounded-br-2xl"
       >
         <div class="relative mb-2.5 flex items-center border-b-[0.7px] border-[#211D1D]">
           <input

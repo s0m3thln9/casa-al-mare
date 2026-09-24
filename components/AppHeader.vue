@@ -45,93 +45,93 @@ const handleMenuButtonClick = () => {
 </script>
 
 <template>
-  <header
-    :class="[
-      'sticky top-0 left-0 font-[Manrope] text-xs flex justify-between items-center p-2 bg-[#FFFFFA] text-[#211D1D] sm:text-sm sm:p-4',
-      `z-${headerZIndex}`,
-    ]"
-  >
-    <div>
-      <NuxtLink to="/">
-        <img
-          src="/logo.svg"
-          alt="CASA AL MARE"
-          class="min-w-[126px] h-[17px] sm:w-[229px] sm:h-[30px]"
-          loading="eager"
-        >
-      </NuxtLink>
-    </div>
-    <nav class="hidden lg:block">
-      <ul class="flex gap-4">
-        <li class="hover:text-[#F3A454]">
-          <button
-            aria-label="Меню"
-            class="cursor-pointer menu-button"
-            @click="menuStore.open"
+  <div :class="['sticky top-0 left-0', `z-${headerZIndex}`]">
+    <TopBanner />
+    <header
+      class="font-[Manrope] text-xs flex justify-between items-center p-2 bg-[#FFFFFA] text-[#211D1D] sm:text-sm sm:p-4"
+    >
+      <div>
+        <NuxtLink to="/">
+          <img
+            src="/logo.svg"
+            alt="CASA AL MARE"
+            class="min-w-[126px] h-[17px] sm:w-[229px] sm:h-[30px]"
+            loading="eager"
           >
-            Меню
-          </button>
-        </li>
-        <li class="hover:text-[#F3A454]"><NuxtLink to="/blog/">Блог
-        </NuxtLink></li>
-        <li class="hover:text-[#F3A454]"><NuxtLink to="/campaigns/">Вдохновение
-        </NuxtLink></li>
-        <li class="hover:text-[#F3A454]">
-          <a
-            href="https://t.me/casaalmarecom"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Telegram
-          </a>
-        </li>
-        <li class="hover:text-[#F3A454]">
-          <a
-            href="https://wa.me/message/QHQXRHXMTADMK1"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            WhatsApp
-          </a>
-        </li>
-      </ul>
-    </nav>
-    <nav>
-      <ul class="flex gap-3 sm:gap-4">
-        <li class="hover:text-[#F3A454] cursor-pointer"><AppSearch @search-toggle="handleSearchToggle" /></li>
-        <li class="hidden hover:text-[#F3A454] cursor-pointer sm:block relative">
-          <NuxtLink @click="handleFavClick"
-            >Избранное
-            <span
-              v-if="favoritesCount > 0"
-              class="absolute top-0 -right-1.5 text-[#211D1D] text-[9px]"
-              :class="favoritesCount > 9 && '-right-2'"
+        </NuxtLink>
+      </div>
+      <nav class="hidden lg:block">
+        <ul class="flex gap-4">
+          <li class="hover:text-[#F3A454]">
+            <button
+              aria-label="Меню"
+              class="cursor-pointer menu-button"
+              @click="menuStore.open"
             >
-              {{ badgeText(favoritesCount) }}
+              Меню
+            </button>
+          </li>
+          <li class="hover:text-[#F3A454]"><NuxtLink to="/blog/">Блог
+          </NuxtLink></li>
+          <li class="hover:text-[#F3A454]"><NuxtLink to="/campaigns/">Вдохновение
+          </NuxtLink></li>
+          <li class="hover:text-[#F3A454]">
+            <a
+              href="https://t.me/casaalmarecom"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Telegram
+            </a>
+          </li>
+          <li class="hover:text-[#F3A454]">
+            <a
+              href="https://wa.me/message/QHQXRHXMTADMK1"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              WhatsApp
+            </a>
+          </li>
+        </ul>
+      </nav>
+      <nav>
+        <ul class="flex gap-3 sm:gap-4">
+          <li class="hover:text-[#F3A454] cursor-pointer"><AppSearch @search-toggle="handleSearchToggle" /></li>
+          <li class="hidden hover:text-[#F3A454] cursor-pointer sm:block relative">
+            <NuxtLink @click="handleFavClick"
+              >Избранное
+              <span
+                v-if="favoritesCount > 0"
+                class="absolute top-0 -right-1.5 text-[#211D1D] text-[9px]"
+                :class="favoritesCount > 9 && '-right-2'"
+              >
+                {{ badgeText(favoritesCount) }}
+              </span>
+            </NuxtLink>
+          </li>
+          <li class="hover:text-[#F3A454] relative">
+            <NuxtLink to="/order/">Корзина</NuxtLink>
+            <span
+              v-if="cartCount > 0"
+              class="absolute top-0 -right-1.5 text-[#211D1D] text-[9px]"
+              :class="cartCount > 9 && '-right-2'"
+            >
+              {{ badgeText(cartCount) }}
             </span>
-          </NuxtLink>
-        </li>
-        <li class="hover:text-[#F3A454] relative">
-          <NuxtLink to="/order/">Корзина</NuxtLink>
-          <span
-            v-if="cartCount > 0"
-            class="absolute top-0 -right-1.5 text-[#211D1D] text-[9px]"
-            :class="cartCount > 9 && '-right-2'"
-          >
-            {{ badgeText(cartCount) }}
-          </span>
-        </li>
-        <li class="block hover:text-[#F3A454] cursor-pointer lg:hidden">
-          <button
-            aria-label="Меню"
-            class="menu-button2"
-            @click="handleMenuButtonClick"
-          >
-            {{ menuButtonText }}
-          </button>
-        </li>
-      </ul>
-    </nav>
-  </header>
+          </li>
+          <li class="block hover:text-[#F3A454] cursor-pointer lg:hidden">
+            <button
+              aria-label="Меню"
+              class="menu-button2"
+              @click="handleMenuButtonClick"
+            >
+              {{ menuButtonText }}
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </header>
+  </div>
   <MainMenu />
 </template>

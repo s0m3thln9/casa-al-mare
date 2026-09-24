@@ -584,7 +584,7 @@ useHead(() => ({
     </div>
     <div
       v-else
-      class="flex flex-col gap-2 items-center p-2 sticky top-[32px] bg-[#FFFFFA] z-[8]"
+      class="flex flex-col gap-2 items-center p-2 sticky top-[calc(32px+var(--top-banner-h,0px))] bg-[#FFFFFA] z-[8]"
     >
       <span class="text-[10px] font-light font-[Commissioner]"><AppBreadcrumbs :items="breadcrumsItems" center /></span>
       <div class="flex justify-between w-full">

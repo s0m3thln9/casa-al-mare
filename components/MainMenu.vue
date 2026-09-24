@@ -264,12 +264,12 @@ watch(
     @click.self="menuStore.close"
   >
     <div
-      class="fixed top-[32px] flex bg-[#FFFFFA] transition-all duration-300 sm:top-[62px] sm:rounded-b-3xl sm:border-t-[0.5px] sm:border-r-[0.5px] sm:border-b-[0.5px] sm:border-[#F9F6EC]"
+      class="fixed top-[calc(32px+var(--top-banner-h,0px))] flex bg-[#FFFFFA] transition-all duration-300 sm:top-[calc(62px+var(--top-banner-h,0px))] sm:rounded-b-3xl sm:border-t-[0.5px] sm:border-r-[0.5px] sm:border-b-[0.5px] sm:border-[#F9F6EC]"
       :class="[
         menuStore.isOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0',
         isMobile
-          ? 'w-full h-[calc(100dvh-32px-env(safe-area-inset-bottom))] overflow-y-auto'
-          : 'w-fit h-auto max-h-[calc(100vh-62px)] overflow-hidden',
+          ? 'w-full h-[calc(100dvh-32px-var(--top-banner-h,0px)-env(safe-area-inset-bottom))] overflow-y-auto'
+          : 'w-fit h-auto max-h-[calc(100vh-62px-var(--top-banner-h,0px))] overflow-hidden',
       ]"
     >
       <div
