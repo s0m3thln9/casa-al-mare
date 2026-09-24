@@ -63,7 +63,7 @@ const navigateToItem = (itemAlias: string | undefined, itemId: number) => {
 }
 
 const contactViaTelegram = () => {
-  window.open('https://t.me/casaalmarecom', '_blank')
+  window.open('https://t.me/casaalmare_swim', '_blank')
 }
 
 const formatDate = (timestamp: number): string => {

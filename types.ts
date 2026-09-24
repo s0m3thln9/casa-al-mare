@@ -234,6 +234,7 @@ export interface DocNode {
   menuindex?: number
   publishedon?: string
   image?: string
+  activeImage?: string
   video?: DocVideo[]
   set?: string[]
   metatags?: DocMetaTag[]

@@ -126,6 +126,8 @@ const availableQuantity = computed(() => {
   })
 })
 
+const seoContent = computed(() => campaign.value?.content ?? null)
+
 const pageTitle = computed(() => campaign.value?.pagetitle ?? "")
 const description = computed(() => campaign.value?.description ?? "")
 
@@ -213,6 +215,12 @@ const getCardClass = (index: number) => {
         />
       </template>
     </div>
+
+    <AppSEO
+      v-if="seoContent"
+      :content="seoContent"
+      custom-class="mt-4 sm:mt-10"
+    />
 
     <AppPopup title="Собрать комплект" popup-id="set">
       <div class="flex flex-col gap-6 mt-6">

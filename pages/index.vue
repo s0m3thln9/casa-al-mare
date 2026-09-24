@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { DocTree } from '~/types'
+
 interface VideoSource {
   mp4: string
   ogv: string
@@ -10,11 +12,27 @@ interface VideoData {
   mob: VideoSource
 }
 
-const { data: treeData } = await useFetch(
+const { data: treeData } = await useFetch<DocTree>(
   "https://back.casaalmare.com/api/getdocTree"
 )
 
 const indexData = computed(() => treeData.value?.data?.index)
+
+const promoCampaigns = computed(() => {
+  const subitems = treeData.value?.data?.campaigns?.subitems
+  if (!subitems) return []
+  return Object.values(subitems)
+    .slice()
+    .sort((a, b) => (a.menuindex ?? 0) - (b.menuindex ?? 0))
+    .filter(campaign => campaign.activeImage)
+    .slice(0, 2)
+    .map(campaign => ({
+      id: campaign.id,
+      text: campaign.pagetitle,
+      link: `/campaigns/${campaign.alias}/`,
+      imageUrl: docImageUrl(campaign.id, campaign.activeImage),
+    }))
+})
 
 const pageTitle = computed(() => indexData.value?.longtitle ?? indexData.value?.pagetitle)
 const description = computed(() => indexData.value?.description ?? "")
@@ -77,18 +95,31 @@ const images = {
       link="/catalog/"
     />
     <div class="flex flex-col lg:flex-row gap-2 px-2 py-2 sm:gap-4 sm:px-4 sm:py-4">
-      <BannerCard
-        :image-url="images.promo1"
-        custom-class="rounded-lg aspect-[1] cursor-default!"
-        object-position="center"
-      />
-      <BannerCard
-        :image-url="images.promo2"
-        text="Вдохновение"
-        custom-class="rounded-lg aspect-[1]"
-        object-position="center"
-        link="/campaigns/"
-      />
+      <template v-if="promoCampaigns.length > 0">
+        <BannerCard
+          v-for="campaign in promoCampaigns"
+          :key="campaign.id"
+          :image-url="campaign.imageUrl"
+          :text="campaign.text"
+          :link="campaign.link"
+          custom-class="rounded-lg aspect-[1]"
+          object-position="center"
+        />
+      </template>
+      <template v-else>
+        <BannerCard
+          :image-url="images.promo1"
+          custom-class="rounded-lg aspect-[1] cursor-default!"
+          object-position="center"
+        />
+        <BannerCard
+          :image-url="images.promo2"
+          text="Вдохновение"
+          custom-class="rounded-lg aspect-[1]"
+          object-position="center"
+          link="/campaigns/"
+        />
+      </template>
     </div>
     <div class="grid grid-cols-2 gap-2 px-2 sm:gap-4 md:grid-cols-6 lg:grid-cols-5 sm:px-4">
       <BannerCard
