@@ -1,44 +1,25 @@
 export interface TopBannerConfig {
-  /** Глобальный выключатель баннера */
   enabled: boolean
-  /**
-   * Идентификатор кампании. Используется как ключ для запоминания закрытия —
-   * при смене id баннер снова покажется всем, кто закрыл предыдущий.
-   */
   id: string
-  /** Период показа (ISO-дата). Если не задан — без ограничений */
   startAt?: string
   endAt?: string
 
-  /** Содержимое */
   content: {
-    /** Сообщения бегущей строки, разделяются иконкой */
     messages: string[]
-    /** Ссылка по клику на баннер. Пусто — баннер не кликабельный */
     link?: string
-    /** Подпись для скринридеров */
     ariaLabel?: string
-    /** Показывать иконку-логотип между сообщениями */
     showIcon: boolean
-    /** Сколько раз повторить набор сообщений в одной копии ленты */
     repeat: number
   }
 
-  /** Поведение */
   behavior: {
-    /** Показывать кнопку закрытия */
     closable: boolean
-    /** Где запоминать закрытие: на вкладку, навсегда или не запоминать */
     rememberClose: "session" | "local" | "none"
-    /** Длительность полного прохода ленты, сек. Меньше — быстрее */
     speed: number
-    /** Останавливать ленту при наведении */
     pauseOnHover: boolean
   }
 
-  /** Внешний вид */
   appearance: {
-    /** Высота баннера, px */
     height: number
     background: string
     text: string
@@ -48,7 +29,7 @@ export interface TopBannerConfig {
   }
 }
 
-export const topBannerConfig: TopBannerConfig = {
+export const defaultTopBannerConfig: TopBannerConfig = {
   enabled: false,
   id: "solo-noi-2026-09",
 
@@ -75,4 +56,26 @@ export const topBannerConfig: TopBannerConfig = {
     closeBackground: "#F3A454",
     closeIcon: "#FFFFFA",
   },
+}
+
+export type RemoteTopBannerConfig = Partial<Omit<TopBannerConfig, "content" | "behavior" | "appearance">> & {
+  content?: Partial<TopBannerConfig["content"]>
+  behavior?: Partial<TopBannerConfig["behavior"]>
+  appearance?: Partial<TopBannerConfig["appearance"]>
+}
+
+export const resolveTopBannerConfig = (remote?: RemoteTopBannerConfig | null): TopBannerConfig => {
+  const defaults = defaultTopBannerConfig
+  if (!remote) return defaults
+
+  const content = { ...defaults.content, ...remote.content }
+  if (!Array.isArray(content.messages)) content.messages = []
+
+  return {
+    ...defaults,
+    ...remote,
+    content,
+    behavior: { ...defaults.behavior, ...remote.behavior },
+    appearance: { ...defaults.appearance, ...remote.appearance },
+  }
 }

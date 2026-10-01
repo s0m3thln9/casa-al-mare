@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { topBannerConfig as config } from "~/config/topBanner"
+import { resolveTopBannerConfig, type RemoteTopBannerConfig } from "~/config/topBanner"
+
+const { data: remoteConfig } = await useFetch<RemoteTopBannerConfig>(
+  "https://back.casaalmare.com/api/getBannerConfig",
+  { key: "top-banner-config" }
+)
+
+const config = resolveTopBannerConfig(remoteConfig.value)
 
 const { content, behavior, appearance } = config
 
