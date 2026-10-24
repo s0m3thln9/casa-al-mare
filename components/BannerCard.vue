@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue"
-import { navigateTo } from "#app"
-
 const props = defineProps<{
   imageUrl: string
   text?: string
@@ -12,43 +9,24 @@ const props = defineProps<{
   link?: string
 }>()
 
-const isLoaded = ref(false)
-const imageSrc = ref("")
-
-const handleClick = () => {
-  if (props.link) {
-    navigateTo(props.link)
-  }
-}
-
-onMounted(() => {
-  imageSrc.value = props.imageUrl
-  const img = new Image()
-  img.src = props.imageUrl
-  img.onload = () => {
-    isLoaded.value = true
-  }
-  img.onerror = () => {
-    isLoaded.value = true
-  }
-})
+// С link карточка — настоящая ссылка <a href>, чтобы переходы видели поисковики
+const NuxtLinkComponent = resolveComponent("NuxtLink")
+const rootTag = computed(() => (props.link ? NuxtLinkComponent : "div"))
+const rootAttrs = computed(() => (props.link ? { to: props.link } : {}))
 </script>
 
 <template>
-  <div
-    :class="['relative w-full overflow-hidden cursor-pointer', maxHeight || '', customClass]"
-    @click="handleClick"
+  <component
+    :is="rootTag"
+    v-bind="rootAttrs"
+    :class="['block relative w-full overflow-hidden cursor-pointer bg-[#F9F6EC]', maxHeight || '', customClass]"
   >
-    <div
-      v-if="!isLoaded"
-      :class="['bg-[#F9F6EC] w-full h-full', customClass]"
-    />
     <img
-      v-else
-      :src="imageSrc"
+      v-if="imageUrl"
+      :src="imageUrl"
       class="w-full h-full object-cover"
       :style="{ objectPosition: objectPosition || 'center' }"
-      alt="banner"
+      :alt="text || 'banner'"
       fetchpriority="high"
     >
     <div
@@ -65,7 +43,7 @@ onMounted(() => {
         <div class="grid-icon" />
       </div>
     </div>
-  </div>
+  </component>
 </template>
 
 <style scoped>

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { Item } from "~/stores/catalog"
-import type { DocNode, DocTree } from "~/types"
 
 interface VideoSource {
   mp4: string
@@ -62,8 +61,7 @@ const isAnyFilterActive = computed(() => {
 })
 
 const { data: videoData } = await useAsyncData('catalog-videos', () =>
-  $fetch<VideoAPIItem[]>("https://back.casaalmare.com/api/getVideoByID", {
-    method: "GET",
+  $fetch<VideoAPIItem[]>("/api/media/video", {
     params: { id: 3 },
   }).then(response => Array.isArray(response) ? response.slice(0, 2) : [])
     .catch(() => [])
@@ -233,17 +231,13 @@ const setupInfiniteScroll = () => {
   }
 }
 
-onMounted(async () => {
-  await Promise.all([
-    catalogStore.loadItems(),
-    !docsStore.tree ? docsStore.fetchTree() : Promise.resolve()
-  ])
+// Товары и фильтры готовятся ещё на сервере, чтобы карточки попали в HTML.
+await catalogStore.loadItems()
+applyFiltersFromPath(currentPath.value, route.query)
+catalogStore.shouldResetCount = false
+catalogStore.syncPending()
 
-  applyFiltersFromPath(currentPath.value, route.query)
-  catalogStore.shouldResetCount = false
-
-  catalogStore.syncPending()
-
+onMounted(() => {
   void nextTick(() => {
     if (scrollPosition.value > 0) {
       window.scrollTo(0, scrollPosition.value)
@@ -368,80 +362,31 @@ const hasMoreItems = computed(() => {
   return catalogStore.currentVisibleCardCount < catalogStore.filteredItems.length
 })
 
-const docsStore = useDocsStore()
-
-const { data: treeData } = await useFetch<DocTree>(
-  "https://back.casaalmare.com/api/getdocTree"
+const { data: categoryContent, error: categoryContentError } = await useContentNode(
+  () => `catalog/${currentPath.value.replace(/^\/+|\/+$/g, "")}`,
 )
+if (categoryContentError.value) console.error("Не удалось загрузить данные категории:", categoryContentError.value)
 
-const getCurrentCategoryData = computed(() => {
-  const catalogData = treeData.value?.data?.catalog
-  if (!catalogData?.subitems) return null
+// trail: [каталог, 1-й уровень, 2-й уровень, ...] — null, если сегмент пути не найден
+const catalogRoot = computed(() => categoryContent.value?.trail?.[0] ?? null)
 
-  const pathValue = currentPath.value?.trim()
-  if (!pathValue) return catalogData
-
-  const segments = pathValue
-    .replace(/^\/+|\/+$/g, "")
-    .split("/")
-    .filter((p) => p.trim() !== "")
-
-  let node: DocNode | undefined
-  let level: Record<string, DocNode> | undefined = catalogData.subitems
-
-  for (const segment of segments) {
-    node = level?.[segment]
-    if (!node) return null
-    level = node.subitems
-  }
-
-  return node ?? null
-})
+const getCurrentCategoryData = computed(() => categoryContent.value?.node ?? null)
 
 const pageTitle = computed(() => getCurrentCategoryData.value?.longtitle ||
 getCurrentCategoryData.value?.pagetitle ||
-  treeData.value?.data?.catalog?.pagetitle || "Каталог")
+  catalogRoot.value?.pagetitle || "Каталог")
 const description = computed(() => getCurrentCategoryData.value?.meta_descr ||
     getCurrentCategoryData.value?.description
-  || treeData.value?.data?.catalog?.description || "")
+  || catalogRoot.value?.description || "")
 
-const metaTags = computed(() => {
-  const tags = getCurrentCategoryData.value?.metatags || treeData.value?.data?.catalog?.metatags || []
-
-  const result: Record<string, string> = {}
-  tags.forEach(tag => {
-    if (tag.name.startsWith("og:")) {
-      const ogKey = tag.name.replace("og:", "")
-      const camelCaseKey = "og" + ogKey.charAt(0).toUpperCase() + ogKey.slice(1)
-      result[camelCaseKey] = tag.content
-    } else if (tag.name.startsWith("twitter:")) {
-      const twitterKey = tag.name.replace("twitter:", "")
-      const camelCaseKey = "twitter" + twitterKey.charAt(0).toUpperCase() + twitterKey.slice(1)
-      result[camelCaseKey] = tag.content
-    } else {
-      result[tag.name] = tag.content
-    }
-  })
-
-  return result
-})
-
-const updateSeo = () => {
-  useSeoMeta({
-    title: pageTitle.value,
-    description: description.value,
-    ...metaTags.value
-  })
-}
-
-updateSeo()
-
-watch(getCurrentCategoryData, () => {
-  updateSeo()
-}, { immediate: true })
+useDocSeo(() => ({
+  title: pageTitle.value,
+  description: description.value,
+  metatags: getCurrentCategoryData.value?.metatags || catalogRoot.value?.metatags,
+}))
 
 const seoContent = computed(() => {
-  const catalogData = treeData.value?.data?.catalog
+  const catalogData = catalogRoot.value
   if (!catalogData) return null
 
   const pathValue = currentPath.value?.trim()
@@ -452,18 +397,12 @@ const seoContent = computed(() => {
     .split('/')
     .filter((p: string) => p.trim() !== '')
 
-  const firstAlias = segments[0]
-  if (!firstAlias) return catalogData.content || null
-
-  const firstLevel = catalogData.subitems?.[firstAlias]
+  const firstLevel = segments[0] ? categoryContent.value?.trail?.[1] : null
   if (!firstLevel) return catalogData.content || null
 
-  if (segments.length > 1) {
-    const secondSegment = segments[1]
-    if (!secondSegment.includes(',')) {
-      const secondLevel = firstLevel.subitems?.[secondSegment]
-      if (secondLevel?.content) return secondLevel.content
-    }
+  if (segments.length > 1 && !segments[1].includes(',')) {
+    const secondLevel = categoryContent.value?.trail?.[2]
+    if (secondLevel?.content) return secondLevel.content
   }
 
   return firstLevel.content || catalogData.content || null
@@ -521,14 +460,7 @@ const catalogH1 = computed(() => {
 
 const { toAbsolute, withTrailingSlash, buildBreadcrumbList, buildItemList } = useStructuredData()
 
-const { data: ssrCatalogProducts } = await useAsyncData("catalog-ssr-products", () =>
-  $fetch<Item[]>("https://back.casaalmare.com/api/getProducts"),
-)
-
-const jsonLdItems = computed<Item[]>(() => {
-  const base = catalogStore.items.length ? catalogStore.items : (ssrCatalogProducts.value || [])
-  return filterCatalogItemsByPath(base, currentPath.value, route.query)
-})
+const jsonLdItems = computed<Item[]>(() => filterCatalogItemsByPath(catalogStore.items, currentPath.value, route.query))
 
 const collectionUrl = computed(() =>
   toAbsolute(withTrailingSlash(currentPath.value ? `/catalog/${currentPath.value}` : "/catalog")),

@@ -1,5 +1,13 @@
 <script setup lang="ts">
+import type { NuxtError } from "#app"
 import { type AppInput, SelectInput } from "#components"
+
+const props = defineProps<{ error: NuxtError }>()
+
+useHead({
+  title: props.error?.statusCode === 404 ? "Страница не найдена - CASA AL MARE" : "Ошибка - CASA AL MARE",
+  meta: [{ name: "robots", content: "noindex, follow" }],
+})
 
 const isCookieAccepted = ref(true)
 const email = ref("")

@@ -2,7 +2,7 @@
 import { resolveTopBannerConfig, type RemoteTopBannerConfig } from "~/config/topBanner"
 
 const { data: remoteConfig } = await useFetch<RemoteTopBannerConfig>(
-  "https://back.casaalmare.com/api/getBannerConfig",
+  "/api/banner-config",
   { key: "top-banner-config" }
 )
 

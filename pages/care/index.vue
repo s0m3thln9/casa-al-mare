@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import type { DocTree } from "~/types"
-
-
 useHead({
   title: "Уход за изделиями - CASA AL MARE",
 })
@@ -14,38 +11,9 @@ const breadcrumsItems: { name: string; path?: string }[] = [
   { name: "Уход за изделиями" },
 ]
 
-const areImagesLoaded = ref(false)
+const { data: careDoc } = await useContentNode("docs/care")
 
-const preloadImages = async () => {
-  const loadImage = (url: string) => {
-    return new Promise((resolve, reject) => {
-      const img = new Image()
-      img.src = url
-      img.onload = resolve
-      img.onerror = reject
-    })
-  }
-
-  try {
-    await Promise.all(["/about.jpg"].map((url) => loadImage(url)))
-    areImagesLoaded.value = true
-  } catch (error) {
-    console.error("Ошибка при загрузке изображений:", error)
-    areImagesLoaded.value = true
-  }
-}
-
-onMounted(() => {
-  preloadImages()
-})
-
-const { data: treeData } = await useFetch<DocTree>(
-  "https://back.casaalmare.com/api/getdocTree"
-)
-
-const careContent = computed(() => {
-  return treeData.value?.data?.docs?.subitems?.care?.content ?? ""
-})
+const careContent = computed(() => careDoc.value?.node?.content ?? "")
 </script>
 
 <template>
@@ -54,12 +22,7 @@ const careContent = computed(() => {
       <AppBreadcrumbs :items="breadcrumsItems" />
     </div>
     <div class="grid grid-cols-1 items-start my-6 xl:grid-cols-2">
-      <div
-        v-if="!areImagesLoaded"
-        class="aspect-[909/692] w-full bg-[#F9F6EC] rounded-lg"
-      />
       <img
-        v-else
         src="/care.png"
         alt="care"
         width="909"

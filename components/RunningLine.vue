@@ -5,11 +5,17 @@ const props = defineProps<{
 	messages: string[];
 }>();
 
+// Ширина экрана известна только в браузере: до монтирования считаем от 1920px,
+// иначе серверный HTML и первый рендер клиента не совпадут.
+const screenWidth = ref(1920);
+onMounted(() => {
+	screenWidth.value = window.innerWidth;
+});
+
 const repeatCount = computed(() => {
-	const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 1920;
 	const estimatedMessageWidth = 300;
 	const totalMessagesWidth = estimatedMessageWidth * props.messages.length;
-	return Math.ceil(screenWidth / totalMessagesWidth) * 2;
+	return Math.ceil(screenWidth.value / totalMessagesWidth) * 2;
 });
 </script>
 

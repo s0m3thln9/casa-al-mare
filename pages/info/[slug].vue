@@ -1,76 +1,20 @@
 <script setup lang="ts">
-import type { DocNode } from "~/types"
-
-import { useRoute } from "vue-router"
-
 const route = useRoute()
 const slug = computed(() => route.params.slug as string)
-const docsStore = useDocsStore()
 
-const { data: treeData } = await useFetch(
-  "https://back.casaalmare.com/api/getdocTree"
-)
-
-const doc = computed(() => {
-  const slugValue = slug.value
-  if (!slugValue || !treeData.value?.data) return null
-
-  const findDoc = (nodes: Record<string, DocNode> | undefined): DocNode | null => {
-    if (!nodes) return null
-
-    for (const key in nodes) {
-      const node = nodes[key]
-      if (node && typeof node === 'object') {
-        if (node.alias === slugValue) return node
-        if (node.subitems) {
-          const found = findDoc(node.subitems)
-          if (found) return found
-        }
-      }
-    }
-    return null
-  }
-
-  return findDoc(treeData.value.data)
-})
+const { data: doc, error: docError } = await useContentDoc(slug)
+useFetchErrorPage(docError)
 
 const breadcrumbsItems = computed(() => [
   { name: "Главная", path: "/" },
   { name: doc.value?.pagetitle || "Не найдено" },
 ])
 
-const pageTitle = computed(() => doc.value?.pagetitle ?? "")
-const description = computed(() => doc.value?.description ?? "")
-
-const metaTags = computed(() => {
-  const tags: Record<string, string> = {}
-
-  doc.value?.metatags?.forEach(tag => {
-    if (tag.name.startsWith('og:')) {
-      const ogKey = tag.name.replace('og:', '')
-      const camelCaseKey = 'og' + ogKey.charAt(0).toUpperCase() + ogKey.slice(1)
-      tags[camelCaseKey] = tag.content
-    } else if (tag.name.startsWith('twitter:')) {
-      const twitterKey = tag.name.replace('twitter:', '')
-      const camelCaseKey = 'twitter' + twitterKey.charAt(0).toUpperCase() + twitterKey.slice(1)
-      tags[camelCaseKey] = tag.content
-    } else {
-      tags[tag.name] = tag.content
-    }
-  })
-
-  return tags
-})
-
-const updateSeo = () => {
-  useSeoMeta({
-    title: pageTitle.value,
-    description: description.value,
-    ...metaTags.value
-  })
-}
-
-updateSeo()
+useDocSeo(() => ({
+  title: doc.value?.longtitle || doc.value?.pagetitle,
+  description: doc.value?.description,
+  metatags: doc.value?.metatags,
+}))
 
 const handleAccordionClick = (e: MouseEvent) => {
   const target = e.target as HTMLElement
@@ -80,10 +24,6 @@ const handleAccordionClick = (e: MouseEvent) => {
   const accordeon = header.closest('.accordeon') as HTMLElement
   accordeon.classList.toggle('open')
 }
-
-watch(doc, () => {
-  updateSeo()
-}, { immediate: true })
 </script>
 
 <template>
@@ -92,13 +32,7 @@ watch(doc, () => {
       <AppBreadcrumbs :items="breadcrumbsItems" />
     </div>
     <div
-      v-if="docsStore.loading"
-      class="flex flex-col items-center justify-center min-h-[400px]"
-    >
-      <p class="text-lg">Загрузка...</p>
-    </div>
-    <div
-      v-else-if="doc"
+      v-if="doc"
       class="flex flex-col items-center"
     >
       <h2 class="uppercase mb-6 font-[Inter] text-[17px]">{{ doc.pagetitle }}</h2>
@@ -107,19 +41,6 @@ watch(doc, () => {
         @click="handleAccordionClick"
         v-html="doc.content"
       />
-    </div>
-    <div
-      v-else-if="docsStore.error"
-      class="flex flex-col items-center justify-center min-h-[400px]"
-    >
-      <h2 class="uppercase mb-6 text-2xl font-bold">Ошибка загрузки</h2>
-      <p class="text-red-500">{{ docsStore.error }}</p>
-      <button
-        class="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-        @click="docsStore.fetchTree"
-      >
-        Повторить
-      </button>
     </div>
     <div
       v-else

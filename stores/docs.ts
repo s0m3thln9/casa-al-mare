@@ -17,28 +17,33 @@ export const useDocsStore = defineStore("docs", () => {
   const loading = computed(() => rawState.value.loading)
   const error = computed(() => rawState.value.error)
 
-  const fetchTree = async () => {
+  let loadingPromise: Promise<void> | null = null
+
+  // Облегчённое дерево документов (без content/metatags) — для меню и списков.
+  // Полные документы страницы получают через useContentNode/useContentDoc.
+  const fetchTree = (force = false): Promise<void> => {
+    if (rawState.value.tree && !force) return Promise.resolve()
+    if (loadingPromise) return loadingPromise
+
     rawState.value.loading = true
     rawState.value.error = null
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000)
-
-    try {
-      const response = await $fetch<DocTree>("https://back.casaalmare.com/api/getdocTree", {
-        signal: controller.signal,
+    loadingPromise = $fetch<DocTree>("/api/content/tree", { timeout: 10000 })
+      .then((response) => {
+        rawState.value.tree = response
       })
-      rawState.value.tree = response
-    } catch (err) {
-      if (err instanceof Error && err.name === "AbortError") {
-        rawState.value.error = "Таймаут загрузки, попробуйте позже"
-      } else {
-        rawState.value.error = `Ошибка: ${err instanceof Error ? err.message : String(err)}`
-      }
-      console.error("Fetch error:", err)
-    } finally {
-      clearTimeout(timeoutId)
-      rawState.value.loading = false
-    }
+      .catch((err) => {
+        if (err instanceof Error && (err.name === "AbortError" || err.name === "TimeoutError")) {
+          rawState.value.error = "Таймаут загрузки, попробуйте позже"
+        } else {
+          rawState.value.error = `Ошибка: ${err instanceof Error ? err.message : String(err)}`
+        }
+        console.error("Fetch error:", err)
+      })
+      .finally(() => {
+        rawState.value.loading = false
+        loadingPromise = null
+      })
+    return loadingPromise
   }
 
   const findDocById = (nodes: Record<string, DocNode> | DocNode[], id: number | string): DocNode | null => {

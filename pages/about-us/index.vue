@@ -12,30 +12,6 @@ const breadcrumsItems: { name: string; path?: string }[] = [
   { name: "О нас" },
 ]
 
-const areImagesLoaded = ref(false)
-
-const preloadImages = async () => {
-  const loadImage = (url: string) => {
-    return new Promise((resolve, reject) => {
-      const img = new Image()
-      img.src = url
-      img.onload = resolve
-      img.onerror = reject
-    })
-  }
-
-  try {
-    await Promise.all(["/about.jpg"].map((url) => loadImage(url)))
-    areImagesLoaded.value = true
-  } catch (error) {
-    console.error("Ошибка при загрузке изображений:", error)
-    areImagesLoaded.value = true
-  }
-}
-
-onMounted(() => {
-  preloadImages()
-})
 </script>
 
 <template>
@@ -62,12 +38,7 @@ onMounted(() => {
         </p>
       </div>
       <div class="mt-4 sm:mt-0">
-        <div
-          v-if="!areImagesLoaded"
-          class="aspect-[909/692] w-full bg-[#F9F6EC] rounded-lg"
-        />
         <img
-          v-else
           src="/O_NAS.webp"
           alt="about"
           width="909"

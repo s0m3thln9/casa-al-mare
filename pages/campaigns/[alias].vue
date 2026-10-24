@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import type { DocNode, DocTree } from '~/types'
+import type { DocNode } from '~/types'
 
 const route = useRoute()
 const docsStore = useDocsStore()
@@ -10,17 +9,13 @@ const catalogStore = useCatalogStore()
 
 const alias = computed(() => String(route.params.alias))
 
-const { data: treeData } = await useFetch<DocTree>(
-  "https://back.casaalmare.com/api/getdocTree"
+const { data: campaignContent, error: campaignError } = await useContentNode(
+  () => `campaigns/${alias.value}`,
+  { strict: true },
 )
+useFetchErrorPage(campaignError, "Кампания не найдена")
 
-const campaignsData = computed(() => docsStore.tree?.data?.campaigns ?? treeData.value?.data?.campaigns)
-
-const campaign = computed<DocNode | null>(() => {
-  const subitems = campaignsData.value?.subitems
-  if (!subitems) return null
-  return Object.values(subitems).find(item => item.alias === alias.value) ?? null
-})
+const campaign = computed<DocNode | null>(() => campaignContent.value?.node ?? null)
 
 const campaignItems = computed(() => {
   if (!campaign.value?.subitems) return []
@@ -29,9 +24,6 @@ const campaignItems = computed(() => {
     .sort((a, b) => (a.menuindex ?? 0) - (b.menuindex ?? 0))
 })
 
-if (campaignsData.value?.subitems && !campaign.value) {
-  throw createError({ statusCode: 404, statusMessage: "Кампания не найдена", fatal: true })
-}
 
 const breadcrumsItems = computed<{ name: string; path?: string }[]>(() => [
   { name: "Главная", path: "/" },
@@ -41,10 +33,11 @@ const breadcrumsItems = computed<{ name: string; path?: string }[]>(() => [
 
 const selectedSetItems = ref<DocNode[]>([])
 
-const openSetPopup = (node: DocNode) => {
+const openSetPopup = async (node: DocNode) => {
   if (!node.set || !Array.isArray(node.set)) return
 
   setStore.clear()
+  await docsStore.fetchTree()
 
   const items = node.set
     .map(id => docsStore.findDocById(docsStore.tree?.data ?? {}, id))
@@ -129,50 +122,17 @@ const availableQuantity = computed(() => {
 const seoContent = computed(() => campaign.value?.content ?? null)
 
 const pageTitle = computed(() => campaign.value?.pagetitle ?? "")
-const description = computed(() => campaign.value?.description ?? "")
 
-const metaTags = computed(() => {
-  const tags: Record<string, string> = {}
+useDocSeo(() => ({
+  title: campaign.value?.longtitle || pageTitle.value,
+  description: campaign.value?.description,
+  metatags: campaign.value?.metatags,
+}))
 
-  campaign.value?.metatags?.forEach(tag => {
-    if (tag.name.startsWith('og:')) {
-      const ogKey = tag.name.replace('og:', '')
-      const camelCaseKey = 'og' + ogKey.charAt(0).toUpperCase() + ogKey.slice(1)
-      tags[camelCaseKey] = tag.content
-    } else if (tag.name.startsWith('twitter:')) {
-      const twitterKey = tag.name.replace('twitter:', '')
-      const camelCaseKey = 'twitter' + twitterKey.charAt(0).toUpperCase() + twitterKey.slice(1)
-      tags[camelCaseKey] = tag.content
-    } else {
-      tags[tag.name] = tag.content
-    }
-  })
-
-  return tags
-})
-
-const updateSeo = () => {
-  useSeoMeta({
-    title: pageTitle.value,
-    description: description.value,
-    ...metaTags.value
-  })
-}
-
-updateSeo()
-
-watch([pageTitle, description, metaTags], () => {
-  updateSeo()
-}, { deep: true })
-
-onMounted(async () => {
-  if (!docsStore.tree) {
-    await docsStore.fetchTree()
-  }
-
-  if (catalogStore.items.length === 0) {
-    await catalogStore.loadItems()
-  }
+onMounted(() => {
+  // Нужны только для попапа «Собрать комплект»
+  void docsStore.fetchTree()
+  void catalogStore.loadItems()
 })
 
 const getCardClass = (index: number) => {
@@ -189,9 +149,9 @@ const getCardClass = (index: number) => {
 
     <h2 class="uppercase text-center font-[Inter] text-[17px]">{{ pageTitle }}</h2>
 
-    <div v-if="docsStore.loading && campaignItems.length === 0" class="text-center py-10">Загрузка...</div>
 
-    <div v-else-if="campaignItems.length === 0" class="text-center py-10 text-gray-400">
+
+    <div v-if="campaignItems.length === 0" class="text-center py-10 text-gray-400">
       В этой кампании пока нет материалов
     </div>
 

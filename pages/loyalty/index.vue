@@ -6,7 +6,7 @@ useHead({
 const authStore = useAuthStore()
 const authModalStore = useAuthModalStore()
 const userStore = useUserStore()
-const docsStore = useDocsStore()
+const { data: faqDoc } = await useContentNode("docs/loyality-faq", { children: "full" })
 
 const breadcrumsItems: { name: string; path?: string }[] = [
   { name: "Главная", path: "/" },
@@ -37,7 +37,7 @@ const levels = [
 const currentLevel = computed(() => (authStore.isAuth ? userStore.user?.loyaltyLevel ?? null : null))
 
 const faqItems = computed(() => {
-  const rawItems = docsStore.tree?.data?.docs?.subitems?.["loyality-faq"]?.subitems
+  const rawItems = faqDoc.value?.node?.subitems
   if (!rawItems) return []
   return Object.values(rawItems).sort((a, b) => (a?.menuindex ?? 0) - (b?.menuindex ?? 0))
 })

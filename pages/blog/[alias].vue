@@ -1,26 +1,17 @@
 <script setup lang="ts">
 const route = useRoute()
-const docsStore = useDocsStore()
 
 const articleAlias = computed(() => route.params.alias as string)
 
-const { data: treeData } = await useFetch(
-  "https://back.casaalmare.com/api/getdocTree"
-)
+const [{ data: articleData, error: articleError }, { data: blogContent }] = await Promise.all([
+  useContentNode(() => `blog/${articleAlias.value}`, { strict: true }),
+  useContentNode("blog"),
+])
+useFetchErrorPage(articleError, "Статья не найдена")
 
-const subitems = computed(() =>
-  Object.values(docsStore.tree?.data?.blog?.subitems ?? {})
-)
+const subitems = computed(() => Object.values(blogContent.value?.node?.subitems ?? {}))
 
-const article = computed(() => {
-  const alias = articleAlias.value
-  if (!alias) return null
-
-  return treeData.value?.data?.blog?.subitems?.[alias] ?? null
-})
-
-const pageTitle = computed(() => article.value?.pagetitle ?? "")
-const description = computed(() => article.value?.description ?? "")
+const article = computed(() => articleData.value?.node ?? null)
 
 const articleContent = computed(() => article.value?.content ?? "")
 
@@ -31,43 +22,15 @@ const randomOtherArticles = computed(() => {
     item => item.id !== article.value!.id
   )
 
-  const shuffled = [...others].sort(() => 0.5 - Math.random())
-  return shuffled.slice(0, 3)
+  // Стабильный порядок для статьи: одинаковый на сервере и при гидрации
+  return seededShuffle(others, Number(article.value.id)).slice(0, 3)
 })
 
-const metaTags = computed(() => {
-  const tags: Record<string, string> = {}
-
-  article.value?.metatags?.forEach(tag => {
-    if (tag.name.startsWith('og:')) {
-      const ogKey = tag.name.replace('og:', '')
-      const camelCaseKey = 'og' + ogKey.charAt(0).toUpperCase() + ogKey.slice(1)
-      tags[camelCaseKey] = tag.content
-    } else if (tag.name.startsWith('twitter:')) {
-      const twitterKey = tag.name.replace('twitter:', '')
-      const camelCaseKey = 'twitter' + twitterKey.charAt(0).toUpperCase() + twitterKey.slice(1)
-      tags[camelCaseKey] = tag.content
-    } else {
-      tags[tag.name] = tag.content
-    }
-  })
-
-  return tags
-})
-
-const updateSeo = () => {
-  useSeoMeta({
-    title: pageTitle.value,
-    description: description.value,
-    ...metaTags.value
-  })
-}
-
-updateSeo()
-
-watch(article, () => {
-  updateSeo()
-}, { immediate: true })
+useDocSeo(() => ({
+  title: article.value?.longtitle || article.value?.pagetitle,
+  description: article.value?.description,
+  metatags: article.value?.metatags,
+}))
 
 const formatDate = (dateString: string | undefined) => {
   if (!dateString) return ''

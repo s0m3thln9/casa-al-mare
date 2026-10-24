@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { DocTree } from '~/types'
-
 interface VideoSource {
   mp4: string
   ogv: string
@@ -12,14 +10,16 @@ interface VideoData {
   mob: VideoSource
 }
 
-const { data: treeData } = await useFetch<DocTree>(
-  "https://back.casaalmare.com/api/getdocTree"
-)
+const [{ data: indexContent }, { data: campaignsContent }, { data }] = await Promise.all([
+  useContentNode("index"),
+  useContentNode("campaigns"),
+  useFetch<VideoData>("/api/media/main-video", { key: "main-video" }),
+])
 
-const indexData = computed(() => treeData.value?.data?.index)
+const indexData = computed(() => indexContent.value?.node)
 
 const promoCampaigns = computed(() => {
-  const subitems = treeData.value?.data?.campaigns?.subitems
+  const subitems = campaignsContent.value?.node?.subitems
   if (!subitems) return []
   return Object.values(subitems)
     .slice()
@@ -34,44 +34,12 @@ const promoCampaigns = computed(() => {
     }))
 })
 
-const pageTitle = computed(() => indexData.value?.longtitle ?? indexData.value?.pagetitle)
-const description = computed(() => indexData.value?.description ?? "")
+useDocSeo(() => ({
+  title: indexData.value?.longtitle ?? indexData.value?.pagetitle,
+  description: indexData.value?.description,
+  metatags: indexData.value?.metatags,
+}))
 
-const metaTags = computed(() => {
-  const tags: Record<string, string> = {}
-
-  indexData.value?.metatags?.forEach(tag => {
-    if (tag.name.startsWith('og:')) {
-      const ogKey = tag.name.replace('og:', '')
-      const camelCaseKey = 'og' + ogKey.charAt(0).toUpperCase() + ogKey.slice(1)
-      tags[camelCaseKey] = tag.content
-    } else if (tag.name.startsWith('twitter:')) {
-      const twitterKey = tag.name.replace('twitter:', '')
-      const camelCaseKey = 'twitter' + twitterKey.charAt(0).toUpperCase() + twitterKey.slice(1)
-      tags[camelCaseKey] = tag.content
-    } else {
-      tags[tag.name] = tag.content
-    }
-  })
-
-  return tags
-})
-
-const updateSeo = () => {
-  useSeoMeta({
-    title: pageTitle.value,
-    description: description.value,
-    ...metaTags.value
-  })
-}
-
-updateSeo()
-
-watch([pageTitle, description, metaTags], () => {
-  updateSeo()
-}, { deep: true })
-
-const data = await $fetch<VideoData>("https://back.casaalmare.com/api/getMainVideo")
 const images = {
   promo1: "/2_camp.webp",
   promo2: "/1_camp.webp",

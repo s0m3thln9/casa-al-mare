@@ -19,9 +19,24 @@ const popupStore = usePopupStore()
 const itemStore = useItemStore()
 const orderStore = useOrderStore()
 
-const isLoading = ref(true)
-const error = ref<string | null>(null)
-const item = ref<Item | null>(null)
+interface ProductResponse {
+  item: Item
+  doc: DocNode | null
+}
+
+// Полный товар (с описаниями) и его SEO-документ — на сервере, из кэша Nitro.
+const { data: productData, error: productError, status: productStatus } = await useFetch<ProductResponse>(
+  () => `/api/catalog/product/${alias.value}`,
+  { key: computed(() => `product:${alias.value}`) },
+)
+useFetchErrorPage(productError, "Товар не найден")
+
+// Облегчённый список нужен для цветов, шорт и «Вам может понравиться».
+await catalogStore.loadItems()
+
+const item = computed<Item | null>(() => productData.value?.item ?? null)
+const isLoading = computed(() => !item.value && productStatus.value === "pending")
+const error = computed(() => (productError.value ? "Произошла ошибка при загрузке данных." : null))
 
 const isHtml = (str: string) => {
   return /<\/?[a-z][\s\S]*>/i.test(str)
@@ -57,64 +72,8 @@ const handleAccordionClick = (e: MouseEvent) => {
   accordeon.classList.toggle('open')
 }
 
-const loadItem = async () => {
-  try {
-    isLoading.value = true
-    error.value = null
-
-    if (catalogStore.items.length === 0) {
-      await catalogStore.loadItems()
-    }
-
-    let foundItem: Item | null = null
-    console.log(alias.value)
-    if (alias.value && alias.value.trim() !== "") {
-      foundItem = catalogStore.items.find((i) => i.alias === alias.value) || null
-
-      if (foundItem) {
-        if (foundItem.colorVal && foundItem.colorName) {
-          itemStore.color = {
-            code: foundItem.colorVal,
-            name: foundItem.colorName,
-            value: foundItem.colorVal,
-          }
-        }
-      } else {
-        error.value = "Товар не найден. Проверьте адресную строку."
-        item.value = null
-        return
-      }
-    } else {
-      const idFromParams = route.params.id
-      if (typeof idFromParams === "string" && !isNaN(Number(idFromParams))) {
-        foundItem = catalogStore.getItemById(Number(idFromParams)) || null
-      }
-    }
-
-    if (!foundItem) {
-      error.value = "Товар не найден."
-      return
-    }
-
-    item.value = foundItem
-
-    sendViewItemEvent(foundItem)
-
-    const sizeFromQuery = route.query.size as string
-    if (sizeFromQuery && foundItem.sizes?.includes(sizeFromQuery)) {
-      await nextTick()
-      itemStore.size = sizeFromQuery
-    }
-  } catch (err) {
-    console.error("Ошибка:", err)
-    error.value = "Произошла ошибка при загрузке данных."
-  } finally {
-    isLoading.value = false
-  }
-}
-
-onMounted(async () => {
-  await loadItem()
+onMounted(() => {
+  if (item.value) sendViewItemEvent(item.value)
 })
 
 const availableColors = computed(() => {
@@ -189,9 +148,10 @@ const getPopupId = (header: string): string => {
 
 const relatedItemsIds = computed(() => {
   const currentId = item.value?.id
+  if (!currentId) return []
   const allIds = catalogStore.items.filter((i) => i.id !== currentId).map((i) => i.id)
-  const shuffled = [...allIds].sort(() => 0.5 - Math.random())
-  return shuffled.slice(0, 3)
+  // Псевдослучайно, но стабильно для товара — иначе сервер и клиент покажут разные карточки
+  return seededShuffle(allIds, currentId).slice(0, 3)
 })
 
 
@@ -441,7 +401,7 @@ const needsBorder = (color: { art?: string }) => {
 
 watch(
   item,
-  (newItem) => {
+  (newItem, oldItem) => {
     if (newItem) {
       if (newItem.colorVal && newItem.colorName) {
         itemStore.color = {
@@ -451,10 +411,16 @@ watch(
           art: newItem.colorArt,
         }
       }
-      if (newItem.sizes?.[0]) {
+      const sizeFromQuery = typeof route.query.size === "string" ? route.query.size : ""
+      if (sizeFromQuery && newItem.sizes?.includes(sizeFromQuery)) {
+        itemStore.size = sizeFromQuery
+      } else if (newItem.sizes?.[0]) {
         itemStore.size = newItem.sizes[0]
       }
 
+      if (import.meta.client && oldItem && oldItem.id !== newItem.id) {
+        sendViewItemEvent(newItem)
+      }
     }
   },
   { immediate: true },
@@ -462,17 +428,13 @@ watch(
 
 watch(
   () => alias.value,
-  async (newAlias) => {
+  (newAlias) => {
     if (newAlias) {
       itemStore.color = null
       itemStore.size = null
       shortsSelected.value = false
       shortsSize.value = null
-      await loadItem()
-
-      if (!error.value) {
-        scrollToTop()
-      }
+      scrollToTop()
     }
   }
 )
@@ -486,79 +448,15 @@ const scrollToTop = () => {
   }
 }
 
-const { data: treeData } = await useFetch(
-  "https://back.casaalmare.com/api/getdocTree"
-)
+const ssrItem = item
 
-const { data: ssrProducts } = await useAsyncData<Item[]>(
-  `products-ssr-${alias.value}`,
-  () => $fetch<Item[]>("https://back.casaalmare.com/api/getProducts")
-)
+const doc = computed(() => productData.value?.doc ?? null)
 
-const ssrItem = computed(() =>
-  ssrProducts.value?.find((i) => i.alias === alias.value) ?? null
-)
-
-
-const doc = computed(() => {
-  const slugValue = alias.value
-  if (!slugValue || !treeData.value?.data) return null
-
-  const findDoc = (nodes: Record<string, DocNode> | undefined): DocNode | null => {
-    if (!nodes) return null
-
-    for (const key in nodes) {
-      const node = nodes[key]
-      if (node && typeof node === 'object') {
-        if (node.alias === slugValue) return node
-        if (node.subitems) {
-          const found = findDoc(node.subitems)
-          if (found) return found
-        }
-      }
-    }
-    return null
-  }
-
-  return findDoc(treeData.value.data)
-})
-
-const pageTitle = computed(() => doc.value?.pagetitle ?? "")
-const description = computed(() => doc.value?.description ?? "")
-
-const metaTags = computed(() => {
-  const tags: Record<string, string> = {}
-
-  doc.value?.metatags?.forEach(tag => {
-    if (tag.name.startsWith('og:')) {
-      const ogKey = tag.name.replace('og:', '')
-      const camelCaseKey = 'og' + ogKey.charAt(0).toUpperCase() + ogKey.slice(1)
-      tags[camelCaseKey] = tag.content
-    } else if (tag.name.startsWith('twitter:')) {
-      const twitterKey = tag.name.replace('twitter:', '')
-      const camelCaseKey = 'twitter' + twitterKey.charAt(0).toUpperCase() + twitterKey.slice(1)
-      tags[camelCaseKey] = tag.content
-    } else {
-      tags[tag.name] = tag.content
-    }
-  })
-
-  return tags
-})
-
-const updateSeo = () => {
-  useSeoMeta({
-    title: pageTitle.value,
-    description: description.value,
-    ...metaTags.value
-  })
-}
-
-updateSeo()
-
-watch(doc, () => {
-  updateSeo()
-}, { immediate: true })
+useDocSeo(() => ({
+  title: doc.value?.longtitle || doc.value?.pagetitle || item.value?.name,
+  description: doc.value?.description,
+  metatags: doc.value?.metatags,
+}))
 
 const jsonLdSchema = computed(() => {
   if (!ssrItem.value) return null
@@ -752,25 +650,13 @@ useHead(computed(() => {
             <NuxtImg
               v-for="(img, index) in currentColorImages"
               :key="index"
-              v-slot="{ src, isLoaded, imgAttrs }"
               :src="img"
-              :custom="true"
-              class="absolute top-0 left-0 w-full h-full"
-            >
-              <div
-                v-if="!isLoaded"
-                class="w-full h-full aspect-[460/680] bg-[#F9F6EC]"
-                :style="imageStyles(index)"
-              />
-              <img
-                v-else
-                v-bind="imgAttrs"
-                :src="src"
-                :style="imageStyles(index)"
-                class="w-full h-full object-cover"
-                alt="item"
-              >
-            </NuxtImg>
+              :style="imageStyles(index)"
+              :alt="item ? `${item.name} — фото ${index + 1}` : ''"
+              :loading="index === 0 ? 'eager' : 'lazy'"
+              :fetchpriority="index === 0 ? 'high' : undefined"
+              class="absolute top-0 left-0 w-full h-full object-cover bg-[#F9F6EC]"
+            />
           </template>
           <template v-else>
             <div
@@ -800,23 +686,11 @@ useHead(computed(() => {
             style="aspect-ratio: 726/1080;"
           >
             <NuxtImg
-              v-slot="{ src, isLoaded, imgAttrs }"
               :src="img"
-              :custom="true"
-              class="absolute inset-0 w-full h-full"
-            >
-              <div
-                v-if="!isLoaded"
-                class="w-full h-full bg-[#F9F6EC]"
-              />
-              <img
-                v-else
-                v-bind="imgAttrs"
-                :src="src"
-                class="w-full h-full object-cover"
-                alt="item"
-              >
-            </NuxtImg>
+              :alt="`${item.name} — фото ${index + 1}`"
+              :loading="index < 2 ? 'eager' : 'lazy'"
+              class="absolute inset-0 w-full h-full object-cover"
+            />
           </div>
         </template>
         <template v-else>
@@ -1074,28 +948,10 @@ useHead(computed(() => {
     </template>
 
 
-    <div v-if="ssrItem" class="seo-content">
-      <div>{{ ssrItem.name }}</div>
-      <template
-        v-for="section in ssrItem.content"
-        :key="section.header"
-      >
-        <h2>{{ section.header }}</h2>
-        <p>{{ section.content }}</p>
-      </template>
-    </div>
   </main>
 </template>
 
 <style scoped>
-.seo-content {
-  position: absolute;
-  left: -9999px;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-}
-
 .product-sidebar {
   position: relative;
 }

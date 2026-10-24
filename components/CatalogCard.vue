@@ -17,7 +17,6 @@ const emit = defineEmits<{
 }>()
 
 const {
-  currentImageIndex,
   isHovered,
   isVisible,
   isNarrowScreen,
@@ -32,7 +31,7 @@ const {
   handleTouchStart,
   handleTouchMove,
   handleTouchEnd,
-  handleClick,
+  productLink,
   handleSizeClick,
   currentColorImages,
   getPriceData,
@@ -49,6 +48,11 @@ const {
   id: props.id,
   link: props.link || false,
 })
+
+// Карточка со ссылкой рендерится как <a href> — товары доступны поисковикам без JS
+const NuxtLinkComponent = resolveComponent("NuxtLink")
+const rootTag = computed(() => (productLink.value ? NuxtLinkComponent : "div"))
+const rootAttrs = computed(() => (productLink.value ? { to: productLink.value } : {}))
 
 const videoSource = computed(() => {
   if (!props.popup && item.value?.video?.length) {
@@ -83,8 +87,10 @@ if (props.modelValue) {
 </script>
 
 <template>
-  <div
+  <component
+    :is="rootTag"
     v-if="variant === 'mini'"
+    v-bind="rootAttrs"
     :class="[
       'flex flex-col items-center relative font-[Commissioner] text-[#211D1D] font-light text-[11px] text-center cursor-pointer sm:font-[Manrope] sm:text-xs',
       customClass,
@@ -92,7 +98,6 @@ if (props.modelValue) {
     ]"
     @mouseenter="!popup && (isHovered = true)"
     @mouseleave="!popup && (isHovered = false)"
-    @click="handleClick(null)"
   >
     <div class="w-full rounded-lg relative">
       <div class="overflow-hidden rounded-lg h-full">
@@ -116,26 +121,14 @@ if (props.modelValue) {
 
         <NuxtImg
           v-else-if="item && currentColorImages.length > 0"
-          v-slot="{ src, isLoaded, imgAttrs }"
           :src="currentColorImages[0]"
-          :custom="true"
-          class="aspect-[300/450] transition-all duration-300 ease-out"
-        >
-          <div
-            v-if="!isLoaded"
-            class="w-full h-full aspect-[300/450] bg-[#F9F6EC]"
-          />
-          <img
-            v-else
-            v-bind="imgAttrs"
-            :src="src"
-            :class="[
-              'w-full h-full object-cover transition-all duration-300 ease-out rounded-lg',
-              customImageClass,
-            ]"
-            alt="card"
-          >
-        </NuxtImg>
+          :alt="item.name"
+          loading="lazy"
+          :class="[
+            'w-full h-full aspect-[300/450] object-cover bg-[#F9F6EC] transition-all duration-300 ease-out rounded-lg',
+            customImageClass,
+          ]"
+        />
 
         <div
           v-else
@@ -186,7 +179,7 @@ if (props.modelValue) {
       <div
         v-if="popup"
         class="flex gap-1 flex-wrap justify-center mt-1"
-        @click.stop
+        @click.stop.prevent
       >
         <SingleSelectButton
           v-model="selectedSize"
@@ -199,7 +192,7 @@ if (props.modelValue) {
       <div
         v-else
         :class="['hidden gap-1 2xl:flex']"
-        @click.stop
+        @click.stop.prevent
       >
         <SingleSelectButton
           v-model="selectedSize"
@@ -234,18 +227,19 @@ if (props.modelValue) {
         />
       </div>
     </template>
-  </div>
+  </component>
 
-  <div
+  <component
+    :is="rootTag"
     v-else
+    v-bind="rootAttrs"
     :class="[
-      'relative font-[Commissioner] font-light text-[10px] text-center text-[#211D1D] cursor-pointer sm:font-[Manrope] sm:text-sm',
+      'block relative font-[Commissioner] font-light text-[10px] text-center text-[#211D1D] cursor-pointer sm:font-[Manrope] sm:text-sm',
       customClass,
       !popup && isVisible ? 'animate-card-appear' : '',
     ]"
     @mouseenter="!popup && (isHovered = true)"
     @mouseleave="!popup && (isHovered = false)"
-    @click="handleClick(null)"
   >
     <template v-if="!item">
       <div class="aspect-[460/680] bg-[#F9F6EC] rounded-lg w-full" />
@@ -282,78 +276,50 @@ if (props.modelValue) {
           <div class="aspect-[460/680] bg-[#F9F6EC] rounded-lg w-full" />
         </template>
 
-        <NuxtImg
-          v-else
-          v-slot="{ isLoaded }"
-          :src="currentColorImages[currentImageIndex]"
-          alt="card"
-          width="460"
-          height="680"
-          :custom="true"
-        >
+        <template v-else>
           <div
-            v-if="!isLoaded"
-            class="aspect-[460/680] bg-[#F9F6EC] rounded-lg w-full"
-          />
-
-          <template v-else>
-            <div
-              v-if="numImages > 1"
-              class="relative w-full aspect-[460/680] overflow-hidden"
-              @touchstart="handleTouchStart"
-              @touchmove="handleTouchMove"
-              @touchend="handleTouchEnd"
-              @mousemove="handleMouseMove"
-            >
-              <NuxtImg
-                v-for="(img, index) in currentColorImages.slice(0, numImages)"
-                :key="index"
-                v-slot="{ src, imgAttrs }"
-                :src="img"
-                width="460"
-                height="680"
-                :custom="true"
-              >
-                <img
-                  v-bind="imgAttrs"
-                  :src="src"
-                  :class="['rounded-2xl absolute top-0 left-0 w-full h-full', customImageClass]"
-                  :style="imageStyles(index)"
-                  alt="card"
-                >
-              </NuxtImg>
-            </div>
-
+            v-if="numImages > 1"
+            class="relative w-full aspect-[460/680] overflow-hidden rounded-2xl bg-[#F9F6EC]"
+            @touchstart="handleTouchStart"
+            @touchmove="handleTouchMove"
+            @touchend="handleTouchEnd"
+            @mousemove="handleMouseMove"
+          >
             <NuxtImg
-              v-else
-              v-slot="{ src, imgAttrs }"
-              :src="currentColorImages[0]"
+              v-for="(img, index) in currentColorImages.slice(0, numImages)"
+              :key="index"
+              :src="img"
+              :alt="index === 0 ? item.name : ''"
               width="460"
               height="680"
-              :custom="true"
-            >
-              <img
-                v-bind="imgAttrs"
-                :src="src"
-                :class="['rounded-2xl w-full aspect-[460/680] object-cover', customImageClass]"
-                alt="card"
-                @click="handleClick(null)"
-              >
-            </NuxtImg>
+              loading="lazy"
+              :class="['rounded-2xl absolute top-0 left-0 w-full h-full object-cover', customImageClass]"
+              :style="imageStyles(index)"
+            />
+          </div>
 
+          <NuxtImg
+            v-else
+            :src="currentColorImages[0]"
+            :alt="item.name"
+            width="460"
+            height="680"
+            loading="lazy"
+            :class="['rounded-2xl w-full aspect-[460/680] object-cover bg-[#F9F6EC]', customImageClass]"
+          />
+
+          <div
+            v-if="numImages > 1"
+            class="flex justify-center items-center gap-1 px-6 py-2"
+          >
             <div
-              v-if="numImages > 1"
-              class="flex justify-center items-center gap-1 px-6 py-2"
-            >
-              <div
-                v-for="index in barIndices"
-                :key="index"
-                class="flex-1 border-y border-[#A6CEFF]"
-                :style="barStyles(index)"
-              />
-            </div>
-          </template>
-        </NuxtImg>
+              v-for="index in barIndices"
+              :key="index"
+              class="flex-1 border-y border-[#A6CEFF]"
+              :style="barStyles(index)"
+            />
+          </div>
+        </template>
       </template>
 
       <h4 class="mt-1 line-clamp-1 min-h-4">{{ item.name }}</h4>
@@ -399,7 +365,7 @@ if (props.modelValue) {
         />
       </div>
     </template>
-  </div>
+  </component>
 </template>
 
 <style scoped>

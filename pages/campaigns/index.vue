@@ -1,14 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
-import type { DocNode, DocTree, DocVideo } from '~/types'
+import type { DocNode, DocVideo } from '~/types'
 
-const docsStore = useDocsStore()
+const { data: campaignsContent, error: campaignsError } = await useContentNode("campaigns")
+useFetchErrorPage(campaignsError)
 
-const { data: treeData } = await useFetch<DocTree>(
-  "https://back.casaalmare.com/api/getdocTree"
-)
-
-const campaignsData = computed(() => docsStore.tree?.data?.campaigns ?? treeData.value?.data?.campaigns)
+const campaignsData = computed(() => campaignsContent.value?.node)
 
 const campaigns = computed(() => {
   if (!campaignsData.value?.subitems) return []
@@ -38,48 +34,11 @@ const breadcrumsItems: { name: string; path?: string }[] = [
   { name: "Вдохновение" },
 ]
 
-const pageTitle = computed(() => campaignsData.value?.pagetitle ?? "")
-const description = computed(() => campaignsData.value?.description ?? "")
-
-const metaTags = computed(() => {
-  const tags: Record<string, string> = {}
-
-  campaignsData.value?.metatags?.forEach(tag => {
-    if (tag.name.startsWith('og:')) {
-      const ogKey = tag.name.replace('og:', '')
-      const camelCaseKey = 'og' + ogKey.charAt(0).toUpperCase() + ogKey.slice(1)
-      tags[camelCaseKey] = tag.content
-    } else if (tag.name.startsWith('twitter:')) {
-      const twitterKey = tag.name.replace('twitter:', '')
-      const camelCaseKey = 'twitter' + twitterKey.charAt(0).toUpperCase() + twitterKey.slice(1)
-      tags[camelCaseKey] = tag.content
-    } else {
-      tags[tag.name] = tag.content
-    }
-  })
-
-  return tags
-})
-
-const updateSeo = () => {
-  useSeoMeta({
-    title: pageTitle.value,
-    description: description.value,
-    ...metaTags.value
-  })
-}
-
-updateSeo()
-
-watch([pageTitle, description, metaTags], () => {
-  updateSeo()
-}, { deep: true })
-
-onMounted(async () => {
-  if (!docsStore.tree) {
-    await docsStore.fetchTree()
-  }
-})
+useDocSeo(() => ({
+  title: campaignsData.value?.pagetitle,
+  description: campaignsData.value?.description,
+  metatags: campaignsData.value?.metatags,
+}))
 </script>
 
 <template>
@@ -90,9 +49,9 @@ onMounted(async () => {
 
     <h2 class="uppercase text-center font-[Inter] text-[17px]">Вдохновение</h2>
 
-    <div v-if="docsStore.loading && campaigns.length === 0" class="text-center py-10">Загрузка...</div>
 
-    <div v-else-if="campaigns.length === 0" class="text-center py-10 text-gray-400">
+
+    <div v-if="campaigns.length === 0" class="text-center py-10 text-gray-400">
       Пока нет ни одной кампании
     </div>
 

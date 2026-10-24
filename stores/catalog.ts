@@ -236,23 +236,28 @@ export const useCatalogStore = defineStore("catalog", () => {
       : [...cleaned, ...Array(Math.max(0, len - cleaned.length)).fill("")]
   }
 
-  const loadItems = async (): Promise<void> => {
-    if (items.value.length > 0) {
-      return
-    }
+  let loadingPromise: Promise<void> | null = null
 
-    try {
-      isLoading.value = true
-      const response = await $fetch("https://back.casaalmare.com/api/getProducts")
-      if (response && Array.isArray(response)) {
-        items.value = response as Item[]
-      }
-    } catch (error) {
-      console.error("Error loading items:", error)
-      items.value = []
-    } finally {
-      isLoading.value = false
-    }
+  // Облегчённый список товаров (без описаний) из кэша сервера. При SSR состояние
+  // стора уходит в payload, поэтому на клиенте повторного запроса нет.
+  const loadItems = (): Promise<void> => {
+    if (items.value.length > 0) return Promise.resolve()
+    if (loadingPromise) return loadingPromise
+
+    isLoading.value = true
+    loadingPromise = $fetch<Item[]>("/api/catalog/products")
+      .then((response) => {
+        if (Array.isArray(response)) items.value = response
+      })
+      .catch((error) => {
+        console.error("Error loading items:", error)
+        items.value = []
+      })
+      .finally(() => {
+        isLoading.value = false
+        loadingPromise = null
+      })
+    return loadingPromise
   }
 
   const getLinkFromFilters = (filters: Partial<SortAndFilter>): string => {

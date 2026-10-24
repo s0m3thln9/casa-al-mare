@@ -9,6 +9,8 @@ interface UseCatalogCardProps {
 
 export function useCatalogCard(props: UseCatalogCardProps) {
   const catalogStore = useCatalogStore()
+  // true, если карточка создаётся при гидрации серверного HTML
+  const isFromServerHtml = useNuxtApp().isHydrating
   const currentImageIndex = ref(0)
   const isTransitioning = ref(false)
   const isHovered = ref(false)
@@ -18,7 +20,7 @@ export function useCatalogCard(props: UseCatalogCardProps) {
   const touchStartX = ref(0)
   const touchStartY = ref(0)
   const isHorizontalSwipe = ref(false)
-  const item = shallowRef<Item | null>(null)
+  const item = computed<Item | null>(() => catalogStore.getItemById(props.id) ?? null)
   const favoritesStore = useFavoritesStore()
   const selectedSize = ref<string | null>(null)
   const isFavoriteLocal = ref(favoritesStore.isFavorite(props.id))
@@ -132,21 +134,24 @@ export function useCatalogCard(props: UseCatalogCardProps) {
     isHorizontalSwipe.value = false
   }
 
+  const buildProductLink = (size?: string | null): string | null => {
+    if (!item.value?.alias) return null
+    const itemLink = `/product/${item.value.alias}/`
+    return size ? `${itemLink}?size=${encodeURIComponent(size)}` : itemLink
+  }
+
+  // Адрес для ссылки-карточки: без размера, чтобы в HTML были чистые канонические URL.
+  const productLink = computed(() => (props.link ? buildProductLink(null) : null))
+
   const handleClick = async (forceSize?: string | null) => {
-    if (props.link && item.value && item.value.alias) {
-      const fullAlias = item.value.alias
-      let itemLink = `/product/${fullAlias}/`
+    if (!props.link) return
+    const itemLink = buildProductLink(forceSize ?? selectedSize.value)
+    if (!itemLink) return
 
-      const sizeToUse = forceSize ?? selectedSize.value
-      if (sizeToUse) {
-        itemLink += `?size=${encodeURIComponent(sizeToUse)}`
-      }
-
-      try {
-        await navigateTo(itemLink)
-      } catch (error) {
-        console.error("Navigation error:", error)
-      }
+    try {
+      await navigateTo(itemLink)
+    } catch (error) {
+      console.error("Navigation error:", error)
     }
   }
 
@@ -165,11 +170,10 @@ export function useCatalogCard(props: UseCatalogCardProps) {
   }
 
   const handleStarClick = async (e: MouseEvent | TouchEvent) => {
+    // Карточка может быть ссылкой — звёздочка не должна по ней переходить
     e.stopPropagation()
-    if (isStarPressed.value) {
-      e.preventDefault()
-      return
-    }
+    e.preventDefault()
+    if (isStarPressed.value) return
 
     isStarPressed.value = true
 
@@ -228,15 +232,11 @@ export function useCatalogCard(props: UseCatalogCardProps) {
     }
   }
 
-  watchEffect(async () => {
-    if (catalogStore.items.length === 0) {
-      await catalogStore.loadItems()
-    }
-    item.value = catalogStore.getItemById(props.id)
-  })
-
   onMounted(() => {
-    isVisible.value = true
+    if (catalogStore.items.length === 0) void catalogStore.loadItems()
+    // Анимация появления — только для карточек, добавленных уже на клиенте;
+    // карточки из серверного HTML не должны пропадать и «въезжать» заново.
+    isVisible.value = !isFromServerHtml
   })
 
   watch(currentColorImages, () => {
@@ -269,6 +269,7 @@ export function useCatalogCard(props: UseCatalogCardProps) {
     handleTouchMove,
     handleTouchEnd,
     handleClick,
+    productLink,
     handleSizeClick,
     isFavoriteLocal,
     isStarPressed,
