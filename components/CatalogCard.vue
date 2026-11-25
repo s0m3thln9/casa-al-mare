@@ -329,6 +329,12 @@ if (props.modelValue) {
         :class="{ 'mb-2': popup }"
       >
         {{ priceFormatter(getPriceData().price) }}
+        <span
+          v-if="getPriceData().oldPrice && getPriceData().oldPrice > 0"
+          class="text-[#5E5B58] line-through ml-1"
+        >
+          {{ priceFormatter(getPriceData().oldPrice) }}
+        </span>
       </span>
       <span
         v-else
